@@ -15,7 +15,7 @@ This project is a SaaS platform enabling merchants to manage products, process s
 
 ### Clone/Navigate to the Project
 ```bash
-cd "c:/Users/Metto/Desktop/Anti gravity" 
+cd "c:/Users/Metto/" 
 # Or wherever you have placed the project files
 ```
 
