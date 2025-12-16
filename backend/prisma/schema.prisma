@@ -1,0 +1,122 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String   @id @default(uuid())
+  email         String   @unique
+  phoneNumber   String   @unique @map("phone_number")
+  passwordHash  String   @map("password_hash")
+  role          String   @default("MERCHANT") // ADMIN, MERCHANT
+  status        String   @default("ACTIVE") // ACTIVE, SUSPENDED
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  wallet        Wallet?
+  products      Product[]
+  sales         Sale[]
+  initiatedTx   Transaction[] @relation("Initiator")
+  approvedWithdrawals Withdrawal[] @relation("Approver")
+
+  @@map("users")
+}
+
+model Wallet {
+  id            String   @id @default(uuid())
+  userId        String   @unique @map("user_id")
+  user          User     @relation(fields: [userId], references: [id])
+  balance       Decimal  @default(0)
+  currency      String   @default("KES")
+  lastUpdatedAt DateTime @updatedAt @map("last_updated_at")
+
+  transactions  Transaction[]
+  withdrawals   Withdrawal[]
+
+  @@map("wallets")
+}
+
+model Product {
+  id            String   @id @default(uuid())
+  merchantId    String   @map("merchant_id")
+  merchant      User     @relation(fields: [merchantId], references: [id])
+  name          String
+  sku           String?
+  price         Decimal
+  stockQuantity Int      @default(0) @map("stock_quantity")
+  isTaxable     Boolean  @default(false) @map("is_taxable")
+  status        String   @default("ACTIVE") // ACTIVE, ARCHIVED
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  saleItems     SaleItem[]
+
+  @@map("products")
+}
+
+model Transaction {
+  id              String   @id @default(uuid())
+  type            String   // DEPOSIT_STK, WITHDRAWAL, FEE, SALE_CREDIT
+  reference       String?  // M-Pesa Receipt or internal ref
+  merchantRequestId String? @map("merchant_request_id")
+  checkoutRequestId String? @map("checkout_request_id")
+  amount          Decimal
+  feeCharged      Decimal  @default(0) @map("fee_charged")
+  status          String   @default("PENDING") // PENDING, COMPLETED, FAILED
+  initiatorUserId String?  @map("initiator_user_id")
+  initiator       User?    @relation("Initiator", fields: [initiatorUserId], references: [id])
+  recipientWalletId String @map("recipient_wallet_id")
+  recipientWallet Wallet   @relation(fields: [recipientWalletId], references: [id])
+  metadata        String?  // JSON stringified
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  sale            Sale?
+
+  @@map("transactions")
+}
+
+model Sale {
+  id              String   @id @default(uuid())
+  merchantId      String   @map("merchant_id")
+  merchant        User     @relation(fields: [merchantId], references: [id])
+  totalAmount     Decimal  @map("total_amount")
+  paymentMethod   String   @default("MPESA_STK") @map("payment_method")
+  transactionId   String?  @unique @map("transaction_id")
+  transaction     Transaction? @relation(fields: [transactionId], references: [id])
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  items           SaleItem[]
+
+  @@map("sales")
+}
+
+model SaleItem {
+  id        String   @id @default(uuid())
+  saleId    String   @map("sale_id")
+  sale      Sale     @relation(fields: [saleId], references: [id])
+  productId String   @map("product_id")
+  product   Product  @relation(fields: [productId], references: [id])
+  quantity  Int
+  unitPrice Decimal  @map("unit_price")
+  subtotal  Decimal
+
+  @@map("sale_items")
+}
+
+model Withdrawal {
+  id            String   @id @default(uuid())
+  walletId      String   @map("wallet_id")
+  wallet        Wallet   @relation(fields: [walletId], references: [id])
+  amount        Decimal
+  mpesaNumber   String   @map("mpesa_number")
+  status        String   @default("PENDING") // PENDING, APPROVED, PROCESSING, COMPLETED, REJECTED
+  approvedBy    String?  @map("approved_by")
+  approver      User?    @relation("Approver", fields: [approvedBy], references: [id])
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  @@map("withdrawals")
+}
