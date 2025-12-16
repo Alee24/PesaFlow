@@ -121,3 +121,14 @@ export const mpesaCallback = async (req: Request, res: Response): Promise<void> 
         res.status(500).json({ error: 'Callback processing failed' });
     }
 };
+
+import { testMpesaConnectionService } from '../services/mpesa.service';
+
+export const testConnection = async (req: Request, res: Response): Promise<void> => {
+    const result = await testMpesaConnectionService();
+    if (result.success) {
+        res.json(result);
+    } else {
+        res.status(500).json(result);
+    }
+};

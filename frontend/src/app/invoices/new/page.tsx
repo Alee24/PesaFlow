@@ -142,183 +142,200 @@ export default function CreateInvoicePage() {
                 </div>
 
                 {/* THE INVOICE CANVAS */}
-                <div className="bg-white shadow-xl min-h-[1100px] w-full relative text-gray-800 print:shadow-none print:w-full print:m-0">
+                <div className="bg-white shadow-xl min-h-[1100px] w-full relative text-gray-800 print:shadow-none print:w-full print:m-0 flex flex-col justify-between">
 
-                    {/* Header with Blue Curve */}
-                    <div className="absolute top-0 left-0 w-full h-[200px] overflow-hidden">
-                        {/* CSS Curve via SVG */}
-                        <svg viewBox="0 0 1440 320" className="w-full h-full absolute top-0 left-0" preserveAspectRatio="none">
-                            <path fill="#003366" fillOpacity="1" d="M0,192L80,186.7C160,181,320,171,480,186.7C640,203,800,245,960,240C1120,235,1280,181,1360,154.7L1440,128L1440,0L1360,0C1280,0,1120,0,960,0C800,0,640,0,480,0C320,0,160,0,80,0L0,0Z"></path>
-                        </svg>
-                        <div className="relative z-10 p-12 flex justify-between items-start">
-                            <h1 className="text-6xl font-black text-white tracking-widest uppercase">INVOICE</h1>
-                            <div className="text-right text-white mt-4">
-                                <div className="flex items-center gap-2 justify-end">
-                                    <span className="font-bold text-lg opacity-80">NO:</span>
-                                    <input
-                                        type="text"
-                                        className="bg-transparent border-b border-white/30 text-white font-bold text-lg w-40 text-right focus:outline-none focus:border-white"
-                                        value={invoiceData.invoiceNumber}
-                                        onChange={e => setInvoiceData({ ...invoiceData, invoiceNumber: e.target.value })}
-                                    />
-                                </div>
+                    <div>
+                        {/* 1. Dark Blue Top Bar with Title */}
+                        <div className="bg-[#1a2b42] h-24 flex items-center px-12 justify-between">
+                            <h1 className="text-4xl font-bold tracking-widest text-[#d4af37]">INVOICE</h1>
+                            {/* Optional: Add tagline or other info here if needed */}
+                        </div>
+
+                        {/* 2. Top Section: Website + Logo */}
+                        <div className="px-12 py-8 flex justify-between items-start">
+                            <div className="text-xs tracking-widest uppercase text-gray-500 mt-2">
+                                {company?.website || 'WWW.COMPANYWEBSITE.COM'}
+                            </div>
+                            <div className="text-right">
+                                {company?.logoUrl ? (
+                                    <div className="flex flex-col items-end">
+                                        <img src={company.logoUrl} alt="Logo" className="h-16 object-contain mb-1" />
+                                        <div className="text-[10px] tracking-widest uppercase font-bold text-gray-700">
+                                            {company?.companyName || 'LOGO TEXT'}
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <div className="flex flex-col items-end opacity-50">
+                                        <div className="text-3xl font-bold text-gray-800">LOGO</div>
+                                        <div className="text-xs uppercase">Your Tagline</div>
+                                    </div>
+                                )}
                             </div>
                         </div>
-                    </div>
 
-                    {/* Content Section */}
-                    <div className="pt-[240px] px-16">
-
-                        {/* Bill To / From Grid */}
-                        <div className="grid grid-cols-2 gap-20 mb-12">
-                            {/* Left: Bill To (User Input) */}
-                            <div>
-                                <h3 className="text-xl font-bold text-gray-700 mb-4">Bill To:</h3>
-                                <div className="space-y-3">
+                        {/* 3. Invoice Info Section */}
+                        <div className="px-12 py-4 flex justify-between items-start mb-12">
+                            {/* Left: Bill To */}
+                            <div className="w-1/3">
+                                <h3 className="font-bold text-gray-800 uppercase text-sm mb-4 tracking-wide">Invoice To:</h3>
+                                <div className="space-y-1">
                                     <input
                                         type="text"
-                                        placeholder="Client Name"
-                                        className="w-full text-lg font-medium text-gray-900 placeholder-gray-300 border-none p-0 focus:ring-0"
+                                        placeholder="CLIENT NAME"
+                                        className="w-full font-bold text-gray-900 uppercase placeholder-gray-300 border-none p-0 focus:ring-0 text-lg"
                                         value={invoiceData.clientName}
                                         onChange={e => setInvoiceData({ ...invoiceData, clientName: e.target.value })}
                                     />
                                     <input
                                         type="text"
                                         placeholder="Phone Number"
-                                        className="w-full text-gray-600 placeholder-gray-300 border-none p-0 focus:ring-0"
+                                        className="w-full text-sm text-gray-600 uppercase placeholder-gray-300 border-none p-0 focus:ring-0"
                                         value={invoiceData.clientPhone}
                                         onChange={e => setInvoiceData({ ...invoiceData, clientPhone: e.target.value })}
                                     />
                                     <textarea
-                                        placeholder="Address"
+                                        placeholder="123 STREET, ADDRESS"
                                         rows={2}
-                                        className="w-full text-gray-600 placeholder-gray-300 border-none p-0 focus:ring-0 resize-none"
+                                        className="w-full text-sm text-gray-600 uppercase placeholder-gray-300 border-none p-0 focus:ring-0 resize-none"
                                         value={invoiceData.clientAddress}
                                         onChange={e => setInvoiceData({ ...invoiceData, clientAddress: e.target.value })}
                                     />
                                 </div>
+                            </div>
 
-                                <div className="mt-8">
-                                    <p className="text-gray-500 mb-1">Date:</p>
+                            {/* Right: Invoice Meta */}
+                            <div className="text-right">
+                                <div className="flex items-center justify-end gap-2 mb-1">
+                                    <span className="text-sm font-bold text-gray-500 uppercase tracking-wide">Invoice No.</span>
+                                    <input
+                                        type="text"
+                                        className="text-right font-bold text-gray-800 border-none p-0 focus:ring-0 w-24"
+                                        value={invoiceData.invoiceNumber}
+                                        onChange={e => setInvoiceData({ ...invoiceData, invoiceNumber: e.target.value })}
+                                    />
+                                </div>
+                                <div className="flex items-center justify-end gap-2">
+                                    <span className="text-sm font-bold text-gray-500 uppercase tracking-wide">Date</span>
                                     <input
                                         type="date"
-                                        className="text-gray-700 font-semibold border-none p-0 focus:ring-0"
+                                        className="text-right font-bold text-gray-800 border-none p-0 focus:ring-0 w-32"
                                         value={invoiceData.date}
                                         onChange={e => setInvoiceData({ ...invoiceData, date: e.target.value })}
                                     />
                                 </div>
                             </div>
+                        </div>
 
-                            {/* Right: From (Company Profile) */}
-                            <div className="text-right">
-                                <h3 className="text-xl font-bold text-gray-700 mb-4">From:</h3>
-                                <div className="space-y-1 text-gray-600">
-                                    {company ? (
-                                        <>
-                                            <p className="text-lg font-medium text-gray-900">{company.companyName}</p>
-                                            <p>{company.contactPhone}</p>
-                                            <p className="whitespace-pre-wrap">{company.location}</p>
-                                            <p>{company.email}</p>
-                                        </>
-                                    ) : (
-                                        <p className="text-gray-400 italic">Configure in Settings</p>
-                                    )}
-                                </div>
+                        {/* 4. Table Header */}
+                        <div className="px-12 mb-4">
+                            <div className="grid grid-cols-12 gap-4 border-b border-gray-200 pb-2">
+                                <div className="col-span-6 font-bold text-[#1a2b42] uppercase text-sm tracking-wider">Description</div>
+                                <div className="col-span-2 font-bold text-[#1a2b42] uppercase text-center text-sm tracking-wider">Price</div>
+                                <div className="col-span-2 font-bold text-[#1a2b42] uppercase text-center text-sm tracking-wider">Qty.</div>
+                                <div className="col-span-2 font-bold text-[#1a2b42] uppercase text-right text-sm tracking-wider">Total</div>
                             </div>
                         </div>
 
-                        {/* Items Table */}
-                        <div className="mb-12">
-                            <table className="w-full">
-                                <thead>
-                                    <tr className="bg-[#003366] text-white">
-                                        <th className="py-3 px-4 text-left w-1/2">Description</th>
-                                        <th className="py-3 px-4 text-center w-24">Qty</th>
-                                        <th className="py-3 px-4 text-right w-32">Price</th>
-                                        <th className="py-3 px-4 text-right w-32">Total</th>
-                                        <th className="py-3 px-2 w-10 print:hidden"></th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {items.map((item, index) => (
-                                        <tr key={index} className="border-b border-gray-200">
-                                            <td className="p-2">
-                                                <input
-                                                    type="text"
-                                                    className="w-full border-none focus:ring-0 text-gray-800"
-                                                    value={item.description}
-                                                    onChange={e => handleItemChange(index, 'description', e.target.value)}
-                                                    placeholder="Item Description"
-                                                />
-                                            </td>
-                                            <td className="p-2">
-                                                <input
-                                                    type="number"
-                                                    className="w-full text-center border-none focus:ring-0 text-gray-800"
-                                                    value={item.quantity}
-                                                    onChange={e => handleItemChange(index, 'quantity', Number(e.target.value))}
-                                                />
-                                            </td>
-                                            <td className="p-2">
-                                                <input
-                                                    type="number"
-                                                    className="w-full text-right border-none focus:ring-0 text-gray-800"
-                                                    value={item.price}
-                                                    onChange={e => handleItemChange(index, 'price', Number(e.target.value))}
-                                                />
-                                            </td>
-                                            <td className="p-2 text-right font-medium text-gray-700">
-                                                {(item.quantity * item.price).toFixed(2)}
-                                            </td>
-                                            <td className="p-2 print:hidden">
-                                                <button onClick={() => removeItem(index)} className="text-red-400 hover:text-red-600">
-                                                    <Trash2 className="w-4 h-4" />
-                                                </button>
-                                            </td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                            <div className="mt-4 print:hidden">
-                                <Button size="sm" variant="outline" onClick={addItem} className="text-indigo-600 border-indigo-200">
-                                    <Plus className="w-4 h-4 mr-2" /> Add Item
+                        {/* 5. Table Items */}
+                        <div className="px-12 space-y-4 mb-12">
+                            {items.map((item, index) => (
+                                <div key={index} className="grid grid-cols-12 gap-4 border-b border-gray-100 pb-2 relative group items-center">
+                                    <div className="col-span-6">
+                                        <input
+                                            type="text"
+                                            className="w-full border-none focus:ring-0 text-gray-600 font-medium"
+                                            value={item.description}
+                                            onChange={e => handleItemChange(index, 'description', e.target.value)}
+                                            placeholder="Lorem ipsum dolor"
+                                        />
+                                    </div>
+                                    <div className="col-span-2 text-center">
+                                        <input
+                                            type="number"
+                                            className="w-full text-center border-none focus:ring-0 text-gray-600 font-medium"
+                                            value={item.price}
+                                            onChange={e => handleItemChange(index, 'price', Number(e.target.value))}
+                                        />
+                                    </div>
+                                    <div className="col-span-2 text-center">
+                                        <input
+                                            type="number"
+                                            className="w-full text-center border-none focus:ring-0 text-gray-600 font-medium"
+                                            value={item.quantity}
+                                            onChange={e => handleItemChange(index, 'quantity', Number(e.target.value))}
+                                        />
+                                    </div>
+                                    <div className="col-span-2 text-right font-bold text-gray-800">
+                                        {(item.quantity * item.price).toLocaleString()}
+                                    </div>
+
+                                    <div className="absolute -right-6 top-1 print:hidden opacity-0 group-hover:opacity-100 transition-opacity">
+                                        <button onClick={() => removeItem(index)} className="text-red-400 hover:text-red-600">
+                                            <Trash2 className="w-4 h-4" />
+                                        </button>
+                                    </div>
+                                </div>
+                            ))}
+                            <div className="print:hidden pt-2">
+                                <Button size="sm" variant="ghost" onClick={addItem} className="text-[#1a2b42] hover:bg-gray-100">
+                                    <Plus className="w-4 h-4 mr-2" /> Add Line
                                 </Button>
                             </div>
                         </div>
 
-                        {/* Footer Section */}
-                        <div className="flex justify-end mb-12">
-                            <div className="w-1/2 bg-[#003366] text-white p-4 flex justify-between items-center rounded-sm">
-                                <span className="font-semibold text-lg">Sub Total</span>
-                                <span className="font-bold text-2xl">KES {subTotal.toLocaleString()}</span>
-                            </div>
-                        </div>
-
-                        {/* Notes & Bank Info */}
-                        <div className="grid grid-cols-2 gap-12 mt-20">
-                            <div>
-                                <h4 className="font-bold text-gray-800 mb-2">Note:</h4>
+                        {/* 6. Footer Layout: Terms (Left) + Totals (Right) */}
+                        <div className="px-12 flex justify-between items-start mb-12">
+                            {/* Left: Terms */}
+                            <div className="w-1/2 pr-12">
+                                <h4 className="font-bold text-[#1a2b42] mb-2 uppercase text-sm">Terms and Conditions</h4>
                                 <textarea
-                                    className="w-full border-b border-gray-300 focus:outline-none focus:border-indigo-500 resize-none text-gray-600"
-                                    rows={3}
-                                    placeholder="Thank you for your business..."
+                                    className="w-full text-xs text-gray-500 border-none p-0 focus:ring-0 resize-none h-24 bg-transparent"
+                                    placeholder="Lorem ipsum dolor sit amet, consectetur adipiscing elit..."
                                     value={invoiceData.notes}
                                     onChange={e => setInvoiceData({ ...invoiceData, notes: e.target.value })}
                                 />
 
-                                <h4 className="font-bold text-gray-800 mt-8 mb-2">Payment Information:</h4>
-                                <div className="text-sm text-gray-600 whitespace-pre-line">
-                                    {company?.bankDetails || "Bank: Specify in Settings"}
-                                    {'\n'}
-                                    {company?.mpesaDetails}
+                                <div className="mt-4">
+                                    <h4 className="font-bold text-[#1a2b42] mb-1 uppercase text-xs">Payment Information</h4>
+                                    <p className="text-xs text-gray-500 whitespace-pre-wrap">
+                                        {company?.bankDetails || 'Bank Details Here'}{'\n'}
+                                        {company?.mpesaDetails}
+                                    </p>
                                 </div>
                             </div>
 
-                            <div className="flex items-end justify-end">
-                                <h2 className="text-4xl font-serif text-[#003366]">Thank You!</h2>
+                            {/* Right: Totals */}
+                            <div className="w-1/3 space-y-3">
+                                <div className="flex justify-between font-bold text-[#1a2b42] uppercase text-sm">
+                                    <span>Subtotal</span>
+                                    <span>${subTotal.toLocaleString()}</span>
+                                </div>
+                                <div className="flex justify-between font-bold text-[#1a2b42] uppercase text-sm">
+                                    <span>Tax (16%)</span>
+                                    <span>${(subTotal * 0.16).toLocaleString()}</span>
+                                </div>
+                                <div className="flex justify-between font-extrabold text-[#1a2b42] uppercase text-lg pt-2 border-t border-gray-200">
+                                    <span>Grand Total</span>
+                                    <span>${(subTotal * 1.16).toLocaleString()}</span>
+                                </div>
                             </div>
                         </div>
+                    </div>
 
+                    {/* 7. Bottom Bar */}
+                    <div id="invoice-footer" className="bg-[#1a2b42] h-16 w-full flex items-center justify-between px-12 text-white/80 text-xs tracking-wider">
+                        <div className="flex items-center gap-2">
+                            <span>location icon</span>
+                            <span>{company?.location || 'Your Address Here'}</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <span>email icon</span>
+                            <span>{company?.email || 'yourbusiness@email.com'}</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <span>phone icon</span>
+                            <span>{company?.contactPhone || '123 456 789'}</span>
+                        </div>
                     </div>
                 </div>
 
@@ -328,47 +345,70 @@ export default function CreateInvoicePage() {
                             size: A4; 
                             margin: 0; 
                         }
-                        body { 
+                        
+                        body, html { 
                             background: white; 
+                            width: 210mm;
+                            height: 100%;
+                            margin: 0;
+                            padding: 0;
                             -webkit-print-color-adjust: exact; 
                             print-color-adjust: exact;
                         }
-                        nav, aside, button, .print\\:hidden { display: none !important; }
+
+                        /* Hide Dashboard Elements */
+                        nav, aside, button, .print\\:hidden, #__next > div > div > div:first-child { 
+                            display: none !important; 
+                        }
                         
-                        /* Layout Reset for Print */
-                        body, html, #__next, .flex, .flex-col {
-                            height: auto !important;
-                            overflow: visible !important;
+                        /* Reset Layout Parents */
+                        #__next, .flex, .flex-col, .min-h-screen {
                             display: block !important;
+                            height: auto !important;
+                            width: 100% !important;
+                            margin: 0 !important;
+                            padding: 0 !important;
+                            overflow: visible !important;
                         }
 
-                        /* Target specific invoice container */
+                        /* Invoice Container */
                         .bg-white.shadow-xl {
                             width: 210mm !important;
                             min-height: 297mm !important;
-                            margin: 0 auto !important;
+                            margin: 0 !important;
                             padding: 0 !important;
                             box-shadow: none !important;
-                            position: static !important; /* Ensure it flows */
+                            border-radius: 0 !important;
+                            position: relative !important;
+                            padding-bottom: 80px !important; /* Space for fixed footer */
                         }
 
-                        main { 
-                            padding: 0 !important; 
-                            margin: 0 auto !important; 
-                            width: 100% !important; 
-                            display: block !important;
+                        /* Main Content Area */
+                        .bg-white.shadow-xl > div:first-child {
+                            min-height: 200mm;
                         }
 
+                        /* Fixed Footer */
+                        #invoice-footer {
+                            position: fixed !important;
+                            bottom: 0 !important;
+                            left: 0 !important;
+                            width: 210mm !important;
+                            z-index: 50 !important;
+                        }
+
+                        /* Input Resets */
                         input, textarea { 
                             border: none !important; 
                             background: transparent !important; 
                             resize: none !important;
+                            padding: 0 !important;
+                            margin: 0 !important;
                         }
-                        
-                        /* SVG Header */
-                        svg {
-                            print-color-adjust: exact;
-                            -webkit-print-color-adjust: exact;
+
+                        /* Page Break Handling */
+                        tr, .grid {
+                            page-break-inside: avoid;
                         }
                     }
                 `}</style>

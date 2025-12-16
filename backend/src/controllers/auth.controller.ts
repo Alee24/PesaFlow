@@ -108,3 +108,47 @@ export const login = async (req: Request, res: Response): Promise<void> => {
         }
     }
 };
+
+export const updateUser = async (req: Request, res: Response): Promise<void> => {
+    try {
+        const userId = (req as any).user.userId;
+        const { email, phoneNumber, password, currentPassword, name } = req.body;
+
+        const user = await prisma.user.findUnique({ where: { id: userId } });
+        if (!user) {
+            res.status(404).json({ error: 'User not found' });
+            return;
+        }
+
+        // Verify current password before any sensitive changes if password is being changed
+        // Or broadly require it. For now, let's require it only if changing password or email.
+        if (password || email !== user.email) {
+            if (!currentPassword || !(await bcrypt.compare(currentPassword, user.passwordHash))) {
+                res.status(401).json({ error: 'Invalid current password' });
+                return;
+            }
+        }
+
+        const updates: any = {};
+        if (email) updates.email = email;
+        if (phoneNumber) updates.phoneNumber = phoneNumber;
+        if (name) updates.name = name;
+        if (password) {
+            updates.passwordHash = await bcrypt.hash(password, 10);
+        }
+
+        const updatedUser = await prisma.user.update({
+            where: { id: userId },
+            data: updates,
+        });
+
+        res.json({
+            message: 'User updated successfully',
+            user: { id: updatedUser.id, email: updatedUser.email, role: updatedUser.role }
+        });
+
+    } catch (error) {
+        console.error("Update User Error:", error);
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+};

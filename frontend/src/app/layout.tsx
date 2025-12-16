@@ -17,6 +17,10 @@ export const metadata: Metadata = {
   description: "Seamless M-Pesa payments for your business",
 };
 
+import { ToastProvider } from "@/contexts/ToastContext";
+
+// ...
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -27,7 +31,9 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        {children}
+        <ToastProvider>
+          {children}
+        </ToastProvider>
       </body>
     </html>
   );

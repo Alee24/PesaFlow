@@ -140,10 +140,19 @@ export const initiateSTKPush = async (
                 });
             }
         });
-
+        // ... existing code ...
         return response.data;
     } catch (error: any) {
         console.error('STK Push Error:', error.response?.data || error.message);
         throw new Error('Failed to initiate STK Push');
+    }
+};
+
+export const testMpesaConnectionService = async () => {
+    try {
+        const token = await getAccessToken();
+        return { success: true, message: 'Connection successful. Access Token generated.', token: token.slice(0, 10) + '...' };
+    } catch (error: any) {
+        return { success: false, message: error.message };
     }
 };

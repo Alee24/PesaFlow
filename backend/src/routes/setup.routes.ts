@@ -60,9 +60,10 @@ SMTP_SECURE="${smtpSecure || 'false'}"
         // We need to run this command in the backend directory
         const backendDir = path.join(__dirname, '../../');
 
+        // ... existing code ...
         console.log('Running database setup...');
 
-        exec('npx prisma db push', { cwd: backendDir, env: { ...process.env, DATABASE_URL: databaseUrl } }, (error, stdout, stderr) => {
+        exec('npx prisma db push', { cwd: backendDir, env: { ...process.env, DATABASE_URL: databaseUrl } }, async (error, stdout, stderr) => {
             if (error) {
                 console.error(`DB Setup Error: ${error.message}`);
                 return res.status(500).json({
@@ -73,10 +74,52 @@ SMTP_SECURE="${smtpSecure || 'false'}"
 
             console.log(`DB Setup Output: ${stdout}`);
 
-            res.json({
-                success: true,
-                message: 'Configuration saved and database initialized! Please restart the server to apply changes.'
-            });
+            // 6. Create Super Admin User
+            try {
+                // Initialize Prisma with new connection string
+                const prisma = new PrismaClient({
+                    datasources: {
+                        db: {
+                            url: databaseUrl
+                        }
+                    }
+                });
+
+                const { adminEmail, adminPassword } = req.body;
+
+                if (adminEmail && adminPassword) {
+                    const bcrypt = require('bcryptjs');
+                    const hashedPassword = await bcrypt.hash(adminPassword, 10);
+
+                    await prisma.user.upsert({
+                        where: { email: adminEmail },
+                        update: {},
+                        create: {
+                            email: adminEmail,
+                            passwordHash: hashedPassword,
+                            role: 'ADMIN',
+                            name: 'Super Admin',
+                            phoneNumber: '0000000000' // Placeholder
+                        }
+                    });
+
+                    await prisma.$disconnect();
+                }
+
+                res.json({
+                    success: true,
+                    message: 'Configuration saved, database initialized, and admin account created! Please restart the server.'
+                });
+
+            } catch (err: any) {
+                console.error("Admin Creation Error:", err);
+                // Return success mostly because DB is set up, but warn about admin
+                res.json({
+                    success: true,
+                    message: 'Database initialized but failed to create admin user manually. You may need to register normally.',
+                    details: err.message
+                });
+            }
         });
 
     } catch (error: any) {

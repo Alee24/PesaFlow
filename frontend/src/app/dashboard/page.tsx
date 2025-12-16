@@ -2,6 +2,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import { Card } from '@/components/ui/Card';
@@ -183,19 +184,20 @@ export default function DashboardPage() {
                                 </div>
                             ))}
                         </div>
-                        <button className="mt-6 w-full py-2 bg-indigo-50 text-indigo-600 text-sm font-bold rounded-lg hover:bg-indigo-100 transition-colors">
+                        <Link href="/products" className="mt-6 w-full py-2 bg-indigo-50 text-indigo-600 text-sm font-bold rounded-lg hover:bg-indigo-100 transition-colors block text-center">
                             View All
-                        </button>
+                        </Link>
                     </div>
                 </div>
 
                 {/* Recent Transactions Table */}
                 <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
+
                     <div className="px-6 py-5 border-b border-gray-100 dark:border-gray-700 flex justify-between items-center">
                         <h3 className="text-lg font-bold text-gray-800 dark:text-white">Recent Transactions</h3>
-                        <button className="text-sm text-indigo-600 font-medium hover:underline flex items-center gap-1">
+                        <Link href="/transactions" className="text-sm text-indigo-600 font-medium hover:underline flex items-center gap-1">
                             View All <ArrowRight className="w-4 h-4" />
-                        </button>
+                        </Link>
                     </div>
                     <div className="overflow-x-auto">
                         <table className="w-full text-left text-sm text-gray-500">

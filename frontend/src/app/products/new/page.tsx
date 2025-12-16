@@ -9,9 +9,13 @@ import { Input } from '@/components/ui/Input';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import api from '@/lib/api';
 
+import { useToast } from '@/contexts/ToastContext';
+
 export default function NewProductPage() {
     const router = useRouter();
+    const { showToast } = useToast();
     const [loading, setLoading] = useState(false);
+
     const [formData, setFormData] = useState({
         name: '',
         price: '',
@@ -24,10 +28,11 @@ export default function NewProductPage() {
         setLoading(true);
         try {
             await api.post('/products', formData);
-            router.push('/products');
+            showToast('Product created successfully', 'success');
+            setTimeout(() => router.push('/products'), 500); // Slight delay for UX
         } catch (error) {
             console.error(error);
-            alert('Failed to create product');
+            showToast('Failed to create product', 'error');
         } finally {
             setLoading(false);
         }

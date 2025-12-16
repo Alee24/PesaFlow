@@ -52,6 +52,22 @@ export default function SettingsPage() {
         setFormData(prev => ({ ...prev, [name]: value }));
     };
 
+    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (file) {
+            if (file.size > 2 * 1024 * 1024) {
+                alert("File size too large. Max 2MB.");
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                setFormData(prev => ({ ...prev, logoUrl: reader.result as string }));
+            };
+            reader.readAsDataURL(file);
+        }
+    };
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setSaving(true);
@@ -83,6 +99,46 @@ export default function SettingsPage() {
                     <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Business Settings</h1>
                     <p className="text-gray-500">Manage your company details for invoicing.</p>
                 </header>
+
+                <Card className="mb-8">
+                    <div className="flex justify-between items-start mb-6">
+                        <div>
+                            <h2 className="text-xl font-bold text-gray-900 dark:text-white">M-Pesa Integration</h2>
+                            <p className="text-sm text-gray-500">Manage your Daraja API connection</p>
+                        </div>
+                        <span className="bg-yellow-100 text-yellow-800 text-xs px-3 py-1 rounded-full font-medium">
+                            {formData.mpesaDetails?.includes('production') ? 'Production' : 'Sandbox / Test'}
+                        </span>
+                    </div>
+
+                    <div className="space-y-4">
+                        <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-100 dark:border-gray-700">
+                            <div className="flex items-center justify-between">
+                                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Connection Status</span>
+                                <Button
+                                    type="button"
+                                    onClick={async () => {
+                                        try {
+                                            const res = await api.post('/mpesa/test');
+                                            alert(`Success: ${res.data.message}`);
+                                        } catch (e: any) {
+                                            alert(`Connection Failed: ${e.response?.data?.message || e.message}`);
+                                        }
+                                    }}
+                                    variant="outline"
+                                    className="text-sm"
+                                >
+                                    Test Connection
+                                </Button>
+                            </div>
+                        </div>
+
+                        <form onSubmit={handleSubmit} className="space-y-6">
+                            {/* Reusing existing mpesaDetails field for display logic above, but allowing edit here alongside others if needed */}
+                            {/* ... existing fields ... */}
+                        </form>
+                    </div>
+                </Card>
 
                 <Card>
                     <form onSubmit={handleSubmit} className="space-y-6">
@@ -126,13 +182,28 @@ export default function SettingsPage() {
                                 onChange={handleChange}
                                 placeholder="Nairobi, Kenya"
                             />
-                            <Input
-                                label="Logo URL"
-                                name="logoUrl"
-                                value={formData.logoUrl}
-                                onChange={handleChange}
-                                placeholder="https://example.com/logo.png"
-                            />
+                            <div className="flex flex-col space-y-2">
+                                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Company Logo</label>
+                                <div className="flex items-center gap-4">
+                                    <input
+                                        type="file"
+                                        accept="image/*"
+                                        onChange={handleFileChange}
+                                        className="block w-full text-sm text-gray-500
+                                            file:mr-4 file:py-2 file:px-4
+                                            file:rounded-full file:border-0
+                                            file:text-sm file:font-semibold
+                                            file:bg-indigo-50 file:text-indigo-700
+                                            hover:file:bg-indigo-100"
+                                    />
+                                    {formData.logoUrl && (
+                                        <div className="relative h-12 w-12 rounded-lg overflow-hidden border">
+                                            <img src={formData.logoUrl} alt="Logo Preview" className="h-full w-full object-contain" />
+                                        </div>
+                                    )}
+                                </div>
+                                <p className="text-xs text-gray-500">Max size 2MB</p>
+                            </div>
                             <Input
                                 label="VAT Number"
                                 name="vatNumber"

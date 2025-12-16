@@ -37,9 +37,15 @@ export default function InstallPage() {
         // SMTP
         smtpHost: '',
         smtpPort: '587',
+        // ... existing fields
         smtpUser: '',
         smtpPassword: '',
-        smtpSecure: 'false'
+        smtpSecure: 'false',
+
+        // Admin
+        adminEmail: '',
+        adminPassword: '',
+        adminPasswordConfirm: ''
     });
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -47,6 +53,12 @@ export default function InstallPage() {
     };
 
     const handleSubmit = async () => {
+        if (formData.adminPassword !== formData.adminPasswordConfirm) {
+            setStatus('error');
+            setMessage('Passwords do not match');
+            return;
+        }
+
         setLoading(true);
         setStatus('idle');
         setMessage('');
@@ -94,12 +106,12 @@ export default function InstallPage() {
             <div className="max-w-2xl w-full">
                 <div className="mb-8 text-center">
                     <h1 className="text-4xl font-bold text-gray-900 mb-2">PesaFlow Installer</h1>
-                    <p className="text-gray-500">Setup your M-Pesa SaaS Platform in 3 easy steps</p>
+                    <p className="text-gray-500">Setup your M-Pesa SaaS Platform in 4 easy steps</p>
                 </div>
 
                 {/* Progress Bar */}
                 <div className="flex justify-between mb-8 max-w-sm mx-auto">
-                    {[1, 2, 3].map(i => (
+                    {[1, 2, 3, 4].map(i => (
                         <div key={i} className={`w-3 h-3 rounded-full ${step >= i ? 'bg-indigo-600' : 'bg-gray-300'}`} />
                     ))}
                 </div>
@@ -179,6 +191,24 @@ export default function InstallPage() {
                             </div>
                             <Input label="SMTP Username" name="smtpUser" value={formData.smtpUser} onChange={handleChange} placeholder="user@gmail.com" />
                             <Input label="SMTP Password" name="smtpPassword" type="password" value={formData.smtpPassword} onChange={handleChange} />
+
+                            <div className="flex justify-between pt-4">
+                                <Button variant="secondary" onClick={prevStep}>Back</Button>
+                                <Button onClick={nextStep}>Next: Admin Account</Button>
+                            </div>
+                        </div>
+                    )}
+
+                    {step === 4 && (
+                        <div className="space-y-6">
+                            <div>
+                                <h2 className="text-xl font-semibold mb-4">4. Super Admin Setup</h2>
+                                <p className="text-sm text-gray-500 mb-4">Create your primary administrator account.</p>
+                            </div>
+
+                            <Input label="Admin Email" name="adminEmail" type="email" value={formData.adminEmail} onChange={handleChange} required />
+                            <Input label="Admin Password" name="adminPassword" type="password" value={formData.adminPassword} onChange={handleChange} required />
+                            <Input label="Confirm Password" name="adminPasswordConfirm" type="password" value={formData.adminPasswordConfirm} onChange={handleChange} required />
 
                             <div className="flex justify-between pt-4">
                                 <Button variant="secondary" onClick={prevStep}>Back</Button>
