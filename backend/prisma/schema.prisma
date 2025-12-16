@@ -3,8 +3,13 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
-  url      = env("DATABASE_URL")
+// SQLite Configuration (Development)
+// provider = "sqlite"
+// url      = "file:./dev.db"
+
+// MySQL Configuration (Production)
+provider = "mysql"
+url      = env("DATABASE_URL")
 }
 
 model User {

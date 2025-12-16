@@ -10,6 +10,8 @@ import withdrawalRoutes from './routes/withdrawal.routes';
 import profileRoutes from './routes/profile.routes';
 import invoiceRoutes from './routes/invoice.routes';
 import setupRoutes from './routes/setup.routes';
+import adminRoutes from './routes/admin.routes';
+
 import walletRoutes from './routes/wallet.routes';
 
 
@@ -30,6 +32,7 @@ app.use('/api/wallet', walletRoutes);
 app.use('/api/profile', profileRoutes);
 app.use('/api/invoices', invoiceRoutes);
 app.use('/api/setup', setupRoutes);
+app.use('/api/admin', adminRoutes);
 
 app.get('/', (req, res) => {
 

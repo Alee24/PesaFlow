@@ -1,27 +1,37 @@
 # PesaFlow - M-Pesa SaaS Platform
 
-This project is a SaaS platform enabling merchants to manage products, process sales via M-Pesa STK Push, and request withdrawals. It features a Next.js Frontend and an Express/Node.js Backend.
+PesaFlow is a modern SaaS platform designed for merchants to manage business operations seamlessly. It enables product management, point-of-sale (POS) processing via M-Pesa STK Push, withdrawal requests, and comprehensive financial reporting. The platform features a robust Admin Dashboard, PDF Invoicing, and Multi-role Access Control.
 
-## Prerequisites
+## 🚀 Features
 
-- **Node.js** (v18 or higher)
-- **npm** (Node Package Manager)
-- **Git**
-- **Databases Supported**: SQLite (default for dev), MySQL, or PostgreSQL.
+-   **Point of Sale (POS)**: Initiate instant M-Pesa payments (STK Push) for customers.
+-   **Dashboard & Analytics**: Real-time insights into sales, revenue, and daily performance.
+-   **Admin Portal**: Specialized dashboard for Super Admins to monitor system health, user activity, and revenues.
+-   **Wallet System**: Merchants have digital wallets to track earnings and request withdrawals.
+-   **PDF Invoicing**: Generate professional, print-ready PDF invoices for transactions.
+-   **Role-Based Access**: Secure separation between Merchants and Admins.
+-   **Automated Setup**: Built-in Installation Wizard for easy deployment.
 
 ---
 
-## 1. Project Setup
+## 🛠 Prerequisites
 
-### Clone/Navigate to the Project
+-   **Node.js** (v18 or higher)
+-   **npm** (Node Package Manager)
+-   **Database**: MySQL (Recommended for Production) or SQLite (Dev only).
+
+---
+
+## 📦 Installation & Setup
+
+### 1. Clone the Repository
 ```bash
-cd "c:/Users/Metto/" 
-# Or wherever you have placed the project files
+git clone <repository_url>
+cd pesaflow
 ```
 
-### Install Dependencies
-
-You need to install dependencies for both the Backend and Frontend.
+### 2. Install Dependencies
+Install packages for both the backend and frontend services.
 
 **Backend:**
 ```bash
@@ -35,113 +45,89 @@ cd ../frontend
 npm install
 ```
 
----
+### 3. Database Configuration
+By default, the system is configured for **MySQL**.
 
-## 2. Configuration
-
-### Backend Environment Variables (`.env`)
-
-Navigate to the `backend` directory and ensure you have a `.env` file. A template is provided below:
-
-**File:** `backend/.env`
-```env
-# --- Database Configuration ---
-# OPTION 1: SQLite (Default - Easiest for Local Dev)
-DATABASE_URL="file:./dev.db"
-
-# OPTION 2: MySQL (For Production/Remote)
-# DATABASE_URL="mysql://USER:PASSWORD@HOST:PORT/DATABASE_NAME"
-
-# --- Server Configuration ---
-PORT=3001
-JWT_SECRET="your_super_secret_jwt_key"
-
-# --- M-Pesa Daraja API Credentials ---
-# Login to Safaricom Developer Portal to get these.
-MPESA_CONSUMER_KEY="your_consumer_key"
-MPESA_CONSUMER_SECRET="your_consumer_secret"
-MPESA_PASSKEY="your_passkey"
-MPESA_SHORTCODE="your_shortcode" # e.g. 174379 for Sandbox
-MPESA_ENV="sandbox" # or "production"
-MPESA_CALLBACK_URL="http://localhost:3001/api/mpesa/callback" 
-# Note: For callbacks to work locally, use Ngrok to expose localhost:3001
-```
+1.  Create a MySQL database (e.g., `pesaflow`).
+2.  The application uses `prisma` to manage the schema. The connection string will be set during the installation wizard or manually in `.env`.
 
 ---
 
-## 3. Database Setup
-
-Initialize the database schema using Prisma.
-
-**For SQLite (If using `file:./dev.db`):**
-```bash
-cd backend
-npx prisma db push
-```
-
-**For MySQL (If using remote DB):**
-1. Update `DATABASE_URL` in `.env`.
-2. Update `backend/prisma/schema.prisma` provider to `"mysql"`.
-3. Run:
-```bash
-npx prisma db push
-```
-
----
-
-## 4. Running the Application
+## ⚡ Running the Application
 
 You need to run the Backend and Frontend in separate terminals.
 
-### Terminal 1: Backend
+**Terminal 1: Backend**
 ```bash
 cd backend
 npm run dev
 ```
 *Server running on http://localhost:3001*
 
-### Terminal 2: Frontend
+**Terminal 2: Frontend**
 ```bash
 cd frontend
 npm run dev
 ```
-*Frontend running on http://localhost:3000*
+*Frontend running on http://localhost:2424*
 
 ---
 
-## 5. Usage
+##  wizard Configuration (Recommended)
 
-1.  **Open Browser**: Go to [http://localhost:3000](http://localhost:3000).
-2.  **Login/Register**:
-    *   You will be redirected to the Login page.
-    *   Click "Register" to create a new Merchant account.
-3.  **Dashboard**: Once logged in, you can access the Dashboard.
-4.  **POS System**:
-    *   Go to **POS System**.
-    *   Add products to cart (create products first in "Products" page).
-    *   Enter Customer Phone (e.g., `2547...`) and Click "Charge".
-    *   This triggers the M-Pesa STK Push.
+1.  Open your browser and navigate to **[http://localhost:2424/install](http://localhost:2424/install)**.
+2.  Follow the **4-Step Installation Wizard**:
+    *   **Step 1**: Database Connection (MySQL recommended).
+    *   **Step 2**: M-Pesa API Credentials (Consumer Key, Secret, Passkey).
+    *   **Step 3**: Server & Email Settings.
+    *   **Step 4**: **Super Admin Account Setup** (Create your primary admin user).
+3.  Upon completion, the system will generate the `.env` file and initialize the database.
+4.  **Restart the Backend** server to apply changes.
 
 ---
 
-## 6. M-Pesa Testing Tools
+## 🧪 M-Pesa Integration Testing
 
-We have included scripts to verify your M-Pesa credentials before running the full app.
+We provide built-in tools to verify your credentials before going live.
 
-**Run Test Script:**
+**Via Dashboard:**
+Go to **Settings > M-Pesa Integration** and click "Test Connection".
+
+**Via CLI:**
 ```bash
 cd backend
-npx ts-node src/scripts/test-mpesa.ts
+npx ts-node src/scripts/verify-mpesa.ts
 ```
-*This will attempt to authenticate and send a test STK Push request using settings in your `.env`.*
+*This script tests connectivity to Safaricom's API using your `.env` credentials.*
+
+### ⚠️ Important for Live Production
+For M-Pesa to confirm payments, your backend must be accessible from the internet.
+1.  **Callback URL**: Set `MPESA_CALLBACK_URL` in `.env` to your public domain (e.g., `https://your-domain.com/api/mpesa/callback`).
+2.  **Localhost**: For local testing, use **Ngrok** to check live callbacks.
 
 ---
 
-## Troubleshooting
+## 🔐 Admin Portal
 
--   **Database Connection Failed**:
-    -   If using MySQL, ensure the remote server allows connections from your IP (check Firewall/UFW).
-    -   Ensure MySQL `bind-address` is `0.0.0.0`.
--   **M-Pesa Errors**:
-    -   `Invalid Access Token`: Check Consumer Key/Secret. Ensure "Lipa na M-Pesa" is enabled in your Daraja App.
-    -   `Merchant does not exist`: Your Shortcode is incorrect or not active in Sandbox. Use generic `174379` for testing.
+The Admin Portal is restricted to users with the `ADMIN` role.
+-   **Access**: Log in with the account created during Step 4 of installation.
+-   **Features**: View system-wide stats, manage merchants (future), and oversee transaction volumes.
+-   **Security**: Regular merchants cannot access this route; they are redirected to their User Dashboard.
+
+---
+
+## 📄 Invoicing
+
+-   **Automatic Generation**: Every completed transaction generates an invoice.
+-   **PDF Download**: Users can download high-quality PDF invoices directly from the Transaction Details page.
+-   **Customization**: Invoices pull business details (Logo, VAT, Contact) from the "Settings" page.
+
+---
+
+## 🆘 Troubleshooting
+
+-   **Prisma/Database Errors**:
+    -   Ensure your MySQL server is running.
+    -   If switching databases (SQLite <-> MySQL), delete the `node_modules` folder inside backend and re-run `npm install` and `npx prisma generate`.
+-   **PDF Generating Issues**:
+    -   Ensure `frontend` build utilizes the dynamic import for `@react-pdf/renderer` as implemented.

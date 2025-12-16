@@ -52,9 +52,14 @@ export default function AdminPage() {
     return (
         <DashboardLayout>
             <div className="max-w-7xl mx-auto space-y-8 pb-12">
-                <header>
-                    <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Admin Portal</h1>
-                    <p className="text-gray-500 text-sm">System Overview & Monitoring</p>
+                <header className="flex justify-between items-end">
+                    <div>
+                        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Admin Portal</h1>
+                        <p className="text-gray-500 text-sm">System Overview & Monitoring</p>
+                    </div>
+                    <Button onClick={() => router.push('/admin/users')} className="flex items-center gap-2">
+                        <Users className="w-4 h-4" /> Manage Users
+                    </Button>
                 </header>
 
                 {/* 1. Colorful Stat Cards */}
