@@ -19,7 +19,7 @@ export const stkPush = async (req: AuthRequest, res: Response): Promise<void> =>
             return;
         }
 
-        const { phoneNumber, amount } = req.body;
+        const { phoneNumber, amount, items } = req.body;
 
         if (!phoneNumber || !amount) {
             res.status(400).json({ error: 'Phone number and amount required' });
@@ -27,7 +27,7 @@ export const stkPush = async (req: AuthRequest, res: Response): Promise<void> =>
         }
 
         console.log(`Initiating STK Push for ${phoneNumber} amount ${amount}`);
-        const response = await initiateSTKPush(phoneNumber, Number(amount), 'POS Sale', req.user.userId);
+        const response = await initiateSTKPush(phoneNumber, Number(amount), 'POS Sale', req.user.userId, items);
         console.log('STK Initiation Successful:', response);
         res.json(response);
 

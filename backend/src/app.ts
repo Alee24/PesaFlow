@@ -7,6 +7,8 @@ import productRoutes from './routes/product.routes';
 import mpesaRoutes from './routes/mpesa.routes';
 import transactionRoutes from './routes/transaction.routes';
 import withdrawalRoutes from './routes/withdrawal.routes';
+import profileRoutes from './routes/profile.routes';
+import invoiceRoutes from './routes/invoice.routes';
 import setupRoutes from './routes/setup.routes';
 
 
@@ -23,6 +25,8 @@ app.use('/api/products', productRoutes);
 app.use('/api/mpesa', mpesaRoutes);
 app.use('/api/transactions', transactionRoutes);
 app.use('/api/withdrawals', withdrawalRoutes);
+app.use('/api/profile', profileRoutes);
+app.use('/api/invoices', invoiceRoutes);
 app.use('/api/setup', setupRoutes);
 
 app.get('/', (req, res) => {

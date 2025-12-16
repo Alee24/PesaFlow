@@ -3,7 +3,7 @@ generator client {
 }
 
 datasource db {
-  provider = "mysql"
+  provider = "sqlite"
   url      = env("DATABASE_URL")
 }
 
@@ -22,8 +22,29 @@ model User {
   sales         Sale[]
   initiatedTx   Transaction[] @relation("Initiator")
   approvedWithdrawals Withdrawal[] @relation("Approver")
+  
+  businessProfile BusinessProfile?
 
   @@map("users")
+}
+
+model BusinessProfile {
+  id            String   @id @default(uuid())
+  userId        String   @unique @map("user_id")
+  user          User     @relation(fields: [userId], references: [id])
+  companyName   String   @map("company_name")
+  logoUrl       String?  @map("logo_url")
+  contactPhone  String?  @map("contact_phone")
+  email         String?
+  location      String?
+  website       String?
+  vatNumber     String?  @map("vat_number")
+  bankDetails   String?  @map("bank_details")
+  mpesaDetails  String?  @map("mpesa_details")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  @@map("business_profiles")
 }
 
 model Wallet {

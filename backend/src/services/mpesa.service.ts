@@ -32,7 +32,8 @@ export const initiateSTKPush = async (
     phoneNumber: string,
     amount: number,
     reference: string,
-    userId: string
+    userId: string,
+    items: Array<{ name: string; price: number; quantity: number }> = []
 ) => {
     const token = await getAccessToken();
     const date = new Date();
@@ -79,18 +80,64 @@ export const initiateSTKPush = async (
             },
         });
 
-        // Log intent to DB
-        await prisma.transaction.create({
-            data: {
-                type: 'DEPOSIT_STK',
-                amount: amount,
-                reference: reference,
-                merchantRequestId: response.data.MerchantRequestID,
-                checkoutRequestId: response.data.CheckoutRequestID,
-                initiatorUserId: userId,
-                recipientWalletId: (await prisma.wallet.findFirstOrThrow({ where: { userId } })).id,
-                status: 'PENDING',
-                metadata: JSON.stringify(response.data)
+        // Use interactive transaction to ensure data integrity
+        await prisma.$transaction(async (tx) => {
+            const wallet = await tx.wallet.findFirstOrThrow({ where: { userId } });
+
+            const transaction = await tx.transaction.create({
+                data: {
+                    type: 'DEPOSIT_STK',
+                    amount: amount,
+                    reference: reference, // This will be updated with actual MPesa Receipt in callback
+                    merchantRequestId: response.data.MerchantRequestID,
+                    checkoutRequestId: response.data.CheckoutRequestID,
+                    initiatorUserId: userId,
+                    recipientWalletId: wallet.id,
+                    status: 'PENDING',
+                    metadata: JSON.stringify(response.data)
+                }
+            });
+
+            // If we have items, create a Sale record
+            if (items.length > 0) {
+                // Ensure product exists or create a placeholder if it's dynamic
+                // For simplicity in this POS demo, we might need a "Miscellaneous" product
+                // or we assume items match existing products.
+                // To avoid complexity, we'll try to link if we have IDs, but here we just have name/price.
+                // We'll create a Sale and SaleItems with a fallback product or find one.
+
+                // NOTE: In a real app, items should have productIds.
+                // We'll Create a "POS Item" product if it doesn't exist for this purpose, or map to a generic one.
+                // Hack: Find ANY product to link constraints, or create one.
+
+                let defaultProduct = await tx.product.findFirst({ where: { merchantId: userId } });
+                if (!defaultProduct) {
+                    defaultProduct = await tx.product.create({
+                        data: {
+                            merchantId: userId,
+                            name: 'General POS Item',
+                            price: 0,
+                            stockQuantity: 9999
+                        }
+                    });
+                }
+
+                await tx.sale.create({
+                    data: {
+                        merchantId: userId,
+                        totalAmount: amount,
+                        transactionId: transaction.id,
+                        paymentMethod: 'MPESA_STK',
+                        items: {
+                            create: items.map(item => ({
+                                productId: defaultProduct!.id, // Linking to generic for now as we didn't pass IDs
+                                quantity: item.quantity,
+                                unitPrice: item.price,
+                                subtotal: item.price * item.quantity
+                            }))
+                        }
+                    }
+                });
             }
         });
 

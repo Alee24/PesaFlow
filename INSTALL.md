@@ -1,5 +1,5 @@
 
-# M-Pesa SaaS Platform - Installation Guide
+# PesaFlow - Installation Guide
 
 Welcome! This guide will help you install and configure the platform on your server.
 

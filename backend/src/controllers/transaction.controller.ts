@@ -16,3 +16,33 @@ export const getTransactions = async (req: Request, res: Response) => {
         res.status(500).json({ error: 'Failed to fetch transactions' });
     }
 };
+
+export const getTransactionById = async (req: Request, res: Response) => {
+    try {
+        const { id } = req.params;
+        const transaction = await prisma.transaction.findUnique({
+            where: { id },
+            include: {
+                initiator: {
+                    include: { businessProfile: true }
+                },
+                sale: {
+                    include: {
+                        items: {
+                            include: { product: true }
+                        }
+                    }
+                }
+            }
+        });
+
+        if (!transaction) {
+            return res.status(404).json({ error: 'Transaction not found' });
+        }
+
+        res.json(transaction);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Failed to fetch transaction details' });
+    }
+};

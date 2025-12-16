@@ -1,12 +1,10 @@
-
 import { Router } from 'express';
-import { getTransactions, getTransactionById } from '../controllers/transaction.controller';
+import { createInvoice } from '../controllers/invoice.controller';
 import { authenticateToken } from '../middlewares/auth.middleware';
 
 const router = Router();
 
 router.use(authenticateToken);
-router.get('/', getTransactions);
-router.get('/:id', getTransactionById);
+router.post('/', createInvoice);
 
 export default router;

@@ -3,7 +3,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, ShoppingCart, Package, CreditCard, ArrowLeftRight, Settings, LogOut, User, Store } from 'lucide-react';
+import { LayoutDashboard, ShoppingCart, Package, CreditCard, ArrowLeftRight, Settings, LogOut, User, Store, FileText } from 'lucide-react';
 import { cn } from '@/lib/utils'; // Assuming you have a utils file, if not I'll inline it or generic classnames
 // Since I don't see lib/utils in previous file lists, I'll stick to template literals if needed or assuming standard setup.
 // I'll assume standard class strings for now.
@@ -11,10 +11,12 @@ import { cn } from '@/lib/utils'; // Assuming you have a utils file, if not I'll
 const menuItems = [
     { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
     { name: 'POS System', href: '/pos', icon: Store },
+    { name: 'Invoices', href: '/invoices', icon: FileText },
     { name: 'Products', href: '/products', icon: Package },
     { name: 'Transactions', href: '/transactions', icon: ArrowLeftRight },
     { name: 'Withdrawals', href: '/withdrawals', icon: CreditCard },
-    { name: 'Admin', href: '/admin', icon: Settings },
+    { name: 'Settings', href: '/settings', icon: Settings },
+    { name: 'Admin', href: '/admin', icon: User },
 ];
 
 export function Sidebar() {
@@ -25,7 +27,7 @@ export function Sidebar() {
             <div className="flex h-16 items-center border-b border-gray-200 dark:border-gray-800 px-6">
                 <div className="flex items-center gap-2 font-bold text-xl text-indigo-600 dark:text-indigo-400">
                     <Store className="w-6 h-6" />
-                    <span>PayFlow</span>
+                    <span>PesaFlow</span>
                 </div>
             </div>
 

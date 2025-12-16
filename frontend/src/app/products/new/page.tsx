@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
+import DashboardLayout from '@/components/layout/DashboardLayout';
 import api from '@/lib/api';
 
 export default function NewProductPage() {
@@ -33,13 +34,13 @@ export default function NewProductPage() {
     };
 
     return (
-        <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-8">
+        <DashboardLayout>
             <div className="max-w-2xl mx-auto space-y-8">
                 <header>
-                    <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Add New Product</h1>
+                    <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Add New Product</h1>
                 </header>
 
-                <Card>
+                <Card className="shadow-lg border border-gray-100 dark:border-gray-700">
                     <form onSubmit={handleSubmit} className="space-y-6">
                         <Input
                             label="Product Name"
@@ -71,12 +72,12 @@ export default function NewProductPage() {
                         />
 
                         <div className="flex gap-4 pt-4">
-                            <Button type="submit" isLoading={loading}>Create Product</Button>
-                            <Button type="button" variant="ghost" onClick={() => router.back()}>Cancel</Button>
+                            <Button type="submit" isLoading={loading} className="w-full">Create Product</Button>
+                            <Button type="button" variant="ghost" className="w-full" onClick={() => router.back()}>Cancel</Button>
                         </div>
                     </form>
                 </Card>
             </div>
-        </div>
+        </DashboardLayout>
     );
 }

@@ -93,7 +93,7 @@ export default function InstallPage() {
         <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
             <div className="max-w-2xl w-full">
                 <div className="mb-8 text-center">
-                    <h1 className="text-4xl font-bold text-gray-900 mb-2">Platform Installer</h1>
+                    <h1 className="text-4xl font-bold text-gray-900 mb-2">PesaFlow Installer</h1>
                     <p className="text-gray-500">Setup your M-Pesa SaaS Platform in 3 easy steps</p>
                 </div>
 

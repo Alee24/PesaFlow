@@ -1,0 +1,179 @@
+'use client';
+
+import React, { useState, useEffect } from 'react';
+import DashboardLayout from '@/components/layout/DashboardLayout';
+import { Card } from '@/components/ui/Card';
+import { Input } from '@/components/ui/Input';
+import { Button } from '@/components/ui/Button';
+import api from '@/lib/api';
+
+export default function SettingsPage() {
+    const [formData, setFormData] = useState({
+        companyName: '',
+        logoUrl: '',
+        contactPhone: '',
+        email: '',
+        location: '',
+        website: '',
+        vatNumber: '',
+        bankDetails: '',
+        mpesaDetails: ''
+    });
+    const [loading, setLoading] = useState(true);
+    const [saving, setSaving] = useState(false);
+
+    useEffect(() => {
+        fetchProfile();
+    }, []);
+
+    const fetchProfile = async () => {
+        try {
+            const res = await api.get('/profile');
+            if (res.data) {
+                // Filter out nulls/undefined from response to avoid controlled/uncontrolled inputs warning
+                const sanitizedData = Object.fromEntries(
+                    Object.entries(res.data).map(([key, value]) => [key, value || ''])
+                );
+
+                setFormData(prev => ({
+                    ...prev,
+                    ...sanitizedData
+                }));
+            }
+        } catch (error) {
+            console.error("Failed to load profile", error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+        const { name, value } = e.target;
+        setFormData(prev => ({ ...prev, [name]: value }));
+    };
+
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setSaving(true);
+        try {
+            await api.put('/profile', formData);
+            alert('Settings saved successfully!');
+        } catch (error: any) {
+            console.error(error);
+            alert(error.response?.data?.error || "Failed to save settings");
+        } finally {
+            setSaving(false);
+        }
+    };
+
+    if (loading) {
+        return (
+            <DashboardLayout>
+                <div className="flex items-center justify-center h-full">
+                    <p className="text-gray-500">Loading settings...</p>
+                </div>
+            </DashboardLayout>
+        );
+    }
+
+    return (
+        <DashboardLayout>
+            <div className="max-w-4xl mx-auto py-6">
+                <header className="mb-6">
+                    <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Business Settings</h1>
+                    <p className="text-gray-500">Manage your company details for invoicing.</p>
+                </header>
+
+                <Card>
+                    <form onSubmit={handleSubmit} className="space-y-6">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <Input
+                                label="Company Name"
+                                name="companyName"
+                                value={formData.companyName}
+                                onChange={handleChange}
+                                required
+                                placeholder="My Awesome Business"
+                            />
+                            <Input
+                                label="Contact Phone"
+                                name="contactPhone"
+                                type="tel"
+                                value={formData.contactPhone}
+                                onChange={handleChange}
+                                placeholder="+254 7..."
+                            />
+                            <Input
+                                label="Email Address"
+                                name="email"
+                                type="email"
+                                value={formData.email}
+                                onChange={handleChange}
+                                placeholder="billing@example.com"
+                            />
+                            <Input
+                                label="Website"
+                                name="website"
+                                type="url"
+                                value={formData.website}
+                                onChange={handleChange}
+                                placeholder="https://example.com"
+                            />
+                            <Input
+                                label="Location / Address"
+                                name="location"
+                                value={formData.location}
+                                onChange={handleChange}
+                                placeholder="Nairobi, Kenya"
+                            />
+                            <Input
+                                label="Logo URL"
+                                name="logoUrl"
+                                value={formData.logoUrl}
+                                onChange={handleChange}
+                                placeholder="https://example.com/logo.png"
+                            />
+                            <Input
+                                label="VAT Number"
+                                name="vatNumber"
+                                value={formData.vatNumber}
+                                onChange={handleChange}
+                                placeholder="P05..."
+                            />
+                        </div>
+
+                        <div className="space-y-4">
+                            <div className="flex flex-col space-y-2">
+                                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Bank Details</label>
+                                <textarea
+                                    name="bankDetails"
+                                    value={formData.bankDetails}
+                                    onChange={handleChange}
+                                    className="px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 dark:bg-gray-800 dark:border-gray-700 min-h-[100px] w-full"
+                                    placeholder="Bank Name: KCB&#10;Account No: 1234567890&#10;Branch: Nairobi"
+                                />
+                            </div>
+
+                            <div className="flex flex-col space-y-2">
+                                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">M-Pesa Details</label>
+                                <textarea
+                                    name="mpesaDetails"
+                                    value={formData.mpesaDetails}
+                                    onChange={handleChange}
+                                    className="px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 dark:bg-gray-800 dark:border-gray-700 min-h-[100px] w-full"
+                                    placeholder="Paybill: 123456&#10;Account No: Business Name"
+                                />
+                            </div>
+                        </div>
+
+                        <div className="pt-4 border-t dark:border-gray-700">
+                            <Button type="submit" isLoading={saving} className="w-full md:w-auto md:px-8">
+                                Save Changes
+                            </Button>
+                        </div>
+                    </form>
+                </Card>
+            </div>
+        </DashboardLayout>
+    );
+}

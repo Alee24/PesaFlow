@@ -1,4 +1,4 @@
-# M-Pesa SaaS Platform - Installation & Setup Guide
+# PesaFlow - M-Pesa SaaS Platform
 
 This project is a SaaS platform enabling merchants to manage products, process sales via M-Pesa STK Push, and request withdrawals. It features a Next.js Frontend and an Express/Node.js Backend.
 

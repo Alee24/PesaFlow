@@ -1,12 +1,11 @@
-
 import { Router } from 'express';
-import { getTransactions, getTransactionById } from '../controllers/transaction.controller';
+import { getProfile, updateProfile } from '../controllers/profile.controller';
 import { authenticateToken } from '../middlewares/auth.middleware';
 
 const router = Router();
 
 router.use(authenticateToken);
-router.get('/', getTransactions);
-router.get('/:id', getTransactionById);
+router.get('/', getProfile);
+router.put('/', updateProfile);
 
 export default router;

@@ -5,6 +5,7 @@ import React, { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
+import DashboardLayout from '@/components/layout/DashboardLayout';
 import api from '@/lib/api'; // Assuming an API utility is available at this path
 
 export default function WithdrawalsPage() {
@@ -50,7 +51,7 @@ export default function WithdrawalsPage() {
     };
 
     return (
-        <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-8">
+        <DashboardLayout>
             <div className="max-w-7xl mx-auto space-y-8">
                 <header>
                     <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Withdrawals</h1>
@@ -104,8 +105,8 @@ export default function WithdrawalsPage() {
                                                 <td className="p-4">KES {w.amount}</td>
                                                 <td className="p-4">
                                                     <span className={`px-2 py-1 rounded-full text-xs font-medium ${w.status === 'COMPLETED' ? 'bg-green-100 text-green-800' :
-                                                            w.status === 'REJECTED' ? 'bg-red-100 text-red-800' :
-                                                                'bg-yellow-100 text-yellow-800'
+                                                        w.status === 'REJECTED' ? 'bg-red-100 text-red-800' :
+                                                            'bg-yellow-100 text-yellow-800'
                                                         }`}>
                                                         {w.status}
                                                     </span>
@@ -119,6 +120,6 @@ export default function WithdrawalsPage() {
                     </Card>
                 </div>
             </div>
-        </div>
+        </DashboardLayout>
     );
 }

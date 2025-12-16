@@ -39,7 +39,7 @@ export default function RegisterPage() {
             localStorage.setItem('token', res.data.token);
             localStorage.setItem('user', JSON.stringify(res.data.user));
             router.push('/dashboard');
-        } catch (err: any) {
+        } catch (err: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
             setError(err.response?.data?.error || 'Failed to register');
         } finally {
             setLoading(false);
@@ -51,7 +51,7 @@ export default function RegisterPage() {
             <div className="w-full max-w-md">
                 <div className="text-center mb-8">
                     <h1 className="text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 to-purple-600">
-                        PayFlow
+                        PesaFlow
                     </h1>
                     <p className="text-gray-500 mt-2">Create your merchant account</p>
                 </div>
