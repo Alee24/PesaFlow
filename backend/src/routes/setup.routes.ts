@@ -61,14 +61,19 @@ SMTP_SECURE="${smtpSecure || 'false'}"
         const backendDir = path.join(__dirname, '../../');
 
         // ... existing code ...
+        // ... existing code ...
         console.log('Running database setup...');
 
         exec('npx prisma db push', { cwd: backendDir, env: { ...process.env, DATABASE_URL: databaseUrl } }, async (error, stdout, stderr) => {
             if (error) {
                 console.error(`DB Setup Error: ${error.message}`);
-                return res.status(500).json({
-                    error: 'Saved configuration but failed to initialize database. Please check credentials.',
-                    details: stderr || error.message
+                // Instead of failing, we return a warning with instructions
+                return res.json({
+                    success: true, // We consider Saving Config as "Success"
+                    warning: true,
+                    message: 'Configuration saved! However, we could not automatically create the database tables (likely due to server permissions).',
+                    details: 'Please import the "backend/database_schema.sql" file into your MySQL database manually. You can then register your Admin account normally.',
+                    technical_error: stderr || error.message
                 });
             }
 
@@ -86,7 +91,7 @@ SMTP_SECURE="${smtpSecure || 'false'}"
                 });
 
                 const { adminEmail, adminPassword } = req.body;
-
+                // ... rest of code same as before ... 
                 if (adminEmail && adminPassword) {
                     const bcrypt = require('bcryptjs');
                     const hashedPassword = await bcrypt.hash(adminPassword, 10);
@@ -99,7 +104,7 @@ SMTP_SECURE="${smtpSecure || 'false'}"
                             passwordHash: hashedPassword,
                             role: 'ADMIN',
                             name: 'Super Admin',
-                            phoneNumber: '0000000000' // Placeholder
+                            phoneNumber: '0000000000'
                         }
                     });
 
@@ -113,9 +118,10 @@ SMTP_SECURE="${smtpSecure || 'false'}"
 
             } catch (err: any) {
                 console.error("Admin Creation Error:", err);
-                // Return success mostly because DB is set up, but warn about admin
+                // Return success mostly because DB is set up
                 res.json({
                     success: true,
+                    warning: true,
                     message: 'Database initialized but failed to create admin user manually. You may need to register normally.',
                     details: err.message
                 });
