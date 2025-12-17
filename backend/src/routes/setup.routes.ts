@@ -4,28 +4,26 @@ import fs from 'fs';
 import path from 'path';
 import { exec } from 'child_process';
 import { PrismaClient } from '@prisma/client';
+import bcrypt from 'bcryptjs';
 
 const router = Router();
 
 router.post('/', async (req: Request, res: Response) => {
+    console.log("Received Setup Request:", { ...req.body, dbPassword: '***', adminPassword: '***' });
+
     try {
         const {
             dbHost, dbPort, dbUser, dbPassword, dbName,
             mpesaKey, mpesaSecret, mpesaPasskey, mpesaShortcode, mpesaEnv,
-            smtpHost, smtpPort, smtpUser, smtpPassword, smtpSecure
+            smtpHost, smtpPort, smtpUser, smtpPassword, smtpSecure,
+            adminEmail, adminPassword
         } = req.body;
 
         // 1. Construct DATABASE_URL
-        // Special handling for special characters in password
         const encodedPassword = encodeURIComponent(dbPassword);
         const databaseUrl = `mysql://${dbUser}:${encodedPassword}@${dbHost}:${dbPort}/${dbName}`;
 
-        // 2. Test Database Connection
-        // We'll try to connect using a temporary Prisma instance or just assume it works if we can't easily spin one up dynamically.
-        // Better: We can try a raw MySQL connection test, but we don't have 'mysql2' driver installed explicitly, prisma uses it internally.
-        // For now, trust the user input or allow the 'prisma db push' step to fail if creds are wrong.
-
-        // 3. Prepare .env content
+        // 2. Prepare .env content
         const envContent = `
 # Database Configuration
 DATABASE_URL="${databaseUrl}"
@@ -50,50 +48,55 @@ SMTP_PASS="${smtpPassword}"
 SMTP_SECURE="${smtpSecure || 'false'}"
 `;
 
-        const envPath = path.join(__dirname, '../../.env');
-
-        // 4. Write .env file
-        fs.writeFileSync(envPath, envContent.trim());
-
-        // 5. Run Database Migration (Prisma Push)
-        // This initializes the DB with tables
-        // We need to run this command in the backend directory
         const backendDir = path.join(__dirname, '../../');
+        const envPath = path.join(backendDir, '.env');
 
-        // ... existing code ...
-        // ... existing code ...
-        console.log('Running database setup...');
+        // 3. Write .env file
+        try {
+            console.log("Writing .env to:", envPath);
+            fs.writeFileSync(envPath, envContent.trim());
+        } catch (writeErr: any) {
+            console.error("Failed to write .env:", writeErr);
+            return res.status(500).json({ error: 'Permission denied: Cannot write .env file.', details: writeErr.message });
+        }
 
-        exec('npx prisma db push', { cwd: backendDir, env: { ...process.env, DATABASE_URL: databaseUrl } }, async (error, stdout, stderr) => {
+        // 4. Run Database Migration (Prisma Push)
+        console.log('Running database setup (npx prisma db push)...');
+        // We use --accept-data-loss to ensure it doesn't hang on prompts
+        // We set the timeout to 60s
+        const command = process.platform === 'win32' ? 'npx.cmd prisma db push --accept-data-loss' : 'npx prisma db push --accept-data-loss';
+
+        exec(command, {
+            cwd: backendDir,
+            env: { ...process.env, DATABASE_URL: databaseUrl },
+            timeout: 60000
+        }, async (error, stdout, stderr) => {
+
             if (error) {
-                console.error(`DB Setup Error: ${error.message}`);
-                // Instead of failing, we return a warning with instructions
+                console.error(`DB Setup Failed (Exec Error): ${error.message}`);
+                console.error(`Stderr: ${stderr}`);
+
+                // Return Warning Response instead of Error
                 return res.json({
-                    success: true, // We consider Saving Config as "Success"
+                    success: true, // Frontend treats this as success
                     warning: true,
-                    message: 'Configuration saved! However, we could not automatically create the database tables (likely due to server permissions).',
-                    details: 'Please import the "backend/database_schema.sql" file into your MySQL database manually. You can then register your Admin account normally.',
+                    message: 'Configuration saved! However, automatic database setup failed.',
+                    details: 'Please import backend/database_schema.sql manually into your database.',
                     technical_error: stderr || error.message
                 });
             }
 
             console.log(`DB Setup Output: ${stdout}`);
 
-            // 6. Create Super Admin User
+            // 5. Create Super Admin User
             try {
-                // Initialize Prisma with new connection string
+                // Initialize Prisma with new connection string specifically for this operation
                 const prisma = new PrismaClient({
-                    datasources: {
-                        db: {
-                            url: databaseUrl
-                        }
-                    }
+                    datasources: { db: { url: databaseUrl } }
                 });
 
-                const { adminEmail, adminPassword } = req.body;
-                // ... rest of code same as before ... 
                 if (adminEmail && adminPassword) {
-                    const bcrypt = require('bcryptjs');
+                    console.log("Creating Admin User:", adminEmail);
                     const hashedPassword = await bcrypt.hash(adminPassword, 10);
 
                     await prisma.user.upsert({
@@ -104,33 +107,35 @@ SMTP_SECURE="${smtpSecure || 'false'}"
                             passwordHash: hashedPassword,
                             role: 'ADMIN',
                             name: 'Super Admin',
-                            phoneNumber: '0000000000'
+                            phoneNumber: '0000000000',
+                            wallet: { create: { balance: 0 } },
+                            businessProfile: { create: { companyName: 'System Admin' } }
                         }
                     });
 
                     await prisma.$disconnect();
+                    console.log("Admin User Created Successfully");
                 }
 
-                res.json({
+                return res.json({
                     success: true,
-                    message: 'Configuration saved, database initialized, and admin account created! Please restart the server.'
+                    message: 'Installation completed successfully! Please restart the backend server.'
                 });
 
             } catch (err: any) {
                 console.error("Admin Creation Error:", err);
-                // Return success mostly because DB is set up
-                res.json({
+                return res.json({
                     success: true,
                     warning: true,
-                    message: 'Database initialized but failed to create admin user manually. You may need to register normally.',
+                    message: 'Database initialized, but failed to create Admin user.',
                     details: err.message
                 });
             }
         });
 
     } catch (error: any) {
-        console.error('Setup failed:', error);
-        res.status(500).json({ error: 'Failed to save configuration' });
+        console.error('Setup Route Unexpected Error:', error);
+        res.status(500).json({ error: 'Internal Server Error during setup', details: error.message });
     }
 });
 
