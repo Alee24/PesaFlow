@@ -2,11 +2,12 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
-import { LayoutDashboard, ShoppingCart, Package, CreditCard, ArrowLeftRight, Settings, LogOut, User, Store, FileText, Bell } from 'lucide-react';
-import { cn } from '@/lib/utils'; // Assuming you have a utils file, if not I'll inline it or generic classnames
-// Since I don't see lib/utils in previous file lists, I'll stick to template literals if needed or assuming standard setup.
-// I'll assume standard class strings for now.
+import { usePathname, useRouter } from 'next/navigation';
+import { LayoutDashboard, ShoppingCart, Package, CreditCard, ArrowLeftRight, Settings, LogOut, User, Store, FileText, Bell, X, CheckCircle, AlertCircle, Info } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import { useState, useEffect, useRef } from 'react';
+import { formatDistanceToNow } from 'date-fns';
+import api from '@/lib/api';
 
 const menuItems = [
     { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
@@ -14,22 +15,19 @@ const menuItems = [
     { name: 'Invoices', href: '/invoices', icon: FileText },
     { name: 'Products', href: '/products', icon: Package },
     { name: 'Transactions', href: '/transactions', icon: ArrowLeftRight },
-    { name: 'Withdrawals', href: '/withdrawals', icon: CreditCard },
+    { name: 'Withdrawals', href: '/withdrawals', icon: CreditCard, role: 'MERCHANT' },
     { name: 'Settings', href: '/settings', icon: Settings },
-    { name: 'Admin', href: '/admin', icon: User },
+    { name: 'Users', href: '/admin/users', icon: User, role: 'ADMIN' },
+    { name: 'Withdrawal Approvals', href: '/admin/withdrawals', icon: CheckCircle, role: 'ADMIN' },
 ];
 
-
-import { useState } from 'react';
-import { X, CheckCircle, AlertCircle, Info } from 'lucide-react';
 
 export function Sidebar({ user }: { user?: any }) {
     const pathname = usePathname();
 
     const filteredMenuItems = menuItems.filter(item => {
-        if (item.name === 'Admin') {
-            return user?.role === 'ADMIN';
-        }
+        if (item.role === 'ADMIN') return user?.role === 'ADMIN';
+        if (item.role === 'MERCHANT') return user?.role === 'MERCHANT';
         return true;
     });
 
@@ -79,14 +77,76 @@ export function Sidebar({ user }: { user?: any }) {
     );
 }
 
+
 export function Header({ user }: { user?: any }) {
     const [showNotifications, setShowNotifications] = useState(false);
+    const [notifications, setNotifications] = useState<any[]>([]);
+    const [showUserMenu, setShowUserMenu] = useState(false);
+    const pathname = usePathname();
+    const router = useRouter();
+    const prevCountRef = useRef(0);
 
-    // Mock notifications for popup
-    const notifications = [
-        { id: 1, title: 'Welcome', message: 'Account created successfully.', type: 'info', time: 'Just now' },
-        { id: 2, title: 'Update', message: 'Invoicing system updated.', type: 'success', time: '2h ago' }
-    ];
+    const playBeep = () => {
+        try {
+            const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
+            if (!AudioContextClass) return;
+            const audioCtx = new AudioContextClass();
+            const oscillator = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+            oscillator.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+            oscillator.type = 'sine';
+            oscillator.frequency.setValueAtTime(660, audioCtx.currentTime);
+            gainNode.gain.setValueAtTime(0, audioCtx.currentTime);
+            gainNode.gain.linearRampToValueAtTime(0.05, audioCtx.currentTime + 0.01);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.15);
+            oscillator.start(audioCtx.currentTime);
+            oscillator.stop(audioCtx.currentTime + 0.15);
+        } catch (e) { }
+    };
+
+    const fetchNotifications = async () => {
+        try {
+            const res = await api.get('/notifications');
+            const newNotifs = res.data;
+            const newUnread = newNotifs.filter((n: any) => !n.read).length;
+
+            if (newUnread > prevCountRef.current) {
+                playBeep();
+            }
+            prevCountRef.current = newUnread;
+            setNotifications(newNotifs);
+        } catch (error) {
+            console.error("Failed to fetch notifications");
+        }
+    };
+
+    useEffect(() => {
+        if (user) {
+            fetchNotifications();
+            const interval = setInterval(fetchNotifications, 30000); // Poll every 30s
+            return () => clearInterval(interval);
+        }
+    }, [user]);
+
+    const unreadCount = notifications.filter(n => !n.read).length;
+
+    const handleOpenNotifications = async () => {
+        setShowNotifications(true);
+        if (unreadCount > 0) {
+            try {
+                await api.post('/notifications/read');
+                // Optimistically mark all as read
+                setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+            } catch (e) { console.error(e); }
+        }
+    };
+
+    const handleLogout = () => {
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        window.location.href = '/auth/login';
+    };
 
     const getIcon = (type: string) => {
         switch (type) {
@@ -96,32 +156,72 @@ export function Header({ user }: { user?: any }) {
         }
     };
 
+    // Breadcrumbs
+    const pathSegments = pathname.split('/').filter(Boolean);
+
     return (
         <>
-            <header className="sticky top-0 z-30 flex h-16 w-full items-center justify-between border-b border-gray-200 bg-white/80 backdrop-blur-md dark:bg-gray-900/80 dark:border-gray-800 px-6 shadow-sm transition-all duration-300">
+            <header className="sticky top-0 z-30 flex h-16 w-full items-center justify-between border-b border-gray-200 bg-white dark:bg-gray-900/95 backdrop-blur-sm px-6 shadow-sm transition-all duration-300">
                 <div className="flex items-center gap-4">
-                    <h2 className="text-lg font-semibold text-gray-800 dark:text-white transition-opacity hover:opacity-80">Overview</h2>
+                    <nav className="flex items-center text-sm font-medium text-gray-500">
+                        <span className="text-gray-400 mr-2">/</span>
+                        {pathSegments.map((segment, index) => (
+                            <span key={index} className="flex items-center">
+                                <span className={`capitalize ${index === pathSegments.length - 1 ? 'text-gray-900 dark:text-white font-bold' : 'text-gray-500'}`}>
+                                    {segment.replace('-', ' ')}
+                                </span>
+                                {index < pathSegments.length - 1 && <span className="mx-2 text-gray-400">/</span>}
+                            </span>
+                        ))}
+                        {pathSegments.length === 0 && <span className="text-gray-900 dark:text-white font-bold">Dashboard</span>}
+                    </nav>
                 </div>
 
-                <div className="flex items-center gap-4">
+                <div className="flex items-center gap-6">
+                    {/* Notifications */}
                     <button
-                        onClick={() => setShowNotifications(true)}
+                        onClick={handleOpenNotifications}
                         className="p-2 text-gray-500 hover:text-indigo-600 transition-colors relative rounded-full hover:bg-gray-100 dark:hover:bg-gray-800"
                     >
                         <Bell className="w-5 h-5" />
-                        <span className="absolute top-1 right-2 w-2 h-2 bg-red-500 rounded-full animate-pulse border border-white"></span>
+                        {unreadCount > 0 && (
+                            <span className="absolute top-1 right-2 w-2 h-2 bg-red-500 rounded-full animate-pulse border border-white"></span>
+                        )}
                     </button>
 
-                    <div className="flex items-center gap-3 pl-4 border-l border-gray-200 dark:border-gray-700">
-                        <Link href="/profile" className="flex items-center gap-3 hover:opacity-80 transition-opacity group">
+                    {/* User Profile */}
+                    <div className="relative">
+                        <button
+                            onClick={() => setShowUserMenu(!showUserMenu)}
+                            onBlur={() => setTimeout(() => setShowUserMenu(false), 200)}
+                            className="flex items-center gap-3 pl-4 border-l border-gray-200 dark:border-gray-700 hover:opacity-80 transition-opacity group"
+                        >
                             <div className="flex flex-col text-right hidden sm:block">
-                                <span className="text-sm font-medium text-gray-900 dark:text-white group-hover:text-indigo-600 transition-colors">{user?.email || 'User'}</span>
+                                <span className="text-sm font-medium text-gray-900 dark:text-white group-hover:text-indigo-600 transition-colors">
+                                    {user?.email || 'User'}
+                                </span>
                                 <span className="text-xs text-gray-500 capitalize">{user?.role?.toLowerCase() || 'Merchant'}</span>
                             </div>
                             <div className="h-10 w-10 rounded-full bg-indigo-100 dark:bg-indigo-900 flex items-center justify-center text-indigo-700 dark:text-indigo-300 group-hover:bg-indigo-200 transition-colors ring-2 ring-transparent group-hover:ring-indigo-100">
                                 <User className="w-5 h-5" />
                             </div>
-                        </Link>
+                        </button>
+
+                        {/* Dropdown */}
+                        {showUserMenu && (
+                            <div className="absolute right-0 top-12 w-48 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 py-1 z-50 animate-in zoom-in-95 duration-100">
+                                <Link href="/profile" className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700">
+                                    Profile
+                                </Link>
+                                <Link href="/settings" className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700">
+                                    Settings
+                                </Link>
+                                <div className="border-t border-gray-100 dark:border-gray-700 my-1"></div>
+                                <button onClick={handleLogout} className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20">
+                                    Sign out
+                                </button>
+                            </div>
+                        )}
                     </div>
                 </div>
             </header>
@@ -136,27 +236,35 @@ export function Header({ user }: { user?: any }) {
                         <div className="px-6 py-4 border-b border-gray-100 dark:border-gray-800 flex justify-between items-center bg-gray-50/50 dark:bg-gray-800/50">
                             <div>
                                 <h3 className="font-bold text-lg text-gray-900 dark:text-white">Notifications</h3>
-                                <p className="text-xs text-gray-500">You have {notifications.length} unread messages</p>
+                                <p className="text-xs text-gray-500">You have {unreadCount} unread messages</p>
                             </div>
                             <button onClick={() => setShowNotifications(false)} className="text-gray-400 hover:text-gray-600 transition-colors">
                                 <X className="w-5 h-5" />
                             </button>
                         </div>
                         <div className="max-h-[400px] overflow-y-auto p-2">
-                            {notifications.map((note) => (
-                                <div key={note.id} className="p-4 hover:bg-gray-50 dark:hover:bg-gray-800/50 rounded-xl transition-colors cursor-pointer flex gap-4 group">
-                                    <div className="mt-1 bg-gray-100 dark:bg-gray-800 p-2 rounded-full h-fit group-hover:bg-white transition-colors shadow-sm">
-                                        {getIcon(note.type)}
-                                    </div>
-                                    <div className="flex-1">
-                                        <div className="flex justify-between items-start">
-                                            <h4 className="font-semibold text-gray-800 dark:text-gray-200 text-sm group-hover:text-indigo-600 transition-colors">{note.title}</h4>
-                                            <span className="text-[10px] text-gray-400 font-medium">{note.time}</span>
+                            {notifications.length === 0 ? (
+                                <div className="p-8 text-center text-gray-500 text-sm">No notifications</div>
+                            ) : (
+                                notifications.map((note) => (
+                                    <div key={note.id} className={`p-4 hover:bg-gray-50 dark:hover:bg-gray-800/50 rounded-xl transition-colors cursor-pointer flex gap-4 group ${!note.read ? 'bg-indigo-50/50 dark:bg-indigo-900/10' : ''}`}>
+                                        <div className="mt-1 bg-gray-100 dark:bg-gray-800 p-2 rounded-full h-fit group-hover:bg-white transition-colors shadow-sm">
+                                            {getIcon(note.type)}
                                         </div>
-                                        <p className="text-xs text-gray-500 mt-1 leading-relaxed">{note.message}</p>
+                                        <div className="flex-1">
+                                            <div className="flex justify-between items-start">
+                                                <h4 className={`font-semibold text-sm group-hover:text-indigo-600 transition-colors ${!note.read ? 'text-gray-900 dark:text-white' : 'text-gray-600 dark:text-gray-400'}`}>
+                                                    {note.title}
+                                                </h4>
+                                                <span className="text-[10px] text-gray-400 font-medium whitespace-nowrap ml-2">
+                                                    {formatDistanceToNow(new Date(note.createdAt), { addSuffix: true })}
+                                                </span>
+                                            </div>
+                                            <p className="text-xs text-gray-500 mt-1 leading-relaxed">{note.message}</p>
+                                        </div>
                                     </div>
-                                </div>
-                            ))}
+                                ))
+                            )}
                         </div>
                         <div className="p-4 border-t border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-800/50 text-center">
                             <Link href="/notifications" onClick={() => setShowNotifications(false)} className="text-xs font-bold text-indigo-600 hover:text-indigo-700 uppercase tracking-wide">

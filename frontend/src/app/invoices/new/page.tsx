@@ -7,9 +7,11 @@ import { Button } from '@/components/ui/Button';
 import { Plus, Trash2, Printer, Save } from 'lucide-react';
 import api from '@/lib/api';
 import { useRouter } from 'next/navigation';
+import { useToast } from '@/contexts/ToastContext';
 
 export default function CreateInvoicePage() {
     const router = useRouter();
+    const { showToast } = useToast();
     const [loading, setLoading] = useState(false);
 
     // Form State
@@ -108,13 +110,13 @@ export default function CreateInvoicePage() {
             });
 
             console.log('Saved:', res.data);
-            // Redirect to view/print page (which we should reuse for viewing)
-            // But our view page relies on "transaction.initiator" business profile.
-            // And it relies on Sale Items -> Product Name.
-            // So if checking history, we see "General Item".
-            // That's acceptable for V1.
-            alert('Invoice Saved!');
-            router.push('/invoices');
+            showToast('Invoice created successfully!', 'success'); // Assuming useToast hook is used, otherwise alert
+
+            if (res.data.transaction && res.data.transaction.id) {
+                router.push(`/invoices/${res.data.transaction.id}`);
+            } else {
+                router.push('/invoices');
+            }
 
         } catch (error) {
             console.error(error);
@@ -154,20 +156,19 @@ export default function CreateInvoicePage() {
                         {/* 2. Top Section: Website + Logo */}
                         <div className="px-12 py-8 flex justify-between items-start">
                             <div className="text-xs tracking-widest uppercase text-gray-500 mt-2">
-                                {company?.website || 'WWW.COMPANYWEBSITE.COM'}
+                                {company?.website}
                             </div>
                             <div className="text-right">
                                 {company?.logoUrl ? (
                                     <div className="flex flex-col items-end">
                                         <img src={company.logoUrl} alt="Logo" className="h-16 object-contain mb-1" />
                                         <div className="text-[10px] tracking-widest uppercase font-bold text-gray-700">
-                                            {company?.companyName || 'LOGO TEXT'}
+                                            {company?.companyName}
                                         </div>
                                     </div>
                                 ) : (
                                     <div className="flex flex-col items-end opacity-50">
-                                        <div className="text-3xl font-bold text-gray-800">LOGO</div>
-                                        <div className="text-xs uppercase">Your Tagline</div>
+                                        <div className="text-3xl font-bold text-gray-800 uppercase">{company?.companyName || 'YOUR LOGO'}</div>
                                     </div>
                                 )}
                             </div>
@@ -214,13 +215,22 @@ export default function CreateInvoicePage() {
                                         onChange={e => setInvoiceData({ ...invoiceData, invoiceNumber: e.target.value })}
                                     />
                                 </div>
-                                <div className="flex items-center justify-end gap-2">
+                                <div className="flex items-center justify-end gap-2 mb-1">
                                     <span className="text-sm font-bold text-gray-500 uppercase tracking-wide">Date</span>
                                     <input
                                         type="date"
                                         className="text-right font-bold text-gray-800 border-none p-0 focus:ring-0 w-32"
                                         value={invoiceData.date}
                                         onChange={e => setInvoiceData({ ...invoiceData, date: e.target.value })}
+                                    />
+                                </div>
+                                <div className="flex items-center justify-end gap-2">
+                                    <span className="text-sm font-bold text-gray-500 uppercase tracking-wide">Due Date</span>
+                                    <input
+                                        type="date"
+                                        className="text-right font-bold text-gray-800 border-none p-0 focus:ring-0 w-32"
+                                        value={(invoiceData as any).dueDate || ''}
+                                        onChange={e => setInvoiceData({ ...invoiceData, dueDate: e.target.value } as any)}
                                     />
                                 </div>
                             </div>
@@ -295,28 +305,33 @@ export default function CreateInvoicePage() {
                                     onChange={e => setInvoiceData({ ...invoiceData, notes: e.target.value })}
                                 />
 
-                                <div className="mt-4">
-                                    <h4 className="font-bold text-[#1a2b42] mb-1 uppercase text-xs">Payment Information</h4>
-                                    <p className="text-xs text-gray-500 whitespace-pre-wrap">
-                                        {company?.bankDetails || 'Bank Details Here'}{'\n'}
-                                        {company?.mpesaDetails}
-                                    </p>
-                                </div>
+                                {(company?.bankDetails || company?.mpesaDetails) && (
+                                    <div className="mt-4">
+                                        <h4 className="font-bold text-[#1a2b42] mb-1 uppercase text-xs">Payment Information</h4>
+                                        <p className="text-xs text-gray-500 whitespace-pre-wrap">
+                                            {company?.bankDetails}
+                                            {company?.bankDetails && company?.mpesaDetails ? '\n' : ''}
+                                            {company?.mpesaDetails}
+                                        </p>
+                                    </div>
+                                )}
                             </div>
 
                             {/* Right: Totals */}
                             <div className="w-1/3 space-y-3">
                                 <div className="flex justify-between font-bold text-[#1a2b42] uppercase text-sm">
                                     <span>Subtotal</span>
-                                    <span>${subTotal.toLocaleString()}</span>
+                                    <span>{company?.currency || 'KES'} {subTotal.toLocaleString()}</span>
                                 </div>
-                                <div className="flex justify-between font-bold text-[#1a2b42] uppercase text-sm">
-                                    <span>Tax (16%)</span>
-                                    <span>${(subTotal * 0.16).toLocaleString()}</span>
-                                </div>
+                                {company?.vatEnabled && (
+                                    <div className="flex justify-between font-bold text-[#1a2b42] uppercase text-sm">
+                                        <span>Tax ({company.vatRate || 16}%)</span>
+                                        <span>{company?.currency || 'KES'} {(subTotal * ((company.vatRate || 16) / 100)).toLocaleString()}</span>
+                                    </div>
+                                )}
                                 <div className="flex justify-between font-extrabold text-[#1a2b42] uppercase text-lg pt-2 border-t border-gray-200">
                                     <span>Grand Total</span>
-                                    <span>${(subTotal * 1.16).toLocaleString()}</span>
+                                    <span>{company?.currency || 'KES'} {(subTotal + (company?.vatEnabled ? subTotal * ((company.vatRate || 16) / 100) : 0)).toLocaleString()}</span>
                                 </div>
                             </div>
                         </div>
@@ -325,16 +340,16 @@ export default function CreateInvoicePage() {
                     {/* 7. Bottom Bar */}
                     <div id="invoice-footer" className="bg-[#1a2b42] h-16 w-full flex items-center justify-between px-12 text-white/80 text-xs tracking-wider">
                         <div className="flex items-center gap-2">
-                            <span>location icon</span>
-                            <span>{company?.location || 'Your Address Here'}</span>
+
+                            <span>{company?.location}</span>
                         </div>
                         <div className="flex items-center gap-2">
-                            <span>email icon</span>
-                            <span>{company?.email || 'yourbusiness@email.com'}</span>
+
+                            <span>{company?.email}</span>
                         </div>
                         <div className="flex items-center gap-2">
-                            <span>phone icon</span>
-                            <span>{company?.contactPhone || '123 456 789'}</span>
+
+                            <span>{company?.contactPhone}</span>
                         </div>
                     </div>
                 </div>

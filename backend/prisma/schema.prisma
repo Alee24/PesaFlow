@@ -24,6 +24,7 @@ model User {
   updatedAt     DateTime @updatedAt @map("updated_at")
 
   wallet        Wallet?
+  notifications Notification[]
   products      Product[]
   sales         Sale[]
   initiatedTx   Transaction[] @relation("Initiator")
@@ -45,9 +46,30 @@ model BusinessProfile {
   email         String?
   location      String?
   website       String?
-  vatNumber     String?  @map("vat_number")
+  kraPinNumber  String?  @map("kra_pin_number")
   bankDetails   String?  @map("bank_details")
   mpesaDetails  String?  @map("mpesa_details")
+  
+  // SMTP Settings
+  smtpHost      String?  @map("smtp_host")
+  smtpPort      Int?     @map("smtp_port")
+  smtpUser      String?  @map("smtp_user")
+  smtpPass      String?  @map("smtp_pass")
+
+  // M-Pesa API Credentials
+  mpesaConsumerKey    String? @map("mpesa_consumer_key")
+  mpesaConsumerSecret String? @map("mpesa_consumer_secret")
+  mpesaPasskey        String? @map("mpesa_passkey")
+  mpesaShortcode      String? @map("mpesa_shortcode")
+  mpesaInitiatorName  String? @map("mpesa_initiator_name")
+  mpesaInitiatorPass  String? @map("mpesa_initiator_pass")
+  mpesaCallbackUrl    String? @map("mpesa_callback_url")
+  mpesaEnv            String? @default("sandbox") @map("mpesa_env")
+  currency            String? @default("KES")
+  vatEnabled          Boolean @default(false)
+  vatRate             Float   @default(16.0)
+
+
   createdAt     DateTime @default(now()) @map("created_at")
   updatedAt     DateTime @updatedAt @map("updated_at")
 
@@ -156,6 +178,7 @@ model Withdrawal {
   walletId      String   @map("wallet_id")
   wallet        Wallet   @relation(fields: [walletId], references: [id])
   amount        Decimal
+  fee           Decimal  @default(0)
   mpesaNumber   String   @map("mpesa_number")
   status        String   @default("PENDING") // PENDING, APPROVED, PROCESSING, COMPLETED, REJECTED
   approvedBy    String?  @map("approved_by")
@@ -165,3 +188,16 @@ model Withdrawal {
 
   @@map("withdrawals")
 }
+
+model Notification {
+  id        String   @id @default(uuid())
+  userId    String
+  title     String
+  message   String
+  type      String   @default("info") // info, success, warning, error
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+

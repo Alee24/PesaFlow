@@ -77,18 +77,20 @@ export const mpesaCallback = async (req: Request, res: Response): Promise<void> 
 
             if (transaction) {
                 // Update transaction status
+                // Credit Merchant Wallet (Amount - Fee)
+                // Service Charge: 2.5 KES
+                const fee = 2.5;
+                const creditAmount = Number(amount) - fee;
+
+                // Update transaction status & record fee
                 await prisma.transaction.update({
                     where: { id: transaction.id },
                     data: {
                         status: 'COMPLETED',
                         reference: mpesaReceipt,
+                        feeCharged: fee
                     }
                 });
-
-                // Credit Merchant Wallet (Amount - Fee)
-                // Hardcoded Fee: 3 KES
-                const fee = 3;
-                const creditAmount = Number(amount) - fee;
 
                 await prisma.wallet.update({
                     where: { id: transaction.recipientWalletId },
@@ -98,6 +100,18 @@ export const mpesaCallback = async (req: Request, res: Response): Promise<void> 
                 });
 
                 console.log(`Credited wallet ${transaction.recipientWalletId} with ${creditAmount}`);
+
+                // Send Notification
+                if (transaction.initiatorUserId) {
+                    await prisma.notification.create({
+                        data: {
+                            userId: transaction.initiatorUserId,
+                            title: 'Payment Received',
+                            message: `Received KES ${amount} from ${phone}. Ref: ${mpesaReceipt}`,
+                            type: 'success'
+                        }
+                    });
+                }
             }
 
         } else {
@@ -112,6 +126,18 @@ export const mpesaCallback = async (req: Request, res: Response): Promise<void> 
                     where: { id: transaction.id },
                     data: { status: 'FAILED' }
                 });
+
+                // Send Notification
+                if (transaction.initiatorUserId) {
+                    await prisma.notification.create({
+                        data: {
+                            userId: transaction.initiatorUserId,
+                            title: 'Payment Failed',
+                            message: `Transaction failed: ${stkCallback.ResultDesc}`,
+                            type: 'error'
+                        }
+                    });
+                }
             }
         }
 

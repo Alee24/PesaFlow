@@ -4,23 +4,45 @@ import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
-const getAccessToken = async () => {
-    const consumerKey = process.env.MPESA_CONSUMER_KEY;
-    const consumerSecret = process.env.MPESA_CONSUMER_SECRET;
-    const url = process.env.MPESA_ENV === 'production'
+const getCredentials = async (userId?: string) => {
+    let creds = {
+        consumerKey: process.env.MPESA_CONSUMER_KEY,
+        consumerSecret: process.env.MPESA_CONSUMER_SECRET,
+        passkey: process.env.MPESA_PASSKEY,
+        shortCode: process.env.MPESA_SHORTCODE,
+        initiatorName: process.env.MPESA_INITIATOR_NAME,
+        password: process.env.MPESA_INITIATOR_PASSWORD,
+        callbackUrl: process.env.MPESA_CALLBACK_URL || 'http://localhost:3001/api/mpesa/callback',
+        env: process.env.MPESA_ENV || 'sandbox'
+    };
+
+    if (userId) {
+        const profile = await prisma.businessProfile.findUnique({ where: { userId } });
+        if (profile) {
+            if (profile.mpesaConsumerKey) creds.consumerKey = profile.mpesaConsumerKey;
+            if (profile.mpesaConsumerSecret) creds.consumerSecret = profile.mpesaConsumerSecret;
+            if (profile.mpesaPasskey) creds.passkey = profile.mpesaPasskey;
+            if (profile.mpesaShortcode) creds.shortCode = profile.mpesaShortcode;
+            if (profile.mpesaInitiatorName) creds.initiatorName = profile.mpesaInitiatorName;
+            if (profile.mpesaInitiatorPass) creds.password = profile.mpesaInitiatorPass;
+            if (profile.mpesaCallbackUrl) creds.callbackUrl = profile.mpesaCallbackUrl;
+            if (profile.mpesaEnv) creds.env = profile.mpesaEnv;
+        }
+    }
+    return creds;
+}
+
+const getAccessToken = async (creds: any) => {
+    const url = creds.env === 'production'
         ? 'https://api.safaricom.co.ke/oauth/v1/generate?grant_type=client_credentials'
         : 'https://sandbox.safaricom.co.ke/oauth/v1/generate?grant_type=client_credentials';
 
-    const auth = Buffer.from(`${consumerKey}:${consumerSecret}`).toString('base64');
+    const auth = Buffer.from(`${creds.consumerKey}:${creds.consumerSecret}`).toString('base64');
 
     try {
-        console.log(`Getting Access Token from ${url}`);
         const response = await axios.get(url, {
-            headers: {
-                Authorization: `Basic ${auth}`,
-            },
+            headers: { Authorization: `Basic ${auth}` },
         });
-        console.log('Got Access Token');
         return response.data.access_token;
     } catch (error: any) {
         console.error('M-Pesa Access Token Error:', error.message);
@@ -33,9 +55,11 @@ export const initiateSTKPush = async (
     amount: number,
     reference: string,
     userId: string,
-    items: Array<{ name: string; price: number; quantity: number }> = []
+    items: Array<{ name: string; price: number; quantity: number, id?: string }> = []
 ) => {
-    const token = await getAccessToken();
+    const creds = await getCredentials(userId);
+    const token = await getAccessToken(creds);
+
     const date = new Date();
     const timestamp = date.getFullYear() +
         ('0' + (date.getMonth() + 1)).slice(-2) +
@@ -44,11 +68,9 @@ export const initiateSTKPush = async (
         ('0' + date.getMinutes()).slice(-2) +
         ('0' + date.getSeconds()).slice(-2);
 
-    const shortCode = process.env.MPESA_SHORTCODE;
-    const passkey = process.env.MPESA_PASSKEY;
-    const password = Buffer.from(`${shortCode}${passkey}${timestamp}`).toString('base64');
+    const password = Buffer.from(`${creds.shortCode}${creds.passkey}${timestamp}`).toString('base64');
 
-    const url = process.env.MPESA_ENV === 'production'
+    const url = creds.env === 'production'
         ? 'https://api.safaricom.co.ke/mpesa/stkpush/v1/processrequest'
         : 'https://sandbox.safaricom.co.ke/mpesa/stkpush/v1/processrequest';
 
@@ -57,18 +79,16 @@ export const initiateSTKPush = async (
         ? `254${phoneNumber.slice(1)}`
         : phoneNumber;
 
-    const callbackUrl = process.env.MPESA_CALLBACK_URL || 'http://localhost:3001/api/mpesa/callback';
-
     const requestBody = {
-        BusinessShortCode: shortCode,
+        BusinessShortCode: creds.shortCode,
         Password: password,
         Timestamp: timestamp,
         TransactionType: 'CustomerPayBillOnline',
         Amount: amount,
         PartyA: formattedPhone,
-        PartyB: shortCode,
+        PartyB: creds.shortCode,
         PhoneNumber: formattedPhone,
-        CallBackURL: callbackUrl,
+        CallBackURL: creds.callbackUrl,
         AccountReference: reference,
         TransactionDesc: `Payment for ${reference}`,
     };
@@ -98,18 +118,7 @@ export const initiateSTKPush = async (
                 }
             });
 
-            // If we have items, create a Sale record
             if (items.length > 0) {
-                // Ensure product exists or create a placeholder if it's dynamic
-                // For simplicity in this POS demo, we might need a "Miscellaneous" product
-                // or we assume items match existing products.
-                // To avoid complexity, we'll try to link if we have IDs, but here we just have name/price.
-                // We'll create a Sale and SaleItems with a fallback product or find one.
-
-                // NOTE: In a real app, items should have productIds.
-                // We'll Create a "POS Item" product if it doesn't exist for this purpose, or map to a generic one.
-                // Hack: Find ANY product to link constraints, or create one.
-
                 let defaultProduct = await tx.product.findFirst({ where: { merchantId: userId } });
                 if (!defaultProduct) {
                     defaultProduct = await tx.product.create({
@@ -130,7 +139,7 @@ export const initiateSTKPush = async (
                         paymentMethod: 'MPESA_STK',
                         items: {
                             create: items.map(item => ({
-                                productId: defaultProduct!.id, // Linking to generic for now as we didn't pass IDs
+                                productId: item.id || defaultProduct!.id,
                                 quantity: item.quantity,
                                 unitPrice: item.price,
                                 subtotal: item.price * item.quantity
@@ -138,19 +147,32 @@ export const initiateSTKPush = async (
                         }
                     }
                 });
+
+                for (const item of items) {
+                    if (item.id) {
+                        await tx.product.update({
+                            where: { id: item.id },
+                            data: { stockQuantity: { decrement: item.quantity } }
+                        });
+                    }
+                }
             }
         });
-        // ... existing code ...
-        return response.data;
+
+        return { ...response.data, internalTransactionId: 'pending_lookup' };
     } catch (error: any) {
         console.error('STK Push Error:', error.response?.data || error.message);
         throw new Error('Failed to initiate STK Push');
     }
 };
 
-export const testMpesaConnectionService = async () => {
+export const testMpesaConnectionService = async (userId?: string) => {
     try {
-        const token = await getAccessToken();
+        const creds = await getCredentials(userId);
+        if (!creds.consumerKey || !creds.consumerSecret) {
+            throw new Error("Missing Consumer Key or Secret (Env or Settings)");
+        }
+        const token = await getAccessToken(creds);
         return { success: true, message: 'Connection successful. Access Token generated.', token: token.slice(0, 10) + '...' };
     } catch (error: any) {
         return { success: false, message: error.message };

@@ -88,6 +88,11 @@ export const login = async (req: Request, res: Response): Promise<void> => {
             return;
         }
 
+        if (user.status === 'SUSPENDED') {
+            res.status(403).json({ error: 'Your account has been suspended. Please call 0724454757 for activation.' });
+            return;
+        }
+
         const token = jwt.sign(
             { userId: user.id, role: user.role },
             process.env.JWT_SECRET || 'fallback_secret',
@@ -104,6 +109,7 @@ export const login = async (req: Request, res: Response): Promise<void> => {
             const errorMessage = (error as any).errors.map((e: any) => `${e.path.join('.')}: ${e.message}`).join(', ');
             res.status(400).json({ error: errorMessage });
         } else {
+            console.error("LOGIN ERROR FULL DETAILS:", error);
             res.status(500).json({ error: 'Internal Server Error' });
         }
     }
@@ -130,8 +136,29 @@ export const updateUser = async (req: Request, res: Response): Promise<void> => 
         }
 
         const updates: any = {};
-        if (email) updates.email = email;
-        if (phoneNumber) updates.phoneNumber = phoneNumber;
+
+        if (email && email !== user.email) {
+            const existingEmail = await prisma.user.findFirst({
+                where: { email, id: { not: userId } }
+            });
+            if (existingEmail) {
+                res.status(400).json({ error: 'Email already in use' });
+                return;
+            }
+            updates.email = email;
+        }
+
+        if (phoneNumber && phoneNumber !== user.phoneNumber) {
+            const existingPhone = await prisma.user.findFirst({
+                where: { phoneNumber, id: { not: userId } }
+            });
+            if (existingPhone) {
+                res.status(400).json({ error: 'Phone number already in use' });
+                return;
+            }
+            updates.phoneNumber = phoneNumber;
+        }
+
         if (name) updates.name = name;
         if (password) {
             updates.passwordHash = await bcrypt.hash(password, 10);

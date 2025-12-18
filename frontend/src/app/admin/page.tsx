@@ -5,8 +5,10 @@ import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import { Card } from '@/components/ui/Card';
+import { Button } from '@/components/ui/Button';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, Legend } from 'recharts';
 import { Users, CreditCard, Activity, Server, AlertTriangle, CheckCircle, TrendingUp, DollarSign } from 'lucide-react';
+import api from '@/lib/api';
 
 // Mock Data for Charts
 const revenueData = [
@@ -31,23 +33,55 @@ const userActivityData = [
 export default function AdminPage() {
     const router = useRouter();
     const [isLoading, setIsLoading] = useState(true);
+    const [stats, setStats] = useState<any>(null);
+    const [currency, setCurrency] = useState('KES');
+    const [userRole, setUserRole] = useState('');
 
     useEffect(() => {
-        const userData = localStorage.getItem('user');
-        if (!userData) {
-            router.push('/auth/login');
-            return;
-        }
+        const init = async () => {
+            const userDataStr = localStorage.getItem('user');
+            if (!userDataStr) {
+                router.push('/auth/login');
+                return;
+            }
 
-        const user = JSON.parse(userData);
-        if (user.role !== 'ADMIN') {
-            router.push('/dashboard');
-            return;
-        }
-        setIsLoading(false);
+            const user = JSON.parse(userDataStr);
+            setUserRole(user.role);
+
+            if (user.role !== 'ADMIN') {
+                router.push('/dashboard');
+                return;
+            }
+
+            try {
+                // Fetch Stats
+                const statsPro = api.get('/admin/stats');
+                // Fetch Profile for Currency
+                const profilePro = api.get('/profile');
+
+                const [statsRes, profileRes] = await Promise.all([statsPro, profilePro]);
+
+                setStats(statsRes.data);
+                if (profileRes.data?.currency) {
+                    setCurrency(profileRes.data.currency);
+                }
+            } catch (error) {
+                console.error("Failed to fetch admin data", error);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        init();
     }, [router]);
 
-    if (isLoading) return null;
+    if (isLoading) return (
+        <DashboardLayout>
+            <div className="flex justify-center items-center h-full">Loading Admin Portal...</div>
+        </DashboardLayout>
+    );
+
+    if (userRole !== 'ADMIN') return null;
 
     return (
         <DashboardLayout>
@@ -72,11 +106,11 @@ export default function AdminPage() {
                                     <Users className="w-6 h-6 text-white" />
                                 </div>
                                 <span className="flex items-center gap-1 text-xs font-medium bg-green-400/20 text-green-200 px-2 py-1 rounded-full">
-                                    <TrendingUp className="w-3 h-3" /> +12%
+                                    <TrendingUp className="w-3 h-3" /> Live
                                 </span>
                             </div>
                             <div className="mt-4">
-                                <h3 className="text-3xl font-bold">1,248</h3>
+                                <h3 className="text-3xl font-bold">{stats?.activeMerchants || 0}</h3>
                                 <p className="text-indigo-100 text-sm font-medium">Active Merchants</p>
                             </div>
                         </div>
@@ -91,11 +125,11 @@ export default function AdminPage() {
                                     <DollarSign className="w-6 h-6 text-white" />
                                 </div>
                                 <span className="flex items-center gap-1 text-xs font-medium bg-white/20 px-2 py-1 rounded-full">
-                                    Daily
+                                    Lifetime
                                 </span>
                             </div>
                             <div className="mt-4">
-                                <h3 className="text-3xl font-bold">KES 8.4M</h3>
+                                <h3 className="text-3xl font-bold">{currency} {Number(stats?.totalVolume || 0).toLocaleString()}</h3>
                                 <p className="text-emerald-100 text-sm font-medium">Total Volume</p>
                             </div>
                         </div>
@@ -112,7 +146,7 @@ export default function AdminPage() {
                                 <span className="text-xs font-medium bg-white/20 px-2 py-1 rounded-full">Action Req.</span>
                             </div>
                             <div className="mt-4">
-                                <h3 className="text-3xl font-bold">24</h3>
+                                <h3 className="text-3xl font-bold">{stats?.pendingPayouts || 0}</h3>
                                 <p className="text-orange-100 text-sm font-medium">Pending Payouts</p>
                             </div>
                         </div>
@@ -139,11 +173,14 @@ export default function AdminPage() {
                     </div>
                 </div>
 
-                {/* 2. Charts Section */}
+                {/* 2. Charts Section (Keep Mock for Visuals as backend doesn't support generic analytics yet) */}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                     {/* Revenue Chart */}
                     <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-sm border border-gray-100 dark:border-gray-700">
-                        <h3 className="text-lg font-bold text-gray-800 dark:text-white mb-6">Revenue Analytics</h3>
+                        <div className="flex justify-between items-center mb-6">
+                            <h3 className="text-lg font-bold text-gray-800 dark:text-white">Revenue Analytics</h3>
+                            <span className="text-xs font-medium text-gray-500 bg-gray-100 px-2 py-1 rounded">Simulated Data</span>
+                        </div>
                         <div className="h-80 w-full">
                             <ResponsiveContainer width="100%" height="100%">
                                 <AreaChart data={revenueData}>
@@ -173,7 +210,10 @@ export default function AdminPage() {
 
                     {/* User Activity Bar Chart */}
                     <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-sm border border-gray-100 dark:border-gray-700">
-                        <h3 className="text-lg font-bold text-gray-800 dark:text-white mb-6">Live Traffic</h3>
+                        <div className="flex justify-between items-center mb-6">
+                            <h3 className="text-lg font-bold text-gray-800 dark:text-white">Live Traffic</h3>
+                            <span className="text-xs font-medium text-gray-500 bg-gray-100 px-2 py-1 rounded">Simulated Data</span>
+                        </div>
                         <div className="h-80 w-full">
                             <ResponsiveContainer width="100%" height="100%">
                                 <BarChart data={userActivityData}>
@@ -192,28 +232,42 @@ export default function AdminPage() {
                 </div>
 
                 {/* 3. Recent Logs Table */}
-                <Card title="System Logs & Recent Activities" className="overflow-hidden">
-                    <div className="overflow-x-auto">
+                <Card title="Recent Transactions Log" className="overflow-hidden">
+                    <div className=" overflow-x-auto">
                         <table className="w-full text-left">
                             <thead className="bg-gray-50/50 dark:bg-gray-800/50 border-b dark:border-gray-700">
                                 <tr>
                                     <th className="p-4 text-xs uppercase text-gray-500 font-semibold">Time</th>
                                     <th className="p-4 text-xs uppercase text-gray-500 font-semibold">User</th>
                                     <th className="p-4 text-xs uppercase text-gray-500 font-semibold">Action</th>
+                                    <th className="p-4 text-xs uppercase text-gray-500 font-semibold">Amount</th>
                                     <th className="p-4 text-xs uppercase text-gray-500 font-semibold text-center">Status</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
-                                {[1, 2, 3, 4, 5].map((i) => (
-                                    <tr key={i} className="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
-                                        <td className="p-4 text-sm text-gray-500">Just now</td>
-                                        <td className="p-4 text-sm font-medium text-gray-900 dark:text-white">Admin User</td>
-                                        <td className="p-4 text-sm text-gray-600 dark:text-gray-300">Updated system configuration</td>
-                                        <td className="p-4 text-center">
-                                            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700">Success</span>
-                                        </td>
+                                {stats?.recentLogs && stats.recentLogs.length > 0 ? (
+                                    stats.recentLogs.map((log: any) => (
+                                        <tr key={log.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
+                                            <td className="p-4 text-sm text-gray-500">{new Date(log.createdAt).toLocaleString()}</td>
+                                            <td className="p-4 text-sm font-medium text-gray-900 dark:text-white">
+                                                {log.initiator?.name || log.initiator?.email || 'Unknown'}
+                                            </td>
+                                            <td className="p-4 text-sm text-gray-600 dark:text-gray-300">{log.type} - {log.reference || 'N/A'}</td>
+                                            <td className="p-4 text-sm font-bold text-gray-800 dark:text-white">{currency} {Number(log.amount).toLocaleString()}</td>
+                                            <td className="p-4 text-center">
+                                                <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium 
+                                                    ${log.status === 'COMPLETED' ? 'bg-green-100 text-green-700' :
+                                                        log.status === 'FAILED' ? 'bg-red-100 text-red-700' : 'bg-yellow-100 text-yellow-700'}`}>
+                                                    {log.status}
+                                                </span>
+                                            </td>
+                                        </tr>
+                                    ))
+                                ) : (
+                                    <tr>
+                                        <td colSpan={5} className="p-8 text-center text-gray-500">No recent activity detected.</td>
                                     </tr>
-                                ))}
+                                )}
                             </tbody>
                         </table>
                     </div>

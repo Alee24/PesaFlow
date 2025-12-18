@@ -1,4 +1,5 @@
 import express from 'express';
+import path from 'path';
 import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
@@ -11,8 +12,12 @@ import profileRoutes from './routes/profile.routes';
 import invoiceRoutes from './routes/invoice.routes';
 import setupRoutes from './routes/setup.routes';
 import adminRoutes from './routes/admin.routes';
+import categoryRoutes from './routes/category.routes';
+import notificationRoutes from './routes/notification.routes';
 
 import walletRoutes from './routes/wallet.routes';
+import dashboardRoutes from './routes/dashboard.routes';
+import salesRoutes from './routes/sales.routes';
 
 
 const app = express();
@@ -20,9 +25,13 @@ const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cors());
-app.use(helmet());
+app.use(helmet({
+    crossOriginResourcePolicy: { policy: "cross-origin" }
+}));
 app.use(morgan('dev'));
+app.use('/uploads', express.static(path.join(__dirname, '../public/uploads')));
 
+app.use('/api/categories', categoryRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/mpesa', mpesaRoutes);
@@ -33,6 +42,9 @@ app.use('/api/profile', profileRoutes);
 app.use('/api/invoices', invoiceRoutes);
 app.use('/api/setup', setupRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/dashboard', dashboardRoutes);
+app.use('/api/sales', salesRoutes);
+app.use('/api/notifications', notificationRoutes);
 
 app.get('/', (req, res) => {
 

@@ -99,3 +99,45 @@ export const updateUserStatus = async (req: AuthRequest, res: Response) => {
         res.status(500).json({ error: error.message });
     }
 };
+
+export const getAdminStats = async (req: AuthRequest, res: Response) => {
+    try {
+        const activeMerchants = await prisma.user.count({
+            where: { role: 'MERCHANT', status: 'ACTIVE' }
+        });
+
+        const totalVolumeAgg = await prisma.transaction.aggregate({
+            _sum: { amount: true },
+            where: { status: 'COMPLETED' }
+        });
+        const totalVolume = totalVolumeAgg._sum.amount || 0;
+
+        const netIncomeAgg = await prisma.transaction.aggregate({
+            _sum: { feeCharged: true },
+            where: { status: 'COMPLETED' }
+        });
+        const netIncome = netIncomeAgg._sum.feeCharged || 0;
+
+        const pendingPayouts = await prisma.withdrawal.count({
+            where: { status: 'PENDING' }
+        });
+
+        const recentLogs = await prisma.transaction.findMany({
+            take: 5,
+            orderBy: { createdAt: 'desc' },
+            include: {
+                initiator: { select: { name: true, email: true } }
+            }
+        });
+
+        res.json({
+            activeMerchants,
+            totalVolume,
+            netIncome,
+            pendingPayouts,
+            recentLogs
+        });
+    } catch (error: any) {
+        res.status(500).json({ error: error.message });
+    }
+};

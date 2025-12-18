@@ -8,12 +8,21 @@ import { Input } from '@/components/ui/Input';
 import api from '@/lib/api';
 import { Plus, Search, CheckCircle, XCircle, Ban, Power } from 'lucide-react';
 import { useToast } from '@/contexts/ToastContext';
+import { ConfirmModal } from '@/components/ui/ConfirmModal';
 
 export default function UserManagementPage() {
     const [users, setUsers] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [showCreateModal, setShowCreateModal] = useState(false);
     const { showToast } = useToast();
+
+    // Status Modal State
+    const [statusModal, setStatusModal] = useState({
+        isOpen: false,
+        userId: '',
+        targetStatus: '',
+        loading: false
+    });
 
     // Create Form State
     const [newUser, setNewUser] = useState({
@@ -53,16 +62,28 @@ export default function UserManagementPage() {
         }
     };
 
-    const toggleStatus = async (userId: string, currentStatus: string) => {
+    const initiateStatusToggle = (userId: string, currentStatus: string) => {
         const newStatus = currentStatus === 'ACTIVE' ? 'SUSPENDED' : 'ACTIVE';
-        if (!confirm(`Are you sure you want to ${newStatus === 'ACTIVE' ? 'activate' : 'suspend'} this user?`)) return;
+        setStatusModal({
+            isOpen: true,
+            userId,
+            targetStatus: newStatus,
+            loading: false
+        });
+    };
 
+    const confirmStatusChange = async () => {
+        if (!statusModal.userId) return;
+        setStatusModal(prev => ({ ...prev, loading: true }));
         try {
-            await api.patch(`/admin/users/${userId}/status`, { status: newStatus });
-            showToast(`User ${newStatus.toLowerCase()} successfully`, 'success');
+            await api.patch(`/admin/users/${statusModal.userId}/status`, { status: statusModal.targetStatus });
+            showToast(`User ${statusModal.targetStatus.toLowerCase()} successfully`, 'success');
             fetchUsers();
+            setStatusModal(prev => ({ ...prev, isOpen: false }));
         } catch (error: any) {
             showToast('Failed to update status', 'error');
+        } finally {
+            setStatusModal(prev => ({ ...prev, loading: false }));
         }
     };
 
@@ -129,7 +150,7 @@ export default function UserManagementPage() {
                                                         size="sm"
                                                         variant={user.status === 'ACTIVE' ? 'outline' : 'primary'}
                                                         className={user.status === 'ACTIVE' ? 'text-red-600 hover:text-red-700 border-red-200 hover:bg-red-50' : ''}
-                                                        onClick={() => toggleStatus(user.id, user.status)}
+                                                        onClick={() => initiateStatusToggle(user.id, user.status)}
                                                     >
                                                         {user.status === 'ACTIVE' ? (
                                                             <><Ban className="w-3 h-3 mr-1" /> Suspend</>
@@ -179,6 +200,18 @@ export default function UserManagementPage() {
                         </Card>
                     </div>
                 )}
+                <ConfirmModal
+                    isOpen={statusModal.isOpen}
+                    onClose={() => setStatusModal(prev => ({ ...prev, isOpen: false }))}
+                    onConfirm={confirmStatusChange}
+                    title={statusModal.targetStatus === 'SUSPENDED' ? 'Suspend User' : 'Activate User'}
+                    description={statusModal.targetStatus === 'SUSPENDED'
+                        ? 'Are you sure you want to SUSPEND this user? They will not be able to log in or process transactions.'
+                        : 'Are you sure you want to ACTIVATE this user? They will regain access to their account.'}
+                    variant={statusModal.targetStatus === 'SUSPENDED' ? 'danger' : 'success'}
+                    loading={statusModal.loading}
+                    confirmText={statusModal.targetStatus === 'SUSPENDED' ? 'Suspend' : 'Activate'}
+                />
             </div>
         </DashboardLayout>
     );
