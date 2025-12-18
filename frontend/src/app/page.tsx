@@ -1,146 +1,216 @@
+'use client';
 
 import Link from 'next/link';
-import { ArrowRight, CheckCircle2, DollarSign, LayoutDashboard, ShieldCheck, Smartphone, Zap } from 'lucide-react';
+import { Store, Package, CreditCard, BarChart3, Shield, Users, Zap, CheckCircle, TrendingUp, Lock, Smartphone, FileText, ArrowRight, Star } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 
 export default function LandingPage() {
+  const features = [
+    {
+      icon: Store,
+      title: 'Advanced POS System',
+      description: 'Complete point-of-sale with barcode scanning, discounts, split payments, and real-time inventory updates.',
+      color: 'from-blue-500 to-cyan-500'
+    },
+    {
+      icon: Package,
+      title: 'Inventory Management',
+      description: 'Track stock levels, set reorder points, manage suppliers, batch tracking, and automated low-stock alerts.',
+      color: 'from-purple-500 to-pink-500'
+    },
+    {
+      icon: Smartphone,
+      title: 'M-Pesa Integration',
+      description: 'Seamless STK Push payments, automatic reconciliation, and instant wallet crediting with 2.5 KES fee.',
+      color: 'from-green-500 to-emerald-500'
+    },
+    {
+      icon: FileText,
+      title: 'Smart Invoicing',
+      description: 'Create professional invoices, track payments, send email notifications, and generate PDF receipts.',
+      color: 'from-orange-500 to-red-500'
+    },
+    {
+      icon: Shield,
+      title: 'Merchant Verification',
+      description: 'KYC document upload, admin review system, account activation workflow, and compliance tracking.',
+      color: 'from-indigo-500 to-purple-500'
+    },
+    {
+      icon: BarChart3,
+      title: 'Analytics & Reports',
+      description: 'Sales statistics, inventory valuation, profit margins, stock movements, and comprehensive dashboards.',
+      color: 'from-pink-500 to-rose-500'
+    },
+    {
+      icon: CreditCard,
+      title: 'Withdrawal Management',
+      description: 'Request payouts to M-Pesa, admin approval workflow, automatic fee deduction (2%), and transaction history.',
+      color: 'from-teal-500 to-cyan-500'
+    },
+    {
+      icon: Users,
+      title: 'Multi-User Support',
+      description: 'Role-based access control, merchant and admin accounts, status-based restrictions, and user management.',
+      color: 'from-violet-500 to-purple-500'
+    }
+  ];
+
+  const stats = [
+    { value: '100%', label: 'Uptime Guarantee' },
+    { value: '2.5 KES', label: 'Transaction Fee' },
+    { value: '24/7', label: 'Support Available' },
+    { value: 'Instant', label: 'Payment Processing' }
+  ];
+
+  const pricingPlans = [
+    {
+      name: 'Starter',
+      price: 'Free',
+      description: 'Perfect for small businesses getting started',
+      features: [
+        'Up to 100 transactions/month',
+        'Basic POS system',
+        'Inventory management',
+        'M-Pesa integration',
+        'Email support'
+      ],
+      cta: 'Get Started',
+      popular: false
+    },
+    {
+      name: 'Professional',
+      price: '2,500 KES',
+      period: '/month',
+      description: 'For growing businesses with advanced needs',
+      features: [
+        'Unlimited transactions',
+        'Advanced POS with discounts',
+        'Full inventory tracking',
+        'Priority M-Pesa processing',
+        'Analytics & reports',
+        'Barcode scanning',
+        'Priority support'
+      ],
+      cta: 'Start Free Trial',
+      popular: true
+    },
+    {
+      name: 'Enterprise',
+      price: 'Custom',
+      description: 'Tailored solutions for large organizations',
+      features: [
+        'Everything in Professional',
+        'Multi-location support',
+        'Custom integrations',
+        'Dedicated account manager',
+        'SLA guarantee',
+        'Custom training',
+        '24/7 phone support'
+      ],
+      cta: 'Contact Sales',
+      popular: false
+    }
+  ];
+
   return (
-    <div className="min-h-screen bg-white dark:bg-black font-sans selection:bg-indigo-100 dark:selection:bg-indigo-900">
-
-      {/* Navigation */}
-      <nav className="fixed w-full z-50 bg-white/80 dark:bg-black/80 backdrop-blur-md border-b border-gray-100 dark:border-gray-800">
-        <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center">
-              <Zap className="text-white w-5 h-5 fill-current" />
-            </div>
-            <span className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 to-purple-600">
-              PesaFlow
-            </span>
-          </div>
-          <div className="hidden md:flex items-center gap-8 text-sm font-medium text-gray-600 dark:text-gray-300">
-            <a href="#features" className="hover:text-indigo-600 dark:hover:text-white transition-colors">Features</a>
-            <a href="#pricing" className="hover:text-indigo-600 dark:hover:text-white transition-colors">Pricing</a>
-            <a href="#testimonials" className="hover:text-indigo-600 dark:hover:text-white transition-colors">Testimonials</a>
-          </div>
-          <div className="flex items-center gap-4">
-            <Link href="/auth/login" className="text-sm font-medium text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white">
-              Log in
-            </Link>
-            <Link href="/auth/register">
-              <Button>Get Started <ArrowRight className="w-4 h-4 ml-2" /></Button>
-            </Link>
-          </div>
-        </div>
-      </nav>
-
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-indigo-50 dark:from-gray-900 dark:via-gray-800 dark:to-indigo-950">
       {/* Hero Section */}
-      <section className="pt-32 pb-20 px-6">
-        <div className="max-w-7xl mx-auto text-center">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-300 text-sm font-medium mb-8">
-            <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-indigo-500"></span>
-            </span>
-            v2.0 Now Available with STK Push
+      <header className="relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-br from-indigo-600/10 via-purple-600/10 to-pink-600/10 dark:from-indigo-600/20 dark:via-purple-600/20 dark:to-pink-600/20"></div>
+
+        <nav className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+          <div className="flex justify-between items-center">
+            <div className="flex items-center gap-2">
+              <Store className="w-8 h-8 text-indigo-600" />
+              <span className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 to-purple-600">
+                Mpesa Connect
+              </span>
+            </div>
+            <div className="flex gap-4">
+              <Link href="/auth/login">
+                <Button variant="outline">Sign In</Button>
+              </Link>
+              <Link href="/auth/register">
+                <Button>Get Started Free</Button>
+              </Link>
+            </div>
           </div>
+        </nav>
 
-          <h1 className="text-5xl md:text-7xl font-bold tracking-tight text-gray-900 dark:text-white mb-8">
-            Payments made <br />
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-purple-600">
-              seamless & instant.
-            </span>
-          </h1>
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 md:py-32">
+          <div className="text-center">
+            <div className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-100 dark:bg-indigo-900/30 rounded-full text-indigo-600 dark:text-indigo-400 text-sm font-semibold mb-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
+              <Zap className="w-4 h-4" />
+              Complete Business Management Platform
+            </div>
 
-          <p className="text-xl text-gray-500 dark:text-gray-400 max-w-2xl mx-auto mb-12">
-            The all-in-one SaaS platform for merchants to manage sales, track inventory, and process M-Pesa payments purely via STK Push. No hardware needed.
-          </p>
+            <h1 className="text-5xl md:text-7xl font-bold text-gray-900 dark:text-white mb-6 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-100">
+              Manage Your Business
+              <span className="block bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600">
+                All in One Place
+              </span>
+            </h1>
 
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <Link href="/auth/register" className="w-full sm:w-auto">
-              <Button size="lg" className="w-full h-12 px-8 text-base">Start Free Trial</Button>
-            </Link>
-            <Link href="#demo" className="w-full sm:w-auto">
-              <Button variant="outline" size="lg" className="w-full h-12 px-8 text-base">View Demo</Button>
-            </Link>
-          </div>
+            <p className="text-xl md:text-2xl text-gray-600 dark:text-gray-300 mb-10 max-w-3xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-700 delay-200">
+              Advanced POS, Inventory Management, M-Pesa Integration, and Merchant Verification.
+              Everything you need to run a successful business in Kenya.
+            </p>
 
-          {/* Hero Image / Dashboard Preview */}
-          <div className="mt-20 relative mx-auto max-w-5xl">
-            <div className="absolute -inset-1 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-2xl blur opacity-20"></div>
-            <div className="relative rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-2xl overflow-hidden">
-              <div className="aspect-[16/9] w-full bg-gray-50 dark:bg-gray-800/50 flex items-center justify-center text-gray-400">
-                {/* Placeholder for actual dashboard screenshot if available, using a text for now or mock UI */}
-                <div className="flex flex-col items-center">
-                  <LayoutDashboard className="w-16 h-16 mb-4 text-indigo-200 dark:text-gray-700" />
-                  <span className="text-sm">Interactive Dashboard Preview</span>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center animate-in fade-in slide-in-from-bottom-4 duration-700 delay-300">
+              <Link href="/auth/register">
+                <Button size="lg" className="text-lg px-8 py-6 shadow-2xl shadow-indigo-500/50">
+                  Start Free Trial <ArrowRight className="w-5 h-5 ml-2" />
+                </Button>
+              </Link>
+              <Button size="lg" variant="outline" className="text-lg px-8 py-6">
+                Watch Demo
+              </Button>
+            </div>
+
+            {/* Stats */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mt-20 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-500">
+              {stats.map((stat, index) => (
+                <div key={index} className="text-center">
+                  <div className="text-3xl md:text-4xl font-bold text-indigo-600 dark:text-indigo-400 mb-2">
+                    {stat.value}
+                  </div>
+                  <div className="text-sm text-gray-600 dark:text-gray-400">
+                    {stat.label}
+                  </div>
                 </div>
-              </div>
+              ))}
             </div>
           </div>
         </div>
-      </section>
+      </header>
 
-      {/* Partners / Social Proof */}
-      <section className="py-10 border-y border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-900/50">
-        <div className="max-w-7xl mx-auto px-6 text-center">
-          <p className="text-sm font-medium text-gray-500 mb-6">TRUSTED BY INNOVATIVE MERCHANTS</p>
-          <div className="flex flex-wrap justify-center gap-8 md:gap-16 opacity-50 grayscale hover:grayscale-0 transition-all duration-300">
-            {['Acme Corp', 'GlobalTech', 'Nebula', 'Spherule', 'CodeBox'].map((brand) => (
-              <span key={brand} className="text-xl font-bold font-serif text-gray-800 dark:text-white">{brand}</span>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Features Grid */}
-      <section id="features" className="py-24 px-6 bg-white dark:bg-black">
-        <div className="max-w-7xl mx-auto">
+      {/* Features Section */}
+      <section className="py-20 bg-white dark:bg-gray-900">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
-            <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-4">Everything you need to run your business</h2>
-            <p className="text-gray-500 max-w-2xl mx-auto">From POS to Inventory, we provide the tools to help you scale.</p>
+            <h2 className="text-4xl md:text-5xl font-bold text-gray-900 dark:text-white mb-4">
+              Powerful Features for Modern Businesses
+            </h2>
+            <p className="text-xl text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
+              Everything you need to manage sales, inventory, payments, and grow your business
+            </p>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-8">
-            {[
-              {
-                icon: <Smartphone className="w-6 h-6 text-indigo-600" />,
-                title: "M-Pesa STK Push",
-                desc: "Trigger payments directly to your customer's phone. No manual entry errors, higher conversion rates."
-              },
-              {
-                icon: <LayoutDashboard className="w-6 h-6 text-purple-600" />,
-                title: "Cloud POS",
-                desc: "Access your Point of Sale from any device. Ring up sales on your phone, tablet, or laptop."
-              },
-              {
-                icon: <ShieldCheck className="w-6 h-6 text-emerald-600" />,
-                title: "Secure Wallets",
-                desc: "Each merchant gets a dedicated digital wallet. Withdraw your earnings to M-Pesa instantly."
-              },
-              {
-                icon: <LayoutDashboard className="w-6 h-6 text-pink-600" />,
-                title: "Inventory Management",
-                desc: "Track stock levels, set prices, and manage SKUs with ease. Never run out of best-sellers."
-              },
-              {
-                icon: <Zap className="w-6 h-6 text-yellow-500" />,
-                title: "Real-time Analytics",
-                desc: "Visualize your sales data. See what's selling and when, to make better business decisions."
-              },
-              {
-                icon: <CheckCircle2 className="w-6 h-6 text-blue-500" />,
-                title: "Easy Setup",
-                desc: "Get started in under 2 minutes. Our installation wizard makes deployment a breeze."
-              }
-            ].map((feature, i) => (
-              <div key={i} className="p-8 rounded-2xl bg-gray-50 dark:bg-gray-900 hover:bg-white dark:hover:bg-gray-800 border border-transparent hover:border-gray-200 dark:hover:border-gray-700 shadow-sm hover:shadow-lg transition-all">
-                <div className="w-12 h-12 rounded-lg bg-white dark:bg-gray-800 shadow-sm flex items-center justify-center mb-6">
-                  {feature.icon}
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+            {features.map((feature, index) => (
+              <div
+                key={index}
+                className="group p-6 bg-gradient-to-br from-gray-50 to-white dark:from-gray-800 dark:to-gray-900 rounded-2xl border border-gray-200 dark:border-gray-700 hover:border-indigo-500 dark:hover:border-indigo-500 transition-all duration-300 hover:shadow-2xl hover:shadow-indigo-500/20 hover:-translate-y-1"
+              >
+                <div className={`w-14 h-14 rounded-xl bg-gradient-to-br ${feature.color} p-3 mb-4 group-hover:scale-110 transition-transform duration-300`}>
+                  <feature.icon className="w-full h-full text-white" />
                 </div>
-                <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">{feature.title}</h3>
-                <p className="text-gray-500 leading-relaxed">
-                  {feature.desc}
+                <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
+                  {feature.title}
+                </h3>
+                <p className="text-gray-600 dark:text-gray-400 text-sm leading-relaxed">
+                  {feature.description}
                 </p>
               </div>
             ))}
@@ -148,35 +218,144 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* CTA Section */}
-      <section className="py-24 px-6">
-        <div className="max-w-5xl mx-auto rounded-3xl bg-indigo-600 px-6 py-16 md:px-20 text-center relative overflow-hidden">
-          <div className="absolute top-0 right-0 -mt-10 -mr-10 w-64 h-64 bg-indigo-500 rounded-full blur-3xl opacity-50"></div>
-          <div className="absolute bottom-0 left-0 -mb-10 -ml-10 w-64 h-64 bg-purple-500 rounded-full blur-3xl opacity-50"></div>
+      {/* Pricing Section */}
+      <section className="py-20 bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-gray-900 dark:to-indigo-950">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl md:text-5xl font-bold text-gray-900 dark:text-white mb-4">
+              Simple, Transparent Pricing
+            </h2>
+            <p className="text-xl text-gray-600 dark:text-gray-400">
+              Choose the plan that fits your business needs
+            </p>
+          </div>
 
-          <h2 className="text-3xl md:text-5xl font-bold text-white mb-6 relative z-10">Start accepting payments today.</h2>
-          <p className="text-indigo-100 text-lg mb-10 max-w-2xl mx-auto relative z-10">
-            Join thousands of merchants growing their business with PesaFlow. No credit card required for trial.
+          <div className="grid md:grid-cols-3 gap-8">
+            {pricingPlans.map((plan, index) => (
+              <div
+                key={index}
+                className={`relative p-8 bg-white dark:bg-gray-800 rounded-2xl border-2 ${plan.popular
+                    ? 'border-indigo-500 shadow-2xl shadow-indigo-500/30 scale-105'
+                    : 'border-gray-200 dark:border-gray-700'
+                  } transition-all duration-300 hover:shadow-xl`}
+              >
+                {plan.popular && (
+                  <div className="absolute -top-4 left-1/2 -translate-x-1/2 px-4 py-1 bg-gradient-to-r from-indigo-600 to-purple-600 text-white text-sm font-bold rounded-full flex items-center gap-1">
+                    <Star className="w-4 h-4 fill-current" />
+                    Most Popular
+                  </div>
+                )}
+
+                <div className="mb-6">
+                  <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+                    {plan.name}
+                  </h3>
+                  <p className="text-gray-600 dark:text-gray-400 text-sm">
+                    {plan.description}
+                  </p>
+                </div>
+
+                <div className="mb-6">
+                  <span className="text-5xl font-bold text-gray-900 dark:text-white">
+                    {plan.price}
+                  </span>
+                  {plan.period && (
+                    <span className="text-gray-600 dark:text-gray-400">
+                      {plan.period}
+                    </span>
+                  )}
+                </div>
+
+                <ul className="space-y-4 mb-8">
+                  {plan.features.map((feature, fIndex) => (
+                    <li key={fIndex} className="flex items-start gap-3">
+                      <CheckCircle className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" />
+                      <span className="text-gray-700 dark:text-gray-300 text-sm">
+                        {feature}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+
+                <Link href="/auth/register">
+                  <Button
+                    className="w-full"
+                    variant={plan.popular ? 'primary' : 'outline'}
+                  >
+                    {plan.cta}
+                  </Button>
+                </Link>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* CTA Section */}
+      <section className="py-20 bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">
+            Ready to Transform Your Business?
+          </h2>
+          <p className="text-xl text-indigo-100 mb-10">
+            Join hundreds of businesses already using Mpesa Connect to streamline operations and boost sales
           </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center relative z-10">
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link href="/auth/register">
-              <Button size="lg" className="bg-white text-indigo-600 hover:bg-gray-100 border-none h-12 px-8">Get Started Now</Button>
+              <Button size="lg" className="bg-white text-indigo-600 hover:bg-gray-100 text-lg px-8 py-6">
+                Start Free Trial <ArrowRight className="w-5 h-5 ml-2" />
+              </Button>
             </Link>
+            <Button size="lg" variant="outline" className="border-white text-white hover:bg-white/10 text-lg px-8 py-6">
+              Contact Sales
+            </Button>
           </div>
         </div>
       </section>
 
       {/* Footer */}
-      <footer className="py-12 px-6 border-t border-gray-100 dark:border-gray-800">
-        <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center">
-          <div className="flex items-center gap-2 mb-4 md:mb-0">
-            <div className="w-6 h-6 bg-indigo-600 rounded flex items-center justify-center">
-              <Zap className="text-white w-3 h-3 fill-current" />
+      <footer className="bg-gray-900 text-gray-400 py-12">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid md:grid-cols-4 gap-8 mb-8">
+            <div>
+              <div className="flex items-center gap-2 mb-4">
+                <Store className="w-6 h-6 text-indigo-400" />
+                <span className="text-xl font-bold text-white">Mpesa Connect</span>
+              </div>
+              <p className="text-sm">
+                Complete business management platform for modern Kenyan businesses.
+              </p>
             </div>
-            <span className="font-bold text-gray-900 dark:text-white">PesaFlow</span>
+            <div>
+              <h4 className="text-white font-semibold mb-4">Product</h4>
+              <ul className="space-y-2 text-sm">
+                <li><a href="#" className="hover:text-white transition-colors">Features</a></li>
+                <li><a href="#" className="hover:text-white transition-colors">Pricing</a></li>
+                <li><a href="#" className="hover:text-white transition-colors">Security</a></li>
+                <li><a href="#" className="hover:text-white transition-colors">Integrations</a></li>
+              </ul>
+            </div>
+            <div>
+              <h4 className="text-white font-semibold mb-4">Company</h4>
+              <ul className="space-y-2 text-sm">
+                <li><a href="#" className="hover:text-white transition-colors">About Us</a></li>
+                <li><a href="#" className="hover:text-white transition-colors">Blog</a></li>
+                <li><a href="#" className="hover:text-white transition-colors">Careers</a></li>
+                <li><a href="#" className="hover:text-white transition-colors">Contact</a></li>
+              </ul>
+            </div>
+            <div>
+              <h4 className="text-white font-semibold mb-4">Legal</h4>
+              <ul className="space-y-2 text-sm">
+                <li><a href="#" className="hover:text-white transition-colors">Privacy Policy</a></li>
+                <li><a href="#" className="hover:text-white transition-colors">Terms of Service</a></li>
+                <li><a href="#" className="hover:text-white transition-colors">Cookie Policy</a></li>
+                <li><a href="#" className="hover:text-white transition-colors">Compliance</a></li>
+              </ul>
+            </div>
           </div>
-          <div className="text-sm text-gray-500">
-            © {new Date().getFullYear()} PesaFlow Inc. All rights reserved.
+          <div className="border-t border-gray-800 pt-8 text-center text-sm">
+            <p>&copy; 2025 Mpesa Connect. All rights reserved. Built with ❤️ in Kenya.</p>
           </div>
         </div>
       </footer>

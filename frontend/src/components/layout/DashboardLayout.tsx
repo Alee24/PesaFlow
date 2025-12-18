@@ -4,6 +4,9 @@
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Sidebar, Header } from './DashboardShell';
+import { AlertCircle, XCircle } from 'lucide-react';
+import Link from 'next/link';
+import { Button } from '../ui/Button';
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
     const router = useRouter();
@@ -36,7 +39,40 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 <div className="print:hidden">
                     <Header user={user} />
                 </div>
-                <main className="flex-1 p-6 md:p-8 overflow-y-auto print:p-0 print:overflow-visible">
+
+                {/* Restriction Banner for Merchants */}
+                {user.role === 'MERCHANT' && user.status === 'PENDING_VERIFICATION' && (
+                    <div className="bg-amber-50 border-b border-amber-200 px-8 py-3 flex items-center justify-between animate-in slide-in-from-top duration-500">
+                        <div className="flex items-center gap-3">
+                            <div className="p-1.5 bg-amber-100 rounded-lg">
+                                <AlertCircle className="w-5 h-5 text-amber-600" />
+                            </div>
+                            <div>
+                                <p className="text-sm font-bold text-amber-900">Account Pending Verification</p>
+                                <p className="text-xs text-amber-700">Digital payments (M-Pesa, Invoices) and Withdrawals are restricted until admin approval. You can still use POS for Cash Sales.</p>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {user.role === 'MERCHANT' && user.status === 'REJECTED' && (
+                    <div className="bg-red-50 border-b border-red-200 px-8 py-3 flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                            <div className="p-1.5 bg-red-100 rounded-lg">
+                                <XCircle className="w-5 h-5 text-red-600" />
+                            </div>
+                            <div>
+                                <p className="text-sm font-bold text-red-900">Account Application Denied</p>
+                                <p className="text-xs text-red-700">Reason: {user.appealNotes || 'Documentation issues.'}. Please submit an appeal to use the app.</p>
+                            </div>
+                        </div>
+                        <Link href="/profile">
+                            <Button size="sm" variant="danger">Submit Appeal</Button>
+                        </Link>
+                    </div>
+                )}
+
+                <main className={`flex-1 p-6 md:p-8 overflow-y-auto print:p-0 print:overflow-visible ${(user.status === 'REJECTED' || user.status === 'SUSPENDED') ? 'pointer-events-none grayscale opacity-50 blur-[2px]' : ''}`}>
                     {children}
                 </main>
             </div>

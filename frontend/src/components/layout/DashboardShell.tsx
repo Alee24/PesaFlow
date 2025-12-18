@@ -3,7 +3,7 @@
 
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { LayoutDashboard, ShoppingCart, Package, CreditCard, ArrowLeftRight, Settings, LogOut, User, Store, FileText, Bell, X, CheckCircle, AlertCircle, Info } from 'lucide-react';
+import { LayoutDashboard, ShoppingCart, Package, CreditCard, ArrowLeftRight, Settings, LogOut, User, Store, FileText, Bell, X, CheckCircle, AlertCircle, Info, Lock } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useState, useEffect, useRef } from 'react';
 import { formatDistanceToNow } from 'date-fns';
@@ -12,13 +12,14 @@ import api from '@/lib/api';
 const menuItems = [
     { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
     { name: 'POS System', href: '/pos', icon: Store },
-    { name: 'Invoices', href: '/invoices', icon: FileText },
-    { name: 'Products', href: '/products', icon: Package },
+    { name: 'Invoices', href: '/invoices', icon: FileText, requiresActive: true },
+    { name: 'Inventory', href: '/products', icon: Package },
     { name: 'Transactions', href: '/transactions', icon: ArrowLeftRight },
-    { name: 'Withdrawals', href: '/withdrawals', icon: CreditCard, role: 'MERCHANT' },
+    { name: 'Withdrawals', href: '/withdrawals', icon: CreditCard, role: 'MERCHANT', requiresActive: true },
     { name: 'Settings', href: '/settings', icon: Settings },
+    { name: 'Merchant Verification', href: '/admin/verification', icon: CheckCircle, role: 'ADMIN' },
     { name: 'Users', href: '/admin/users', icon: User, role: 'ADMIN' },
-    { name: 'Withdrawal Approvals', href: '/admin/withdrawals', icon: CheckCircle, role: 'ADMIN' },
+    { name: 'Withdrawal Approvals', href: '/admin/withdrawals', icon: CreditCard, role: 'ADMIN' },
 ];
 
 
@@ -31,18 +32,40 @@ export function Sidebar({ user }: { user?: any }) {
         return true;
     });
 
+    const isItemLocked = (item: any) => {
+        if (user?.role === 'ADMIN') return false;
+        if (item.requiresActive && user?.status !== 'ACTIVE') return true;
+        return false;
+    };
+
     return (
         <aside className="fixed left-0 top-0 z-40 h-screen w-64 bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800 hidden md:block transition-all duration-300 ease-in-out">
             <div className="flex h-16 items-center border-b border-gray-200 dark:border-gray-800 px-6">
                 <div className="flex items-center gap-2 font-bold text-xl text-indigo-600 dark:text-indigo-400 animate-fade-in">
                     <Store className="w-6 h-6 hover:rotate-12 transition-transform duration-300" />
-                    <span className="bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 to-violet-600">PesaFlow</span>
+                    <span className="bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 to-violet-600">Mpesa Connect</span>
                 </div>
             </div>
 
             <nav className="p-4 space-y-1">
                 {filteredMenuItems.map((item) => {
                     const isActive = pathname === item.href;
+                    const locked = isItemLocked(item);
+
+                    if (locked) {
+                        return (
+                            <div
+                                key={item.href}
+                                className="group flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 ease-out text-gray-400 cursor-not-allowed opacity-60"
+                                title="Requires account activation"
+                            >
+                                <item.icon className="w-5 h-5" />
+                                {item.name}
+                                <Lock className="w-3 h-3 ml-auto text-amber-500" />
+                            </div>
+                        );
+                    }
+
                     return (
                         <Link
                             key={item.href}

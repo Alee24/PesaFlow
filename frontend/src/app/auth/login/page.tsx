@@ -37,7 +37,7 @@ export default function LoginPage() {
             <div className="w-full max-w-md">
                 <div className="text-center mb-8">
                     <h1 className="text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 to-purple-600">
-                        PesaFlow
+                        Mpesa Connect
                     </h1>
                     <p className="text-gray-500 mt-2">Sign in to your dashboard</p>
                 </div>

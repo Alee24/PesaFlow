@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useEffect, useState } from 'react';
@@ -6,9 +5,11 @@ import { Card } from '@/components/ui/Card';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import api from '@/lib/api';
 import { Button } from '@/components/ui/Button';
-import { Download, Filter } from 'lucide-react';
+import { Download, Filter, Receipt, Eye } from 'lucide-react';
 import dynamic from 'next/dynamic';
 import TransactionsPDF from '@/components/pdf/TransactionsPDF';
+import ReceiptPDF from '@/components/pdf/ReceiptPDF';
+import { Modal } from '@/components/ui/Modal';
 
 const PDFDownloadLink = dynamic(
     () => import('@react-pdf/renderer').then((mod) => mod.PDFDownloadLink),
@@ -23,6 +24,7 @@ export default function TransactionsPage() {
     const [endDate, setEndDate] = useState('');
     const [status, setStatus] = useState('ALL');
     const [isClient, setIsClient] = useState(false);
+    const [selectedTx, setSelectedTx] = useState<any>(null);
 
     useEffect(() => {
         setIsClient(true);
@@ -67,13 +69,17 @@ export default function TransactionsPage() {
         }
     };
 
+    const formatCurrency = (amount: number) => {
+        return new Intl.NumberFormat('en-KE', { style: 'currency', currency: 'KES' }).format(amount);
+    };
+
     return (
         <DashboardLayout>
-            <div className="max-w-7xl mx-auto space-y-8">
+            <div className="max-w-7xl mx-auto space-y-8 pb-12">
                 <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                     <div>
                         <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Transactions</h1>
-                        <p className="text-gray-500 text-sm">History of all payments</p>
+                        <p className="text-gray-500 text-sm">History of all payments and earnings</p>
                     </div>
 
                     <div className="flex flex-wrap items-center gap-2">
@@ -122,6 +128,7 @@ export default function TransactionsPage() {
                             >
                                 <option value="ALL">All Status</option>
                                 <option value="COMPLETED">Completed</option>
+                                <option value="PAID">Paid</option>
                                 <option value="PENDING">Pending</option>
                                 <option value="FAILED">Failed</option>
                                 <option value="CANCELLED">Cancelled</option>
@@ -147,36 +154,48 @@ export default function TransactionsPage() {
                         <table className="w-full text-left text-sm">
                             <thead>
                                 <tr className="border-b dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50">
-                                    <th className="py-4 px-6 text-gray-500 font-semibold">Date</th>
-                                    <th className="py-4 px-6 text-gray-500 font-semibold">Type</th>
-                                    <th className="py-4 px-6 text-gray-500 font-semibold">Ref</th>
-                                    <th className="py-4 px-6 text-gray-500 font-semibold">Paid By (Phone)</th>
-                                    <th className="py-4 px-6 text-gray-500 font-semibold text-right">Amount</th>
-                                    <th className="py-4 px-6 text-gray-500 font-semibold text-center">Status</th>
+                                    <th className="py-4 px-6 text-gray-500 font-semibold uppercase text-[10px] tracking-wider">Date</th>
+                                    <th className="py-4 px-6 text-gray-500 font-semibold uppercase text-[10px] tracking-wider">Type</th>
+                                    <th className="py-4 px-6 text-gray-500 font-semibold uppercase text-[10px] tracking-wider">Reference</th>
+                                    <th className="py-4 px-6 text-gray-500 font-semibold uppercase text-[10px] tracking-wider">Paid By</th>
+                                    <th className="py-4 px-6 text-gray-500 font-semibold uppercase text-[10px] tracking-wider text-right">Amount</th>
+                                    <th className="py-4 px-6 text-gray-500 font-semibold uppercase text-[10px] tracking-wider text-center">Status</th>
+                                    <th className="py-4 px-6 text-gray-500 font-semibold uppercase text-[10px] tracking-wider text-right">Action</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {loading ? (
-                                    <tr><td colSpan={6} className="text-center py-12 text-gray-500">Loading transactions...</td></tr>
+                                    <tr><td colSpan={7} className="text-center py-12 text-gray-500">Loading transactions...</td></tr>
                                 ) : transactions.length === 0 ? (
-                                    <tr><td colSpan={6} className="text-center py-12 text-gray-500">No transactions found for this period.</td></tr>
+                                    <tr><td colSpan={7} className="text-center py-12 text-gray-500">No transactions found for this period.</td></tr>
                                 ) : (
                                     transactions.map((tx) => (
                                         <tr key={tx.id} className="border-b dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
-                                            <td className="py-4 px-6 text-gray-700 dark:text-gray-300">{new Date(tx.createdAt).toLocaleString()}</td>
-                                            <td className="py-4 px-6 font-medium text-gray-900 dark:text-white">{tx.type}</td>
+                                            <td className="py-4 px-6 text-gray-700 dark:text-gray-300">
+                                                {new Date(tx.createdAt).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })}
+                                            </td>
+                                            <td className="py-4 px-6 font-medium text-gray-900 dark:text-white">
+                                                <span className="text-[10px] bg-gray-100 dark:bg-gray-700 px-2 py-0.5 rounded-full">
+                                                    {tx.type.replace('_', ' ')}
+                                                </span>
+                                            </td>
                                             <td className="py-4 px-6 font-mono text-xs text-gray-500">{tx.reference || '-'}</td>
                                             <td className="py-4 px-6 text-gray-600 dark:text-gray-400 font-mono text-xs">{getPhoneNumber(tx)}</td>
-                                            <td className={`py-4 px-6 text-right font-bold ${tx.type === 'WITHDRAWAL' ? 'text-red-600' : 'text-green-600'}`}>
-                                                {tx.type === 'WITHDRAWAL' ? '-' : '+'} KES {Number(tx.amount).toLocaleString()}
+                                            <td className={`py-4 px-6 text-right font-bold ${tx.type === 'WITHDRAWAL' || tx.type.includes('FEE') ? 'text-red-600' : 'text-green-600'}`}>
+                                                {tx.type === 'WITHDRAWAL' || tx.type.includes('FEE') ? '-' : '+'} {formatCurrency(Number(tx.amount))}
                                             </td>
                                             <td className="py-4 px-6 text-center">
-                                                <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${tx.status === 'COMPLETED' ? 'bg-green-100 text-green-800' :
+                                                <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${tx.status === 'COMPLETED' || tx.status === 'PAID' ? 'bg-green-100 text-green-800' :
                                                     tx.status === 'FAILED' ? 'bg-red-100 text-red-800' :
                                                         'bg-yellow-100 text-yellow-800'
                                                     }`}>
                                                     {tx.status}
                                                 </span>
+                                            </td>
+                                            <td className="py-4 px-6 text-right">
+                                                <Button variant="ghost" size="sm" onClick={() => setSelectedTx(tx)} className="h-8 px-2">
+                                                    <Eye className="w-3.5 h-3.5 mr-1" /> Details
+                                                </Button>
                                             </td>
                                         </tr>
                                     ))
@@ -186,6 +205,111 @@ export default function TransactionsPage() {
                     </div>
                 </Card>
             </div>
+
+            <Modal isOpen={!!selectedTx} onClose={() => setSelectedTx(null)} title="Transaction Details">
+                {selectedTx && (
+                    <div className="space-y-6 animate-in fade-in zoom-in duration-200">
+                        <div className="flex justify-between items-start border-b dark:border-gray-700 pb-4">
+                            <div>
+                                <p className="text-[10px] text-gray-400 uppercase font-black tracking-widest mb-1">REFERENCE</p>
+                                <p className="text-sm font-mono font-bold text-gray-900 dark:text-white uppercase">
+                                    {selectedTx.reference || selectedTx.id.split('-')[0]}
+                                </p>
+                            </div>
+                            <div className="flex flex-col items-end gap-2">
+                                <span className={`px-2 py-0.5 rounded text-[10px] font-black uppercase ${selectedTx.status === 'COMPLETED' || selectedTx.status === 'PAID' ? 'bg-green-500 text-white' : 'bg-yellow-500 text-white'
+                                    }`}>
+                                    {selectedTx.status}
+                                </span>
+                                {isClient && (
+                                    <PDFDownloadLink
+                                        document={<ReceiptPDF transaction={selectedTx} />}
+                                        fileName={`Receipt_${selectedTx.reference || selectedTx.id.split('-')[0]}.pdf`}
+                                    >
+                                        {({ loading }) => (
+                                            <button className="text-[10px] font-bold text-indigo-600 hover:text-indigo-500 underline flex items-center gap-1">
+                                                <Download className="w-3 h-3" />
+                                                {loading ? 'Generating...' : 'Download PDF Receipt'}
+                                            </button>
+                                        )}
+                                    </PDFDownloadLink>
+                                )}
+                            </div>
+                        </div>
+
+                        <div className="bg-gray-50 dark:bg-gray-900/50 p-6 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-inner">
+                            <div className="flex items-center gap-3 mb-6">
+                                <div className="p-2 bg-indigo-100 dark:bg-indigo-900/30 rounded-lg">
+                                    <Receipt className="w-5 h-5 text-indigo-600" />
+                                </div>
+                                <div>
+                                    <h4 className="font-bold text-gray-900 dark:text-white">
+                                        {selectedTx.sale ? 'Purchase Receipt' : 'Payment Information'}
+                                    </h4>
+                                    <p className="text-[10px] text-gray-400 font-bold uppercase tracking-tight">
+                                        {new Date(selectedTx.createdAt).toLocaleString()}
+                                    </p>
+                                </div>
+                            </div>
+
+                            {selectedTx.sale ? (
+                                <div className="space-y-4">
+                                    <div className="space-y-3 max-h-[250px] overflow-y-auto pr-2 custom-scrollbar">
+                                        {selectedTx.sale.items.map((item: any, idx: number) => (
+                                            <div key={idx} className="flex justify-between items-center text-sm group">
+                                                <div className="flex-1">
+                                                    <p className="font-bold text-gray-800 dark:text-gray-200 group-hover:text-indigo-600 transition-colors">
+                                                        {item.product?.name || 'Item'}
+                                                    </p>
+                                                    <p className="text-[10px] text-gray-400 font-medium">
+                                                        {item.quantity} units @ {formatCurrency(Number(item.unitPrice))}
+                                                    </p>
+                                                </div>
+                                                <p className="font-mono font-bold text-gray-900 dark:text-white">
+                                                    {formatCurrency(Number(item.subtotal))}
+                                                </p>
+                                            </div>
+                                        ))}
+                                    </div>
+                                    <div className="pt-4 border-t-2 border-dashed border-gray-200 dark:border-gray-700 mt-4">
+                                        <div className="flex justify-between items-center">
+                                            <p className="text-sm font-black text-gray-500 uppercase tracking-widest">Total</p>
+                                            <p className="text-2xl font-black text-indigo-600 tracking-tighter">
+                                                {formatCurrency(Number(selectedTx.amount))}
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            ) : (
+                                <div className="space-y-4">
+                                    <div className="flex justify-between items-center text-sm">
+                                        <span className="text-gray-500 font-medium uppercase text-[10px] tracking-wider">Type</span>
+                                        <span className="font-bold text-gray-900 dark:text-white uppercase">{selectedTx.type.replace('_', ' ')}</span>
+                                    </div>
+                                    <div className="flex justify-between items-center text-sm">
+                                        <span className="text-gray-500 font-medium uppercase text-[10px] tracking-wider">Amount</span>
+                                        <span className={`font-black text-lg ${selectedTx.type === 'WITHDRAWAL' ? 'text-red-600' : 'text-green-600'}`}>
+                                            {selectedTx.type === 'WITHDRAWAL' ? '-' : '+'} {formatCurrency(Number(selectedTx.amount))}
+                                        </span>
+                                    </div>
+                                    {selectedTx.feeCharged > 0 && (
+                                        <div className="flex justify-between items-center text-sm text-red-500">
+                                            <span className="font-medium uppercase text-[10px] tracking-wider">Processing Fee</span>
+                                            <span className="font-bold">-{formatCurrency(Number(selectedTx.feeCharged))}</span>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+                        </div>
+
+                        <div className="flex flex-col gap-2">
+                            <Button onClick={() => setSelectedTx(null)} className="w-full h-12 rounded-xl shadow-lg shadow-indigo-200 dark:shadow-none bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 transition-all border-none">
+                                Done
+                            </Button>
+                        </div>
+                    </div>
+                )}
+            </Modal>
         </DashboardLayout>
     );
 }

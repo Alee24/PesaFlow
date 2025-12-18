@@ -23,6 +23,13 @@ export const authenticateToken = (req: AuthRequest, res: Response, next: NextFun
             res.status(403).json({ error: 'Invalid or expired token' });
             return;
         }
+
+        // Broad guard: REJECTED or SUSPENDED users are blocked entirely
+        if (user.status === 'REJECTED' || user.status === 'SUSPENDED') {
+            res.status(403).json({ error: `Account ${user.status}. Please contact support.` });
+            return;
+        }
+
         req.user = user;
         next();
     });
@@ -31,6 +38,14 @@ export const authenticateToken = (req: AuthRequest, res: Response, next: NextFun
 export const requireAdmin = (req: AuthRequest, res: Response, next: NextFunction): void => {
     if (req.user?.role !== 'ADMIN') {
         res.status(403).json({ error: 'Admin access required' });
+        return;
+    }
+    next();
+};
+
+export const requireActive = (req: AuthRequest, res: Response, next: NextFunction): void => {
+    if (req.user?.status !== 'ACTIVE' && req.user?.role !== 'ADMIN') {
+        res.status(403).json({ error: 'Full account activation required for this feature.' });
         return;
     }
     next();

@@ -41,6 +41,7 @@ export default function SettingsPage() {
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [logoFile, setLogoFile] = useState<File | null>(null);
+    const [user, setUser] = useState<any>(null);
 
     // Toast State
     const [toast, setToast] = useState<{ visible: boolean; message: string; type: 'success' | 'error' | 'info' }>({
@@ -58,6 +59,8 @@ export default function SettingsPage() {
     const [testEmail, setTestEmail] = useState('');
 
     useEffect(() => {
+        const storedUser = localStorage.getItem('user');
+        if (storedUser) setUser(JSON.parse(storedUser));
         fetchProfile();
     }, []);
 
@@ -269,81 +272,85 @@ export default function SettingsPage() {
                     </Card>
 
                     {/* M-Pesa Settings */}
-                    <Card className="p-6">
-                        <div className="flex justify-between items-center mb-4 border-b pb-2">
-                            <h2 className="text-xl font-semibold text-gray-800 dark:text-white">M-Pesa API Configuration</h2>
-                            <div className="flex items-center gap-4">
-                                <span className={`text-xs px-2 py-1 rounded font-bold ${formData.mpesaEnv === 'production' ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800'}`}>
-                                    {formData.mpesaEnv === 'production' ? 'PRODUCTION' : 'SANDBOX'}
-                                </span>
-                            </div>
-                        </div>
-
-                        {/* Status Banner */}
-                        <div className={`p-4 rounded-lg border mb-6 flex flex-col gap-2 ${mpesaTestStatus === 'success' ? 'bg-green-50 border-green-200' : mpesaTestStatus === 'error' ? 'bg-red-50 border-red-200' : 'bg-gray-50 border-gray-100'}`}>
-                            <div className="flex items-center justify-between">
-                                <span className={`text-sm font-medium ${mpesaTestStatus === 'success' ? 'text-green-700' : mpesaTestStatus === 'error' ? 'text-red-700' : 'text-gray-700'}`}>
-                                    API Status: {mpesaTestStatus === 'idle' ? 'Not Checked' : mpesaTestStatus.toUpperCase()}
-                                </span>
-                                <Button type="button" onClick={handleTestMpesa} variant="outline" size="sm">Test M-Pesa Connection</Button>
-                            </div>
-                            {mpesaTestMessage && <p className={`text-xs ${mpesaTestStatus === 'error' ? 'text-red-600' : 'text-green-600'}`}>{mpesaTestMessage}</p>}
-                        </div>
-
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div className="flex flex-col space-y-1">
-                                <label className="text-sm font-medium text-gray-700">Environment</label>
-                                <select
-                                    name="mpesaEnv"
-                                    value={formData.mpesaEnv}
-                                    onChange={handleChange}
-                                    className="px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 bg-white"
-                                >
-                                    <option value="sandbox">Sandbox (Dev)</option>
-                                    <option value="production">Production (Live)</option>
-                                </select>
-                            </div>
-                            <Input label="Consumer Key" name="mpesaConsumerKey" value={formData.mpesaConsumerKey} onChange={handleChange} type="password" />
-                            <Input label="Consumer Secret" name="mpesaConsumerSecret" value={formData.mpesaConsumerSecret} onChange={handleChange} type="password" />
-                            <Input label="Passkey" name="mpesaPasskey" value={formData.mpesaPasskey} onChange={handleChange} type="password" />
-                            <Input label="Shortcode (Paybill/Till)" name="mpesaShortcode" value={formData.mpesaShortcode} onChange={handleChange} />
-                            <Input label="Initiator Name" name="mpesaInitiatorName" value={formData.mpesaInitiatorName} onChange={handleChange} />
-                            <Input label="Initiator Password" name="mpesaInitiatorPass" value={formData.mpesaInitiatorPass} onChange={handleChange} type="password" />
-                            <Input label="Callback URL" name="mpesaCallbackUrl" value={formData.mpesaCallbackUrl} onChange={handleChange} placeholder="https://yourdomain.com/api/mpesa/callback" />
-                        </div>
-                    </Card>
-
-                    {/* SMTP Settings */}
-                    <Card className="p-6">
-                        <h2 className="text-xl font-semibold mb-4 text-gray-800 dark:text-white border-b pb-2">Email Notifications (SMTP)</h2>
-
-                        {/* SMTP Status Banner */}
-                        <div className={`p-4 rounded-lg border mb-6 flex flex-col gap-2 ${smtpTestStatus === 'success' ? 'bg-green-50 border-green-200' : smtpTestStatus === 'error' ? 'bg-red-50 border-red-200' : 'bg-gray-50 border-gray-100'}`}>
-                            <div className="flex items-center justify-between">
-                                <span className={`text-sm font-medium ${smtpTestStatus === 'success' ? 'text-green-700' : smtpTestStatus === 'error' ? 'text-red-700' : 'text-gray-700'}`}>
-                                    SMTP Status: {smtpTestStatus === 'idle' ? 'Not Checked' : smtpTestStatus.toUpperCase()}
-                                </span>
-                                <div className="flex gap-2">
-                                    <input
-                                        type="email"
-                                        placeholder="Test Recipient Email"
-                                        className="text-sm px-3 py-1 border rounded-md"
-                                        value={testEmail}
-                                        onChange={(e) => setTestEmail(e.target.value)}
-                                    />
-                                    <Button type="button" onClick={handleTestSMTP} variant="outline" size="sm">Test SMTP</Button>
+                    {user?.role === 'ADMIN' && (
+                        <Card className="p-6">
+                            <div className="flex justify-between items-center mb-4 border-b pb-2">
+                                <h2 className="text-xl font-semibold text-gray-800 dark:text-white">M-Pesa API Configuration</h2>
+                                <div className="flex items-center gap-4">
+                                    <span className={`text-xs px-2 py-1 rounded font-bold ${formData.mpesaEnv === 'production' ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800'}`}>
+                                        {formData.mpesaEnv === 'production' ? 'PRODUCTION' : 'SANDBOX'}
+                                    </span>
                                 </div>
                             </div>
-                            {smtpTestMessage && <p className={`text-xs ${smtpTestStatus === 'error' ? 'text-red-600' : 'text-green-600'}`}>{smtpTestMessage}</p>}
-                        </div>
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <Input label="SMTP Host" name="smtpHost" value={formData.smtpHost} onChange={handleChange} placeholder="smtp.gmail.com" />
-                            <Input label="SMTP Port" name="smtpPort" type="number" value={formData.smtpPort} onChange={handleChange} placeholder="587" />
-                            <Input label="SMTP User" name="smtpUser" value={formData.smtpUser} onChange={handleChange} placeholder="user@example.com" />
-                            <Input label="SMTP Password" name="smtpPass" type="password" value={formData.smtpPass} onChange={handleChange} placeholder="App Password" />
-                        </div>
-                    </Card>
+                            {/* Status Banner */}
+                            <div className={`p-4 rounded-lg border mb-6 flex flex-col gap-2 ${mpesaTestStatus === 'success' ? 'bg-green-50 border-green-200' : mpesaTestStatus === 'error' ? 'bg-red-50 border-red-200' : 'bg-gray-50 border-gray-100'}`}>
+                                <div className="flex items-center justify-between">
+                                    <span className={`text-sm font-medium ${mpesaTestStatus === 'success' ? 'text-green-700' : mpesaTestStatus === 'error' ? 'text-red-700' : 'text-gray-700'}`}>
+                                        API Status: {mpesaTestStatus === 'idle' ? 'Not Checked' : mpesaTestStatus.toUpperCase()}
+                                    </span>
+                                    <Button type="button" onClick={handleTestMpesa} variant="outline" size="sm">Test M-Pesa Connection</Button>
+                                </div>
+                                {mpesaTestMessage && <p className={`text-xs ${mpesaTestStatus === 'error' ? 'text-red-600' : 'text-green-600'}`}>{mpesaTestMessage}</p>}
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div className="flex flex-col space-y-1">
+                                    <label className="text-sm font-medium text-gray-700">Environment</label>
+                                    <select
+                                        name="mpesaEnv"
+                                        value={formData.mpesaEnv}
+                                        onChange={handleChange}
+                                        className="px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 bg-white"
+                                    >
+                                        <option value="sandbox">Sandbox (Dev)</option>
+                                        <option value="production">Production (Live)</option>
+                                    </select>
+                                </div>
+                                <Input label="Consumer Key" name="mpesaConsumerKey" value={formData.mpesaConsumerKey} onChange={handleChange} type="password" />
+                                <Input label="Consumer Secret" name="mpesaConsumerSecret" value={formData.mpesaConsumerSecret} onChange={handleChange} type="password" />
+                                <Input label="Passkey" name="mpesaPasskey" value={formData.mpesaPasskey} onChange={handleChange} type="password" />
+                                <Input label="Shortcode (Paybill/Till)" name="mpesaShortcode" value={formData.mpesaShortcode} onChange={handleChange} />
+                                <Input label="Initiator Name" name="mpesaInitiatorName" value={formData.mpesaInitiatorName} onChange={handleChange} />
+                                <Input label="Initiator Password" name="mpesaInitiatorPass" value={formData.mpesaInitiatorPass} onChange={handleChange} type="password" />
+                                <Input label="Callback URL" name="mpesaCallbackUrl" value={formData.mpesaCallbackUrl} onChange={handleChange} placeholder="https://yourdomain.com/api/mpesa/callback" />
+                            </div>
+                        </Card>
+                    )}
+
+                    {/* SMTP Settings */}
+                    {user?.role === 'ADMIN' && (
+                        <Card className="p-6">
+                            <h2 className="text-xl font-semibold mb-4 text-gray-800 dark:text-white border-b pb-2">Email Notifications (SMTP)</h2>
+
+                            {/* SMTP Status Banner */}
+                            <div className={`p-4 rounded-lg border mb-6 flex flex-col gap-2 ${smtpTestStatus === 'success' ? 'bg-green-50 border-green-200' : smtpTestStatus === 'error' ? 'bg-red-50 border-red-200' : 'bg-gray-50 border-gray-100'}`}>
+                                <div className="flex items-center justify-between">
+                                    <span className={`text-sm font-medium ${smtpTestStatus === 'success' ? 'text-green-700' : smtpTestStatus === 'error' ? 'text-red-700' : 'text-gray-700'}`}>
+                                        SMTP Status: {smtpTestStatus === 'idle' ? 'Not Checked' : smtpTestStatus.toUpperCase()}
+                                    </span>
+                                    <div className="flex gap-2">
+                                        <input
+                                            type="email"
+                                            placeholder="Test Recipient Email"
+                                            className="text-sm px-3 py-1 border rounded-md"
+                                            value={testEmail}
+                                            onChange={(e) => setTestEmail(e.target.value)}
+                                        />
+                                        <Button type="button" onClick={handleTestSMTP} variant="outline" size="sm">Test SMTP</Button>
+                                    </div>
+                                </div>
+                                {smtpTestMessage && <p className={`text-xs ${smtpTestStatus === 'error' ? 'text-red-600' : 'text-green-600'}`}>{smtpTestMessage}</p>}
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <Input label="SMTP Host" name="smtpHost" value={formData.smtpHost} onChange={handleChange} placeholder="smtp.gmail.com" />
+                                <Input label="SMTP Port" name="smtpPort" type="number" value={formData.smtpPort} onChange={handleChange} placeholder="587" />
+                                <Input label="SMTP User" name="smtpUser" value={formData.smtpUser} onChange={handleChange} placeholder="user@example.com" />
+                                <Input label="SMTP Password" name="smtpPass" type="password" value={formData.smtpPass} onChange={handleChange} placeholder="App Password" />
+                            </div>
+                        </Card>
+                    )}
 
                     {/* Display Info */}
                     <Card className="p-6">

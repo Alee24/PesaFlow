@@ -40,7 +40,20 @@ export const getTransactions = async (req: Request, res: Response) => {
         const transactions = await prisma.transaction.findMany({
             where,
             orderBy: { createdAt: 'desc' },
-            include: { initiator: { select: { name: true, email: true } } }
+            include: {
+                initiator: { select: { name: true, email: true } },
+                sale: {
+                    include: {
+                        items: {
+                            include: {
+                                product: {
+                                    select: { name: true, sku: true }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         });
         res.json(transactions);
     } catch (error) {

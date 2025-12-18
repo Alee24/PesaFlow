@@ -11,7 +11,13 @@ const registerSchema = z.object({
     email: z.string().email(),
     phoneNumber: z.string().min(10),
     password: z.string().min(6),
-    role: z.string().optional(),
+    role: z.string().optional().default('MERCHANT'),
+    // Business Profile Fields
+    companyName: z.string().min(1),
+    idNumber: z.string().min(1),
+    kraPinNumber: z.string().min(1),
+    location: z.string().min(1),
+    dataPolicyAccepted: z.any().transform(v => v === 'true' || v === true || v === 'on'),
 });
 
 const loginSchema = z.object({
@@ -21,7 +27,9 @@ const loginSchema = z.object({
 
 export const register = async (req: Request, res: Response): Promise<void> => {
     try {
-        const { email, phoneNumber, password, role } = registerSchema.parse(req.body);
+        const body = req.body;
+        // Parse the body with Zod
+        const { email, phoneNumber, password, role, companyName, idNumber, kraPinNumber, location, dataPolicyAccepted } = registerSchema.parse(body);
 
         const existingUser = await prisma.user.findFirst({
             where: { OR: [{ email }, { phoneNumber }] },
@@ -33,38 +41,64 @@ export const register = async (req: Request, res: Response): Promise<void> => {
         }
 
         const passwordHash = await bcrypt.hash(password, 10);
+        const protocol = req.protocol;
+        const host = req.get('host');
+        const files = req.files as any;
 
-        // Transaction to create User and Wallet atomically
-        const user = await prisma.$transaction(async (tx) => {
-            const newUser = await tx.user.create({
+        const getFileUrl = (fieldName: string) => {
+            if (files && files[fieldName] && files[fieldName][0]) {
+                return `${protocol}://${host}/uploads/${files[fieldName][0].filename}`;
+            }
+            return null;
+        };
+
+        const result = await prisma.$transaction(async (tx) => {
+            // 1. Create User
+            const user = await tx.user.create({
                 data: {
                     email,
                     phoneNumber,
                     passwordHash,
-                    role: role || 'MERCHANT',
+                    role,
+                    status: 'PENDING_VERIFICATION'
                 },
             });
 
-            // Create a wallet for the new user
+            // 2. Create Wallet
             await tx.wallet.create({
-                data: {
-                    userId: newUser.id,
-                },
+                data: { userId: user.id },
             });
 
-            return newUser;
+            // 3. Create Business Profile with KYC Docs
+            await tx.businessProfile.create({
+                data: {
+                    userId: user.id,
+                    companyName,
+                    idNumber,
+                    kraPinNumber,
+                    location,
+                    dataPolicyAccepted,
+                    idFrontUrl: getFileUrl('idFront'),
+                    idBackUrl: getFileUrl('idBack'),
+                    businessPermitUrl: getFileUrl('businessPermit'),
+                    registrationCertUrl: getFileUrl('registrationCert'),
+                    kraCertUrl: getFileUrl('kraCert'),
+                }
+            });
+
+            return user;
         });
 
         const token = jwt.sign(
-            { userId: user.id, role: user.role },
+            { userId: result.id, role: result.role },
             process.env.JWT_SECRET || 'fallback_secret',
             { expiresIn: '7d' }
         );
 
         res.status(201).json({
-            message: 'User registered successfully',
+            message: 'Registration submitted successfully. Your account is pending verification by our team.',
             token,
-            user: { id: user.id, email: user.email, role: user.role }
+            user: { id: result.id, email: result.email, role: result.role, status: result.status }
         });
     } catch (error) {
         if (error instanceof z.ZodError) {

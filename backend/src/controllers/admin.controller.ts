@@ -14,14 +14,8 @@ interface AuthRequest extends Request {
 export const getAllUsers = async (req: AuthRequest, res: Response) => {
     try {
         const users = await prisma.user.findMany({
-            select: {
-                id: true,
-                name: true,
-                email: true,
-                phoneNumber: true,
-                role: true,
-                status: true,
-                createdAt: true,
+            include: {
+                businessProfile: true,
                 _count: {
                     select: {
                         products: true,
@@ -83,15 +77,18 @@ export const createUser = async (req: AuthRequest, res: Response) => {
 export const updateUserStatus = async (req: AuthRequest, res: Response) => {
     try {
         const { id } = req.params;
-        const { status } = req.body; // ACTIVE, SUSPENDED
+        const { status, notes } = req.body; // ACTIVE, SUSPENDED, REJECTED
 
-        if (!['ACTIVE', 'SUSPENDED'].includes(status)) {
+        if (!['ACTIVE', 'SUSPENDED', 'REJECTED', 'PENDING_VERIFICATION'].includes(status)) {
             return res.status(400).json({ error: 'Invalid status' });
         }
 
         const updatedUser = await prisma.user.update({
             where: { id },
-            data: { status }
+            data: {
+                status,
+                appealNotes: notes || null
+            }
         });
 
         res.json({ message: `User status updated to ${status}`, user: updatedUser });

@@ -1,0 +1,133 @@
+import { PrismaClient } from '@prisma/client';
+import bcrypt from 'bcryptjs';
+
+const prisma = new PrismaClient();
+
+async function createTestUsers() {
+    try {
+        console.log('🔧 Creating test users...\n');
+
+        // Hash password
+        const hashedPassword = await bcrypt.hash('admin123', 10);
+
+        // Create Admin User
+        const admin = await prisma.user.create({
+            data: {
+                name: 'Admin User',
+                email: 'admin@mpesaconnect.com',
+                phoneNumber: '0712345678',
+                passwordHash: hashedPassword,
+                role: 'ADMIN',
+                status: 'ACTIVE',
+                wallet: {
+                    create: {
+                        balance: 10000
+                    }
+                }
+            }
+        });
+
+        console.log('✅ Admin user created:');
+        console.log('   Email: admin@mpesaconnect.com');
+        console.log('   Password: admin123');
+        console.log('   Role: ADMIN');
+        console.log('   Status: ACTIVE\n');
+
+        // Create Merchant User (Active)
+        const merchantActive = await prisma.user.create({
+            data: {
+                name: 'Active Merchant',
+                email: 'merchant@mpesaconnect.com',
+                phoneNumber: '0723456789',
+                passwordHash: hashedPassword,
+                role: 'MERCHANT',
+                status: 'ACTIVE',
+                wallet: {
+                    create: {
+                        balance: 5000
+                    }
+                },
+                businessProfile: {
+                    create: {
+                        companyName: 'Test Business Ltd',
+                        idNumber: '12345678',
+                        kraPinNumber: 'A001234567P',
+                        location: 'Nairobi, Kenya',
+                        dataPolicyAccepted: true
+                    }
+                }
+            }
+        });
+
+        console.log('✅ Active Merchant created:');
+        console.log('   Email: merchant@mpesaconnect.com');
+        console.log('   Password: admin123');
+        console.log('   Role: MERCHANT');
+        console.log('   Status: ACTIVE\n');
+
+        // Create Pending Merchant
+        const merchantPending = await prisma.user.create({
+            data: {
+                name: 'Pending Merchant',
+                email: 'pending@mpesaconnect.com',
+                phoneNumber: '0734567890',
+                passwordHash: hashedPassword,
+                role: 'MERCHANT',
+                status: 'PENDING_VERIFICATION',
+                wallet: {
+                    create: {
+                        balance: 0
+                    }
+                },
+                businessProfile: {
+                    create: {
+                        companyName: 'Pending Business',
+                        idNumber: '87654321',
+                        kraPinNumber: 'A007654321P',
+                        location: 'Mombasa, Kenya',
+                        dataPolicyAccepted: true
+                    }
+                }
+            }
+        });
+
+        console.log('✅ Pending Merchant created:');
+        console.log('   Email: pending@mpesaconnect.com');
+        console.log('   Password: admin123');
+        console.log('   Role: MERCHANT');
+        console.log('   Status: PENDING_VERIFICATION\n');
+
+        console.log('🎉 All test users created successfully!\n');
+        console.log('📝 Login Credentials:');
+        console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+        console.log('Admin Account:');
+        console.log('  Email: admin@mpesaconnect.com');
+        console.log('  Password: admin123');
+        console.log('');
+        console.log('Active Merchant Account:');
+        console.log('  Email: merchant@mpesaconnect.com');
+        console.log('  Password: admin123');
+        console.log('');
+        console.log('Pending Merchant Account (for testing restrictions):');
+        console.log('  Email: pending@mpesaconnect.com');
+        console.log('  Password: admin123');
+        console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
+
+    } catch (error) {
+        console.error('❌ Error creating test users:', error);
+        throw error;
+    } finally {
+        await prisma.$disconnect();
+    }
+}
+
+createTestUsers()
+    .then(() => {
+        console.log('✅ Setup completed successfully!');
+        process.exit(0);
+    })
+    .catch((error) => {
+        console.error('❌ Setup failed!');
+        console.error(error);
+        process.exit(1);
+    });

@@ -13,8 +13,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "PesaFlow - M-Pesa SaaS Platform",
-  description: "Seamless M-Pesa payments for your business",
+  title: "Mpesa Connect - Complete Business Management Platform",
+  description: "Advanced POS, Inventory Management, M-Pesa Integration & Merchant Verification System",
 };
 
 import { ToastProvider } from "@/contexts/ToastContext";

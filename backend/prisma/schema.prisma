@@ -19,7 +19,8 @@ model User {
   phoneNumber   String   @unique @map("phone_number")
   passwordHash  String   @map("password_hash")
   role          String   @default("MERCHANT") // ADMIN, MERCHANT
-  status        String   @default("ACTIVE") // ACTIVE, SUSPENDED
+  status        String   @default("PENDING_VERIFICATION") // ACTIVE, SUSPENDED, PENDING_VERIFICATION, REJECTED
+  appealNotes   String?  @map("appeal_notes")
   createdAt     DateTime @default(now()) @map("created_at")
   updatedAt     DateTime @updatedAt @map("updated_at")
 
@@ -69,6 +70,15 @@ model BusinessProfile {
   vatEnabled          Boolean @default(false)
   vatRate             Float   @default(16.0)
 
+  // KYC Fields
+  idNumber            String?  @map("id_number")
+  idFrontUrl          String?  @map("id_front_url")
+  idBackUrl           String?  @map("id_back_url")
+  businessPermitUrl   String?  @map("business_permit_url")
+  registrationCertUrl String?  @map("registration_cert_url")
+  kraCertUrl          String?  @map("kra_cert_url")
+  dataPolicyAccepted  Boolean  @default(false) @map("data_policy_accepted")
+  verificationNotes   String?  @map("verification_notes")
 
   createdAt     DateTime @default(now()) @map("created_at")
   updatedAt     DateTime @updatedAt @map("updated_at")
@@ -109,19 +119,54 @@ model Product {
   description   String?
   imageUrl      String?  @map("image_url")
   sku           String?
+  barcode       String?
   price         Decimal
+  costPrice     Decimal? @map("cost_price")
   stockQuantity Int      @default(0) @map("stock_quantity")
+  minStockLevel Int      @default(0) @map("min_stock_level")
+  maxStockLevel Int?     @map("max_stock_level")
+  reorderPoint  Int      @default(10) @map("reorder_point")
+  reorderQuantity Int?   @map("reorder_quantity")
   isTaxable     Boolean  @default(false) @map("is_taxable")
-  status        String   @default("ACTIVE") // ACTIVE, ARCHIVED
+  taxRate       Decimal? @default(0) @map("tax_rate")
+  status        String   @default("ACTIVE") // ACTIVE, ARCHIVED, OUT_OF_STOCK
+  unit          String?  @default("pcs") // pcs, kg, liters, etc
+  
+  // Supplier Information
+  supplierName  String?  @map("supplier_name")
+  supplierContact String? @map("supplier_contact")
+  
+  // Batch/Lot Tracking
+  batchNumber   String?  @map("batch_number")
+  expiryDate    DateTime? @map("expiry_date")
   
   categoryId    String?  @map("category_id")
   category      Category? @relation(fields: [categoryId], references: [id])
   
   createdAt     DateTime @default(now()) @map("created_at")
-
+  updatedAt     DateTime @updatedAt @map("updated_at")
+  
   saleItems     SaleItem[]
+  stockMovements StockMovement[]
 
   @@map("products")
+}
+
+model StockMovement {
+  id            String   @id @default(uuid())
+  productId     String   @map("product_id")
+  product       Product  @relation(fields: [productId], references: [id])
+  merchantId    String   @map("merchant_id")
+  type          String   // IN, OUT, ADJUSTMENT, RETURN, DAMAGED
+  quantity      Int
+  previousStock Int      @map("previous_stock")
+  newStock      Int      @map("new_stock")
+  reason        String?
+  reference     String?  // Sale ID, Purchase Order, etc
+  notes         String?
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  @@map("stock_movements")
 }
 
 model Transaction {
@@ -149,10 +194,34 @@ model Sale {
   id              String   @id @default(uuid())
   merchantId      String   @map("merchant_id")
   merchant        User     @relation(fields: [merchantId], references: [id])
+  
+  // Customer Information
+  customerName    String?  @map("customer_name")
+  customerPhone   String?  @map("customer_phone")
+  customerEmail   String?  @map("customer_email")
+  
+  // Pricing
+  subtotal        Decimal  @default(0)
+  discountType    String?  @map("discount_type") // PERCENTAGE, FIXED
+  discountValue   Decimal? @default(0) @map("discount_value")
+  discountAmount  Decimal  @default(0) @map("discount_amount")
+  taxAmount       Decimal  @default(0) @map("tax_amount")
   totalAmount     Decimal  @map("total_amount")
-  paymentMethod   String   @default("MPESA_STK") @map("payment_method")
+  
+  // Payment
+  paymentMethod   String   @default("CASH") @map("payment_method") // CASH, MPESA_STK, SPLIT
+  paymentStatus   String   @default("PAID") @map("payment_status") // PAID, PARTIAL, PENDING
+  amountPaid      Decimal  @default(0) @map("amount_paid")
+  amountDue       Decimal  @default(0) @map("amount_due")
+  changeGiven     Decimal? @default(0) @map("change_given")
+  
+  // Split Payment Details (JSON)
+  splitPayments   String?  @map("split_payments") // JSON: [{method: 'CASH', amount: 100}, {method: 'MPESA', amount: 200}]
+  
   transactionId   String?  @unique @map("transaction_id")
   transaction     Transaction? @relation(fields: [transactionId], references: [id])
+  
+  notes           String?
   createdAt       DateTime @default(now()) @map("created_at")
 
   items           SaleItem[]
@@ -168,6 +237,8 @@ model SaleItem {
   product   Product  @relation(fields: [productId], references: [id])
   quantity  Int
   unitPrice Decimal  @map("unit_price")
+  discount  Decimal  @default(0)
+  tax       Decimal  @default(0)
   subtotal  Decimal
 
   @@map("sale_items")
