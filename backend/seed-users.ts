@@ -2,7 +2,21 @@ import 'dotenv/config';
 import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcryptjs';
 
-const prisma = new PrismaClient();
+
+if (!process.env.DATABASE_URL) {
+    console.error('❌ DATABASE_URL is not defined in environment variables!');
+    process.exit(1);
+}
+
+console.log(`🔧 Using Database URL: ${process.env.DATABASE_URL.split('@')[1] || '...hidden...'}`); // Log host only for safety
+
+const prisma = new PrismaClient({
+    datasources: {
+        db: {
+            url: process.env.DATABASE_URL,
+        },
+    },
+});
 
 async function createTestUsers() {
     try {
