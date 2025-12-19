@@ -21,10 +21,21 @@ const storage = multer.diskStorage({
 });
 
 const fileFilter = (req: any, file: any, cb: any) => {
-    if (file.mimetype.startsWith('image/') || file.mimetype === 'application/pdf') {
+    const allowedTypes = [
+        'image/jpeg',
+        'image/png',
+        'image/gif',
+        'application/pdf',
+        'text/csv',
+        'application/vnd.ms-excel', // Often used for CSV
+        'application/csv',
+        'text/x-csv'
+    ];
+
+    if (allowedTypes.includes(file.mimetype) || file.originalname.endsWith('.csv')) {
         cb(null, true);
     } else {
-        cb(new Error('Only images and PDF documents are allowed!'), false);
+        cb(new Error('Only images, PDFs, and CSV documents are allowed!'), false);
     }
 };
 

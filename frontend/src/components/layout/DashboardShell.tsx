@@ -221,7 +221,7 @@ export function Header({ user }: { user?: any }) {
                         >
                             <div className="flex flex-col text-right hidden sm:block">
                                 <span className="text-sm font-medium text-gray-900 dark:text-white group-hover:text-indigo-600 transition-colors">
-                                    {user?.email || 'User'}
+                                    {user?.name || user?.email || 'User'}
                                 </span>
                                 <span className="text-xs text-gray-500 capitalize">{user?.role?.toLowerCase() || 'Merchant'}</span>
                             </div>

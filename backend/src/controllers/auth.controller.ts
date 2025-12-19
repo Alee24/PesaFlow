@@ -98,7 +98,7 @@ export const register = async (req: Request, res: Response): Promise<void> => {
         res.status(201).json({
             message: 'Registration submitted successfully. Your account is pending verification by our team.',
             token,
-            user: { id: result.id, email: result.email, role: result.role, status: result.status }
+            user: { id: result.id, email: result.email, name: result.name, role: result.role, status: result.status }
         });
     } catch (error) {
         if (error instanceof z.ZodError) {
@@ -136,7 +136,7 @@ export const login = async (req: Request, res: Response): Promise<void> => {
         res.json({
             message: 'Login successful',
             token,
-            user: { id: user.id, email: user.email, role: user.role }
+            user: { id: user.id, email: user.email, name: user.name, role: user.role, status: user.status }
         });
     } catch (error) {
         if (error instanceof z.ZodError) {
@@ -205,11 +205,38 @@ export const updateUser = async (req: Request, res: Response): Promise<void> => 
 
         res.json({
             message: 'User updated successfully',
-            user: { id: updatedUser.id, email: updatedUser.email, role: updatedUser.role }
+            user: { id: updatedUser.id, email: updatedUser.email, name: updatedUser.name, role: updatedUser.role, status: updatedUser.status }
         });
 
     } catch (error) {
         console.error("Update User Error:", error);
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+};
+
+export const getCurrentUser = async (req: Request, res: Response): Promise<void> => {
+    try {
+        const userId = (req as any).user.userId;
+        const user = await prisma.user.findUnique({
+            where: { id: userId }
+        });
+
+        if (!user) {
+            res.status(404).json({ error: 'User not found' });
+            return;
+        }
+
+        res.json({
+            user: {
+                id: user.id,
+                email: user.email,
+                name: user.name,
+                role: user.role,
+                status: user.status
+            }
+        });
+    } catch (error) {
+        console.error("Get User Error:", error);
         res.status(500).json({ error: 'Internal Server Error' });
     }
 };

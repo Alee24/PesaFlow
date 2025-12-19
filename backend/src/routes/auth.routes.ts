@@ -1,6 +1,6 @@
 
 import { Router } from 'express';
-import { register, login, updateUser } from '../controllers/auth.controller';
+import { register, login, updateUser, getCurrentUser } from '../controllers/auth.controller';
 import { authenticateToken } from '../middlewares/auth.middleware';
 
 import { upload } from '../middlewares/upload.middleware';
@@ -15,6 +15,7 @@ router.post('/register', upload.fields([
     { name: 'kraCert', maxCount: 1 }
 ]), register);
 router.post('/login', login);
+router.get('/me', authenticateToken, getCurrentUser);
 router.put('/me', authenticateToken, updateUser);
 
 export default router;

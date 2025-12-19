@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { X, CheckCircle, Smartphone, Banknote } from 'lucide-react';
 import api from '@/lib/api';
+import { normalizePhoneNumber } from '@/lib/phoneUtils';
 
 interface PaymentModalProps {
     totalAmount: number;
@@ -60,7 +61,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({ totalAmount, items, onClose
             // For this iteration, let's just simulate interface or use basic STK.
             const res = await api.post('/mpesa/stkpush', {
                 amount: totalAmount,
-                phoneNumber: phone
+                phoneNumber: normalizePhoneNumber(phone)
             });
 
             // In a real POS, we'd poll here. For prototype, we show "Sent".
@@ -142,7 +143,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({ totalAmount, items, onClose
                         <div className="space-y-4">
                             <Input
                                 label="Customer Phone"
-                                placeholder="2547..."
+                                placeholder="07123456789 or 7123456789"
                                 value={phone}
                                 onChange={(e) => setPhone(e.target.value)}
                             />

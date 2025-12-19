@@ -20,7 +20,23 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             router.push('/auth/login');
             return;
         }
+
+        // Load initial data from storage
         setUser(JSON.parse(userData));
+
+        // Fetch fresh data from API to ensure status/name are up to date
+        import('@/lib/api').then(({ default: api }) => {
+            api.get('/auth/me')
+                .then(res => {
+                    const freshUser = res.data.user;
+                    setUser(freshUser);
+                    localStorage.setItem('user', JSON.stringify(freshUser));
+                })
+                .catch(() => {
+                    // If fetch fails (e.g. token expired), user might need to login again ideally
+                    // But we'll let existing api interceptors handle 401s if they exist
+                });
+        });
     }, [router]);
 
     if (!isClient) return null; // Prevent hydration mismatch

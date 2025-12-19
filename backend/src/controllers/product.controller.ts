@@ -1,6 +1,8 @@
 import { Request, Response } from 'express';
 import { PrismaClient } from '@prisma/client';
 import { z } from 'zod';
+import fs from 'fs';
+import { parse } from 'csv-parse';
 
 const prisma = new PrismaClient();
 
@@ -450,5 +452,88 @@ export const getInventoryStats = async (req: AuthRequest, res: Response): Promis
     } catch (error) {
         console.error(error);
         res.status(500).json({ error: 'Failed to fetch inventory stats' });
+    }
+};
+
+export const importProducts = async (req: AuthRequest, res: Response): Promise<void> => {
+    try {
+        if (!req.user) {
+            res.status(401).json({ error: 'Unauthorized' });
+            return;
+        }
+
+        if (!req.file) {
+            res.status(400).json({ error: 'No CSV file uploaded' });
+            return;
+        }
+
+        const results: any[] = [];
+        const processFile = () => new Promise<void>((resolve, reject) => {
+            fs.createReadStream(req.file!.path)
+                .pipe(parse({ columns: true, skip_empty_lines: true }))
+                .on('data', (data) => results.push(data))
+                .on('error', (err) => reject(err))
+                .on('end', () => resolve());
+        });
+
+        await processFile();
+
+        let successCount = 0;
+        let errorCount = 0;
+
+        // Use transaction or careful iteration. Loop is better for mixed success/fail report.
+        for (const item of results) {
+            try {
+                // Determine Category
+                let categoryId = null;
+                if (item.category) {
+                    const cleanCat = item.category.trim();
+                    let category = await prisma.category.findFirst({
+                        where: { name: cleanCat, merchantId: req.user.userId }
+                    });
+                    if (!category) {
+                        category = await prisma.category.create({
+                            data: { name: cleanCat, merchantId: req.user.userId }
+                        });
+                    }
+                    categoryId = category.id;
+                }
+
+                await prisma.product.create({
+                    data: {
+                        name: item.name || 'Untitled Product',
+                        price: Number(item.price) || 0,
+                        costPrice: Number(item.costPrice) || 0,
+                        stockQuantity: Number(item.stock) || 0,
+                        sku: item.sku || undefined,
+                        barcode: item.barcode || undefined,
+                        description: item.description || '',
+                        merchantId: req.user.userId,
+                        categoryId: categoryId,
+                        unit: item.unit || 'pcs'
+                    }
+                });
+                successCount++;
+            } catch (err) {
+                console.error("Row Import Failed:", err);
+                errorCount++;
+            }
+        }
+
+        // Cleanup file
+        fs.unlinkSync(req.file.path);
+
+        res.json({
+            message: 'Import processed',
+            stats: {
+                total: results.length,
+                success: successCount,
+                failed: errorCount
+            }
+        });
+
+    } catch (error) {
+        console.error("Import Error:", error);
+        res.status(500).json({ error: 'Failed to process import' });
     }
 };

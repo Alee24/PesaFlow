@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Card } from '@/components/ui/Card';
 import api from '@/lib/api';
+import { normalizePhoneNumber } from '@/lib/phoneUtils';
 
 import { ShieldCheck, User, Building2, FileUp, CheckCircle2 } from 'lucide-react';
 
@@ -78,7 +79,12 @@ export default function RegisterPage() {
 
         try {
             const data = new FormData();
-            Object.keys(formData).forEach(key => data.append(key, formData[key]));
+            // Normalize phone number before sending
+            const normalizedData = {
+                ...formData,
+                phoneNumber: normalizePhoneNumber(formData.phoneNumber)
+            };
+            Object.keys(normalizedData).forEach(key => data.append(key, normalizedData[key]));
             Object.keys(files).forEach(key => {
                 if (files[key]) data.append(key, files[key]);
             });
@@ -123,7 +129,7 @@ export default function RegisterPage() {
                             value={formData.phoneNumber}
                             onChange={(e) => setFormData({ ...formData, phoneNumber: e.target.value })}
                             required
-                            placeholder="2547..."
+                            placeholder="07123456789 or 7123456789"
                         />
                         <div className="grid grid-cols-2 gap-4">
                             <Input

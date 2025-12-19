@@ -7,9 +7,10 @@ import { Button } from '@/components/ui/Button';
 import Link from 'next/link';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import api from '@/lib/api';
-import { Tag, Trash2 } from 'lucide-react';
+import { Tag, Trash2, FileUp, Download } from 'lucide-react';
 import { useToast } from '@/contexts/ToastContext';
 import { ConfirmModal } from '@/components/ui/ConfirmModal';
+import { getImageUrl } from '@/lib/utils';
 
 interface Product {
     id: string;
@@ -30,6 +31,8 @@ export default function ProductsPage() {
         elementId: '',
         loading: false
     });
+    const [uploading, setUploading] = useState(false);
+    const fileInputRef = React.useRef<HTMLInputElement>(null);
 
     useEffect(() => {
         fetchProducts();
@@ -66,6 +69,33 @@ export default function ProductsPage() {
         setDeleteModal({ isOpen: true, elementId: id, loading: false });
     };
 
+    const handleImportClick = () => {
+        fileInputRef.current?.click();
+    };
+
+    const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (!e.target.files || !e.target.files[0]) return;
+
+        const file = e.target.files[0];
+        const formData = new FormData();
+        formData.append('file', file);
+
+        setUploading(true);
+        try {
+            const res = await api.post('/products/import', formData, {
+                headers: { 'Content-Type': 'multipart/form-data' }
+            });
+            showToast(`Imported: ${res.data.stats.success} success, ${res.data.stats.failed} failed`, 'success');
+            fetchProducts();
+        } catch (error: any) {
+            console.error(error);
+            showToast(error.response?.data?.error || 'Failed to import products', 'error');
+        } finally {
+            setUploading(false);
+            if (fileInputRef.current) fileInputRef.current.value = '';
+        }
+    };
+
     return (
         <DashboardLayout>
             <div className="max-w-7xl mx-auto space-y-8">
@@ -80,6 +110,26 @@ export default function ProductsPage() {
                                 <Tag className="w-4 h-4" /> Manage Categories
                             </Button>
                         </Link>
+                        <a href="/product_template.csv" download="product_template.csv">
+                            <Button variant="outline" className="flex items-center gap-2">
+                                <Download className="w-4 h-4" /> Template
+                            </Button>
+                        </a>
+                        <input
+                            type="file"
+                            ref={fileInputRef}
+                            className="hidden"
+                            accept=".csv"
+                            onChange={handleFileChange}
+                        />
+                        <Button
+                            variant="outline"
+                            className="flex items-center gap-2"
+                            onClick={handleImportClick}
+                            isLoading={uploading}
+                        >
+                            <FileUp className="w-4 h-4" /> Import CSV
+                        </Button>
                         <Link href="/products/new">
                             <Button className="shadow-lg shadow-indigo-200 dark:shadow-none">+ Add Product</Button>
                         </Link>
@@ -110,7 +160,7 @@ export default function ProductsPage() {
                                                 <div className="flex items-center gap-3">
                                                     <div className="h-10 w-10 rounded-lg bg-gray-100 dark:bg-gray-800 overflow-hidden flex-shrink-0 border border-gray-200 dark:border-gray-700">
                                                         {product.imageUrl ? (
-                                                            <img src={product.imageUrl} className="h-full w-full object-cover" alt="" />
+                                                            <img src={getImageUrl(product.imageUrl)} className="h-full w-full object-cover" alt="" />
                                                         ) : (
                                                             <div className="flex items-center justify-center h-full text-gray-400">
                                                                 <Tag className="w-4 h-4" />

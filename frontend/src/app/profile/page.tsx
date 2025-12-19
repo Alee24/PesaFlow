@@ -7,8 +7,11 @@ import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
 import api from '@/lib/api';
 import { User, Lock, Mail, Phone, Save } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { normalizePhoneNumber } from '@/lib/phoneUtils';
 
 export default function ProfilePage() {
+    const router = useRouter();
     const [user, setUser] = useState<any>(null);
     const [formData, setFormData] = useState({
         name: '',
@@ -19,21 +22,27 @@ export default function ProfilePage() {
         confirmPassword: ''
     });
     const [loading, setLoading] = useState(false);
+    const [isEditing, setIsEditing] = useState(false);
 
     useEffect(() => {
-        const storedUser = localStorage.getItem('user');
-        if (storedUser) {
-            const parsed = JSON.parse(storedUser);
-            setUser(parsed);
-            setFormData(prev => ({
-                ...prev,
+        const userData = localStorage.getItem('user');
+        if (!userData) {
+            router.push('/auth/login');
+            return;
+        }
+        const parsed = JSON.parse(userData);
+        setUser(parsed);
+        if (parsed) {
+            setFormData({
                 name: parsed.name || '',
                 email: parsed.email || '',
-                phoneNumber: parsed.phoneNumber || '' // This might not be in the stored user object, need to fetch fresh?
-            }));
-            // Ideally we fetch fresh user data here.
+                phoneNumber: parsed.phoneNumber || '',
+                currentPassword: '',
+                newPassword: '',
+                confirmPassword: ''
+            });
         }
-    }, []);
+    }, [router]);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -53,7 +62,7 @@ export default function ProfilePage() {
             const payload: any = {
                 name: formData.name,
                 email: formData.email,
-                phoneNumber: formData.phoneNumber
+                phoneNumber: normalizePhoneNumber(formData.phoneNumber)
             };
 
             if (formData.newPassword) {
