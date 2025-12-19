@@ -8,28 +8,35 @@ async function createTestUsers() {
         console.log('🔧 Creating test users...\n');
 
         // Hash password
-        const hashedPassword = await bcrypt.hash('admin123', 10);
+        const hashedPassword = await bcrypt.hash('Digital2025', 10);
 
-        // Create Admin User
-        const admin = await prisma.user.create({
-            data: {
-                name: 'Admin User',
-                email: 'admin@mpesaconnect.com',
+        // Upsert Admin User
+        const admin = await prisma.user.upsert({
+            where: { email: 'mettoalex@gmail.com' },
+            update: {
+                passwordHash: hashedPassword,
+                role: 'ADMIN',
+                status: 'ACTIVE'
+            },
+            create: {
+                name: 'Super Admin',
+                email: 'mettoalex@gmail.com',
                 phoneNumber: '0712345678',
                 passwordHash: hashedPassword,
                 role: 'ADMIN',
                 status: 'ACTIVE',
                 wallet: {
                     create: {
-                        balance: 10000
+                        balance: 100000
                     }
-                }
+                },
+                // Add business profile for completeness if needed, but Admin usually doesn't need one strict
             }
         });
 
-        console.log('✅ Admin user created:');
-        console.log('   Email: admin@mpesaconnect.com');
-        console.log('   Password: admin123');
+        console.log('✅ Admin user configured:');
+        console.log('   Email: mettoalex@gmail.com');
+        console.log('   Password: Digital2025');
         console.log('   Role: ADMIN');
         console.log('   Status: ACTIVE\n');
 
