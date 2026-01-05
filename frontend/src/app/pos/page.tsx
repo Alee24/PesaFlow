@@ -82,7 +82,7 @@ export default function POSPage() {
             return [...prev, {
                 productId: product.id,
                 name: product.name,
-                price: parseFloat(product.price),
+                price: Number(product.price),
                 quantity: 1,
                 imageUrl: product.imageUrl
             }];
