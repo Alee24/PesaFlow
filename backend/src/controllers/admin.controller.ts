@@ -138,3 +138,70 @@ export const getAdminStats = async (req: AuthRequest, res: Response) => {
         res.status(500).json({ error: error.message });
     }
 };
+
+export const updateUser = async (req: AuthRequest, res: Response) => {
+    try {
+        const { id } = req.params;
+        const { name, email, phoneNumber, role } = req.body;
+
+        const updatedUser = await prisma.user.update({
+            where: { id },
+            data: {
+                name,
+                email,
+                phoneNumber,
+                role
+            }
+        });
+
+        res.json({ message: 'User updated successfully', user: updatedUser });
+    } catch (error: any) {
+        if (error.code === 'P2002') {
+             return res.status(400).json({ error: 'Email or phone number already exists' });
+        }
+        res.status(500).json({ error: error.message });
+    }
+};
+
+export const deleteUser = async (req: AuthRequest, res: Response) => {
+    try {
+        const { id } = req.params;
+        
+        // Prevent deleting self
+        if (req.user?.userId === id) {
+            return res.status(400).json({ error: 'Cannot delete your own account' });
+        }
+
+        await prisma.user.delete({
+            where: { id }
+        });
+
+        res.json({ message: 'User deleted successfully' });
+    } catch (error: any) {
+        res.status(500).json({ error: error.message });
+    }
+};
+
+export const resetUserPassword = async (req: AuthRequest, res: Response) => {
+    try {
+        const { id } = req.params;
+        const { password } = req.body;
+
+        if (!password || password.length < 6) {
+            return res.status(400).json({ error: 'Password must be at least 6 characters long' });
+        }
+
+        const hashedPassword = await bcrypt.hash(password, 10);
+
+        await prisma.user.update({
+            where: { id },
+            data: {
+                passwordHash: hashedPassword
+            }
+        });
+
+        res.json({ message: 'Password reset successfully' });
+    } catch (error: any) {
+        res.status(500).json({ error: error.message });
+    }
+};

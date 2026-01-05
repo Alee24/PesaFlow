@@ -9,6 +9,25 @@ import PaymentModal from '@/components/pos/PaymentModal';
 import api from '@/lib/api';
 import { useToast } from '@/contexts/ToastContext';
 
+interface Product {
+    id: string;
+    name: string;
+    price: string | number;
+    stockQuantity: number;
+    imageUrl?: string;
+    categoryId?: string;
+    sku?: string;
+    barcode?: string;
+}
+
+interface CartItem {
+    productId: string;
+    name: string;
+    price: number;
+    quantity: number;
+    imageUrl?: string;
+}
+
 interface Category {
     id: string;
     name: string;
