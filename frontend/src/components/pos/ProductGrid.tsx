@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/Button';
 interface Product {
     id: string;
     name: string;
-    price: string;
+    price: string | number;
     imageUrl?: string;
     stockQuantity: number;
     categoryId?: string;
