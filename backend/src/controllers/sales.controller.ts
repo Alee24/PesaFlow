@@ -228,7 +228,7 @@ export const createCashSale = async (req: Request, res: Response) => {
         console.error("Cash Sale Error:", error);
 
         if (error instanceof z.ZodError) {
-            return res.status(400).json({ error: 'Validation failed', details: error.errors });
+            return res.status(400).json({ error: 'Validation failed', details: (error as any).errors });
         }
 
         res.status(500).json({ error: error.message || 'Failed to process sale' });
