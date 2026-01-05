@@ -168,7 +168,7 @@ export const createProduct = async (req: AuthRequest, res: Response): Promise<vo
     } catch (error: any) {
         console.error(error);
         if (error instanceof z.ZodError) {
-            res.status(400).json({ error: 'Validation failed', details: error.errors });
+            res.status(400).json({ error: 'Validation failed', details: (error as any).errors });
             return;
         }
         res.status(500).json({ error: 'Failed to create product' });
@@ -269,7 +269,7 @@ export const updateProduct = async (req: AuthRequest, res: Response): Promise<vo
     } catch (error: any) {
         console.error(error);
         if (error instanceof z.ZodError) {
-            res.status(400).json({ error: 'Validation failed', details: error.errors });
+            res.status(400).json({ error: 'Validation failed', details: (error as any).errors });
             return;
         }
         res.status(500).json({ error: 'Failed to update product' });

@@ -382,7 +382,7 @@ export default function UserManagementPage() {
                                 </div>
                                 <div className="pt-4 flex justify-end gap-3">
                                     <Button type="button" variant="outline" onClick={() => setEditModal(prev => ({ ...prev, isOpen: false }))}>Cancel</Button>
-                                    <Button type="submit" loading={editModal.loading}>Save Changes</Button>
+                                    <Button type="submit" isLoading={editModal.loading}>Save Changes</Button>
                                 </div>
                             </form>
                         </Card>
@@ -413,7 +413,7 @@ export default function UserManagementPage() {
                                 />
                                 <div className="pt-4 flex justify-end gap-3">
                                     <Button type="button" variant="outline" onClick={() => setPasswordModal(prev => ({ ...prev, isOpen: false }))}>Cancel</Button>
-                                    <Button type="submit" loading={passwordModal.loading}>Reset Password</Button>
+                                    <Button type="submit" isLoading={passwordModal.loading}>Reset Password</Button>
                                 </div>
                             </form>
                         </Card>
