@@ -1,10 +1,13 @@
 import { PrismaClient } from '@prisma/client';
+import dotenv from 'dotenv';
+dotenv.config();
 
 const prisma = new PrismaClient();
 
 async function testDatabaseConnection() {
     try {
         console.log('🔍 Testing database connection...\n');
+        console.log(`📡 URL: ${process.env.DATABASE_URL}`);
 
         // Test 1: Basic connection
         await prisma.$connect();
