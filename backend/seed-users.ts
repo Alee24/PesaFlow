@@ -145,16 +145,16 @@ async function createTestUsers() {
         console.log('📝 Login Credentials:');
         console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
         console.log('Admin Account:');
-        console.log('  Email: admin@mpesaconnect.com');
-        console.log('  Password: admin123');
+        console.log('  Email: mettoalex@gmail.com');
+        console.log('  Password: Digital2025');
         console.log('');
         console.log('Active Merchant Account:');
         console.log('  Email: merchant@mpesaconnect.com');
-        console.log('  Password: admin123');
+        console.log('  Password: Digital2025');
         console.log('');
         console.log('Pending Merchant Account (for testing restrictions):');
         console.log('  Email: pending@mpesaconnect.com');
-        console.log('  Password: admin123');
+        console.log('  Password: Digital2025');
         console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
 
     } catch (error) {
