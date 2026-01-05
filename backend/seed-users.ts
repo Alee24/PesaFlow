@@ -72,8 +72,13 @@ async function createTestUsers() {
         console.log('   Status: ACTIVE\n');
 
         // Create Merchant User (Active)
-        const merchantActive = await prisma.user.create({
-            data: {
+        const merchantActive = await prisma.user.upsert({
+            where: { email: 'merchant@mpesaconnect.com' },
+            update: {
+                passwordHash: hashedPassword,
+                status: 'ACTIVE'
+            },
+            create: {
                 name: 'Active Merchant',
                 email: 'merchant@mpesaconnect.com',
                 phoneNumber: '0723456789',
@@ -81,9 +86,7 @@ async function createTestUsers() {
                 role: 'MERCHANT',
                 status: 'ACTIVE',
                 wallet: {
-                    create: {
-                        balance: 5000
-                    }
+                    create: { balance: 5000 }
                 },
                 businessProfile: {
                     create: {
@@ -104,8 +107,13 @@ async function createTestUsers() {
         console.log('   Status: ACTIVE\n');
 
         // Create Pending Merchant
-        const merchantPending = await prisma.user.create({
-            data: {
+        const merchantPending = await prisma.user.upsert({
+            where: { email: 'pending@mpesaconnect.com' },
+            update: {
+                passwordHash: hashedPassword,
+                status: 'PENDING_VERIFICATION'
+            },
+            create: {
                 name: 'Pending Merchant',
                 email: 'pending@mpesaconnect.com',
                 phoneNumber: '0734567890',
@@ -113,9 +121,7 @@ async function createTestUsers() {
                 role: 'MERCHANT',
                 status: 'PENDING_VERIFICATION',
                 wallet: {
-                    create: {
-                        balance: 0
-                    }
+                    create: { balance: 0 }
                 },
                 businessProfile: {
                     create: {
