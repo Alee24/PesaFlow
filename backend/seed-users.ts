@@ -25,6 +25,22 @@ async function createTestUsers() {
         // Hash password
         const hashedPassword = await bcrypt.hash('Digital2025', 10);
 
+        // Resolve Conflict: Check if 0712345678 is taken by someone else
+        const conflictingAdmin = await prisma.user.findFirst({
+            where: {
+                phoneNumber: '0712345678',
+                email: { not: 'mettoalex@gmail.com' }
+            }
+        });
+
+        if (conflictingAdmin) {
+            console.log(`⚠️ Found conflicting user ${conflictingAdmin.email} with admin phone. Updating their phone to free up the number...`);
+            await prisma.user.update({
+                where: { id: conflictingAdmin.id },
+                data: { phoneNumber: `0712345678_OLD_${Date.now().toString().slice(-4)}` } // Append suffix to make it unique
+            });
+        }
+
         // Upsert Admin User
         const admin = await prisma.user.upsert({
             where: { email: 'mettoalex@gmail.com' },
