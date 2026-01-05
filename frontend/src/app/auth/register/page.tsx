@@ -242,7 +242,7 @@ export default function RegisterPage() {
                                     className="mt-1 w-4 h-4 text-indigo-600 rounded"
                                 />
                                 <label htmlFor="dataConsent" className="text-xs text-blue-800 dark:text-blue-300">
-                                    I hereby consent to PesaFlow collecting and processing my data for verification in accordance with the <b>Kenya Data Protection Act (2019)</b>. I verify that all documents provided are authentic.
+                                    I hereby consent to Mpesa Connect collecting and processing my data for verification in accordance with the <b>Kenya Data Protection Act (2019)</b>. I verify that all documents provided are authentic.
                                 </label>
                             </div>
                         </div>
@@ -267,7 +267,7 @@ export default function RegisterPage() {
             <div className="w-full max-w-xl">
                 <div className="text-center mb-8">
                     <h1 className="text-4xl font-black bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 to-purple-600 tracking-tight">
-                        PesaFlow
+                        Mpesa Connect
                     </h1>
                     <p className="text-gray-500 mt-2">Professional Merchant Onboarding</p>
 

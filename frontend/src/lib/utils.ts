@@ -10,5 +10,8 @@ export function getImageUrl(path?: string) {
     if (path.startsWith('http')) return path;
     // Normalize path separators for Windows compatibility
     const cleanPath = path.replace(/\\/g, '/');
-    return `http://localhost:3001${cleanPath.startsWith('/') ? '' : '/'}${cleanPath}`;
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
+    // Remove /api suffix for static files and ensure clean URL construction
+    const baseUrl = apiUrl.replace(/\/api$/, '');
+    return `${baseUrl}${cleanPath.startsWith('/') ? '' : '/'}${cleanPath}`;
 }

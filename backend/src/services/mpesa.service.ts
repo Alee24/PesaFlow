@@ -12,7 +12,7 @@ const getCredentials = async (userId?: string) => {
         shortCode: process.env.MPESA_SHORTCODE,
         initiatorName: process.env.MPESA_INITIATOR_NAME,
         password: process.env.MPESA_INITIATOR_PASSWORD,
-        callbackUrl: process.env.MPESA_CALLBACK_URL || 'http://localhost:3001/api/mpesa/callback',
+        callbackUrl: process.env.MPESA_CALLBACK_URL || (process.env.APP_URL ? `${process.env.APP_URL}/api/mpesa/callback` : 'http://localhost:3001/api/mpesa/callback'),
         env: process.env.MPESA_ENV || 'sandbox'
     };
 
