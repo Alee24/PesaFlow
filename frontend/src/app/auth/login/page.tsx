@@ -26,7 +26,8 @@ export default function LoginPage() {
             localStorage.setItem('user', JSON.stringify(res.data.user));
             router.push('/dashboard');
         } catch (err: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
-            setError(err.response?.data?.error || 'Failed to login');
+            const errorMessage = err.response?.data?.error || `Connection Error: ${err.message}`;
+            setError(errorMessage);
         } finally {
             setLoading(false);
         }
