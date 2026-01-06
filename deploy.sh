@@ -10,6 +10,8 @@ npm install
 # Force schema push and client generation
 npx prisma db push --accept-data-loss
 npx prisma generate
+# Build the backend (TypeScript -> JS)
+npm run build
 # Restart Backend
 pm2 restart all
 cd ..
