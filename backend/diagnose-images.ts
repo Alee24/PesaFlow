@@ -30,7 +30,10 @@ async function main() {
     console.log(pad('Product Name', 25) + ' | ' + 'Image URL (Raw from DB)');
     console.log('------------------------------------------------------------------------------------------------');
 
-    const uploadDir = path.join(process.cwd(), 'public');
+    const uploadDir = path.join(process.cwd(), 'public/uploads');
+    console.log(`📂 Backend CWD: ${process.cwd()}`);
+    console.log(`📂 Checking Uploads in: ${uploadDir} (Exists: ${fs.existsSync(uploadDir)})`);
+    console.log('------------------------------------------------------------------------------------------------');
 
     products.forEach(p => {
         const url = p.imageUrl || 'NULL';
@@ -44,11 +47,11 @@ async function main() {
             status = '⚠️ External/Absolute';
         } else {
             // Check file existence
-            const filePath = path.join(uploadDir, url);
+            const filePath = path.join(process.cwd(), 'public', url);
             if (fs.existsSync(filePath)) {
                 status = '✅ OK (Found on Disk)';
             } else {
-                status = '❌ MISSING from Disk';
+                status = `❌ MISSING at ${filePath}`;
             }
         }
 
