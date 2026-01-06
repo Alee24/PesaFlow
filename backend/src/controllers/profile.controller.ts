@@ -59,9 +59,9 @@ export const updateProfile = async (req: Request, res: Response) => {
 
         // Handle file upload
         if (req.file) {
-            const protocol = req.protocol;
-            const host = req.get('host');
-            rawData.logoUrl = `${protocol}://${host}/uploads/${req.file.filename}`;
+            // Store relative path. The frontend or API url-handling will resolve it.
+            // This prevents "http://localhost" issues in production.
+            rawData.logoUrl = `/uploads/${req.file.filename}`;
         }
 
         // Convert SMTP Port to number if string

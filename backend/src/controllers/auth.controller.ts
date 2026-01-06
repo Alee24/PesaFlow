@@ -47,7 +47,8 @@ export const register = async (req: Request, res: Response): Promise<void> => {
 
         const getFileUrl = (fieldName: string) => {
             if (files && files[fieldName] && files[fieldName][0]) {
-                return `${protocol}://${host}/uploads/${files[fieldName][0].filename}`;
+                // Return relative path to avoid localhost/mixed-content issues
+                return `/uploads/${files[fieldName][0].filename}`;
             }
             return null;
         };
