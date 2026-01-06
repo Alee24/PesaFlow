@@ -44,6 +44,15 @@ export default function CreateInvoicePage() {
         }
     };
 
+    // Helper to fix logo URL (handle localhost or http mixed content)
+    const getLogoUrl = (url: string) => {
+        if (!url) return null;
+        if (url.includes('/uploads/')) {
+            return `/uploads/${url.split('/uploads/')[1]}`;
+        }
+        return url;
+    };
+
     const handleItemChange = (index: number, field: string, value: string | number) => {
         const newItems: any[] = [...items];
         newItems[index][field] = value;
@@ -162,7 +171,7 @@ export default function CreateInvoicePage() {
                             <div className="text-right">
                                 {company?.logoUrl ? (
                                     <div className="flex flex-col items-end">
-                                        <img src={company.logoUrl} alt="Logo" className="h-16 object-contain mb-1" />
+                                        <img src={getLogoUrl(company.logoUrl) || ''} alt="Logo" className="h-16 object-contain mb-1" />
                                         <div className="text-[10px] tracking-widest uppercase font-bold text-gray-700">
                                             {company?.companyName}
                                         </div>
