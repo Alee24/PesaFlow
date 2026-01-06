@@ -165,8 +165,7 @@ export default function InvoicePage() {
                                         Cancel
                                     </Button>
                                 )}
-                                    </Button>
-                                )}
+
                             </div>
                         )}
                         <Button onClick={() => setEmailModalOpen(true)} variant="outline" className="flex items-center gap-2">
@@ -366,13 +365,13 @@ export default function InvoicePage() {
                 variant={confirmModal.variant}
                 loading={confirmLoading}
             />
-        <EmailModal
-            isOpen={emailModalOpen}
-            onClose={() => setEmailModalOpen(false)}
-            onSend={handleSendEmail}
-            isLoading={sendingEmail}
-            defaultEmail={metadata.clientEmail || ''}
-        />
+            <EmailModal
+                isOpen={emailModalOpen}
+                onClose={() => setEmailModalOpen(false)}
+                onSend={handleSendEmail}
+                isLoading={sendingEmail}
+                defaultEmail={metadata.clientEmail || ''}
+            />
         </DashboardLayout >
     );
 }
