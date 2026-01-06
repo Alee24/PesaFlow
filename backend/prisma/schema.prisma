@@ -182,7 +182,7 @@ model Transaction {
   initiator       User?    @relation("Initiator", fields: [initiatorUserId], references: [id])
   recipientWalletId String @map("recipient_wallet_id")
   recipientWallet Wallet   @relation(fields: [recipientWalletId], references: [id])
-  metadata        String?  // JSON stringified
+  metadata        String?  @db.Text // JSON stringified
   createdAt       DateTime @default(now()) @map("created_at")
 
   sale            Sale?

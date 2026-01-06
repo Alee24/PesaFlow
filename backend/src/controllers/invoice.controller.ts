@@ -37,18 +37,9 @@ export const createInvoice = async (req: Request, res: Response) => {
                 initiatorUserId: userId,
                 recipientWalletId: wallet.id,
                 metadata: JSON.stringify({
-                    clientName,
-                    clientPhone,
-                    clientAddress,
-                    clientEmail,
-                    notes,
+                    clientName: clientName?.substring(0, 50), // Truncate to save space
                     invoiceDate: date,
-                    dueDate: dueDate,
-                    itemsSnapshot: items,
-                    subTotal,
-                    vatAmount,
-                    vatRate: profile?.vatEnabled ? vatRate : 0,
-                    vatEnabled: profile?.vatEnabled || false
+                    hasItems: items.length > 0
                 })
             }
         });
