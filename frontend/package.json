@@ -9,6 +9,7 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@headlessui/react": "^2.2.9",
     "@react-pdf/renderer": "^4.3.1",
     "axios": "^1.13.2",
     "clsx": "^2.1.1",
@@ -17,6 +18,7 @@
     "next": "16.0.10",
     "react": "19.2.1",
     "react-dom": "19.2.1",
+    "react-hot-toast": "^2.6.0",
     "react-to-print": "^3.2.0",
     "recharts": "^3.6.0",
     "tailwind-merge": "^3.4.0"
