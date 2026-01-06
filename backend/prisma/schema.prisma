@@ -18,7 +18,7 @@ model User {
   email         String   @unique
   phoneNumber   String   @unique @map("phone_number")
   passwordHash  String   @map("password_hash")
-  role          String   @default("MERCHANT") // ADMIN, MERCHANT
+  role          String   @default("MERCHANT") // ADMIN, MERCHANT, SUB_MERCHANT
   status        String   @default("PENDING_VERIFICATION") // ACTIVE, SUSPENDED, PENDING_VERIFICATION, REJECTED
   appealNotes   String?  @map("appeal_notes")
   createdAt     DateTime @default(now()) @map("created_at")

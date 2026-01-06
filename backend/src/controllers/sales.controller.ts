@@ -363,3 +363,62 @@ export const getSalesStats = async (req: Request, res: Response) => {
         res.status(500).json({ error: 'Failed to fetch sales statistics' });
     }
 };
+
+// New endpoint: Get Staff Performance
+export const getStaffPerformance = async (req: Request, res: Response) => {
+    try {
+        const merchantId = (req as any).user.merchantId;
+        const { startDate, endDate } = req.query;
+
+        const where: any = {
+            merchantId: merchantId,
+            status: { in: ['COMPLETED'] } // Only completed transactions count
+        };
+
+        if (startDate || endDate) {
+            where.createdAt = {};
+            if (startDate) where.createdAt.gte = new Date(startDate as string);
+            if (endDate) where.createdAt.lte = new Date(endDate as string);
+        }
+
+        // We aggregate TRANSACTIONS because they store the 'initiatorUserId'
+        // Sales data is linked via Transaction, but for simple "Total Sales per Staff"
+        // grouping by transaction initiator is most robust.
+        const performance = await prisma.transaction.groupBy({
+            by: ['initiatorUserId'],
+            where: {
+                ...where,
+                initiatorUserId: { not: null }, // Only human initiated
+                type: 'SALE_CASH' // Filter for sales
+            },
+            _count: {
+                id: true
+            },
+            _sum: {
+                amount: true
+            }
+        });
+
+        // Enrich with User Names
+        const enrichedPerformance = await Promise.all(performance.map(async (p) => {
+            const user = await prisma.user.findUnique({
+                where: { id: p.initiatorUserId! },
+                select: { name: true, email: true, role: true }
+            });
+            return {
+                userId: p.initiatorUserId,
+                userName: user?.name || 'Unknown',
+                userEmail: user?.email,
+                role: user?.role,
+                totalSales: p._count.id,
+                totalRevenue: p._sum.amount
+            };
+        }));
+
+        res.json(enrichedPerformance);
+
+    } catch (error) {
+        console.error("Staff Performance Error:", error);
+        res.status(500).json({ error: 'Failed to fetch staff performance' });
+    }
+};

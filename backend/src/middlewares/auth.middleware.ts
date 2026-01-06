@@ -55,6 +55,20 @@ export const authenticateToken = async (req: AuthRequest, res: Response, next: N
         // Their 'merchantId' (scope) is the parent.
         const merchantId = user.parentId || user.id;
 
+        // Sub-Merchant/Team Member Guard:
+        // If this is a sub-user, ensure the PARENT has an active subscription.
+        if (user.parentId) {
+            const parentSubscription = await prisma.subscription.findUnique({
+                where: { merchantId: merchantId }
+            });
+
+            // If parent has no subscription or it's expired/cancelled
+            if (!parentSubscription || parentSubscription.status !== 'ACTIVE') {
+                res.status(403).json({ error: 'Parent merchant subscription is inactive. Access denied.' });
+                return;
+            }
+        }
+
         req.user = {
             userId: user.id,
             merchantId,

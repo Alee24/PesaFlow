@@ -23,3 +23,21 @@ export const createTeamMember = async (data: any): Promise<TeamMember> => {
 export const deleteTeamMember = async (id: string): Promise<void> => {
     await api.delete(`/team/${id}`);
 };
+
+export interface StaffPerformance {
+    userId: string;
+    userName: string;
+    role: string;
+    totalSales: number;
+    totalRevenue: number;
+}
+
+export const getStaffPerformance = async (startDate?: string, endDate?: string): Promise<StaffPerformance[]> => {
+    const params = new URLSearchParams();
+    if (startDate) params.append('startDate', startDate);
+    if (endDate) params.append('endDate', endDate);
+
+    // Using sales route for this analytics data
+    const response = await api.get(`/sales/staff-performance?${params.toString()}`);
+    return response.data;
+};

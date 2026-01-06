@@ -2,11 +2,12 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { getTeamMembers, createTeamMember, deleteTeamMember, TeamMember } from '@/services/team.service';
+import { getTeamMembers, createTeamMember, deleteTeamMember, TeamMember, getStaffPerformance, StaffPerformance } from '@/services/team.service';
 import { useToast } from '@/contexts/ToastContext';
 
 export default function TeamPage() {
     const [team, setTeam] = useState<TeamMember[]>([]);
+    const [performance, setPerformance] = useState<StaffPerformance[]>([]);
     const [loading, setLoading] = useState(true);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [showModal, setShowModal] = useState(false);
@@ -22,16 +23,20 @@ export default function TeamPage() {
     });
 
     useEffect(() => {
-        fetchTeam();
+        fetchData();
     }, []);
 
-    const fetchTeam = async () => {
+    const fetchData = async () => {
         try {
-            const data = await getTeamMembers();
-            setTeam(data);
+            const [teamData, perfData] = await Promise.all([
+                getTeamMembers(),
+                getStaffPerformance()
+            ]);
+            setTeam(teamData);
+            setPerformance(perfData);
         } catch (error) {
             console.error(error);
-            showToast('Failed to fetch team members', 'error');
+            showToast('Failed to fetch team data', 'error');
         } finally {
             setLoading(false);
         }
@@ -45,7 +50,7 @@ export default function TeamPage() {
             showToast('Team member added successfully', 'success');
             setShowModal(false);
             setFormData({ name: '', email: '', phoneNumber: '', password: '' });
-            fetchTeam();
+            fetchData();
         } catch (error: any) {
             console.error(error);
             let msg = error.response?.data?.error || error.message || 'Failed to add team member';
@@ -74,7 +79,7 @@ export default function TeamPage() {
         try {
             await deleteTeamMember(id);
             showToast('Team member suspended', 'success');
-            fetchTeam();
+            fetchData();
         } catch (error: any) {
             showToast('Failed to suspend member', 'error');
         }

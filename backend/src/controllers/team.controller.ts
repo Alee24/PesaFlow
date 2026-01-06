@@ -89,7 +89,7 @@ export const createTeamMember = async (req: Request, res: Response) => {
                 email: data.email,
                 phoneNumber: data.phoneNumber,
                 passwordHash: hashedPassword,
-                role: 'MERCHANT', // They are merchants, but sub-users
+                role: 'SUB_MERCHANT', // Distinguish from main MERCHANT
                 status: 'ACTIVE', // Auto-active for now, or PENDING?
                 parentId: userId
             },
