@@ -39,6 +39,7 @@ export const createInvoice = async (req: Request, res: Response) => {
                 metadata: JSON.stringify({
                     clientName: clientName?.substring(0, 50), // Truncate to save space
                     invoiceDate: date,
+                    dueDate: dueDate,
                     hasItems: items.length > 0,
                     itemsSnapshot: items
                 })
