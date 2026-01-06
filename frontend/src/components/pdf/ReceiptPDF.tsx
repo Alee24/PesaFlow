@@ -168,7 +168,7 @@ const ReceiptPDF = ({ transaction }: ReceiptPDFProps) => (
     <Document>
         <Page size="A5" style={styles.page}>
             <View style={styles.header}>
-                <Text style={styles.title}>PesaFlow</Text>
+                <Text style={styles.title}>Mpesa Connect</Text>
                 <Text style={styles.subtitle}>OFFICIAL TRANSACTION RECEIPT</Text>
             </View>
 
@@ -234,8 +234,8 @@ const ReceiptPDF = ({ transaction }: ReceiptPDFProps) => (
             </View>
 
             <View style={styles.footer}>
-                <Text style={styles.footerText}>Thank you for choosing PesaFlow.</Text>
-                <Text style={styles.footerText}>For support contact: help@pesaflow.ke</Text>
+                <Text style={styles.footerText}>Thank you for choosing Mpesa Connect.</Text>
+                <Text style={styles.footerText}>For support contact: info@Mpesaconnect.co.ke</Text>
                 <Text style={[styles.footerText, { marginTop: 10, fontSize: 6 }]}>Transaction ID: {transaction.id}</Text>
             </View>
         </Page>

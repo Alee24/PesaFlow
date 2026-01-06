@@ -173,7 +173,7 @@ const TransactionsPDF: React.FC<TransactionsPDFProps> = ({ transactions, startDa
                 </View>
 
                 <Text style={styles.footer}>
-                    PesaFlow Financial Report | Confidential | Page 1 of 1
+                    Mpesa Connect Financial Report | Confidential | Page 1 of 1
                 </Text>
             </Page>
         </Document>
