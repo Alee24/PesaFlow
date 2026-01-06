@@ -5,9 +5,7 @@ import { authenticateToken } from '../middlewares/auth.middleware';
 
 const router = Router();
 
-router.use(authenticateUser);
-
 router.get('/', getSubscription);
-router.post('/pay', initiateSubscription);
+router.post('/', authenticateToken, initiateSubscription);
 
 export default router;
