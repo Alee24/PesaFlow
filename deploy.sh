@@ -23,4 +23,4 @@ npm run build
 # Restart Frontend (assuming pm2 manages it too, or just next start)
 pm2 restart all || echo "PM2 not managing frontend, skipping restart"
 
-echo "✅ Deployment Complete!"
+echo "✅ Mpesa Connect Deployment Complete!"
