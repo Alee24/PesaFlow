@@ -148,6 +148,10 @@ export default function InvoicePage() {
                 <div className="flex justify-between items-center mb-6 print:hidden">
                     <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Invoice Details</h1>
                     <div className="flex gap-3">
+                        <Button onClick={() => setEmailModalOpen(true)} className="flex items-center gap-2 bg-indigo-600 text-white hover:bg-indigo-700 border-transparent shadow-sm">
+                            <Mail className="w-4 h-4" /> Email Invoice
+                        </Button>
+
                         {invoice && (
                             <div className="flex gap-2">
                                 {invoice.status !== 'COMPLETED' && (
@@ -165,12 +169,8 @@ export default function InvoicePage() {
                                         Cancel
                                     </Button>
                                 )}
-
                             </div>
                         )}
-                        <Button onClick={() => setEmailModalOpen(true)} variant="outline" className="flex items-center gap-2">
-                            <Mail className="w-4 h-4" /> Email
-                        </Button>
 
                         <Button onClick={handlePrint} variant="outline" className="flex items-center gap-2">
                             <Printer className="w-4 h-4" /> Print
