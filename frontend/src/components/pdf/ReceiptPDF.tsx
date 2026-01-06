@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Document, Page, Text, View, StyleSheet, Font } from '@react-pdf/renderer';
+import { Document, Page, Text, View, StyleSheet, Font, Image } from '@react-pdf/renderer';
 
 // Register nice fonts if needed, or stick to defaults for now
 Font.register({
@@ -164,84 +164,89 @@ interface ReceiptPDFProps {
     transaction: any;
 }
 
-const ReceiptPDF = ({ transaction }: ReceiptPDFProps) => (
-    <Document>
-        <Page size="A5" style={styles.page}>
-            <View style={styles.header}>
-                {/* Note: In a real deployment, ensure logo.png is accessible via absolute URL or import it */}
-                {/* <Image src="/logo.png" style={{ height: 40, alignSelf: 'center', marginBottom: 5 }} /> */}
-                <Text style={styles.title}>Mpesa Connect</Text>
-                <Text style={styles.subtitle}>OFFICIAL TRANSACTION RECEIPT</Text>
-            </View>
+const ReceiptPDF = ({ transaction }: ReceiptPDFProps) => {
+    // Get the base URL for the image to work in client-side PDF generation
+    const logoUrl = typeof window !== 'undefined' ? `${window.location.origin}/logo.png` : '/logo.png';
 
-            {transaction.status === 'COMPLETED' || transaction.status === 'PAID' ? (
-                <View style={styles.stamp}>
-                    <Text style={styles.stampText}>PAID</Text>
+    return (
+        <Document>
+            <Page size="A5" style={styles.page}>
+                <View style={styles.header}>
+                    <Image src={logoUrl} style={{ height: 50, alignSelf: 'center', marginBottom: 10 }} />
+                    <Text style={styles.title}>Mpesa Connect</Text>
+                    <Text style={styles.subtitle}>OFFICIAL TRANSACTION RECEIPT</Text>
                 </View>
-            ) : null}
 
-            <View style={styles.infoSection}>
-                <View style={styles.infoBlock}>
-                    <Text style={styles.infoLabel}>REFERENCE</Text>
-                    <Text style={styles.infoValue}>{transaction.reference || transaction.id.substring(0, 8).toUpperCase()}</Text>
+                {transaction.status === 'COMPLETED' || transaction.status === 'PAID' ? (
+                    <View style={styles.stamp}>
+                        <Text style={styles.stampText}>PAID</Text>
+                    </View>
+                ) : null}
+
+                <View style={styles.infoSection}>
+                    <View style={styles.infoBlock}>
+                        <Text style={styles.infoLabel}>REFERENCE</Text>
+                        <Text style={styles.infoValue}>{transaction.reference || transaction.id.substring(0, 8).toUpperCase()}</Text>
+                    </View>
+                    <View style={[styles.infoBlock, { textAlign: 'right' }]}>
+                        <Text style={styles.infoLabel}>DATE</Text>
+                        <Text style={styles.infoValue}>{new Date(transaction.createdAt).toLocaleString()}</Text>
+                    </View>
                 </View>
-                <View style={[styles.infoBlock, { textAlign: 'right' }]}>
-                    <Text style={styles.infoLabel}>DATE</Text>
-                    <Text style={styles.infoValue}>{new Date(transaction.createdAt).toLocaleString()}</Text>
-                </View>
-            </View>
 
-            <View style={styles.receiptContainer}>
-                <Text style={styles.receiptHeader}>
-                    {transaction.sale ? "Purchase Items" : "Payment Information"}
-                </Text>
+                <View style={styles.receiptContainer}>
+                    <Text style={styles.receiptHeader}>
+                        {transaction.sale ? "Purchase Items" : "Payment Information"}
+                    </Text>
 
-                {transaction.sale ? (
-                    <View>
-                        <View style={styles.tableHeader}>
-                            <Text style={styles.colItem}>Description</Text>
-                            <Text style={styles.colQty}>Qty</Text>
-                            <Text style={styles.colPrice}>Subtotal</Text>
-                        </View>
-                        {transaction.sale.items.map((item: any, index: number) => (
-                            <View key={index} style={styles.tableRow}>
-                                <View style={styles.colItem}>
-                                    <Text>{item.product?.name || 'Item'}</Text>
-                                    <Text style={styles.itemSubtext}>@ {formatCurrency(Number(item.unitPrice))}</Text>
+                    {transaction.sale ? (
+                        <View>
+                            <View style={styles.tableHeader}>
+                                <Text style={styles.colItem}>Description</Text>
+                                <Text style={styles.colQty}>Qty</Text>
+                                <Text style={styles.colPrice}>Subtotal</Text>
+                            </View>
+                            {transaction.sale.items.map((item: any, index: number) => (
+                                <View key={index} style={styles.tableRow}>
+                                    <View style={styles.colItem}>
+                                        <Text>{item.product?.name || 'Item'}</Text>
+                                        <Text style={styles.itemSubtext}>@ {formatCurrency(Number(item.unitPrice))}</Text>
+                                    </View>
+                                    <Text style={styles.colQty}>{item.quantity}</Text>
+                                    <Text style={styles.colPrice}>{formatCurrency(Number(item.subtotal))}</Text>
                                 </View>
-                                <Text style={styles.colQty}>{item.quantity}</Text>
-                                <Text style={styles.colPrice}>{formatCurrency(Number(item.subtotal))}</Text>
-                            </View>
-                        ))}
-                    </View>
-                ) : (
-                    <View style={{ gap: 10 }}>
-                        <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-                            <Text style={{ fontSize: 10, color: '#6B7280' }}>Transaction Type:</Text>
-                            <Text style={{ fontSize: 10, fontWeight: 'bold' }}>{transaction.type.replace('_', ' ')}</Text>
+                            ))}
                         </View>
-                        {transaction.feeCharged > 0 && (
+                    ) : (
+                        <View style={{ gap: 10 }}>
                             <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-                                <Text style={{ fontSize: 10, color: '#6B7280' }}>Processing Fee:</Text>
-                                <Text style={{ fontSize: 10, fontWeight: 'bold', color: '#EF4444' }}>- {formatCurrency(Number(transaction.feeCharged))}</Text>
+                                <Text style={{ fontSize: 10, color: '#6B7280' }}>Transaction Type:</Text>
+                                <Text style={{ fontSize: 10, fontWeight: 'bold' }}>{transaction.type.replace('_', ' ')}</Text>
                             </View>
-                        )}
+                            {transaction.feeCharged > 0 && (
+                                <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+                                    <Text style={{ fontSize: 10, color: '#6B7280' }}>Processing Fee:</Text>
+                                    <Text style={{ fontSize: 10, fontWeight: 'bold', color: '#EF4444' }}>- {formatCurrency(Number(transaction.feeCharged))}</Text>
+                                </View>
+                            )}
+                        </View>
+                    )}
+
+                    <View style={styles.totalSection}>
+                        <Text style={styles.totalLabel}>Grand Total</Text>
+                        <Text style={styles.totalAmount}>{formatCurrency(Number(transaction.amount))}</Text>
                     </View>
-                )}
-
-                <View style={styles.totalSection}>
-                    <Text style={styles.totalLabel}>Grand Total</Text>
-                    <Text style={styles.totalAmount}>{formatCurrency(Number(transaction.amount))}</Text>
                 </View>
-            </View>
 
-            <View style={styles.footer}>
-                <Text style={styles.footerText}>Thank you for choosing Mpesa Connect.</Text>
-                <Text style={styles.footerText}>For support contact: info@Mpesaconnect.co.ke</Text>
-                <Text style={[styles.footerText, { marginTop: 10, fontSize: 6 }]}>Transaction ID: {transaction.id}</Text>
-            </View>
-        </Page>
-    </Document>
-);
+                <View style={styles.footer}>
+                    <Text style={styles.footerText}>Thank you for choosing Mpesa Connect.</Text>
+                    <Text style={styles.footerText}>For support contact: info@Mpesaconnect.co.ke</Text>
+                    <Text style={styles.footerText}>Powered by KK Dynamic Enterprise Solutions LTD</Text>
+                    <Text style={[styles.footerText, { marginTop: 10, fontSize: 6 }]}>Transaction ID: {transaction.id}</Text>
+                </View>
+            </Page>
+        </Document>
+    );
+};
 
 export default ReceiptPDF;
