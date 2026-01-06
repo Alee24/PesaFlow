@@ -270,6 +270,7 @@ export const manageSubscription = async (req: AuthRequest, res: Response) => {
         res.json({ message: 'Subscription updated successfully', subscription: transaction });
 
     } catch (error: any) {
+        console.error("Manage Subscription Error:", error);
         res.status(500).json({ error: error.message });
     }
 };
