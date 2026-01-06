@@ -110,7 +110,8 @@ export const createTeamMember = async (req: Request, res: Response) => {
         if (error instanceof z.ZodError) {
             return res.status(400).json({ error: 'Validation failed', details: (error as any).errors });
         }
-        res.status(500).json({ error: 'Failed to create team member' });
+        // Return actual error message for debugging (in dev/beta)
+        res.status(500).json({ error: 'Failed to create team member: ' + (error.message || 'Unknown error') });
     }
 };
 

@@ -48,7 +48,8 @@ export default function TeamPage() {
             fetchTeam();
         } catch (error: any) {
             console.error(error);
-            showToast(error.response?.data?.error || 'Failed to add team member', 'error');
+            const msg = error.response?.data?.error || error.message || 'Failed to add team member';
+            showToast(msg, 'error');
         } finally {
             setIsSubmitting(false);
         }
