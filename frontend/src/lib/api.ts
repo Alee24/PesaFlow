@@ -1,8 +1,8 @@
 
 import axios from 'axios';
 
-const api = axios.create({
-    baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api',
+// Fallback to production API if env var is missing (prevents localhost issues on server)
+baseURL: process.env.NEXT_PUBLIC_API_URL || 'https://api.mpesaconnect.co.ke/api',
 });
 
 api.interceptors.request.use((config) => {

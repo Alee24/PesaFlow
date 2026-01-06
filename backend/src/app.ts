@@ -29,7 +29,9 @@ app.use(helmet({
     crossOriginResourcePolicy: { policy: "cross-origin" }
 }));
 app.use(morgan('dev'));
-app.use('/uploads', express.static(path.join(__dirname, '../public/uploads')));
+// Use process.cwd() to strictly locate 'public/uploads' from the project root (backend/)
+// This works in both dev (src/app.ts) and prod (dist/src/app.js) assuming app is started from backend/
+app.use('/uploads', express.static(path.join(process.cwd(), 'public/uploads')));
 
 app.use('/api/categories', categoryRoutes);
 app.use('/api/auth', authRoutes);
