@@ -271,7 +271,32 @@ export const getRecentSales = async (req: Request, res: Response) => {
     }
 };
 
-// ... (getSaleById is already updated in prev step, but for completeness or if it wasn't valid, I'll validly skip it if unchanged, but let's assume it was updated correctly by the partial edit initially. No, it encountered error. I should redo it just in case.)
+// Get Single Sale
+export const getSaleById = async (req: Request, res: Response) => {
+    try {
+        const merchantId = (req as any).user.merchantId;
+        const { id } = req.params;
+
+        const sale = await prisma.sale.findFirst({
+            where: { id, merchantId },
+            include: {
+                items: {
+                    include: { product: true }
+                },
+                transaction: true
+            }
+        });
+
+        if (!sale) {
+            return res.status(404).json({ error: 'Sale not found' });
+        }
+
+        res.json(sale);
+    } catch (error) {
+        console.error("Get Sale Error:", error);
+        res.status(500).json({ error: 'Failed to fetch sale details' });
+    }
+};
 
 // New endpoint: Get sales statistics
 export const getSalesStats = async (req: Request, res: Response) => {
