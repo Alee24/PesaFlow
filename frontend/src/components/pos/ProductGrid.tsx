@@ -41,10 +41,27 @@ const ProductGrid: React.FC<ProductGridProps> = ({ products, categories, onAddTo
     const [selectedCategory, setSelectedCategory] = useState<string>('all');
 
     const filteredProducts = products.filter(p => {
-        const matchesSearch = p.name.toLowerCase().includes(searchTerm.toLowerCase());
+        const search = searchTerm.toLowerCase();
+        const matchesSearch =
+            p.name.toLowerCase().includes(search) ||
+            p.sku?.toLowerCase().includes(search) ||
+            p.barcode?.includes(search);
+
         const matchesCategory = selectedCategory === 'all' || p.categoryId === selectedCategory;
         return matchesSearch && matchesCategory;
     });
+
+    // Barcode Scanner Logic
+    const handleKeyDown = (e: React.KeyboardEvent) => {
+        if (e.key === 'Enter' && searchTerm) {
+            // Check for exact barcode match
+            const exactMatch = products.find(p => p.barcode === searchTerm || p.sku === searchTerm);
+            if (exactMatch) {
+                onAddToCart(exactMatch);
+                setSearchTerm(''); // Clear after scan
+            }
+        }
+    };
 
     return (
         <div className="flex flex-col h-full bg-gray-50/50 dark:bg-black/20">
@@ -55,9 +72,11 @@ const ProductGrid: React.FC<ProductGridProps> = ({ products, categories, onAddTo
                     <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
                     <Input
                         className="pl-12 h-12 rounded-full border-gray-200 bg-white shadow-sm focus:ring-2 focus:ring-indigo-500/20 text-base"
-                        placeholder="Search your menu..."
+                        placeholder="Scan Barcode or Search..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
+                        onKeyDown={handleKeyDown}
+                        autoFocus
                     />
                 </div>
 

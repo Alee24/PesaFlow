@@ -6,6 +6,7 @@ import DashboardLayout from '@/components/layout/DashboardLayout';
 import ProductGrid from '@/components/pos/ProductGrid';
 import CartSidebar from '@/components/pos/CartSidebar';
 import PaymentModal from '@/components/pos/PaymentModal';
+import { ReceiptModal } from '@/components/pos/ReceiptModal';
 import api from '@/lib/api';
 import { useToast } from '@/contexts/ToastContext';
 
@@ -40,7 +41,9 @@ export default function POSPage() {
     const [categories, setCategories] = useState<Category[]>([]);
     const [cartItems, setCartItems] = useState<CartItem[]>([]);
     const [isPaymentOpen, setIsPaymentOpen] = useState(false);
+    const [lastSale, setLastSale] = useState<any>(null);
     const [isLoading, setIsLoading] = useState(true);
+    const [discountData, setDiscountData] = useState<{ discountType: 'PERCENTAGE' | 'FIXED', discountValue: number } | null>(null);
 
     useEffect(() => {
         fetchData();
@@ -112,14 +115,27 @@ export default function POSPage() {
         setCartItems(prev => prev.filter(item => item.productId !== productId));
     };
 
-    const handleCheckoutSuccess = () => {
+    const handleCheckout = (data: any) => {
+        setDiscountData({
+            discountType: data.discountType,
+            discountValue: data.discountValue
+        });
+        setIsPaymentOpen(true);
+    };
+
+    const handleCheckoutSuccess = (sale: any) => {
         setIsPaymentOpen(false);
         setCartItems([]);
-        showToast('Sale completed successfully!', 'success');
+        setLastSale(sale);
+        // showToast('Sale completed successfully!', 'success'); // Receipt modal is confirmation enough
         fetchData(); // Refresh stock
     };
 
-    const totalAmount = cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+    // Recalculate total with discount for Modal
+    const subtotal = cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+    const totalAmount = discountData
+        ? Math.max(0, subtotal - (discountData.discountType === 'PERCENTAGE' ? (subtotal * discountData.discountValue / 100) : discountData.discountValue))
+        : subtotal;
 
     return (
         <DashboardLayout>
@@ -148,7 +164,7 @@ export default function POSPage() {
                         onUpdateQuantity={updateQuantity}
                         onRemoveItem={removeItem}
                         onClearCart={() => setCartItems([])}
-                        onCheckout={() => setIsPaymentOpen(true)}
+                        onCheckout={handleCheckout}
                     />
                 </div>
             </div>
@@ -157,8 +173,17 @@ export default function POSPage() {
                 <PaymentModal
                     items={cartItems}
                     totalAmount={totalAmount}
+                    discountType={discountData?.discountType}
+                    discountValue={discountData?.discountValue}
                     onClose={() => setIsPaymentOpen(false)}
                     onSuccess={handleCheckoutSuccess}
+                />
+            )}
+
+            {lastSale && (
+                <ReceiptModal
+                    sale={lastSale}
+                    onClose={() => setLastSale(null)}
                 />
             )}
         </DashboardLayout>

@@ -140,6 +140,13 @@ export const createProduct = async (req: AuthRequest, res: Response): Promise<vo
 
         const data = productSchema.parse(rawData);
 
+        // Auto-generate barcode if not provided
+        if (!data.barcode) {
+            // 12 digits: 200 + 9 random
+            const uniqueSuffix = Math.floor(Math.random() * 1000000000).toString().padStart(9, '0');
+            data.barcode = `200${uniqueSuffix}`;
+        }
+
         const product = await prisma.product.create({
             data: {
                 ...data,

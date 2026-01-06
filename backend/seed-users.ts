@@ -58,7 +58,7 @@ async function createTestUsers() {
                 status: 'ACTIVE',
                 wallet: {
                     create: {
-                        balance: 100000
+                        balance: 0
                     }
                 },
                 // Add business profile for completeness if needed, but Admin usually doesn't need one strict
@@ -86,7 +86,7 @@ async function createTestUsers() {
                 role: 'MERCHANT',
                 status: 'ACTIVE',
                 wallet: {
-                    create: { balance: 5000 }
+                    create: { balance: 0 }
                 },
                 businessProfile: {
                     create: {

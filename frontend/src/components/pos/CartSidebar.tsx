@@ -15,15 +15,27 @@ interface CartSidebarProps {
     cartItems: CartItem[];
     onUpdateQuantity: (productId: string, delta: number) => void;
     onRemoveItem: (productId: string) => void;
-    onCheckout: () => void;
+    onCheckout: (data?: any) => void;
     onClearCart: () => void;
 }
 
 const CartSidebar: React.FC<CartSidebarProps> = ({ cartItems, onUpdateQuantity, onRemoveItem, onCheckout, onClearCart }) => {
 
+    const [discountType, setDiscountType] = React.useState<'PERCENTAGE' | 'FIXED'>('PERCENTAGE');
+    const [discountValue, setDiscountValue] = React.useState<number>(0);
+
     const subtotal = cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-    const tax = 0; // Configurable later
-    const total = subtotal + tax;
+
+    let discountAmount = 0;
+    if (discountValue > 0) {
+        if (discountType === 'PERCENTAGE') {
+            discountAmount = (subtotal * discountValue) / 100;
+        } else {
+            discountAmount = discountValue;
+        }
+    }
+
+    const total = Math.max(0, subtotal - discountAmount);
 
     return (
         <div className="flex flex-col h-full bg-white dark:bg-gray-900 border-l border-gray-200 dark:border-gray-800 shadow-xl">
@@ -92,14 +104,45 @@ const CartSidebar: React.FC<CartSidebarProps> = ({ cartItems, onUpdateQuantity, 
 
             {/* Footer / Totals */}
             <div className="p-4 border-t dark:border-gray-800 bg-gray-50 dark:bg-gray-800/50 space-y-3">
+
+                {/* Discount Section */}
+                <div className="bg-white dark:bg-gray-800 p-3 rounded-lg border border-gray-200 dark:border-gray-700">
+                    <div className="flex justify-between items-center mb-2">
+                        <span className="text-xs font-bold text-gray-500 uppercase">Discount</span>
+                        <div className="flex bg-gray-100 dark:bg-gray-900 rounded p-0.5">
+                            <button
+                                onClick={() => setDiscountType('PERCENTAGE')}
+                                className={`px-2 py-0.5 text-xs rounded ${discountType === 'PERCENTAGE' ? 'bg-white shadow text-indigo-600' : 'text-gray-500'}`}
+                            >%</button>
+                            <button
+                                onClick={() => setDiscountType('FIXED')}
+                                className={`px-2 py-0.5 text-xs rounded ${discountType === 'FIXED' ? 'bg-white shadow text-indigo-600' : 'text-gray-500'}`}
+                            >$</button>
+                        </div>
+                    </div>
+                    <div className="flex gap-2">
+                        <input
+                            type="number"
+                            min="0"
+                            value={discountValue}
+                            onChange={(e) => setDiscountValue(Number(e.target.value))}
+                            className="w-full text-sm p-1 border rounded bg-transparent text-right"
+                            placeholder="0"
+                        />
+                    </div>
+                </div>
+
                 <div className="flex justify-between text-sm text-gray-600">
                     <span>Subtotal</span>
                     <span>KES {subtotal.toLocaleString()}</span>
                 </div>
-                {/* <div className="flex justify-between text-sm text-gray-600">
-                    <span>Tax</span>
-                    <span>KES {tax.toLocaleString()}</span>
-                </div> */}
+                {discountAmount > 0 && (
+                    <div className="flex justify-between text-sm text-green-600">
+                        <span>Discount ({discountType === 'PERCENTAGE' ? `${discountValue}%` : 'Fixed'})</span>
+                        <span>- KES {discountAmount.toLocaleString()}</span>
+                    </div>
+                )}
+
                 <div className="flex justify-between text-lg font-bold text-gray-900 dark:text-white pt-2 border-t border-gray-200 dark:border-gray-700">
                     <span>Total</span>
                     <span>KES {total.toLocaleString()}</span>
@@ -107,7 +150,7 @@ const CartSidebar: React.FC<CartSidebarProps> = ({ cartItems, onUpdateQuantity, 
 
                 <Button
                     className="w-full py-3 text-lg shadow-lg shadow-indigo-200 dark:shadow-none"
-                    onClick={onCheckout}
+                    onClick={() => onCheckout({ discountType, discountValue, totalAmount: total })}
                     disabled={cartItems.length === 0}
                 >
                     Charge KES {total.toLocaleString()}

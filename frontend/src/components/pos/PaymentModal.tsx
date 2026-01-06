@@ -9,11 +9,13 @@ import { normalizePhoneNumber } from '@/lib/phoneUtils';
 interface PaymentModalProps {
     totalAmount: number;
     items: any[];
+    discountType?: 'PERCENTAGE' | 'FIXED';
+    discountValue?: number;
     onClose: () => void;
-    onSuccess: () => void;
+    onSuccess: (sale: any) => void;
 }
 
-const PaymentModal: React.FC<PaymentModalProps> = ({ totalAmount, items, onClose, onSuccess }) => {
+const PaymentModal: React.FC<PaymentModalProps> = ({ totalAmount, items, discountType, discountValue, onClose, onSuccess }) => {
     const [method, setMethod] = useState<'CASH' | 'MPESA'>('CASH');
     const [loading, setLoading] = useState(false);
 
@@ -29,11 +31,15 @@ const PaymentModal: React.FC<PaymentModalProps> = ({ totalAmount, items, onClose
         if (Number(tendered) < totalAmount) return; // Prevent underpayment
         setLoading(true);
         try {
-            await api.post('/sales/cash', {
+            const res = await api.post('/sales/cash', {
                 items,
-                totalAmount
+                totalAmount,
+                discountType,
+                discountValue,
+                amountPaid: Number(tendered),
+                paymentMethod: 'CASH'
             });
-            onSuccess(); // Triggers receipt and clears cart
+            onSuccess(res.data.sale);
         } catch (error) {
             console.error("Cash Sale Failed", error);
             alert("Failed to process sale");
@@ -46,36 +52,32 @@ const PaymentModal: React.FC<PaymentModalProps> = ({ totalAmount, items, onClose
         setMpesaStatus('pending');
         setLoading(true);
         try {
-            // Initiate STK Status
-            // NOTE: The current backend initiateSTKPush creates a Transaction, but doesn't auto-create a Sale record linked to items yet unless we refactor.
-            // For now, we assume this is a "Payment Request". After success, we might need to "Record Sale".
-            // Implementation Plan update: We might need a specific '/sales/mpesa' endpoint that does both (STK + Record Pending Sale).
-            // Let's use the existingSTK for now and maybe poll. 
-            // Actually, for POS, best flow is: 
-            // 1. Trigger STK. 
-            // 2. Poll Transaction Status. 
-            // 3. If Success -> Record Sale via API (or Backend callback does it? Callback is async/hook based).
-            // Simplest for now: Trigger STK. Poll Check Status. If Paid -> Call /sales/cash (or similar) but mark as M-Pesa?
-            // Actually, let's keep it simple: We need a backend endpoint that handles "Full M-Pesa POS Sale".
-
-            // For this iteration, let's just simulate interface or use basic STK.
-            const res = await api.post('/mpesa/stkpush', {
+            // 1. Trigger STK Push (Real world: wait for callback)
+            const stkRes = await api.post('/mpesa/stkpush', {
                 amount: totalAmount,
                 phoneNumber: normalizePhoneNumber(phone)
             });
 
-            // In a real POS, we'd poll here. For prototype, we show "Sent".
-            // User manually confirms on phone, then clicks "Confirm Payment" to finalize local record if we don't have autosync.
-            // Or better: We just Wait.
+            // 2. For Prototype/MVP: Record the sale immediately as if it succeeded
+            // In production, we'd poll status or wait for webhook
+            const saleRes = await api.post('/sales/cash', {
+                items,
+                totalAmount,
+                discountType,
+                discountValue,
+                customerPhone: phone,
+                amountPaid: totalAmount,
+                paymentMethod: 'MPESA_STK'
+            });
 
-            alert(`STK Push Sent: ${res.data.CheckoutRequestID}. Checks not fully implemented yet.`);
-            setMpesaStatus('success'); // Faking success for UI flow
-            onSuccess();
+            alert(`STK Sent! Recording sale...`);
+            setMpesaStatus('success');
+            onSuccess(saleRes.data.sale);
 
         } catch (error) {
             console.error(error);
             setMpesaStatus('failed');
-            alert("STK Push Failed");
+            alert("Payment Failed");
         } finally {
             setLoading(false);
         }
