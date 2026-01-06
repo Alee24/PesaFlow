@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { getAllUsers, createUser, updateUserStatus, getAdminStats, updateUser, deleteUser, resetUserPassword, manageSubscription } from '../controllers/admin.controller';
+import { getAllUsers, createUser, updateUserStatus, getAdminStats, updateUser, deleteUser, resetUserPassword, manageSubscription, getSystemStatus, triggerSystemUpdate } from '../controllers/admin.controller';
 import { authenticateToken, requireAdmin } from '../middlewares/auth.middleware';
 
 const router = Router();
@@ -16,5 +16,7 @@ router.put('/users/:id', updateUser);
 router.delete('/users/:id', deleteUser);
 router.patch('/users/:id/password', resetUserPassword);
 router.post('/users/:id/subscription', manageSubscription);
+router.get('/system/status', getSystemStatus);
+router.post('/system/update', triggerSystemUpdate);
 
 export default router;

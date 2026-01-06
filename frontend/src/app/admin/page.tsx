@@ -7,7 +7,8 @@ import DashboardLayout from '@/components/layout/DashboardLayout';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, Legend } from 'recharts';
-import { Users, CreditCard, Activity, Server, AlertTriangle, CheckCircle, TrendingUp, DollarSign } from 'lucide-react';
+import { Users, CreditCard, Activity, Server, AlertTriangle, CheckCircle, TrendingUp, DollarSign, RefreshCw, GitCommit } from 'lucide-react';
+import { useToast } from '@/contexts/ToastContext';
 import api from '@/lib/api';
 
 // Mock Data for Charts
@@ -36,6 +37,9 @@ export default function AdminPage() {
     const [stats, setStats] = useState<any>(null);
     const [currency, setCurrency] = useState('KES');
     const [userRole, setUserRole] = useState('');
+    const { showToast } = useToast();
+    const [updating, setUpdating] = useState(false);
+    const [userRole, setUserRole] = useState('');
 
     useEffect(() => {
         const init = async () => {
@@ -58,10 +62,12 @@ export default function AdminPage() {
                 const statsPro = api.get('/admin/stats');
                 // Fetch Profile for Currency
                 const profilePro = api.get('/profile');
+                // Fetch System Status
+                const systemPro = api.get('/admin/system/status');
 
-                const [statsRes, profileRes] = await Promise.all([statsPro, profilePro]);
+                const [statsRes, profileRes, systemRes] = await Promise.all([statsPro, profilePro, systemPro]);
 
-                setStats(statsRes.data);
+                setStats({ ...statsRes.data, system: systemRes.data });
                 if (profileRes.data?.currency) {
                     setCurrency(profileRes.data.currency);
                 }
@@ -73,7 +79,23 @@ export default function AdminPage() {
         };
 
         init();
+        init();
     }, [router]);
+
+    const handleSystemUpdate = async () => {
+        if (!confirm("Are you sure you want to update the server? This will pull the latest code and restart requirements.")) return;
+
+        setUpdating(true);
+        try {
+            await api.post('/admin/system/update');
+            showToast('System update initiated! Server will restart momentarily.', 'success');
+        } catch (error: any) {
+            showToast('Failed to trigger update', 'error');
+        } finally {
+            // Keep spinning for a bit as server restarts
+            setTimeout(() => setUpdating(false), 5000);
+        }
+    };
 
     if (isLoading) return (
         <DashboardLayout>
@@ -165,11 +187,24 @@ export default function AdminPage() {
                                 </span>
                             </div>
                             <div className="mt-4">
-                                <h3 className="text-3xl font-bold">Stable</h3>
+                                <h3 className="text-3xl font-bold">{stats?.system?.status || 'Active'}</h3>
                                 <p className="text-blue-100 text-sm font-medium">System Status</p>
+                                <div className="mt-2 flex items-center gap-2">
+                                    <span className="text-[10px] bg-blue-400/30 px-2 py-0.5 rounded text-white font-mono flex items-center gap-1">
+                                        <GitCommit className="w-3 h-3" /> {stats?.system?.version || 'Unknown'}
+                                    </span>
+                                    <button
+                                        onClick={handleSystemUpdate}
+                                        disabled={updating}
+                                        className="text-[10px] bg-white text-blue-600 font-bold px-2 py-0.5 rounded hover:bg-blue-50 transition-colors flex items-center gap-1 disabled:opacity-50"
+                                    >
+                                        <RefreshCw className={`w-3 h-3 ${updating ? 'animate-spin' : ''}`} />
+                                        {updating ? 'Updating...' : 'Update'}
+                                    </button>
+                                </div>
                             </div>
                         </div>
-                        <Activity className="absolute -bottom-4 -right-4 w-32 h-32 text-white/10 group-hover:scale-110 transition-transform duration-300" />
+                        <Server className="absolute -bottom-4 -right-4 w-32 h-32 text-white/10 group-hover:scale-110 transition-transform duration-300" />
                     </div>
                 </div>
 

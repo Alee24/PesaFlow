@@ -1,6 +1,9 @@
 import { Request, Response } from 'express';
 import { PrismaClient } from '@prisma/client';
+import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcryptjs';
+import { exec } from 'child_process';
+import path from 'path';
 
 const prisma = new PrismaClient();
 
@@ -271,6 +274,45 @@ export const manageSubscription = async (req: AuthRequest, res: Response) => {
 
     } catch (error: any) {
         console.error("Manage Subscription Error:", error);
+        res.status(500).json({ error: error.message });
+    }
+};
+
+export const getSystemStatus = async (req: AuthRequest, res: Response) => {
+    try {
+        // Get git version
+        exec('git rev-parse --short HEAD', (error, stdout, stderr) => {
+            if (error) {
+                console.error('Git Error:', error);
+                return res.json({ version: 'Unknown', lastUpdate: new Date() });
+            }
+            res.json({
+                version: stdout.trim(),
+                lastUpdate: new Date(),
+                status: 'ONLINE'
+            });
+        });
+    } catch (error: any) {
+        res.status(500).json({ error: error.message });
+    }
+};
+
+export const triggerSystemUpdate = async (req: AuthRequest, res: Response) => {
+    try {
+        const deployScript = path.join(process.cwd(), '../deploy.sh'); // Assumes backend/ is CWD, script is in root
+
+        console.log(`Triggering update via: ${deployScript}`);
+
+        // Spawn detached process so it continues after response
+        const child = exec(`bash "${deployScript}"`, {
+            detached: true,
+            stdio: 'ignore'
+        });
+
+        child.unref();
+
+        res.json({ message: 'System update initiated. Server will restart shortly.' });
+    } catch (error: any) {
         res.status(500).json({ error: error.message });
     }
 };
