@@ -4,7 +4,7 @@ import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
-export const sendEmail = async (userId: string, to: string, subject: string, html: string) => {
+export const sendEmail = async (userId: string, to: string, subject: string, html: string, attachments?: any[]) => {
     try {
         const profile = await prisma.businessProfile.findUnique({ where: { userId } });
 
@@ -28,6 +28,7 @@ export const sendEmail = async (userId: string, to: string, subject: string, htm
             to,
             subject,
             html,
+            attachments
         });
 
         console.log("Message sent: %s", info.messageId);

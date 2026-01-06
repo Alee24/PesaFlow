@@ -128,10 +128,22 @@ export default function InvoicePage() {
         }
     };
 
+    import { pdf } from '@react-pdf/renderer';
+
     const handleSendEmail = async (email: string) => {
         setSendingEmail(true);
         try {
-            await api.post(`/invoices/${id}/email`, { email });
+            // Generate PDF Blob
+            const blob = await pdf(<InvoicePDF invoice={invoice} />).toBlob();
+
+            // Create FormData
+            const formData = new FormData();
+            formData.append('email', email);
+            formData.append('file', blob, `Invoice_${invoice.reference}.pdf`);
+
+            // Send to backend (Content-Type header is set automatically by browser for FormData)
+            await api.post(`/invoices/${id}/email`, formData);
+
             toast.success('Invoice sent successfully!');
             setEmailModalOpen(false);
         } catch (error) {

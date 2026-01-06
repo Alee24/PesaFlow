@@ -203,7 +203,15 @@ export const sendInvoiceEmail = async (req: Request, res: Response) => {
             </div>
         `;
 
-        await sendEmail(userId, email, `Invoice #${transaction.reference} from ${senderName}`, emailHtml);
+        let attachments: any[] = [];
+        if (req.file) {
+            attachments.push({
+                filename: req.file.originalname,
+                content: req.file.buffer
+            });
+        }
+
+        await sendEmail(userId, email, `Invoice #${transaction.reference} from ${senderName}`, emailHtml, attachments);
 
         res.json({ message: 'Invoice sent successfully' });
 
