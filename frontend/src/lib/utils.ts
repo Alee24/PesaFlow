@@ -25,6 +25,12 @@ export function getImageUrl(path?: string) {
     if (!cleanPath.startsWith('/')) cleanPath = `/${cleanPath}`;
 
     // 2. Determine Base URL
+    // If it's an upload path, return it relative (so it goes through Next.js proxy)
+    // This allows https://domain.com/uploads/... without needing api. subdomain
+    if (cleanPath.startsWith('/uploads/')) {
+        return cleanPath;
+    }
+
     let apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://api.mpesaconnect.co.ke/api';
 
     // CRITICAL: Force Production URL if we are in a browser and NOT on localhost
