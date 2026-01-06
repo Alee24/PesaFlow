@@ -3,7 +3,8 @@ import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
 
-const uploadDir = path.join(__dirname, '../../public/uploads');
+// Use process.cwd() for consistent path resolution in both dev (ts-node) and prod (dist)
+const uploadDir = path.join(process.cwd(), 'public/uploads');
 
 // Ensure directory exists
 if (!fs.existsSync(uploadDir)) {
