@@ -66,6 +66,16 @@ export default function InvoicePage() {
 
     const biz = invoice.initiator?.businessProfile;
 
+    // Helper to fix logo URL (handle localhost or http mixed content)
+    const getLogoUrl = (url: string) => {
+        if (!url) return null;
+        if (url.includes('/uploads/')) {
+            // Force relative path to use current origin
+            return `/uploads/${url.split('/uploads/')[1]}`;
+        }
+        return url;
+    };
+
     // Parse metadata safely
     let metadata: any = {};
     if (typeof invoice.metadata === 'string') {
@@ -173,7 +183,7 @@ export default function InvoicePage() {
                     <div className="flex justify-between items-start mb-12 border-b pb-8 relative z-10">
                         <div>
                             {biz?.logoUrl ? (
-                                <img src={biz.logoUrl} alt="Logo" className="h-16 mb-4 object-contain" />
+                                <img src={getLogoUrl(biz.logoUrl) || ''} alt="Logo" className="h-16 mb-4 object-contain" />
                             ) : (
                                 <div className="text-3xl font-bold text-gray-800 uppercase mb-4">{biz?.companyName || 'YOUR LOGO'}</div>
                             )}
