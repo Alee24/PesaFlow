@@ -196,12 +196,7 @@ const InvoicePDF: React.FC<InvoicePDFProps> = ({ invoice }) => {
     return (
         <Document>
             <Page size="A4" style={styles.page}>
-                {isPaid && (
-                    <Image
-                        src="https://cdn.pixabay.com/photo/2020/04/10/13/23/paid-5025785_1280.png"
-                        style={styles.stamp}
-                    />
-                )}
+
                 {/* Header */}
                 <View style={styles.header}>
                     <View style={styles.companyCol}>
@@ -297,6 +292,13 @@ const InvoicePDF: React.FC<InvoicePDFProps> = ({ invoice }) => {
                 </View>
 
                 <Text style={styles.thanks}>Thank you for your business!</Text>
+
+                {isPaid && (
+                    <Image
+                        src="https://cdn.pixabay.com/photo/2020/04/10/13/23/paid-5025785_1280.png"
+                        style={styles.stamp}
+                    />
+                )}
             </Page>
         </Document>
     );
