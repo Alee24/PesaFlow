@@ -21,6 +21,7 @@ const menuItems = [
     { name: 'Users', href: '/admin/users', icon: User, role: 'ADMIN' },
     { name: 'Withdrawal Approvals', href: '/admin/withdrawals', icon: CreditCard, role: 'ADMIN' },
     { name: 'Subscription', href: '/subscription', icon: ShieldCheck },
+    { name: 'Admin Dashboard', href: '/admin', icon: LayoutDashboard, role: 'ADMIN' },
 ];
 
 
