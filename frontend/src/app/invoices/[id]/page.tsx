@@ -14,6 +14,8 @@ import { getImageUrl } from '@/lib/utils';
 import { EmailModal } from '@/components/ui/EmailModal';
 import toast from 'react-hot-toast';
 
+import { pdf } from '@react-pdf/renderer';
+
 const PDFDownloadLink = dynamic(
     () => import('@react-pdf/renderer').then((mod) => mod.PDFDownloadLink),
     { ssr: false, loading: () => <Button disabled size="sm">Loading PDF...</Button> }
@@ -128,7 +130,7 @@ export default function InvoicePage() {
         }
     };
 
-    import { pdf } from '@react-pdf/renderer';
+
 
     const handleSendEmail = async (email: string) => {
         setSendingEmail(true);
