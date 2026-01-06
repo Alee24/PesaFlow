@@ -41,7 +41,10 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({ sale, onClose }) => 
                     >
                         {/* Store Info */}
                         <div className="text-center mb-4 border-b border-dashed border-gray-300 pb-4">
-                            <h2 className="font-bold text-lg uppercase">Mpesa Connect</h2>
+                            <div className="flex justify-center mb-2">
+                                <img src="/logo.png" alt="Mpesa Connect" className="h-12 w-auto grayscale" />
+                            </div>
+                            <p className="font-bold text-lg uppercase hidden">Mpesa Connect</p>
                             <p className="text-xs text-gray-500">Nairobi, Kenya</p>
                             <p className="text-xs text-gray-500">info@Mpesaconnect.co.ke</p>
                         </div>

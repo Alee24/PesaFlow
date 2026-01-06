@@ -168,6 +168,8 @@ const ReceiptPDF = ({ transaction }: ReceiptPDFProps) => (
     <Document>
         <Page size="A5" style={styles.page}>
             <View style={styles.header}>
+                {/* Note: In a real deployment, ensure logo.png is accessible via absolute URL or import it */}
+                {/* <Image src="/logo.png" style={{ height: 40, alignSelf: 'center', marginBottom: 5 }} /> */}
                 <Text style={styles.title}>Mpesa Connect</Text>
                 <Text style={styles.subtitle}>OFFICIAL TRANSACTION RECEIPT</Text>
             </View>
