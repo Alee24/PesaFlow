@@ -2,6 +2,7 @@
 import React from 'react';
 import { Trash2, Plus, Minus, ShoppingCart } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
+import { getImageUrl } from '@/lib/utils';
 
 interface CartItem {
     productId: string;
@@ -62,7 +63,22 @@ const CartSidebar: React.FC<CartSidebarProps> = ({ cartItems, onUpdateQuantity, 
                         <div key={item.productId} className="flex gap-3 bg-gray-50 dark:bg-gray-800/30 p-2 rounded-lg group">
                             {/* Tiny Image */}
                             <div className="h-12 w-12 bg-gray-200 rounded overflow-hidden flex-shrink-0">
-                                {item.imageUrl && <img src={item.imageUrl} className="w-full h-full object-cover" />}
+                                {item.imageUrl ? (
+                                    <img
+                                        src={getImageUrl(item.imageUrl)}
+                                        alt={item.name}
+                                        className="w-full h-full object-cover"
+                                        onError={(e) => {
+                                            (e.target as HTMLImageElement).style.display = 'none';
+                                            (e.target as HTMLImageElement).parentElement!.classList.add('flex', 'items-center', 'justify-center');
+                                            (e.target as HTMLImageElement).parentElement!.innerHTML = '<svg class="w-6 h-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>';
+                                        }}
+                                    />
+                                ) : (
+                                    <div className="w-full h-full flex items-center justify-center text-gray-400">
+                                        <ShoppingCart className="w-6 h-6 opacity-50" />
+                                    </div>
+                                )}
                             </div>
 
                             {/* Details */}
