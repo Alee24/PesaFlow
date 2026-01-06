@@ -18,6 +18,7 @@ import notificationRoutes from './routes/notification.routes';
 import walletRoutes from './routes/wallet.routes';
 import dashboardRoutes from './routes/dashboard.routes';
 import salesRoutes from './routes/sales.routes';
+import subscriptionRoutes from './routes/subscription.routes';
 
 
 const app = express();
@@ -47,6 +48,7 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/sales', salesRoutes);
 app.use('/api/notifications', notificationRoutes);
+app.use('/api/subscriptions', subscriptionRoutes);
 
 app.get('/', (req, res) => {
 

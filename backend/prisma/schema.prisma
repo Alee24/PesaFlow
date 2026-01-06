@@ -33,6 +33,7 @@ model User {
   
   categories    Category[]
   businessProfile BusinessProfile?
+  subscription  Subscription?
 
   @@map("users")
 }
@@ -272,3 +273,19 @@ model Notification {
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
+
+model Subscription {
+  id              String   @id @default(uuid())
+  merchantId      String   @unique @map("merchant_id")
+  merchant        User     @relation(fields: [merchantId], references: [id])
+  plan            String   // BASIC, PRO, ENTERPRISE
+  status          String   @default("ACTIVE") // ACTIVE, EXPIRED, CANCELLED
+  startDate       DateTime @default(now()) @map("start_date")
+  endDate         DateTime @map("end_date")
+  autoRenew       Boolean  @default(true) @map("auto_renew")
+  lastPaymentId   String?  @map("last_payment_id") // Reference to Transaction
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  @@map("subscriptions")
+}

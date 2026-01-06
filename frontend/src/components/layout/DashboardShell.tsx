@@ -3,7 +3,7 @@
 
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { LayoutDashboard, ShoppingCart, Package, CreditCard, ArrowLeftRight, Settings, LogOut, User, Store, FileText, Bell, X, CheckCircle, AlertCircle, Info, Lock } from 'lucide-react';
+import { LayoutDashboard, ShoppingCart, Package, CreditCard, ArrowLeftRight, Settings, LogOut, User, Store, FileText, Bell, X, CheckCircle, AlertCircle, Info, Lock, ShieldCheck } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useState, useEffect, useRef } from 'react';
 import { formatDistanceToNow } from 'date-fns';
@@ -20,6 +20,7 @@ const menuItems = [
     { name: 'Merchant Verification', href: '/admin/verification', icon: CheckCircle, role: 'ADMIN' },
     { name: 'Users', href: '/admin/users', icon: User, role: 'ADMIN' },
     { name: 'Withdrawal Approvals', href: '/admin/withdrawals', icon: CreditCard, role: 'ADMIN' },
+    { name: 'Subscription', href: '/subscription', icon: ShieldCheck },
 ];
 
 
