@@ -93,7 +93,8 @@ export default function UserManagementPage() {
             fetchUsers();
             setNewUser({ name: '', email: '', phoneNumber: '', password: '', role: 'MERCHANT' });
         } catch (error: any) {
-            showToast(error.response?.data?.error || 'Failed to create user', 'error');
+            const errorMessage = error.response?.data?.error || error.response?.data?.message || error.message || 'Failed to create user';
+            showToast(errorMessage, 'error');
         }
     };
 
@@ -147,7 +148,8 @@ export default function UserManagementPage() {
             fetchUsers();
             setEditModal(prev => ({ ...prev, isOpen: false }));
         } catch (error: any) {
-            showToast(error.response?.data?.error || 'Failed to update user', 'error');
+            const errorMessage = error.response?.data?.error || error.response?.data?.message || error.message || 'Failed to update user';
+            showToast(errorMessage, 'error');
         } finally {
             setEditModal(prev => ({ ...prev, loading: false }));
         }
@@ -190,7 +192,8 @@ export default function UserManagementPage() {
             showToast('Password reset successfully', 'success');
             setPasswordModal(prev => ({ ...prev, isOpen: false }));
         } catch (error: any) {
-            showToast(error.response?.data?.error || 'Failed to reset password', 'error');
+            const errorMessage = error.response?.data?.error || error.response?.data?.message || error.message || 'Failed to reset password';
+            showToast(errorMessage, 'error');
         } finally {
             setPasswordModal(prev => ({ ...prev, loading: false }));
         }
@@ -223,7 +226,8 @@ export default function UserManagementPage() {
             setSubModal(prev => ({ ...prev, isOpen: false }));
             fetchUsers();
         } catch (error: any) {
-            showToast(error.response?.data?.error || 'Failed to update subscription', 'error');
+            const errorMessage = error.response?.data?.error || error.response?.data?.message || error.message || 'Failed to update subscription';
+            showToast(errorMessage, 'error');
         } finally {
             setSubModal(prev => ({ ...prev, loading: false }));
         }
