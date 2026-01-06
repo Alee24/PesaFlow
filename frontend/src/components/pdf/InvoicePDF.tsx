@@ -293,11 +293,26 @@ const InvoicePDF: React.FC<InvoicePDFProps> = ({ invoice }) => {
 
                 <Text style={styles.thanks}>Thank you for your business!</Text>
 
+                {/* Dynamic Stamps */}
                 {isPaid && (
-                    <Image
-                        src="https://cdn.pixabay.com/photo/2020/04/10/13/23/paid-5025785_1280.png"
-                        style={styles.stamp}
-                    />
+                    <View style={[styles.stamp, { borderColor: '#16a34a', borderWidth: 4, borderRadius: 10, justifyContent: 'center', alignItems: 'center' }]}>
+                        <Text style={{ color: '#16a34a', fontSize: 40, fontWeight: 'bold', textTransform: 'uppercase' }}>PAID</Text>
+                    </View>
+                )}
+                {invoice.status === 'CANCELLED' && (
+                    <View style={[styles.stamp, { borderColor: '#fca5a5', borderWidth: 4, borderRadius: 10, justifyContent: 'center', alignItems: 'center' }]}>
+                        <Text style={{ color: '#fca5a5', fontSize: 30, fontWeight: 'bold', textTransform: 'uppercase' }}>CANCELLED</Text>
+                    </View>
+                )}
+                {(invoice.status === 'PENDING' && metadata.dueDate && new Date(metadata.dueDate) < new Date()) && (
+                    <View style={[styles.stamp, { borderColor: '#dc2626', borderWidth: 4, borderRadius: 10, justifyContent: 'center', alignItems: 'center' }]}>
+                        <Text style={{ color: '#dc2626', fontSize: 30, fontWeight: 'bold', textTransform: 'uppercase' }}>OVERDUE</Text>
+                    </View>
+                )}
+                {(invoice.status === 'PENDING' && metadata.dueDate && new Date(metadata.dueDate) >= new Date()) && (
+                    <View style={[styles.stamp, { borderColor: '#eab308', borderWidth: 4, borderRadius: 10, justifyContent: 'center', alignItems: 'center' }]}>
+                        <Text style={{ color: '#eab308', fontSize: 40, fontWeight: 'bold', textTransform: 'uppercase' }}>DUE</Text>
+                    </View>
                 )}
             </Page>
         </Document>

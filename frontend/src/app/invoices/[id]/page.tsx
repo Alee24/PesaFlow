@@ -202,12 +202,32 @@ export default function InvoicePage() {
                 </div>
 
                 <Card id="invoice-content" className="flex-1 bg-white text-gray-900 p-10 print:shadow-none print:border-none print:p-0 print:w-full relative overflow-hidden">
+                    {/* Status Stamps */}
                     {(invoice.status === 'COMPLETED' || invoice.status === 'PAID') && (
-                        <img
-                            src="https://cdn.pixabay.com/photo/2020/04/10/13/23/paid-5025785_1280.png"
-                            alt="PAID"
-                            className="absolute bottom-10 right-10 w-48 opacity-50 rotate-[-20deg] pointer-events-none z-0"
-                        />
+                        <div className="absolute bottom-10 right-10 border-4 border-green-600 text-green-600 font-bold text-5xl uppercase opacity-50 rotate-[-20deg] px-8 py-2 rounded-lg pointer-events-none z-0 tracking-widest">
+                            PAID
+                        </div>
+                    )}
+                    {(invoice.status === 'CANCELLED') && (
+                        <div className="absolute bottom-10 right-10 border-4 border-red-300 text-red-300 font-bold text-5xl uppercase opacity-50 rotate-[-20deg] px-4 py-2 rounded-lg pointer-events-none z-0 tracking-widest">
+                            CANCELLED
+                        </div>
+                    )}
+                    {(invoice.status === 'PENDING' && metadata.dueDate && new Date(metadata.dueDate) < new Date()) && (
+                        <div className="absolute bottom-10 right-10 border-4 border-red-600 text-red-600 font-bold text-5xl uppercase opacity-50 rotate-[-20deg] px-4 py-2 rounded-lg pointer-events-none z-0 tracking-widest">
+                            OVERDUE
+                        </div>
+                    )}
+                    {/* Optional: 'DUE' stamp if pending but not overdue yet, or just leave blank */}
+                    {(invoice.status === 'PENDING' && (!metadata.dueDate || new Date(metadata.dueDate) >= new Date())) && (
+                        // Standard 'ISSUED' or nothing. User asked for "Due", "Overdue", "Paid".
+                        // Let's show "DUE" if there is a due date, otherwise nothing or "ISSUED".
+                        // User specifically asked for this text.
+                        metadata.dueDate ? (
+                            <div className="absolute bottom-10 right-10 border-4 border-yellow-500 text-yellow-500 font-bold text-5xl uppercase opacity-40 rotate-[-20deg] px-8 py-2 rounded-lg pointer-events-none z-0 tracking-widest">
+                                DUE
+                            </div>
+                        ) : null
                     )}
                     {/* Header */}
                     <div className="flex justify-between items-start mb-12 border-b pb-8 relative z-10">
