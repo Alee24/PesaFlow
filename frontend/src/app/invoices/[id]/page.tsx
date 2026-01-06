@@ -10,6 +10,7 @@ import { Printer, Download } from 'lucide-react';
 import api from '@/lib/api';
 import dynamic from 'next/dynamic';
 import InvoicePDF from '@/components/pdf/InvoicePDF';
+import { getImageUrl } from '@/lib/utils';
 
 const PDFDownloadLink = dynamic(
     () => import('@react-pdf/renderer').then((mod) => mod.PDFDownloadLink),
@@ -66,25 +67,7 @@ export default function InvoicePage() {
 
     const biz = invoice.initiator?.businessProfile;
 
-    // Helper to fix logo URL (handle localhost or http mixed content)
-    const getLogoUrl = (url: string) => {
-        if (!url) return null;
-        let cleanUrl = url;
 
-        // Fix localhost absolute urls
-        if (url.includes('/uploads/')) {
-            cleanUrl = `/uploads/${url.split('/uploads/')[1]}`;
-        }
-
-        // Prepend Backend Origin if it is a relative upload path
-        if (cleanUrl.startsWith('/uploads/')) {
-            const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://api.mpesaconnect.co.ke/api';
-            const origin = apiUrl.replace(/\/api$/, '');
-            return `${origin}${cleanUrl}`;
-        }
-
-        return cleanUrl;
-    };
 
     // Parse metadata safely
     let metadata: any = {};
@@ -193,7 +176,7 @@ export default function InvoicePage() {
                     <div className="flex justify-between items-start mb-12 border-b pb-8 relative z-10">
                         <div>
                             {biz?.logoUrl ? (
-                                <img src={getLogoUrl(biz.logoUrl) || ''} alt="Logo" className="h-16 mb-4 object-contain" />
+                                <img src={getImageUrl(biz.logoUrl) || ''} alt="Logo" className="h-16 mb-4 object-contain" />
                             ) : (
                                 <div className="text-3xl font-bold text-gray-800 uppercase mb-4">{biz?.companyName || 'YOUR LOGO'}</div>
                             )}

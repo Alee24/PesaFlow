@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
 import Toast from '@/components/ui/Toast';
 import api from '@/lib/api';
+import { getImageUrl } from '@/lib/utils';
 
 export default function SettingsPage() {
     const [formData, setFormData] = useState({
@@ -222,9 +223,7 @@ export default function SettingsPage() {
                                     {formData.logoUrl && (
                                         <div className="h-12 w-12 rounded-lg overflow-hidden border bg-white flex items-center justify-center">
                                             <img
-                                                src={(formData.logoUrl.startsWith('/uploads/') || formData.logoUrl.includes('/uploads/'))
-                                                    ? `${(process.env.NEXT_PUBLIC_API_URL || 'https://api.mpesaconnect.co.ke/api').replace(/\/api$/, '')}${formData.logoUrl.includes('/uploads/') ? `/uploads/${formData.logoUrl.split('/uploads/')[1]}` : formData.logoUrl}`
-                                                    : formData.logoUrl}
+                                                src={getImageUrl(formData.logoUrl) || ''}
                                                 alt="Logo"
                                                 className="max-h-full max-w-full object-contain"
                                             />

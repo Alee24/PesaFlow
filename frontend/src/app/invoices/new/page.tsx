@@ -8,6 +8,7 @@ import { Plus, Trash2, Printer, Save } from 'lucide-react';
 import api from '@/lib/api';
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/contexts/ToastContext';
+import { getImageUrl } from '@/lib/utils';
 
 export default function CreateInvoicePage() {
     const router = useRouter();
@@ -44,25 +45,7 @@ export default function CreateInvoicePage() {
         }
     };
 
-    // Helper to fix logo URL (handle localhost or http mixed content)
-    const getLogoUrl = (url: string) => {
-        if (!url) return null;
-        let cleanUrl = url;
 
-        // Fix localhost absolute urls
-        if (url.includes('/uploads/')) {
-            cleanUrl = `/uploads/${url.split('/uploads/')[1]}`;
-        }
-
-        // Prepend Backend Origin if it is a relative upload path
-        if (cleanUrl.startsWith('/uploads/')) {
-            const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://api.mpesaconnect.co.ke/api';
-            const origin = apiUrl.replace(/\/api$/, '');
-            return `${origin}${cleanUrl}`;
-        }
-
-        return cleanUrl;
-    };
 
     const handleItemChange = (index: number, field: string, value: string | number) => {
         const newItems: any[] = [...items];
@@ -182,7 +165,7 @@ export default function CreateInvoicePage() {
                             <div className="text-right">
                                 {company?.logoUrl ? (
                                     <div className="flex flex-col items-end">
-                                        <img src={getLogoUrl(company.logoUrl) || ''} alt="Logo" className="h-16 object-contain mb-1" />
+                                        <img src={getImageUrl(company.logoUrl) || ''} alt="Logo" className="h-16 object-contain mb-1" />
                                         <div className="text-[10px] tracking-widest uppercase font-bold text-gray-700">
                                             {company?.companyName}
                                         </div>
