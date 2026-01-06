@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcryptjs';
-import { exec } from 'child_process';
+import { exec, spawn } from 'child_process';
 import path from 'path';
 
 const prisma = new PrismaClient();
@@ -303,7 +303,8 @@ export const triggerSystemUpdate = async (req: AuthRequest, res: Response) => {
         console.log(`Triggering update via: ${deployScript}`);
 
         // Spawn detached process so it continues after response
-        const child = exec(`bash "${deployScript}"`, {
+        // Use 'bash' directly? Or just the script? Since it's shell script, bash is safer.
+        const child = spawn('bash', [deployScript], {
             detached: true,
             stdio: 'ignore'
         });
@@ -315,3 +316,4 @@ export const triggerSystemUpdate = async (req: AuthRequest, res: Response) => {
         res.status(500).json({ error: error.message });
     }
 };
+```

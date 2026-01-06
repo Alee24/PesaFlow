@@ -1,7 +1,7 @@
 
 import { Router } from 'express';
 import { getSubscription, initiateSubscription } from '../controllers/subscription.controller';
-import { authenticateUser } from '../middlewares/auth.middleware';
+import { authenticateToken } from '../middlewares/auth.middleware';
 
 const router = Router();
 
