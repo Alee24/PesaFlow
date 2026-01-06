@@ -262,7 +262,7 @@ export default function InvoicePage() {
                             {metadata.itemsSnapshot ? (
                                 metadata.itemsSnapshot.map((item: any, idx: number) => (
                                     <tr key={idx}>
-                                        <td className="py-4 text-gray-800 font-medium">{item.description || 'Item'}</td>
+                                        <td className="py-4 text-gray-800 font-medium">{item.description || item.name || item.title || item.product?.name || 'Item'}</td>
                                         <td className="py-4 text-center text-gray-600">{item.quantity}</td>
                                         <td className="py-4 text-right text-gray-600">{Number(item.price).toLocaleString()}</td>
                                         <td className="py-4 text-right font-bold text-gray-900">{(Number(item.price) * Number(item.quantity)).toLocaleString()}</td>

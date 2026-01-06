@@ -249,7 +249,7 @@ const InvoicePDF: React.FC<InvoicePDFProps> = ({ invoice }) => {
                 {saleItems.length > 0 ? (
                     saleItems.map((item: any, idx: number) => (
                         <View key={idx} style={styles.tableRow}>
-                            <Text style={[styles.tableCell, styles.colDesc]}>{item.description || item.product?.name || 'Item'}</Text>
+                            <Text style={[styles.tableCell, styles.colDesc]}>{item.description || item.name || item.title || item.product?.name || 'Item'}</Text>
                             <Text style={[styles.tableCell, styles.colQty]}>{item.quantity}</Text>
                             <Text style={[styles.tableCell, styles.colPrice]}>{fmt(item.price || item.unitPrice)}</Text>
                             <Text style={[styles.tableCell, styles.contentValue, styles.colTotal]}>
