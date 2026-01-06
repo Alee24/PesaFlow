@@ -39,7 +39,7 @@ export default function AdminPage() {
     const [userRole, setUserRole] = useState('');
     const { showToast } = useToast();
     const [updating, setUpdating] = useState(false);
-    const [userRole, setUserRole] = useState('');
+
 
     useEffect(() => {
         const init = async () => {
@@ -79,7 +79,7 @@ export default function AdminPage() {
         };
 
         init();
-        init();
+
     }, [router]);
 
     const handleSystemUpdate = async () => {

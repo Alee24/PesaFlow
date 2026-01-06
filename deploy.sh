@@ -1,6 +1,6 @@
 #!/bin/bash
 
-echo "🚀 Starting Deployment..."
+echo "🚀 Mpesa Connect Starting Deployment..."
 
 # 1. Update Backend
 echo "📦 Updating Backend..."
@@ -15,7 +15,7 @@ pm2 restart all
 cd ..
 
 # 2. Update Frontend
-echo "🎨 Updating Frontend..."
+echo "Im now updating Frontend..."
 cd frontend || exit
 git pull origin main
 npm install
