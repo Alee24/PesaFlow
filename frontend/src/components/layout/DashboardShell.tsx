@@ -42,7 +42,8 @@ export function Sidebar({ user }: { user?: any }) {
         <aside className="fixed left-0 top-0 z-40 h-screen w-64 bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800 hidden md:block transition-all duration-300 ease-in-out">
             <div className="flex h-16 items-center border-b border-gray-200 dark:border-gray-800 px-6">
                 <div className="flex items-center gap-2 font-bold text-xl text-indigo-600 dark:text-indigo-400 animate-fade-in">
-                    <img src="/logo.png" alt="Mpesa Connect" className="h-10 w-auto" />
+                    <Store className="w-6 h-6 hover:rotate-12 transition-transform duration-300" />
+                    <span className="bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 to-violet-600">Mpesa Connect</span>
                 </div>
             </div>
 

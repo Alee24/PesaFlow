@@ -59,13 +59,23 @@ export default function TransactionsPage() {
         }
     };
 
-    const getPhoneNumber = (tx: any) => {
+    const getPaidByInfo = (tx: any) => {
+        if (tx.sale) {
+            if (tx.sale.customerName) return tx.sale.customerName;
+            if (tx.sale.customerPhone) return tx.sale.customerPhone;
+        }
+
         try {
-            if (typeof tx.metadata === 'string') {
-                const meta = JSON.parse(tx.metadata);
-                return meta.phoneNumber || meta.clientPhone || meta.mpesaNumber || '-';
-            }
-            return tx.metadata?.phoneNumber || tx.metadata?.clientPhone || '-';
+            const meta = typeof tx.metadata === 'string' ? JSON.parse(tx.metadata) : tx.metadata;
+            if (meta?.customerName) return meta.customerName;
+            if (meta?.phoneNumber) return meta.phoneNumber;
+            if (meta?.clientPhone) return meta.clientPhone;
+            if (meta?.mpesaNumber) return meta.mpesaNumber;
+
+            // If sender info exists on initiator
+            if (tx.initiator?.name && tx.initiator?.name !== 'Merchant') return tx.initiator.name;
+
+            return '-';
         } catch (e) {
             return '-';
         }
@@ -76,14 +86,19 @@ export default function TransactionsPage() {
     };
 
     const handleDetailsClick = (tx: any) => {
+        console.log("Details clicked for:", tx);
         if (tx.sale) {
             // It's a sale, show Receipt Modal
-            // Merge transaction timestamp and other useful metadata that might be missing on sale record
             const saleData = {
                 ...tx.sale,
                 createdAt: tx.createdAt,
-                // Try to get customer name from initiator or metadata if missing in sale
-                customerName: tx.sale.customerName || tx.initiator?.name || (tx.metadata && typeof tx.metadata === 'string' ? JSON.parse(tx.metadata).clientName : 'Customer')
+                // Ensure customer info is present for the receipt
+                customerName: tx.sale.customerName || getPaidByInfo(tx),
+                // Ensure items have necessary product fields if they were flattened
+                items: tx.sale.items.map((item: any) => ({
+                    ...item,
+                    product: item.product || { name: 'Item', sku: '' }
+                }))
             };
             setSelectedSale(saleData);
         } else {
@@ -199,7 +214,7 @@ export default function TransactionsPage() {
                                                 </span>
                                             </td>
                                             <td className="py-4 px-6 font-mono text-xs text-gray-500">{tx.reference || '-'}</td>
-                                            <td className="py-4 px-6 text-gray-600 dark:text-gray-400 font-mono text-xs">{getPhoneNumber(tx)}</td>
+                                            <td className="py-4 px-6 text-gray-600 dark:text-gray-400 font-mono text-xs">{getPaidByInfo(tx)}</td>
                                             <td className={`py-4 px-6 text-right font-bold ${tx.type === 'WITHDRAWAL' || tx.type.includes('FEE') ? 'text-red-600' : 'text-green-600'}`}>
                                                 {tx.type === 'WITHDRAWAL' || tx.type.includes('FEE') ? '-' : '+'} {formatCurrency(Number(tx.amount))}
                                             </td>
