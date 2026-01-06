@@ -33,31 +33,25 @@ async function main() {
     const path = require('path');
     const uploadDir = path.join(process.cwd(), 'public');
 
-    products.forEach(p => {
-        const url = p.imageUrl || 'NULL';
-        let status = '✅ OK (Relative)';
-        let fileExists = '❓ N/A';
-
-        if (url === 'NULL') {
-            status = '⚪ Empty';
-        } else if (url.includes('localhost') || url.includes('127.0.0.1')) {
-            status = '❌ BAD (Localhost)';
-        } else if (url.startsWith('http')) {
-            status = '⚠️ External/Absolute';
+    if (url === 'NULL') {
+        status = '⚪ Empty';
+    } else if (url.includes('localhost') || url.includes('127.0.0.1')) {
+        status = '❌ BAD (Localhost)';
+    } else if (url.startsWith('http')) {
+        status = '⚠️ External/Absolute';
+    } else {
+        // Check file existence
+        const filePath = path.join(uploadDir, url);
+        if (fs.existsSync(filePath)) {
+            status = '✅ OK (Found on Disk)';
         } else {
-            // Check file existence for relative paths
-            const filePath = path.join(uploadDir, url);
-            if (fs.existsSync(filePath)) {
-                fileExists = '✅ Found';
-            } else {
-                fileExists = '❌ Missing on Disk';
-                status = '❌ BAD (File Missing)';
-            }
+            status = '❌ MISSING from Disk';
         }
+    }
 
-        console.log(pad(p.name, 20) + ' | ' + pad(url, 40) + ' | ' + status + ' | ' + fileExists);
-    });
-    console.log('------------------------------------------------------------------------------------------------');
+    console.log(pad(p.name, 25) + ' | ' + pad(url, 40) + ' | ' + status);
+});
+console.log('------------------------------------------------------------------------------------------------');
 }
 
 function pad(str: string, len: number) {
