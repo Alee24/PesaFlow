@@ -105,10 +105,8 @@ export default function CreateInvoicePage() {
                 items: items.map(i => ({
                     price: Number(i.price),
                     quantity: Number(i.quantity),
-                    // We are hacking slightly here - we need the description to be saved.
-                    // Let's temporarily compromise: The backend creates a "General Item".
-                    // But on the frontend, we are *printing* what we see inputs.
-                    // So saving is more for record keeping.
+                    description: i.description,
+                    name: i.description
                 }))
             });
 
