@@ -315,15 +315,16 @@ export const triggerSystemUpdate = async (req: AuthRequest, res: Response) => {
             return res.status(400).json({ error: 'Update already in progress' });
         }
 
-        const deployScript = path.join(process.cwd(), '../deploy.sh'); // Assumes backend/ is CWD
-        console.log(`Triggering update via: ${deployScript}`);
+        const updateScript = path.join(process.cwd(), '../update.sh'); // Expects update.sh in root
+        const projectRoot = path.join(process.cwd(), '../'); // Move out of backend/
+
+        console.log(`Triggering update via: ${updateScript} from ${projectRoot}`);
 
         updateState.isUpdating = true;
         updateState.logs = [`🚀 Starting System Update at ${new Date().toISOString()}...`];
 
-        // 1. Spawn process (NOT detached, so we can listen)
-        // Note: If this process restarts the NODE server, the stream will die. That's expected.
-        const child = spawn('bash', [deployScript]);
+        // 1. Spawn process from Project Root
+        const child = spawn('bash', [updateScript], { cwd: projectRoot });
 
         child.stdout.on('data', (data) => {
             const lines = data.toString().split('\n');
