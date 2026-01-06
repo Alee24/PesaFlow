@@ -196,10 +196,10 @@ export default function AdminPage() {
                                     <button
                                         onClick={handleSystemUpdate}
                                         disabled={updating}
-                                        className="text-[10px] bg-white text-blue-600 font-bold px-2 py-0.5 rounded hover:bg-blue-50 transition-colors flex items-center gap-1 disabled:opacity-50"
+                                        className="text-xs bg-white text-blue-600 font-bold px-3 py-1.5 rounded-md hover:bg-blue-50 transition-colors flex items-center gap-2 disabled:opacity-50 shadow-sm"
                                     >
-                                        <RefreshCw className={`w-3 h-3 ${updating ? 'animate-spin' : ''}`} />
-                                        {updating ? 'Updating...' : 'Update'}
+                                        <RefreshCw className={`w-3.5 h-3.5 ${updating ? 'animate-spin' : ''}`} />
+                                        {updating ? 'Updating System...' : 'System Update'}
                                     </button>
                                 </div>
                             </div>
