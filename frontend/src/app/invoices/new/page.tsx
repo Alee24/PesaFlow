@@ -118,9 +118,10 @@ export default function CreateInvoicePage() {
                 router.push('/invoices');
             }
 
-        } catch (error) {
+        } catch (error: any) {
             console.error(error);
-            alert('Failed to save invoice');
+            const msg = error.response?.data?.details || error.response?.data?.error || error.message || 'Failed to save invoice';
+            alert(`Error: ${msg}`);
         } finally {
             setLoading(false);
         }

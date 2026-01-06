@@ -117,10 +117,13 @@ export const createInvoice = async (req: Request, res: Response) => {
 
         res.json({ transaction, sale });
 
-    } catch (error) {
+    } catch (error: any) {
         console.error("Create Invoice Error:", error);
-        // Return explicit error message if possible
-        res.status(500).json({ error: 'Failed to create invoice. Server log contains details.' });
+        // Return explicit error message for debugging
+        res.status(500).json({
+            error: 'Failed to create invoice',
+            details: error.message || String(error)
+        });
     }
 };
 
