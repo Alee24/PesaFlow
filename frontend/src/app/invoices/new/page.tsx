@@ -23,7 +23,7 @@ export default function CreateInvoicePage() {
         clientPhone: '',
         clientEmail: '',
         clientAddress: '',
-        notes: ''
+        notes: '1. Goods once sold are not returnable.\n2. Accounts are due on demand.\n3. Title to goods remains with the seller until full payment.'
     });
 
     const [items, setItems] = useState([
@@ -304,7 +304,8 @@ export default function CreateInvoicePage() {
                                 <h4 className="font-bold text-[#1a2b42] mb-2 uppercase text-sm">Terms and Conditions</h4>
                                 <textarea
                                     className="w-full text-xs text-gray-500 border-none p-0 focus:ring-0 resize-none h-24 bg-transparent"
-                                    placeholder="Lorem ipsum dolor sit amet, consectetur adipiscing elit..."
+                                    placeholder="Terms and Conditions..."
+                                    rows={4}
                                     value={invoiceData.notes}
                                     onChange={e => setInvoiceData({ ...invoiceData, notes: e.target.value })}
                                 />
