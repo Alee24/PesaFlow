@@ -12,7 +12,7 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({ sale, onClose }) => 
     const componentRef = useRef<HTMLDivElement>(null);
 
     const handlePrint = useReactToPrint({
-        content: () => componentRef.current,
+        contentRef: componentRef,
         documentTitle: `Receipt-${sale.receiptNumber || sale.id.slice(0, 8)}`,
         onAfterPrint: onClose
     });
