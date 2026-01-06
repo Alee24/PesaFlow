@@ -51,9 +51,16 @@ export default function TeamPage() {
             let msg = error.response?.data?.error || error.message || 'Failed to add team member';
 
             // Append validation details if available
-            if (error.response?.data?.details) {
-                const details = error.response.data.details.map((d: any) => `${d.path.join('.')}: ${d.message}`).join(', ');
-                msg += ` (${details})`;
+            if (Array.isArray(error.response?.data?.details)) {
+                try {
+                    const details = error.response.data.details.map((d: any) => {
+                        const field = Array.isArray(d.path) ? d.path.join('.') : 'unknown';
+                        return `${field}: ${d.message}`;
+                    }).join(', ');
+                    msg += ` (${details})`;
+                } catch (err) {
+                    msg += ` (${JSON.stringify(error.response.data.details)})`;
+                }
             }
 
             showToast(msg, 'error');
