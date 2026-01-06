@@ -63,6 +63,7 @@ export default function TransactionsPage() {
         if (tx.sale) {
             if (tx.sale.customerName) return tx.sale.customerName;
             if (tx.sale.customerPhone) return tx.sale.customerPhone;
+            if (tx.sale.customerEmail) return tx.sale.customerEmail;
         }
 
         try {
@@ -344,6 +345,16 @@ export default function TransactionsPage() {
                     </div>
                 )}
             </Modal>
+
+            {/* Receipt Modal for Sales */}
+            {selectedSale && (
+                <ReceiptModal
+                    isOpen={!!selectedSale}
+                    onClose={() => setSelectedSale(null)}
+                    sale={selectedSale}
+                    onPrint={() => { }}
+                />
+            )}
         </DashboardLayout>
     );
 }
