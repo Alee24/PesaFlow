@@ -21,15 +21,33 @@ async function main() {
     console.log(pad('Product Name', 25) + ' | ' + 'Image URL (Raw from DB)');
     console.log('------------------------------------------------------------------------------------------------');
 
+    const fs = require('fs');
+    const path = require('path');
+    const uploadDir = path.join(process.cwd(), 'public');
+
     products.forEach(p => {
         const url = p.imageUrl || 'NULL';
         let status = '✅ OK (Relative)';
+        let fileExists = '❓ N/A';
 
-        if (url === 'NULL') status = '⚪ Empty';
-        else if (url.includes('localhost') || url.includes('127.0.0.1')) status = '❌ BAD (Localhost)';
-        else if (url.startsWith('http')) status = '⚠️ External/Absolute';
+        if (url === 'NULL') {
+            status = '⚪ Empty';
+        } else if (url.includes('localhost') || url.includes('127.0.0.1')) {
+            status = '❌ BAD (Localhost)';
+        } else if (url.startsWith('http')) {
+            status = '⚠️ External/Absolute';
+        } else {
+            // Check file existence for relative paths
+            const filePath = path.join(uploadDir, url);
+            if (fs.existsSync(filePath)) {
+                fileExists = '✅ Found';
+            } else {
+                fileExists = '❌ Missing on Disk';
+                status = '❌ BAD (File Missing)';
+            }
+        }
 
-        console.log(pad(p.name, 25) + ' | ' + pad(url, 50) + ' | ' + status);
+        console.log(pad(p.name, 20) + ' | ' + pad(url, 40) + ' | ' + status + ' | ' + fileExists);
     });
     console.log('------------------------------------------------------------------------------------------------');
 }
