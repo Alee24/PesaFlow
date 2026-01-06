@@ -1,5 +1,7 @@
 import 'dotenv/config';
 import { PrismaClient } from '@prisma/client';
+import fs from 'fs';
+import path from 'path';
 
 const prisma = new PrismaClient();
 
@@ -24,34 +26,35 @@ async function main() {
     const productCount = await prisma.product.count();
 
     console.log(`📊 DB Stats: Users=${userCount}, Products=${productCount}`);
-
     console.log('------------------------------------------------------------------------------------------------');
     console.log(pad('Product Name', 25) + ' | ' + 'Image URL (Raw from DB)');
     console.log('------------------------------------------------------------------------------------------------');
 
-    const fs = require('fs');
-    const path = require('path');
     const uploadDir = path.join(process.cwd(), 'public');
 
-    if (url === 'NULL') {
-        status = '⚪ Empty';
-    } else if (url.includes('localhost') || url.includes('127.0.0.1')) {
-        status = '❌ BAD (Localhost)';
-    } else if (url.startsWith('http')) {
-        status = '⚠️ External/Absolute';
-    } else {
-        // Check file existence
-        const filePath = path.join(uploadDir, url);
-        if (fs.existsSync(filePath)) {
-            status = '✅ OK (Found on Disk)';
-        } else {
-            status = '❌ MISSING from Disk';
-        }
-    }
+    products.forEach(p => {
+        const url = p.imageUrl || 'NULL';
+        let status = '✅ OK (Relative)';
 
-    console.log(pad(p.name, 25) + ' | ' + pad(url, 40) + ' | ' + status);
-});
-console.log('------------------------------------------------------------------------------------------------');
+        if (url === 'NULL') {
+            status = '⚪ Empty';
+        } else if (url.includes('localhost') || url.includes('127.0.0.1')) {
+            status = '❌ BAD (Localhost)';
+        } else if (url.startsWith('http')) {
+            status = '⚠️ External/Absolute';
+        } else {
+            // Check file existence
+            const filePath = path.join(uploadDir, url);
+            if (fs.existsSync(filePath)) {
+                status = '✅ OK (Found on Disk)';
+            } else {
+                status = '❌ MISSING from Disk';
+            }
+        }
+
+        console.log(pad(p.name, 25) + ' | ' + pad(url, 40) + ' | ' + status);
+    });
+    console.log('------------------------------------------------------------------------------------------------');
 }
 
 function pad(str: string, len: number) {
