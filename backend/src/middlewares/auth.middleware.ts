@@ -40,12 +40,14 @@ export const authenticateToken = async (req: AuthRequest, res: Response, next: N
         });
 
         if (!user) {
-            return res.status(401).json({ error: 'User does not exist' });
+            res.status(401).json({ error: 'User does not exist' });
+            return;
         }
 
         // Broad guard: REJECTED or SUSPENDED users are blocked entirely
         if (user.status === 'REJECTED' || user.status === 'SUSPENDED') {
-            return res.status(403).json({ error: `Account ${user.status}. Please contact support.` });
+            res.status(403).json({ error: `Account ${user.status}. Please contact support.` });
+            return;
         }
 
         // Team Logic:
@@ -64,7 +66,8 @@ export const authenticateToken = async (req: AuthRequest, res: Response, next: N
         next();
 
     } catch (err) {
-        return res.status(403).json({ error: 'Invalid or expired token' });
+        res.status(403).json({ error: 'Invalid or expired token' });
+        return;
     }
 };
 
