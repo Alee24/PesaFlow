@@ -49,7 +49,9 @@ async function main() {
             // Check file existence
             const filePath = path.join(process.cwd(), 'public', url);
             if (fs.existsSync(filePath)) {
-                status = '✅ OK (Found on Disk)';
+                const stat = fs.statSync(filePath);
+                const mode = (stat.mode & 0o777).toString(8);
+                status = `✅ Found (Perms: ${mode})`;
             } else {
                 status = `❌ MISSING at ${filePath}`;
             }
