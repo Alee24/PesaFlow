@@ -39,10 +39,14 @@ export default function AdminPage() {
     const [userRole, setUserRole] = useState('');
     const { showToast } = useToast();
     const [updating, setUpdating] = useState(false);
+    const [showTerminal, setShowTerminal] = useState(false);
+    const [terminalLogs, setTerminalLogs] = useState<string[]>([]);
+    const [updaterInterval, setUpdaterInterval] = useState<NodeJS.Timeout | null>(null);
 
 
     useEffect(() => {
         const init = async () => {
+            // ... existing init logic (unchanged)
             const userDataStr = localStorage.getItem('user');
             if (!userDataStr) {
                 router.push('/auth/login');
@@ -58,11 +62,8 @@ export default function AdminPage() {
             }
 
             try {
-                // Fetch Stats
                 const statsPro = api.get('/admin/stats');
-                // Fetch Profile for Currency
                 const profilePro = api.get('/profile');
-                // Fetch System Status
                 const systemPro = api.get('/admin/system/status');
 
                 const [statsRes, profileRes, systemRes] = await Promise.all([statsPro, profilePro, systemPro]);
@@ -77,23 +78,45 @@ export default function AdminPage() {
                 setIsLoading(false);
             }
         };
-
         init();
-
     }, [router]);
+
+    // Polling effect
+    useEffect(() => {
+        if (updating) {
+            const interval = setInterval(async () => {
+                try {
+                    const res = await api.get('/admin/system/update/status');
+                    setTerminalLogs(res.data.logs || []);
+                    if (res.data.isUpdating === false && res.data.logs.length > 0) {
+                        setUpdating(false); // Stop polling if done
+                    }
+                } catch (error) {
+                    console.error("Failed to poll logs", error);
+                }
+            }, 1000);
+            setUpdaterInterval(interval);
+
+            return () => clearInterval(interval);
+        } else {
+            if (updaterInterval) clearInterval(updaterInterval);
+        }
+    }, [updating]);
 
     const handleSystemUpdate = async () => {
         if (!confirm("Are you sure you want to update the server? This will pull the latest code and restart requirements.")) return;
 
+        setShowTerminal(true);
+        setTerminalLogs(['Initializing update request...']);
         setUpdating(true);
+
         try {
             await api.post('/admin/system/update');
-            showToast('System update initiated! Server will restart momentarily.', 'success');
+            showToast('System update initiated!', 'success');
         } catch (error: any) {
             showToast('Failed to trigger update', 'error');
-        } finally {
-            // Keep spinning for a bit as server restarts
-            setTimeout(() => setUpdating(false), 5000);
+            setTerminalLogs(prev => [...prev, 'Failed to trigger update: ' + error.message]);
+            setUpdating(false);
         }
     };
 
@@ -308,6 +331,41 @@ export default function AdminPage() {
                     </div>
                 </Card>
             </div>
+            {/* Terminal Modal */}
+            {showTerminal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm animate-in fade-in duration-200">
+                    <div className="bg-gray-900 w-full max-w-3xl rounded-xl shadow-2xl overflow-hidden border border-gray-700 font-mono text-sm max-h-[80vh] flex flex-col">
+                        <div className="flex justify-between items-center px-4 py-3 bg-gray-800 border-b border-gray-700">
+                            <div className="flex items-center gap-2">
+                                <div className="flex gap-1.5">
+                                    <div className="w-3 h-3 rounded-full bg-red-500"></div>
+                                    <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
+                                    <div className="w-3 h-3 rounded-full bg-green-500"></div>
+                                </div>
+                                <span className="text-gray-400 ml-2 font-medium">deploy-terminal -- bash</span>
+                            </div>
+                            <button
+                                onClick={() => {
+                                    setShowTerminal(false);
+                                    if (!updating) setUpdating(false); // Clean up if manually closed
+                                }}
+                                className="text-gray-400 hover:text-white transition-colors"
+                            >
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                            </button>
+                        </div>
+                        <div className="p-4 overflow-y-auto flex-1 bg-black text-green-400 space-y-1 font-mono">
+                            {terminalLogs.length === 0 && <p className="text-gray-500 italic">Waiting for logs...</p>}
+                            {terminalLogs.map((log, i) => (
+                                <div key={i} className="break-all whitespace-pre-wrap leading-relaxed">{log}</div>
+                            ))}
+                            {updating && (
+                                <div className="animate-pulse">_</div>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            )}
         </DashboardLayout>
     );
 }

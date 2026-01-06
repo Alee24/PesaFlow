@@ -213,6 +213,9 @@ export const manageSubscription = async (req: AuthRequest, res: Response) => {
         const { id } = req.params;
         const { plan, extendDays, action } = req.body;
 
+        console.log(`👮 [ADMIN] Managing Subscription for Target User: ${id}`);
+        console.log(`   > Action: ${action} | Plan: ${plan} | Extend: ${extendDays}`);
+
         const transaction = await prisma.$transaction(async (tx) => {
             let sub = await tx.subscription.findUnique({ where: { merchantId: id } });
 
@@ -296,23 +299,66 @@ export const getSystemStatus = async (req: AuthRequest, res: Response) => {
     }
 };
 
+// Basic In-Memory Store for Update Logs (Not persistent across restarts)
+let updateState = {
+    isUpdating: false,
+    logs: [] as string[]
+};
+
+export const getSystemUpdateLogs = async (req: AuthRequest, res: Response) => {
+    res.json(updateState);
+};
+
 export const triggerSystemUpdate = async (req: AuthRequest, res: Response) => {
     try {
-        const deployScript = path.join(process.cwd(), '../deploy.sh'); // Assumes backend/ is CWD, script is in root
+        if (updateState.isUpdating) {
+            return res.status(400).json({ error: 'Update already in progress' });
+        }
 
+        const deployScript = path.join(process.cwd(), '../deploy.sh'); // Assumes backend/ is CWD
         console.log(`Triggering update via: ${deployScript}`);
 
-        // Spawn detached process so it continues after response
-        // Use 'bash' directly? Or just the script? Since it's shell script, bash is safer.
-        const child = spawn('bash', [deployScript], {
-            detached: true,
-            stdio: 'ignore'
+        updateState.isUpdating = true;
+        updateState.logs = [`🚀 Starting System Update at ${new Date().toISOString()}...`];
+
+        // 1. Spawn process (NOT detached, so we can listen)
+        // Note: If this process restarts the NODE server, the stream will die. That's expected.
+        const child = spawn('bash', [deployScript]);
+
+        child.stdout.on('data', (data) => {
+            const lines = data.toString().split('\n');
+            lines.forEach((line: string) => {
+                if (line.trim()) {
+                    console.log(`[UPDATE] ${line}`);
+                    updateState.logs.push(line.trim());
+                }
+            });
         });
 
-        child.unref();
+        child.stderr.on('data', (data) => {
+            const lines = data.toString().split('\n');
+            lines.forEach((line: string) => {
+                if (line.trim()) {
+                    console.error(`[UPDATE ERROR] ${line}`);
+                    updateState.logs.push(`ERR: ${line.trim()}`);
+                }
+            });
+        });
 
-        res.json({ message: 'System update initiated. Server will restart shortly.' });
+        child.on('close', (code) => {
+            console.log(`Update process exited with code ${code}`);
+            updateState.isUpdating = false;
+            updateState.logs.push(`🏁 Update Process Finished with code ${code}`);
+            if (code === 0) {
+                updateState.logs.push(`✅ SUCCESS. Refresh page to see changes.`);
+            } else {
+                updateState.logs.push(`❌ FAILED. Check logs above.`);
+            }
+        });
+
+        res.json({ message: 'System update initiated. Check logs for progress.' });
     } catch (error: any) {
+        updateState.isUpdating = false;
         res.status(500).json({ error: error.message });
     }
 };

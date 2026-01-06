@@ -36,9 +36,13 @@ const getAccessToken = async (creds: any) => {
 export const getSubscription = async (req: Request, res: Response) => {
     try {
         const userId = (req as any).user.userId;
+        console.log(`🔍 [GET /subscriptions] Fetching for userId: ${userId}`);
+
         let sub = await prisma.subscription.findUnique({
             where: { merchantId: userId }
         });
+
+        console.log(`   > Found Subscription:`, sub ? `ID: ${sub.id} | Plan: ${sub.plan} | Status: ${sub.status}` : 'Not Found');
 
         if (!sub) {
             // Create a default trial or inactive subscription
