@@ -1,6 +1,5 @@
 import { Request, Response } from 'express';
 import { PrismaClient } from '@prisma/client';
-import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcryptjs';
 import { exec } from 'child_process';
 import path from 'path';
