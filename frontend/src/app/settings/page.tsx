@@ -319,7 +319,7 @@ export default function SettingsPage() {
                     )}
 
                     {/* SMTP Settings */}
-                    {user?.role === 'ADMIN' && (
+                    {true && (
                         <Card className="p-6">
                             <h2 className="text-xl font-semibold mb-4 text-gray-800 dark:text-white border-b pb-2">Email Notifications (SMTP)</h2>
 
