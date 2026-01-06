@@ -7,7 +7,7 @@ const prisma = new PrismaClient();
 
 export const getDashboardStats = async (req: Request, res: Response) => {
     try {
-        const userId = (req as any).user.userId;
+        const userId = (req as any).user.merchantId; // Use Merchant ID for scope
         const userRole = (req as any).user.role;
         const { period } = req.query;
 
@@ -16,6 +16,15 @@ export const getDashboardStats = async (req: Request, res: Response) => {
         else if (period === 'week') startDate = startOfWeek(new Date());
         else if (period === 'year') startDate = startOfYear(new Date());
 
+        // For ADMIN, we might show everything. For Merchant, show their data.
+        // We need the WALLET ID for the merchant to filter transactions efficiently
+        let walletId = null;
+        if (userRole !== 'ADMIN') {
+            const wallet = await prisma.wallet.findFirst({ where: { userId: userId } });
+            if (!wallet) return res.json({ summary: {}, chartData: [], transactions: [] });
+            walletId = wallet.id;
+        }
+
         // 1. Fetch Transactions
         const whereClause: any = {
             createdAt: { gte: startDate },
@@ -23,7 +32,8 @@ export const getDashboardStats = async (req: Request, res: Response) => {
         };
 
         if (userRole !== 'ADMIN') {
-            whereClause.initiatorUserId = userId;
+            // Filter by Wallet (incoming/outgoing from this wallet)
+            whereClause.recipientWalletId = walletId;
         }
 
         const transactions = await prisma.transaction.findMany({
@@ -42,7 +52,7 @@ export const getDashboardStats = async (req: Request, res: Response) => {
             const fee = Number(tx.feeCharged);
             totalFeeIncome += fee;
 
-            if (['DEPOSIT_STK', 'SALE_CREDIT', 'INVOICE'].includes(tx.type)) {
+            if (['DEPOSIT_STK', 'SALE_CREDIT', 'INVOICE', 'SALE_CASH'].includes(tx.type)) {
                 totalIncome += amount;
                 totalSalesCount++;
             } else if (tx.type === 'WITHDRAWAL') {
@@ -62,7 +72,7 @@ export const getDashboardStats = async (req: Request, res: Response) => {
             const fee = Number(tx.feeCharged);
             entry.fees += fee;
 
-            if (['DEPOSIT_STK', 'SALE_CREDIT', 'INVOICE'].includes(tx.type)) {
+            if (['DEPOSIT_STK', 'SALE_CREDIT', 'INVOICE', 'SALE_CASH'].includes(tx.type)) {
                 entry.income += amount;
             } else if (tx.type === 'WITHDRAWAL') {
                 entry.withdrawal += amount;
@@ -98,12 +108,16 @@ export const getDashboardStats = async (req: Request, res: Response) => {
 
 export const getInvoiceStats = async (req: Request, res: Response) => {
     try {
-        const userId = (req as any).user.userId;
+        const userId = (req as any).user.merchantId;
+
+        // Fetch wallet first
+        const wallet = await prisma.wallet.findFirst({ where: { userId } });
+        if (!wallet) return res.json({ paid: { count: 0, amount: 0 }, pending: { count: 0, amount: 0 }, overdue: { count: 0, amount: 0 }, cancelled: { count: 0, amount: 0 }, total: { count: 0, amount: 0 } });
 
         const transactions = await prisma.transaction.findMany({
             where: {
-                initiatorUserId: userId,
-                type: { in: ['INVOICE', 'DEPOSIT_STK', 'SALE_CREDIT'] } // Include all invoice-like types
+                recipientWalletId: wallet.id,
+                type: { in: ['INVOICE', 'DEPOSIT_STK', 'SALE_CREDIT', 'SALE_CASH'] }
             }
         });
 

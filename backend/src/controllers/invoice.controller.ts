@@ -6,15 +6,16 @@ const prisma = new PrismaClient();
 
 export const createInvoice = async (req: Request, res: Response) => {
     try {
-        const userId = (req as any).user.userId;
+        const userId = (req as any).user.userId; // The actor (audit)
+        const merchantId = (req as any).user.merchantId; // The data owner
         const { clientName, clientPhone, clientAddress, clientEmail, date, dueDate, items, invoiceNumber, notes } = req.body;
 
-        console.log(`[Invoice] Creating for User: ${userId}`);
+        console.log(`[Invoice] Creating for Merchant: ${merchantId} by User: ${userId}`);
         console.log(`[Invoice] Payload:`, JSON.stringify(req.body));
 
-        // Fetch Wallet & Profile
-        const wallet = await prisma.wallet.findFirstOrThrow({ where: { userId } });
-        const profile = await prisma.businessProfile.findUnique({ where: { userId } });
+        // Fetch Wallet & Profile of the MERCHANT
+        const wallet = await prisma.wallet.findFirstOrThrow({ where: { userId: merchantId } });
+        const profile = await prisma.businessProfile.findUnique({ where: { userId: merchantId } });
 
         // Calculate Totals
         const subTotal = items.reduce((sum: number, item: any) => sum + (item.price * item.quantity), 0);
@@ -48,13 +49,13 @@ export const createInvoice = async (req: Request, res: Response) => {
 
         // Ensure a fallback product exists for ad-hoc items
         let genericProduct = await prisma.product.findFirst({
-            where: { merchantId: userId, name: 'General Invoice Item' }
+            where: { merchantId: merchantId, name: 'General Invoice Item' }
         });
 
         if (!genericProduct) {
             genericProduct = await prisma.product.create({
                 data: {
-                    merchantId: userId,
+                    merchantId: merchantId,
                     name: 'General Invoice Item',
                     price: 0,
                     stockQuantity: 999999,

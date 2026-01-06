@@ -5,8 +5,10 @@ import jwt from 'jsonwebtoken';
 export interface AuthRequest extends Request {
     user?: {
         userId: string;
+        merchantId: string; // The owner of the data (could be self or parent)
         role: string;
         status: string;
+        parentId?: string;
     };
 }
 
@@ -25,13 +27,22 @@ export const authenticateToken = (req: AuthRequest, res: Response, next: NextFun
             return;
         }
 
-        // Broad guard: REJECTED or SUSPENDED users are blocked entirely
+        // Broad guard: REJECTED or SUSPENDED users are blocked entirely, unless explicitly allowed for appeal viewing (handled elsewhere)
         if (user.status === 'REJECTED' || user.status === 'SUSPENDED') {
             res.status(403).json({ error: `Account ${user.status}. Please contact support.` });
             return;
         }
 
-        req.user = user;
+        // Team Logic:
+        // If user has a parentId, they are a sub-user.
+        // Their 'merchantId' (scope) is the parent.
+        // If not, their 'merchantId' is themselves.
+        const merchantId = user.parentId || user.userId;
+
+        req.user = {
+            ...user,
+            merchantId
+        };
         next();
     });
 };

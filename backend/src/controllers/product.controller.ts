@@ -32,6 +32,7 @@ const productSchema = z.object({
 interface AuthRequest extends Request {
     user?: {
         userId: string;
+        merchantId: string;
         role: string;
     };
 }
@@ -421,6 +422,9 @@ export const getStockMovements = async (req: AuthRequest, res: Response): Promis
     }
 };
 
+// Removed duplicate getProducts
+// New endpoint: Get inventory stats
+
 // New endpoint: Get inventory stats
 export const getInventoryStats = async (req: AuthRequest, res: Response): Promise<void> => {
     try {
@@ -431,7 +435,7 @@ export const getInventoryStats = async (req: AuthRequest, res: Response): Promis
 
         const products = await prisma.product.findMany({
             where: {
-                merchantId: req.user.userId,
+                merchantId: req.user.merchantId,
                 status: { not: 'ARCHIVED' }
             }
         });
@@ -496,11 +500,11 @@ export const importProducts = async (req: AuthRequest, res: Response): Promise<v
                 if (item.category) {
                     const cleanCat = item.category.trim();
                     let category = await prisma.category.findFirst({
-                        where: { name: cleanCat, merchantId: req.user.userId }
+                        where: { name: cleanCat, merchantId: req.user.merchantId }
                     });
                     if (!category) {
                         category = await prisma.category.create({
-                            data: { name: cleanCat, merchantId: req.user.userId }
+                            data: { name: cleanCat, merchantId: req.user.merchantId }
                         });
                     }
                     categoryId = category.id;
