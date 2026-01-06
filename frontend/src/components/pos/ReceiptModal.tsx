@@ -43,7 +43,7 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({ sale, onClose }) => 
                         <div className="text-center mb-4 border-b border-dashed border-gray-300 pb-4">
                             <h2 className="font-bold text-lg uppercase">Mpesa Connect</h2>
                             <p className="text-xs text-gray-500">Nairobi, Kenya</p>
-                            <p className="text-xs text-gray-500">+254 700 000 000</p>
+                            <p className="text-xs text-gray-500">info@Mpesaconnect.co.ke</p>
                         </div>
 
                         {/* Transaction Info */}
@@ -127,7 +127,7 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({ sale, onClose }) => 
                         {/* Footer */}
                         <div className="text-center text-xs text-gray-400 mt-6">
                             <p>Thank you for shopping with us!</p>
-                            <p>Powered by Mpesa Connect</p>
+                            <p className="font-bold mt-1">Powered by KK Dynamic Enterprise Solutions LTD</p>
                         </div>
                     </div>
                 </div>

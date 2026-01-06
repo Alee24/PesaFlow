@@ -91,6 +91,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 <main className={`flex-1 p-6 md:p-8 overflow-y-auto print:p-0 print:overflow-visible ${(user.status === 'REJECTED' || user.status === 'SUSPENDED') ? 'pointer-events-none grayscale opacity-50 blur-[2px]' : ''}`}>
                     {children}
                 </main>
+
+                <footer className="p-4 border-t border-gray-100 dark:border-gray-800 text-center print:hidden">
+                    <p className="text-xs text-gray-400">
+                        Powered by <span className="font-semibold text-gray-500 dark:text-gray-400">KK Dynamic Enterprise Solutions LTD</span>
+                    </p>
+                </footer>
             </div>
         </div>
     );

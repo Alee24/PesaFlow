@@ -235,8 +235,8 @@ export default function LandingPage() {
               <div
                 key={index}
                 className={`relative p-8 bg-white dark:bg-gray-800 rounded-2xl border-2 ${plan.popular
-                    ? 'border-indigo-500 shadow-2xl shadow-indigo-500/30 scale-105'
-                    : 'border-gray-200 dark:border-gray-700'
+                  ? 'border-indigo-500 shadow-2xl shadow-indigo-500/30 scale-105'
+                  : 'border-gray-200 dark:border-gray-700'
                   } transition-all duration-300 hover:shadow-xl`}
               >
                 {plan.popular && (
@@ -355,7 +355,8 @@ export default function LandingPage() {
             </div>
           </div>
           <div className="border-t border-gray-800 pt-8 text-center text-sm">
-            <p>&copy; 2025 Mpesa Connect. All rights reserved. Built with ❤️ in Kenya.</p>
+            <p>&copy; 2025 Mpesa Connect. All rights reserved.</p>
+            <p className="mt-2 text-gray-500">Powered by <span className="font-semibold text-gray-400">KK Dynamic Enterprise Solutions LTD</span></p>
           </div>
         </div>
       </footer>
