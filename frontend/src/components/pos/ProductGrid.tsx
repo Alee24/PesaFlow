@@ -13,6 +13,8 @@ interface Product {
     imageUrl?: string;
     stockQuantity: number;
     categoryId?: string;
+    sku?: string;
+    barcode?: string;
 }
 
 interface Category {
