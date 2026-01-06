@@ -10,6 +10,7 @@ import dynamic from 'next/dynamic';
 import TransactionsPDF from '@/components/pdf/TransactionsPDF';
 import ReceiptPDF from '@/components/pdf/ReceiptPDF';
 import { Modal } from '@/components/ui/Modal';
+import { ReceiptModal } from '@/components/pos/ReceiptModal';
 
 const PDFDownloadLink = dynamic(
     () => import('@react-pdf/renderer').then((mod) => mod.PDFDownloadLink),
@@ -25,6 +26,7 @@ export default function TransactionsPage() {
     const [status, setStatus] = useState('ALL');
     const [isClient, setIsClient] = useState(false);
     const [selectedTx, setSelectedTx] = useState<any>(null);
+    const [selectedSale, setSelectedSale] = useState<any>(null);
 
     useEffect(() => {
         setIsClient(true);
@@ -71,6 +73,23 @@ export default function TransactionsPage() {
 
     const formatCurrency = (amount: number) => {
         return new Intl.NumberFormat('en-KE', { style: 'currency', currency: 'KES' }).format(amount);
+    };
+
+    const handleDetailsClick = (tx: any) => {
+        if (tx.sale) {
+            // It's a sale, show Receipt Modal
+            // Merge transaction timestamp and other useful metadata that might be missing on sale record
+            const saleData = {
+                ...tx.sale,
+                createdAt: tx.createdAt,
+                // Try to get customer name from initiator or metadata if missing in sale
+                customerName: tx.sale.customerName || tx.initiator?.name || (tx.metadata && typeof tx.metadata === 'string' ? JSON.parse(tx.metadata).clientName : 'Customer')
+            };
+            setSelectedSale(saleData);
+        } else {
+            // Fallback for Withdrawals / Invoices without sales
+            setSelectedTx(tx);
+        }
     };
 
     return (
@@ -193,7 +212,7 @@ export default function TransactionsPage() {
                                                 </span>
                                             </td>
                                             <td className="py-4 px-6 text-right">
-                                                <Button variant="ghost" size="sm" onClick={() => setSelectedTx(tx)} className="h-8 px-2">
+                                                <Button variant="ghost" size="sm" onClick={() => handleDetailsClick(tx)} className="h-8 px-2">
                                                     <Eye className="w-3.5 h-3.5 mr-1" /> Details
                                                 </Button>
                                             </td>
