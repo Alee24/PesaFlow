@@ -69,11 +69,21 @@ export default function InvoicePage() {
     // Helper to fix logo URL (handle localhost or http mixed content)
     const getLogoUrl = (url: string) => {
         if (!url) return null;
+        let cleanUrl = url;
+
+        // Fix localhost absolute urls
         if (url.includes('/uploads/')) {
-            // Force relative path to use current origin
-            return `/uploads/${url.split('/uploads/')[1]}`;
+            cleanUrl = `/uploads/${url.split('/uploads/')[1]}`;
         }
-        return url;
+
+        // Prepend Backend Origin if it is a relative upload path
+        if (cleanUrl.startsWith('/uploads/')) {
+            const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
+            const origin = apiUrl.replace(/\/api$/, '');
+            return `${origin}${cleanUrl}`;
+        }
+
+        return cleanUrl;
     };
 
     // Parse metadata safely

@@ -221,7 +221,13 @@ export default function SettingsPage() {
                                     </label>
                                     {formData.logoUrl && (
                                         <div className="h-12 w-12 rounded-lg overflow-hidden border bg-white flex items-center justify-center">
-                                            <img src={formData.logoUrl} alt="Logo" className="max-h-full max-w-full object-contain" />
+                                            <img
+                                                src={(formData.logoUrl.startsWith('/uploads/') || formData.logoUrl.includes('/uploads/'))
+                                                    ? `${(process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api').replace(/\/api$/, '')}${formData.logoUrl.includes('/uploads/') ? `/uploads/${formData.logoUrl.split('/uploads/')[1]}` : formData.logoUrl}`
+                                                    : formData.logoUrl}
+                                                alt="Logo"
+                                                className="max-h-full max-w-full object-contain"
+                                            />
                                         </div>
                                     )}
                                 </div>
