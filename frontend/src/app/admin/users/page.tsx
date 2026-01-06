@@ -6,7 +6,7 @@ import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import api from '@/lib/api';
-import { Plus, Search, CheckCircle, XCircle, Ban, Power } from 'lucide-react';
+import { Plus, Search, CheckCircle, XCircle, Ban, Power, ShieldCheck } from 'lucide-react';
 import { useToast } from '@/contexts/ToastContext';
 import { ConfirmModal } from '@/components/ui/ConfirmModal';
 
@@ -46,6 +46,17 @@ export default function UserManagementPage() {
         userName: '',
         loading: false,
         newPassword: ''
+    });
+
+    // Subscription Modal State
+    const [subModal, setSubModal] = useState({
+        isOpen: false,
+        userId: '',
+        userName: '',
+        loading: false,
+        plan: 'NONE',
+        extendDays: 30,
+        action: 'SET_PLAN' // SET_PLAN | EXTEND
     });
 
     // Create Form State
@@ -185,6 +196,39 @@ export default function UserManagementPage() {
         }
     };
 
+    const handleSubClick = (user: any) => {
+        // Assume user object might have subscription info eager loaded later, 
+        // for now just open modal to set/overwrite
+        setSubModal({
+            isOpen: true,
+            userId: user.id,
+            userName: user.name,
+            loading: false,
+            plan: 'NONE', // Default or fetch current if available
+            extendDays: 30,
+            action: 'SET_PLAN'
+        });
+    };
+
+    const handleSubSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setSubModal(prev => ({ ...prev, loading: true }));
+        try {
+            await api.post(`/admin/users/${subModal.userId}/subscription`, {
+                action: subModal.action,
+                plan: subModal.plan,
+                extendDays: subModal.extendDays
+            });
+            showToast('Subscription updated successfully', 'success');
+            setSubModal(prev => ({ ...prev, isOpen: false }));
+            fetchUsers();
+        } catch (error: any) {
+            showToast(error.response?.data?.error || 'Failed to update subscription', 'error');
+        } finally {
+            setSubModal(prev => ({ ...prev, loading: false }));
+        }
+    };
+
     return (
         <DashboardLayout>
             <div className="max-w-7xl mx-auto pb-12">
@@ -264,6 +308,14 @@ export default function UserManagementPage() {
                                                                 onClick={() => handlePasswordClick(user)}
                                                             >
                                                                 <Power className="w-4 h-4" />
+                                                            </Button>
+                                                            <Button
+                                                                size="sm"
+                                                                variant="outline"
+                                                                title="Manage Subscription"
+                                                                onClick={() => handleSubClick(user)}
+                                                            >
+                                                                <ShieldCheck className="w-4 h-4" />
                                                             </Button>
                                                             <Button
                                                                 size="sm"

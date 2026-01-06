@@ -157,7 +157,7 @@ export const updateUser = async (req: AuthRequest, res: Response) => {
         res.json({ message: 'User updated successfully', user: updatedUser });
     } catch (error: any) {
         if (error.code === 'P2002') {
-             return res.status(400).json({ error: 'Email or phone number already exists' });
+            return res.status(400).json({ error: 'Email or phone number already exists' });
         }
         res.status(500).json({ error: error.message });
     }
@@ -166,7 +166,7 @@ export const updateUser = async (req: AuthRequest, res: Response) => {
 export const deleteUser = async (req: AuthRequest, res: Response) => {
     try {
         const { id } = req.params;
-        
+
         // Prevent deleting self
         if (req.user?.userId === id) {
             return res.status(400).json({ error: 'Cannot delete your own account' });
@@ -201,6 +201,74 @@ export const resetUserPassword = async (req: AuthRequest, res: Response) => {
         });
 
         res.json({ message: 'Password reset successfully' });
+    } catch (error: any) {
+        res.status(500).json({ error: error.message });
+    }
+};
+
+export const manageSubscription = async (req: AuthRequest, res: Response) => {
+    try {
+        const { id } = req.params;
+        const { plan, extendDays, action } = req.body;
+
+        const transaction = await prisma.$transaction(async (tx) => {
+            let sub = await tx.subscription.findUnique({ where: { merchantId: id } });
+
+            if (action === 'SET_PLAN') {
+                const startDate = new Date();
+                const endDate = new Date();
+
+                // Keep existing end date if valid and just upgrading? 
+                // For simplicity, RESET to 30 days from now for new plan assignment
+                endDate.setDate(endDate.getDate() + 30);
+
+                if (plan === 'NONE') {
+                    if (sub) {
+                        await tx.subscription.delete({ where: { merchantId: id } });
+                    }
+                    return null;
+                }
+
+                sub = await tx.subscription.upsert({
+                    where: { merchantId: id },
+                    update: {
+                        plan,
+                        status: 'ACTIVE',
+                        startDate: new Date(),
+                        endDate, // Reset to 30 days
+                    },
+                    create: {
+                        merchantId: id,
+                        plan,
+                        status: 'ACTIVE',
+                        startDate: new Date(),
+                        endDate
+                    }
+                });
+            } else if (action === 'EXTEND') {
+                if (!sub) throw new Error("User has no active subscription to extend");
+
+                const currentEnd = new Date(sub.endDate);
+                // If already expired, start extension from NOW, else from current expiry
+                const baseDate = currentEnd < new Date() ? new Date() : currentEnd;
+
+                const newEndDate = new Date(baseDate);
+                newEndDate.setDate(newEndDate.getDate() + Number(extendDays));
+
+                sub = await tx.subscription.update({
+                    where: { merchantId: id },
+                    data: {
+                        endDate: newEndDate,
+                        status: 'ACTIVE' // Reactivate if expired
+                    }
+                });
+            }
+
+            return sub;
+        });
+
+        res.json({ message: 'Subscription updated successfully', subscription: transaction });
+
     } catch (error: any) {
         res.status(500).json({ error: error.message });
     }
