@@ -165,7 +165,7 @@ export default function InvoicePage() {
                                         Cancel
                                     </Button>
                                 )}
-                            </Button>
+                                    </Button>
                                 )}
                             </div>
                         )}
