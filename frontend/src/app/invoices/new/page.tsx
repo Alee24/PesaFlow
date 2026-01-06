@@ -56,7 +56,7 @@ export default function CreateInvoicePage() {
 
         // Prepend Backend Origin if it is a relative upload path
         if (cleanUrl.startsWith('/uploads/')) {
-            const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
+            const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://api.mpesaconnect.co.ke/api';
             const origin = apiUrl.replace(/\/api$/, '');
             return `${origin}${cleanUrl}`;
         }
