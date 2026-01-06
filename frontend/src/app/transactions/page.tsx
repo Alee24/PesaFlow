@@ -349,10 +349,8 @@ export default function TransactionsPage() {
             {/* Receipt Modal for Sales */}
             {selectedSale && (
                 <ReceiptModal
-                    isOpen={!!selectedSale}
                     onClose={() => setSelectedSale(null)}
                     sale={selectedSale}
-                    onPrint={() => { }}
                 />
             )}
         </DashboardLayout>
