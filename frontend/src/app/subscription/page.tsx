@@ -163,16 +163,16 @@ export default function SubscriptionPage() {
                     </div>
                 </div>
             </Modal>
-        </Modal>
 
-            {/* DEBUG SECTION - REMOVE BEFORE PROD */ }
-    <div className="fixed bottom-0 right-0 bg-black/80 text-green-400 p-2 text-xs font-mono rounded-tl-lg z-50">
-        <p>UserID (Local): {JSON.parse(localStorage.getItem('user') || '{}').id || 'N/A'}</p>
-        <p>SubStatus: {subscription?.status || 'NULL'}</p>
-        <p>SubPlan: {subscription?.plan || 'NULL'}</p>
-        <p>SubID: {subscription?.id || 'NULL'}</p>
-        <p>FetchTime: {new Date().toLocaleTimeString()}</p>
-    </div>
+
+            {/* DEBUG SECTION - REMOVE BEFORE PROD */}
+            <div className="fixed bottom-0 right-0 bg-black/80 text-green-400 p-2 text-xs font-mono rounded-tl-lg z-50">
+                <p>UserID (Local): {JSON.parse(localStorage.getItem('user') || '{}').id || 'N/A'}</p>
+                <p>SubStatus: {subscription?.status || 'NULL'}</p>
+                <p>SubPlan: {subscription?.plan || 'NULL'}</p>
+                <p>SubID: {subscription?.id || 'NULL'}</p>
+                <p>FetchTime: {new Date().toLocaleTimeString()}</p>
+            </div>
         </DashboardLayout >
     );
 }
