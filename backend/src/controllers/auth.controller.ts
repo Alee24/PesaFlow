@@ -90,7 +90,7 @@ export const register = async (req: Request, res: Response): Promise<void> => {
         });
 
         const token = jwt.sign(
-            { userId: result.id, role: result.role },
+            { userId: result.id, role: result.role, status: 'PENDING_VERIFICATION' },
             process.env.JWT_SECRET || 'fallback_secret',
             { expiresIn: '7d' }
         );
@@ -128,7 +128,7 @@ export const login = async (req: Request, res: Response): Promise<void> => {
         }
 
         const token = jwt.sign(
-            { userId: user.id, role: user.role },
+            { userId: user.id, role: user.role, status: user.status },
             process.env.JWT_SECRET || 'fallback_secret',
             { expiresIn: '7d' }
         );
