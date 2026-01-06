@@ -142,3 +142,73 @@ export const getInvoices = async (req: Request, res: Response) => {
         res.status(500).json({ error: 'Failed to fetch invoices' });
     }
 };
+
+export const sendInvoiceEmail = async (req: Request, res: Response) => {
+    try {
+        const userId = (req as any).user.userId;
+        const { id } = req.params;
+        const { email } = req.body;
+
+        if (!email) {
+            return res.status(400).json({ error: 'Email address is required' });
+        }
+
+        const transaction = await prisma.transaction.findFirst({
+            where: {
+                id,
+                initiatorUserId: userId,
+                type: 'INVOICE'
+            }
+        });
+
+        if (!transaction) {
+            return res.status(404).json({ error: 'Invoice not found' });
+        }
+
+        const profile = await prisma.businessProfile.findUnique({ where: { userId } });
+        const senderName = profile?.companyName || 'Us';
+
+        let metadata: any = {};
+        try {
+            metadata = JSON.parse(transaction.metadata as string);
+        } catch (e) {
+            metadata = transaction.metadata || {};
+        }
+
+        const statsMap: Record<string, string> = {
+            'PENDING': 'Due',
+            'PAID': 'Paid',
+            'COMPLETED': 'Paid',
+            'CANCELLED': 'Cancelled'
+        };
+
+        const statusText = statsMap[transaction.status] || transaction.status;
+        const color = transaction.status === 'COMPLETED' || transaction.status === 'PAID' ? 'green' : 'gray';
+
+        const emailHtml = `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+                <h1 style="color: #4f46e5;">Invoice #${transaction.reference}</h1>
+                <p>Dear ${metadata.clientName || 'Customer'},</p>
+                <p>Here is your invoice for <strong>KES ${Number(transaction.amount).toLocaleString()}</strong>.</p>
+                
+                <div style="background: #f9fafb; padding: 20px; border-radius: 8px; margin: 20px 0;">
+                    <p style="margin: 5px 0;"><strong>Status:</strong> <span style="color: ${color}; font-weight: bold;">${statusText}</span></p>
+                    <p style="margin: 5px 0;"><strong>Due Date:</strong> ${metadata.invoiceDate}</p>
+                </div>
+                
+                <p>Please find the details attached or viewable in your portal.</p>
+                <br>
+                <p>Thank you for your business!</p>
+                <p><strong>${senderName}</strong></p>
+            </div>
+        `;
+
+        await sendEmail(userId, email, `Invoice #${transaction.reference} from ${senderName}`, emailHtml);
+
+        res.json({ message: 'Invoice sent successfully' });
+
+    } catch (error: any) {
+        console.error("Send Invoice Email Error:", error);
+        res.status(500).json({ error: 'Failed to send email', details: error.message });
+    }
+};

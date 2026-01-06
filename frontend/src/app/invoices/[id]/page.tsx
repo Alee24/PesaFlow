@@ -6,11 +6,13 @@ import DashboardLayout from '@/components/layout/DashboardLayout';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { ConfirmModal } from '@/components/ui/ConfirmModal';
-import { Printer, Download } from 'lucide-react';
+import { Printer, Download, Mail } from 'lucide-react';
 import api from '@/lib/api';
 import dynamic from 'next/dynamic';
 import InvoicePDF from '@/components/pdf/InvoicePDF';
 import { getImageUrl } from '@/lib/utils';
+import { EmailModal } from '@/components/ui/EmailModal';
+import toast from 'react-hot-toast';
 
 const PDFDownloadLink = dynamic(
     () => import('@react-pdf/renderer').then((mod) => mod.PDFDownloadLink),
@@ -25,6 +27,8 @@ export default function InvoicePage() {
     const [loading, setLoading] = useState(true);
     const [isClient, setIsClient] = useState(false);
     const [confirmLoading, setConfirmLoading] = useState(false);
+    const [emailModalOpen, setEmailModalOpen] = useState(false);
+    const [sendingEmail, setSendingEmail] = useState(false);
     const [confirmModal, setConfirmModal] = useState({
         isOpen: false,
         status: '',
@@ -124,6 +128,20 @@ export default function InvoicePage() {
         }
     };
 
+    const handleSendEmail = async (email: string) => {
+        setSendingEmail(true);
+        try {
+            await api.post(`/invoices/${id}/email`, { email });
+            toast.success('Invoice sent successfully!');
+            setEmailModalOpen(false);
+        } catch (error) {
+            console.error(error);
+            toast.error('Failed to send email');
+        } finally {
+            setSendingEmail(false);
+        }
+    };
+
     return (
         <DashboardLayout>
             <div className="flex flex-col h-full max-w-4xl mx-auto w-full">
@@ -147,8 +165,14 @@ export default function InvoicePage() {
                                         Cancel
                                     </Button>
                                 )}
+                            </Button>
+                                )}
                             </div>
                         )}
+                        <Button onClick={() => setEmailModalOpen(true)} variant="outline" className="flex items-center gap-2">
+                            <Mail className="w-4 h-4" /> Email
+                        </Button>
+
                         <Button onClick={handlePrint} variant="outline" className="flex items-center gap-2">
                             <Printer className="w-4 h-4" /> Print
                         </Button>
@@ -342,6 +366,13 @@ export default function InvoicePage() {
                 variant={confirmModal.variant}
                 loading={confirmLoading}
             />
-        </DashboardLayout>
+        <EmailModal
+            isOpen={emailModalOpen}
+            onClose={() => setEmailModalOpen(false)}
+            onSend={handleSendEmail}
+            isLoading={sendingEmail}
+            defaultEmail={metadata.clientEmail || ''}
+        />
+        </DashboardLayout >
     );
 }
