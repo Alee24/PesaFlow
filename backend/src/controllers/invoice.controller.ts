@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import { PrismaClient } from '@prisma/client';
+import { sendEmail } from '../services/email.service';
 
 const prisma = new PrismaClient();
 
@@ -7,6 +8,9 @@ export const createInvoice = async (req: Request, res: Response) => {
     try {
         const userId = (req as any).user.userId;
         const { clientName, clientPhone, clientAddress, clientEmail, date, dueDate, items, invoiceNumber, notes } = req.body;
+
+        console.log(`[Invoice] Creating for User: ${userId}`);
+        console.log(`[Invoice] Payload:`, JSON.stringify(req.body));
 
         // Fetch Wallet & Profile
         const wallet = await prisma.wallet.findFirstOrThrow({ where: { userId } });
@@ -96,10 +100,9 @@ export const createInvoice = async (req: Request, res: Response) => {
             }
         });
 
-        // Send Email Notification
+        // Send Email Notification (Async, don't block response)
         if (clientEmail) {
-            import('../services/email.service').then(({ sendEmail }) => {
-                const emailHtml = `
+            const emailHtml = `
                     <h1>Invoice #${invoiceNumber}</h1>
                     <p>Dear ${clientName},</p>
                     <p>Here is your invoice for KES ${totalAmount.toLocaleString()}.</p>
@@ -107,15 +110,17 @@ export const createInvoice = async (req: Request, res: Response) => {
                     <br>
                     <p>Thank you!</p>
                 `;
-                sendEmail(userId, clientEmail, `Invoice from ${req.body.companyName || 'Us'}`, emailHtml);
-            });
+            // Fire and forget, but catch errors to prevent crash
+            sendEmail(userId, clientEmail, `Invoice from ${req.body.companyName || 'Us'}`, emailHtml)
+                .catch(err => console.error("Failed to send invoice email:", err));
         }
 
         res.json({ transaction, sale });
 
     } catch (error) {
         console.error("Create Invoice Error:", error);
-        res.status(500).json({ error: 'Failed to create invoice' });
+        // Return explicit error message if possible
+        res.status(500).json({ error: 'Failed to create invoice. Server log contains details.' });
     }
 };
 
@@ -131,7 +136,10 @@ export const getInvoices = async (req: Request, res: Response) => {
                 recipientWalletId: wallet.id,
                 type: 'INVOICE'
             },
-            orderBy: { createdAt: 'desc' }
+            orderBy: { createdAt: 'desc' },
+            include: {
+                sale: true // Include sale details
+            }
         });
 
         res.json(invoices);
