@@ -16,7 +16,15 @@ async function main() {
         }
     });
 
-    console.log(`Found ${products.length} recent products.`);
+    // Debug DB Connection
+    const dbUrl = process.env.DATABASE_URL || 'UNDEFINED';
+    console.log(`🔌 Connected to DB: ${dbUrl.replace(/:.*@/, ':****@')}`);
+
+    const userCount = await prisma.user.count();
+    const productCount = await prisma.product.count();
+
+    console.log(`📊 DB Stats: Users=${userCount}, Products=${productCount}`);
+
     console.log('------------------------------------------------------------------------------------------------');
     console.log(pad('Product Name', 25) + ' | ' + 'Image URL (Raw from DB)');
     console.log('------------------------------------------------------------------------------------------------');
