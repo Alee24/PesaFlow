@@ -284,17 +284,29 @@ model Notification {
 }
 
 model Subscription {
-  id            String   @id @default(uuid())
-  merchantId    String   @unique @map("merchant_id")
-  merchant      User     @relation(fields: [merchantId], references: [id])
-  plan          String // BASIC, PRO, ENTERPRISE
-  status        String   @default("ACTIVE") // ACTIVE, EXPIRED, CANCELLED
-  startDate     DateTime @default(now()) @map("start_date")
-  endDate       DateTime @map("end_date")
-  autoRenew     Boolean  @default(true) @map("auto_renew")
-  lastPaymentId String?  @map("last_payment_id") // Reference to Transaction
-  createdAt     DateTime @default(now()) @map("created_at")
-  updatedAt     DateTime @updatedAt @map("updated_at")
+  id         String @id @default(uuid())
+  merchantId String @unique @map("merchant_id")
+  merchant   User   @relation(fields: [merchantId], references: [id])
+
+  plan   String @default("FREE") // FREE, BASIC, PRO, ENTERPRISE
+  status String @default("ACTIVE") // ACTIVE, EXPIRED, CANCELLED
+
+  // Transaction tracking for BASIC tier (100/month limit)
+  monthlyTxCount   Int      @default(0) @map("monthly_tx_count")
+  txCountResetDate DateTime @default(now()) @map("tx_count_reset_date")
+
+  // Enterprise-specific fields
+  isEnterprise     Boolean   @default(false) @map("is_enterprise")
+  licenseKey       String?   @unique @map("license_key")
+  supportExpiresAt DateTime? @map("support_expires_at")
+
+  startDate     DateTime  @default(now()) @map("start_date")
+  endDate       DateTime? @map("end_date")
+  autoRenew     Boolean   @default(true) @map("auto_renew")
+  lastPaymentId String?   @map("last_payment_id")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
   @@map("subscriptions")
 }
