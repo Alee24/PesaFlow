@@ -144,7 +144,7 @@ export const createTeamMember = async (req: Request, res: Response) => {
     } catch (error: any) {
         console.error("Create Team Member Error:", error);
         if (error instanceof z.ZodError) {
-            return res.status(400).json({ error: 'Validation failed', details: error.errors });
+            return res.status(400).json({ error: 'Validation failed', details: error.issues });
         }
         res.status(500).json({ error: error.message || 'Failed to create team member' });
     }
