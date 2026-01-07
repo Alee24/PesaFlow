@@ -3,8 +3,11 @@
 
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { LayoutDashboard, ShoppingCart, Package, CreditCard, ArrowLeftRight, Settings, LogOut, User, Store, FileText, Bell, X, CheckCircle, AlertCircle, Info, Lock, ShieldCheck } from 'lucide-react';
-import { LayoutDashboard, ShoppingCart, Package, CreditCard, ArrowLeftRight, Settings, LogOut, User, Store, FileText, Bell, X, CheckCircle, AlertCircle, Info, Lock, ShieldCheck, TrendingUp, BarChart3, Users, Wallet } from 'lucide-react';
+import {
+    LayoutDashboard, ShoppingCart, Package, CreditCard, ArrowLeftRight, Settings,
+    LogOut, User, Store, FileText, Bell, X, CheckCircle, AlertCircle, Info, Lock,
+    ShieldCheck, TrendingUp, BarChart3, Users, Wallet
+} from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useState, useEffect, useRef } from 'react';
 import { formatDistanceToNow } from 'date-fns';
