@@ -219,6 +219,10 @@ export const createCashSale = async (req: Request, res: Response) => {
             return { sale, changeGiven };
         });
 
+        // Increment transaction counter for BASIC tier
+        const { incrementTransactionCount } = await import('../middlewares/subscription.middleware');
+        await incrementTransactionCount(merchantId);
+
         res.json({
             success: true,
             message: 'Sale recorded successfully',
