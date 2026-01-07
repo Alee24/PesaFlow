@@ -253,7 +253,7 @@ export const manageSubscription = async (req: AuthRequest, res: Response) => {
             } else if (action === 'EXTEND') {
                 if (!sub) throw new Error("User has no active subscription to extend");
 
-                const currentEnd = new Date(sub.endDate);
+                const currentEnd = sub.endDate ? new Date(sub.endDate) : new Date();
                 // If already expired, start extension from NOW, else from current expiry
                 const baseDate = currentEnd < new Date() ? new Date() : currentEnd;
 

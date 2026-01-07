@@ -56,7 +56,7 @@ export const getSubscription = async (req: Request, res: Response) => {
         }
 
         const now = new Date();
-        const endDate = new Date(sub.endDate);
+        const endDate = sub.endDate ? new Date(sub.endDate) : new Date();
         const diffTime = endDate.getTime() - now.getTime();
         const daysRemaining = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
