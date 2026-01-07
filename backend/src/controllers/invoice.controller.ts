@@ -135,7 +135,12 @@ export const getInvoices = async (req: Request, res: Response) => {
             },
             orderBy: { createdAt: 'desc' },
             include: {
-                sale: true // Include sale details
+                sale: true, // Include sale details
+                initiator: {
+                    include: {
+                        businessProfile: true // Include business profile for logo/company info
+                    }
+                }
             }
         });
 
