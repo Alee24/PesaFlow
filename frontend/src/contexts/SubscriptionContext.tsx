@@ -92,6 +92,25 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
     useEffect(() => {
         fetchSubscription();
+
+        // Auto-refresh subscription when user returns to the tab
+        const handleFocus = () => {
+            fetchSubscription();
+        };
+
+        window.addEventListener('focus', handleFocus);
+
+        // Also refresh every 30 seconds if page is active
+        const interval = setInterval(() => {
+            if (document.visibilityState === 'visible') {
+                fetchSubscription();
+            }
+        }, 30000);
+
+        return () => {
+            window.removeEventListener('focus', handleFocus);
+            clearInterval(interval);
+        };
     }, []);
 
     const hasFeature = (feature: string): boolean => {
