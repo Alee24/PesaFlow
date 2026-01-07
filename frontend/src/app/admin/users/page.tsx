@@ -75,7 +75,23 @@ export default function UserManagementPage() {
     const fetchUsers = async () => {
         try {
             const res = await api.get('/admin/users');
-            setUsers(res.data);
+            // Organize users hierarchically
+            const allUsers = res.data;
+            const organized: any[] = [];
+
+            // First, add all main merchants and admins
+            const mainUsers = allUsers.filter((u: any) => !u.parentId);
+            mainUsers.forEach((merchant: any) => {
+                organized.push({ ...merchant, isParent: true });
+
+                // Then add their branch managers
+                const branches = allUsers.filter((u: any) => u.parentId === merchant.id);
+                branches.forEach((branch: any) => {
+                    organized.push({ ...branch, isChild: true, parentName: merchant.name });
+                });
+            });
+
+            setUsers(organized);
         } catch (error) {
             console.error(error);
             showToast('Failed to load users', 'error');
@@ -266,10 +282,20 @@ export default function UserManagementPage() {
                                     <tr><td colSpan={6} className="p-8 text-center text-gray-500">No users found</td></tr>
                                 ) : (
                                     users.map((user) => (
-                                        <tr key={user.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
+                                        <tr key={user.id} className={`hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors ${user.isChild ? 'bg-gray-50/50 dark:bg-gray-800/30' : ''}`}>
                                             <td className="p-4">
-                                                <div className="font-medium text-gray-900 dark:text-white">{user.name}</div>
-                                                <div className="text-xs text-gray-500 font-mono select-all bg-gray-100 px-1 rounded inline-block" title="Click to copy">{user.id}</div>
+                                                <div className={`flex items-center gap-2 ${user.isChild ? 'pl-8' : ''}`}>
+                                                    {user.isChild && (
+                                                        <span className="text-gray-400">└─</span>
+                                                    )}
+                                                    <div>
+                                                        <div className="font-medium text-gray-900 dark:text-white">{user.name}</div>
+                                                        {user.isChild && (
+                                                            <div className="text-xs text-gray-500">Branch of: {user.parentName}</div>
+                                                        )}
+                                                        <div className="text-xs text-gray-500 font-mono select-all bg-gray-100 px-1 rounded inline-block mt-1" title="Click to copy">{user.id}</div>
+                                                    </div>
+                                                </div>
                                             </td>
                                             <td className="p-4">
                                                 <div className="text-sm text-gray-600 dark:text-gray-300">{user.email}</div>
