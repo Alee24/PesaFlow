@@ -43,6 +43,14 @@ model User {
   // Team Members (staff within a branch)
   teamMembers TeamMember[]
 
+  // CRM Relations
+  customers            Customer[]
+  customerNotes        CustomerNote[]
+  customerInteractions CustomerInteraction[]
+  customerTags         CustomerTag[]
+  customerSegments     CustomerSegment[]
+  emailCampaigns       EmailCampaign[]
+
   @@map("users")
 }
 
@@ -207,9 +215,11 @@ model Sale {
   merchant   User   @relation(fields: [merchantId], references: [id])
 
   // Customer Information
-  customerName  String? @map("customer_name")
-  customerPhone String? @map("customer_phone")
-  customerEmail String? @map("customer_email")
+  customerId    String?   @map("customer_id")
+  customer      Customer? @relation("CustomerSales", fields: [customerId], references: [id])
+  customerName  String?   @map("customer_name")
+  customerPhone String?   @map("customer_phone")
+  customerEmail String?   @map("customer_email")
 
   // Pricing
   subtotal       Decimal  @default(0)
@@ -337,4 +347,180 @@ model TeamMember {
   @@index([merchantId])
   @@index([email])
   @@map("team_members")
+}
+
+// ============================================
+// CRM MODELS
+// ============================================
+
+model Customer {
+  id         String @id @default(uuid())
+  merchantId String @map("merchant_id")
+  merchant   User   @relation(fields: [merchantId], references: [id])
+
+  // Basic Information
+  name    String
+  email   String?
+  phone   String?
+  company String?
+  address String?
+  city    String?
+  country String? @default("Kenya")
+
+  // Metadata
+  source String? @default("MANUAL") // MANUAL, IMPORT, POS, WEBSITE
+  status String  @default("ACTIVE") // ACTIVE, INACTIVE, LEAD, CUSTOMER
+
+  // Financial
+  lifetimeValue    Decimal   @default(0) @map("lifetime_value")
+  totalPurchases   Int       @default(0) @map("total_purchases")
+  lastPurchaseDate DateTime? @map("last_purchase_date")
+
+  // Timestamps
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  notes        CustomerNote[]
+  interactions CustomerInteraction[]
+  tags         CustomerTagRelation[]
+  segments     CustomerSegmentRelation[]
+  sales        Sale[]                    @relation("CustomerSales")
+
+  @@index([merchantId])
+  @@index([email])
+  @@index([phone])
+  @@map("customers")
+}
+
+model CustomerNote {
+  id         String   @id @default(uuid())
+  customerId String   @map("customer_id")
+  customer   Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+
+  userId String @map("user_id")
+  user   User   @relation(fields: [userId], references: [id])
+
+  content String @db.Text
+  type    String @default("NOTE") // NOTE, CALL, MEETING, EMAIL
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([customerId])
+  @@map("customer_notes")
+}
+
+model CustomerInteraction {
+  id         String   @id @default(uuid())
+  customerId String   @map("customer_id")
+  customer   Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+
+  userId String @map("user_id")
+  user   User   @relation(fields: [userId], references: [id])
+
+  type        String // CALL, EMAIL, MEETING, PURCHASE, SUPPORT, OTHER
+  subject     String?
+  description String? @db.Text
+  outcome     String? // SUCCESS, FOLLOW_UP, NO_ANSWER, etc.
+  duration    Int? // Duration in minutes
+
+  interactionDate DateTime @default(now()) @map("interaction_date")
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  @@index([customerId])
+  @@index([type])
+  @@map("customer_interactions")
+}
+
+model CustomerTag {
+  id         String @id @default(uuid())
+  merchantId String @map("merchant_id")
+  merchant   User   @relation(fields: [merchantId], references: [id])
+
+  name  String
+  color String @default("#3B82F6") // Hex color
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  customers CustomerTagRelation[]
+
+  @@unique([merchantId, name])
+  @@map("customer_tags")
+}
+
+model CustomerTagRelation {
+  customerId String   @map("customer_id")
+  customer   Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+
+  tagId String      @map("tag_id")
+  tag   CustomerTag @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  assignedAt DateTime @default(now()) @map("assigned_at")
+
+  @@id([customerId, tagId])
+  @@map("customer_tag_relations")
+}
+
+model CustomerSegment {
+  id         String @id @default(uuid())
+  merchantId String @map("merchant_id")
+  merchant   User   @relation(fields: [merchantId], references: [id])
+
+  name        String
+  description String? @db.Text
+  criteria    String  @db.Text // JSON string with segment criteria
+  autoUpdate  Boolean @default(true) @map("auto_update")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  customers CustomerSegmentRelation[]
+  campaigns EmailCampaign[]
+
+  @@index([merchantId])
+  @@map("customer_segments")
+}
+
+model CustomerSegmentRelation {
+  customerId String   @map("customer_id")
+  customer   Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+
+  segmentId String          @map("segment_id")
+  segment   CustomerSegment @relation(fields: [segmentId], references: [id], onDelete: Cascade)
+
+  addedAt DateTime @default(now()) @map("added_at")
+
+  @@id([customerId, segmentId])
+  @@map("customer_segment_relations")
+}
+
+model EmailCampaign {
+  id         String @id @default(uuid())
+  merchantId String @map("merchant_id")
+  merchant   User   @relation(fields: [merchantId], references: [id])
+
+  name    String
+  subject String
+  content String @db.Text // HTML email content
+
+  segmentId String?          @map("segment_id")
+  segment   CustomerSegment? @relation(fields: [segmentId], references: [id])
+
+  status      String    @default("DRAFT") // DRAFT, SCHEDULED, SENDING, SENT, FAILED
+  scheduledAt DateTime? @map("scheduled_at")
+  sentAt      DateTime? @map("sent_at")
+
+  // Analytics
+  totalRecipients Int @default(0) @map("total_recipients")
+  sentCount       Int @default(0) @map("sent_count")
+  openedCount     Int @default(0) @map("opened_count")
+  clickedCount    Int @default(0) @map("clicked_count")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([merchantId])
+  @@index([status])
+  @@map("email_campaigns")
 }
