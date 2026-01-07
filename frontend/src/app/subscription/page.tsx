@@ -92,22 +92,82 @@ const PLANS = [
 
 export default function SubscriptionPage() {
     const router = useRouter();
-    const { subscription, loading } = useSubscription();
+    const { subscription, loading, refreshSubscription } = useSubscription();
     const [processingPlan, setProcessingPlan] = useState<string | null>(null);
+    const [showPaymentModal, setShowPaymentModal] = useState(false);
+    const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
+    const [phoneNumber, setPhoneNumber] = useState('');
+
+    // Validate Kenyan phone number format
+    const validateKenyanPhone = (phone: string): boolean => {
+        // Remove spaces and dashes
+        const cleaned = phone.replace(/[\s-]/g, '');
+
+        // Accept formats: 0712345678, 254712345678, +254712345678
+        const kenyanPhoneRegex = /^(?:254|\+254|0)([17]\d{8})$/;
+        return kenyanPhoneRegex.test(cleaned);
+    };
+
+    const formatPhoneNumber = (phone: string): string => {
+        const cleaned = phone.replace(/[\s-]/g, '');
+        if (cleaned.startsWith('+254')) return cleaned.substring(1);
+        if (cleaned.startsWith('0')) return '254' + cleaned.substring(1);
+        return cleaned;
+    };
 
     const handleUpgrade = async (planName: string) => {
         if (planName === 'ENTERPRISE') {
-            // Open contact modal or redirect
             window.location.href = 'mailto:sales@mpesaconnect.co.ke?subject=Enterprise Plan Inquiry';
             return;
         }
 
-        setProcessingPlan(planName);
+        if (planName === 'FREE') {
+            return;
+        }
 
-        // TODO: Implement M-Pesa payment flow
-        alert(`Upgrade to ${planName} - Payment integration coming soon!`);
+        setSelectedPlan(planName);
+        setShowPaymentModal(true);
+    };
 
-        setProcessingPlan(null);
+    const handlePayment = async () => {
+        if (!selectedPlan || !phoneNumber) {
+            alert('Please enter your phone number');
+            return;
+        }
+
+        if (!validateKenyanPhone(phoneNumber)) {
+            alert('Please enter a valid Kenyan phone number (e.g., 0712345678)');
+            return;
+        }
+
+        setProcessingPlan(selectedPlan);
+
+        try {
+            const { initiateSubscriptionPayment } = await import('@/services/subscription.service');
+
+            const formattedPhone = formatPhoneNumber(phoneNumber);
+
+            const result = await initiateSubscriptionPayment({
+                plan: selectedPlan as any,
+                phoneNumber: formattedPhone
+            });
+
+            alert('Payment request sent to your phone. Please enter your M-Pesa PIN.');
+
+            setShowPaymentModal(false);
+            setPhoneNumber('');
+
+            // Refresh subscription after delay
+            setTimeout(() => {
+                refreshSubscription();
+            }, 5000);
+
+        } catch (error: any) {
+            console.error('Payment error:', error);
+            alert(error.response?.data?.error || 'Failed to initiate payment');
+        } finally {
+            setProcessingPlan(null);
+        }
     };
 
     const currentPlan = subscription?.plan || 'FREE';
@@ -230,6 +290,55 @@ export default function SubscriptionPage() {
                     </div>
                 </Card>
             </div>
+
+            {/* Payment Modal */}
+            {showPaymentModal && selectedPlan && (
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+                    <div className="bg-white dark:bg-gray-800 rounded-2xl max-w-md w-full p-6 shadow-2xl">
+                        <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
+                            Upgrade to {selectedPlan}
+                        </h3>
+                        <p className="text-gray-600 dark:text-gray-400 mb-6">
+                            Enter your M-Pesa phone number to complete payment
+                        </p>
+
+                        <div className="mb-6">
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                Phone Number
+                            </label>
+                            <input
+                                type="tel"
+                                value={phoneNumber}
+                                onChange={(e) => setPhoneNumber(e.target.value)}
+                                placeholder="0712345678"
+                                className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 dark:bg-gray-700 dark:text-white"
+                            />
+                            <p className="text-xs text-gray-500 mt-1">
+                                You will receive an M-Pesa prompt on this number
+                            </p>
+                        </div>
+
+                        <div className="flex gap-3">
+                            <button
+                                onClick={() => {
+                                    setShowPaymentModal(false);
+                                    setPhoneNumber('');
+                                }}
+                                className="flex-1 px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={handlePayment}
+                                disabled={!phoneNumber || processingPlan === selectedPlan}
+                                className="flex-1 bg-gradient-to-r from-purple-500 to-pink-600 text-white px-4 py-3 rounded-lg hover:shadow-lg transition disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                {processingPlan === selectedPlan ? 'Processing...' : 'Pay Now'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </DashboardLayout>
     );
 }
