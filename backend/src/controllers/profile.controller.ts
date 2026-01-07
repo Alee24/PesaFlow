@@ -36,8 +36,13 @@ const profileSchema = z.object({
 export const getProfile = async (req: Request, res: Response) => {
     try {
         const userId = (req as any).user.userId;
+        const merchantId = (req as any).user.merchantId; // For branch managers, this is parent's ID
+
+        // Branch managers use parent merchant's business profile
+        const profileUserId = merchantId;
+
         const profile = await prisma.businessProfile.findUnique({
-            where: { userId },
+            where: { userId: profileUserId },
         });
 
         res.json(profile || {});

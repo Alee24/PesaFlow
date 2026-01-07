@@ -65,6 +65,9 @@ export default function SettingsPage() {
         fetchProfile();
     }, []);
 
+    // Check if user is branch manager
+    const isBranchManager = user?.role === 'BRANCH_MANAGER';
+
     const fetchProfile = async () => {
         try {
             const res = await api.get('/profile');
@@ -195,12 +198,34 @@ export default function SettingsPage() {
                 <header className="mb-8 flex justify-between items-center">
                     <div>
                         <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Settings</h1>
-                        <p className="text-gray-500 mt-1">Manage business profile, integrations, and preferences.</p>
+                        <p className="text-gray-500 mt-1">
+                            {isBranchManager
+                                ? 'Viewing parent merchant settings (Read-only)'
+                                : 'Manage business profile, integrations, and preferences.'}
+                        </p>
                     </div>
-                    <Button onClick={handleSubmit} isLoading={saving} className="px-6">
-                        Save Changes
-                    </Button>
+                    {!isBranchManager && (
+                        <Button onClick={handleSubmit} isLoading={saving} className="px-6">
+                            Save Changes
+                        </Button>
+                    )}
                 </header>
+
+                {isBranchManager && (
+                    <div className="bg-blue-50 dark:bg-blue-900/20 border-l-4 border-blue-500 p-4 rounded-lg mb-6">
+                        <div className="flex items-center gap-3">
+                            <svg className="w-6 h-6 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            <div>
+                                <h3 className="font-semibold text-blue-900 dark:text-blue-100">Branch Manager View</h3>
+                                <p className="text-sm text-blue-700 dark:text-blue-300">
+                                    You are viewing your parent merchant's business settings. These settings are shared across all branches and can only be modified by the main merchant account.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                )}
 
                 <form onSubmit={handleSubmit} className="space-y-8">
                     {/* General Profile */}
