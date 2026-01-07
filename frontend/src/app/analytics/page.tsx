@@ -31,11 +31,22 @@ export default function AnalyticsPage() {
     const [customerData, setCustomerData] = useState<any>(null);
     const [financialData, setFinancialData] = useState<any>(null);
     const [inventoryData, setInventoryData] = useState<any>(null);
+    const [businessProfile, setBusinessProfile] = useState<any>(null);
     const { showToast } = useToast();
 
     useEffect(() => {
         fetchAnalytics();
+        fetchBusinessProfile();
     }, [dateRange]);
+
+    const fetchBusinessProfile = async () => {
+        try {
+            const response = await api.get('/profile/business');
+            setBusinessProfile(response.data);
+        } catch (error) {
+            console.error('Failed to fetch business profile');
+        }
+    };
 
     const fetchAnalytics = async () => {
         setLoading(true);
@@ -62,10 +73,35 @@ export default function AnalyticsPage() {
 
     const exportReport = async (format: 'pdf' | 'excel') => {
         try {
-            showToast(`Exporting ${format.toUpperCase()} report...`, 'info');
-            // TODO: Implement export functionality
-            showToast(`${format.toUpperCase()} export coming soon!`, 'info');
+            if (format === 'pdf') {
+                const { pdf } = await import('@react-pdf/renderer');
+                const { AnalyticsReportPDF } = await import('@/components/pdf/AnalyticsReportPDF');
+
+                const blob = await pdf(
+                    <AnalyticsReportPDF
+                        businessProfile={businessProfile}
+                        salesData={salesData}
+                        productData={productData}
+                        customerData={customerData}
+                        financialData={financialData}
+                        inventoryData={inventoryData}
+                        dateRange={dateRange}
+                    />
+                ).toBlob();
+
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = `Analytics-Report-${dateRange.start}-to-${dateRange.end}.pdf`;
+                link.click();
+                URL.revokeObjectURL(url);
+
+                showToast('PDF report downloaded successfully!', 'success');
+            } else {
+                showToast('Excel export coming soon!', 'info');
+            }
         } catch (error) {
+            console.error('Export error:', error);
             showToast('Export failed', 'error');
         }
     };
