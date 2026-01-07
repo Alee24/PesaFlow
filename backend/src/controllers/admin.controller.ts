@@ -195,18 +195,7 @@ export const deleteUser = async (req: AuthRequest, res: Response) => {
                 // Delete transactions
                 await tx.transaction.deleteMany({
                     where: {
-                        OR: [
-                            {
-                                senderWallet: {
-                                    userId: id
-                                }
-                            },
-                            {
-                                recipientWallet: {
-                                    userId: id
-                                }
-                            }
-                        ]
+                        recipientWalletId: wallet.id
                     }
                 });
 
@@ -238,11 +227,6 @@ export const deleteUser = async (req: AuthRequest, res: Response) => {
 
             // Delete categories
             await tx.category.deleteMany({
-                where: { merchantId: id }
-            });
-
-            // Delete team members
-            await tx.teamMember.deleteMany({
                 where: { merchantId: id }
             });
 
