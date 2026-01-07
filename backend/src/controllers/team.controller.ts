@@ -5,48 +5,31 @@ import { z } from 'zod';
 
 const prisma = new PrismaClient();
 
-const createTeamMemberSchema = z.object({
+const createBranchManagerSchema = z.object({
     name: z.string().min(2),
     email: z.string().email(),
-    phoneNumber: z.string().min(10).optional(),
-    pin: z.string().length(4).optional(), // 4-digit PIN
-    role: z.enum(['STAFF', 'MANAGER', 'CASHIER']).default('STAFF'),
-    permissions: z.object({
-        canMakeSales: z.boolean().default(true),
-        canViewReports: z.boolean().default(false),
-        canManageInventory: z.boolean().default(false),
-        canProcessWithdrawals: z.boolean().default(false)
-    }).optional()
+    phoneNumber: z.string().min(10),
+    password: z.string().min(6)
 });
 
-const updateTeamMemberSchema = z.object({
+const updateBranchManagerSchema = z.object({
     name: z.string().min(2).optional(),
-    email: z.string().email().optional(),
-    phoneNumber: z.string().min(10).optional(),
-    pin: z.string().length(4).optional(),
-    role: z.enum(['STAFF', 'MANAGER', 'CASHIER']).optional(),
-    status: z.enum(['ACTIVE', 'SUSPENDED']).optional(),
-    permissions: z.object({
-        canMakeSales: z.boolean(),
-        canViewReports: z.boolean(),
-        canManageInventory: z.boolean(),
-        canProcessWithdrawals: z.boolean()
-    }).optional()
+    status: z.enum(['ACTIVE', 'SUSPENDED']).optional()
 });
 
-// Get all team members for the merchant
+// Get all branch managers for the main merchant
 export const getTeamMembers = async (req: Request, res: Response) => {
     try {
         const userId = (req as any).user.userId;
         const merchantId = (req as any).user.merchantId;
 
-        // Only main merchant can view team
+        // Only main merchant can view branches
         if (userId !== merchantId) {
-            return res.status(403).json({ error: 'Only the account owner can view team members' });
+            return res.status(403).json({ error: 'Only the account owner can view branch managers' });
         }
 
-        const teamMembers = await prisma.teamMember.findMany({
-            where: { merchantId: userId },
+        const branchManagers = await prisma.user.findMany({
+            where: { parentId: userId },
             select: {
                 id: true,
                 name: true,
@@ -54,33 +37,26 @@ export const getTeamMembers = async (req: Request, res: Response) => {
                 phoneNumber: true,
                 role: true,
                 status: true,
-                permissions: true,
                 createdAt: true
             },
             orderBy: { createdAt: 'desc' }
         });
 
-        // Parse permissions JSON
-        const formattedMembers = teamMembers.map(member => ({
-            ...member,
-            permissions: member.permissions ? JSON.parse(member.permissions) : null
-        }));
-
-        res.json(formattedMembers);
+        res.json(branchManagers);
     } catch (error) {
-        console.error("Get Team Members Error:", error);
-        res.status(500).json({ error: 'Failed to fetch team members' });
+        console.error("Get Branch Managers Error:", error);
+        res.status(500).json({ error: 'Failed to fetch branch managers' });
     }
 };
 
-// Create a new team member
+// Create a new branch manager
 export const createTeamMember = async (req: Request, res: Response) => {
     try {
         const userId = (req as any).user.userId;
         const merchantId = (req as any).user.merchantId;
 
         if (userId !== merchantId) {
-            return res.status(403).json({ error: 'Only the account owner can add team members' });
+            return res.status(403).json({ error: 'Only the account owner can add branch managers' });
         }
 
         // Check subscription (PRO or ENTERPRISE required)
@@ -89,40 +65,42 @@ export const createTeamMember = async (req: Request, res: Response) => {
         });
 
         if (!subscription || !['PRO', 'ENTERPRISE'].includes(subscription.plan)) {
-            return res.status(403).json({ error: 'Upgrade to PRO plan to add team members' });
+            return res.status(403).json({ error: 'Upgrade to PRO plan to add branch managers' });
         }
 
-        const data = createTeamMemberSchema.parse(req.body);
+        const data = createBranchManagerSchema.parse(req.body);
 
         // Check if email already exists
-        const existing = await prisma.teamMember.findFirst({
+        const existing = await prisma.user.findFirst({
             where: { email: data.email }
         });
 
         if (existing) {
-            return res.status(400).json({ error: 'Team member with this email already exists' });
+            return res.status(400).json({ error: 'User with this email already exists' });
         }
 
-        // Hash PIN if provided
-        let hashedPin = null;
-        if (data.pin) {
-            hashedPin = await bcrypt.hash(data.pin, 10);
+        // Check if phone already exists
+        const existingPhone = await prisma.user.findFirst({
+            where: { phoneNumber: data.phoneNumber }
+        });
+
+        if (existingPhone) {
+            return res.status(400).json({ error: 'User with this phone number already exists' });
         }
 
-        const teamMember = await prisma.teamMember.create({
+        // Hash password
+        const passwordHash = await bcrypt.hash(data.password, 10);
+
+        // Create branch manager user
+        const branchManager = await prisma.user.create({
             data: {
-                merchantId: userId,
                 name: data.name,
                 email: data.email,
                 phoneNumber: data.phoneNumber,
-                pin: hashedPin,
-                role: data.role,
-                permissions: data.permissions ? JSON.stringify(data.permissions) : JSON.stringify({
-                    canMakeSales: true,
-                    canViewReports: false,
-                    canManageInventory: false,
-                    canProcessWithdrawals: false
-                })
+                passwordHash,
+                role: 'BRANCH_MANAGER',
+                status: 'ACTIVE',
+                parentId: userId
             },
             select: {
                 id: true,
@@ -131,26 +109,31 @@ export const createTeamMember = async (req: Request, res: Response) => {
                 phoneNumber: true,
                 role: true,
                 status: true,
-                permissions: true,
                 createdAt: true
             }
         });
 
-        res.status(201).json({
-            ...teamMember,
-            permissions: JSON.parse(teamMember.permissions || '{}')
+        // Create wallet for branch manager
+        await prisma.wallet.create({
+            data: {
+                userId: branchManager.id,
+                balance: 0,
+                currency: 'KES'
+            }
         });
 
+        res.status(201).json(branchManager);
+
     } catch (error: any) {
-        console.error("Create Team Member Error:", error);
+        console.error("Create Branch Manager Error:", error);
         if (error instanceof z.ZodError) {
             return res.status(400).json({ error: 'Validation failed', details: error.issues });
         }
-        res.status(500).json({ error: error.message || 'Failed to create team member' });
+        res.status(500).json({ error: error.message || 'Failed to create branch manager' });
     }
 };
 
-// Update team member
+// Update branch manager
 export const updateTeamMember = async (req: Request, res: Response) => {
     try {
         const userId = (req as any).user.userId;
@@ -158,36 +141,25 @@ export const updateTeamMember = async (req: Request, res: Response) => {
         const { id } = req.params;
 
         if (userId !== merchantId) {
-            return res.status(403).json({ error: 'Only the account owner can update team members' });
+            return res.status(403).json({ error: 'Only the account owner can update branch managers' });
         }
 
-        const data = updateTeamMemberSchema.parse(req.body);
+        const data = updateBranchManagerSchema.parse(req.body);
 
         // Verify ownership
-        const member = await prisma.teamMember.findFirst({
-            where: { id, merchantId: userId }
+        const branchManager = await prisma.user.findFirst({
+            where: { id, parentId: userId }
         });
 
-        if (!member) {
-            return res.status(404).json({ error: 'Team member not found' });
+        if (!branchManager) {
+            return res.status(404).json({ error: 'Branch manager not found' });
         }
 
-        // Hash PIN if provided
-        let hashedPin = undefined;
-        if (data.pin) {
-            hashedPin = await bcrypt.hash(data.pin, 10);
-        }
-
-        const updated = await prisma.teamMember.update({
+        const updated = await prisma.user.update({
             where: { id },
             data: {
                 ...(data.name && { name: data.name }),
-                ...(data.email && { email: data.email }),
-                ...(data.phoneNumber && { phoneNumber: data.phoneNumber }),
-                ...(hashedPin && { pin: hashedPin }),
-                ...(data.role && { role: data.role }),
-                ...(data.status && { status: data.status }),
-                ...(data.permissions && { permissions: JSON.stringify(data.permissions) })
+                ...(data.status && { status: data.status })
             },
             select: {
                 id: true,
@@ -195,26 +167,22 @@ export const updateTeamMember = async (req: Request, res: Response) => {
                 email: true,
                 phoneNumber: true,
                 role: true,
-                status: true,
-                permissions: true
+                status: true
             }
         });
 
-        res.json({
-            ...updated,
-            permissions: JSON.parse(updated.permissions || '{}')
-        });
+        res.json(updated);
 
     } catch (error: any) {
-        console.error("Update Team Member Error:", error);
+        console.error("Update Branch Manager Error:", error);
         if (error instanceof z.ZodError) {
             return res.status(400).json({ error: 'Validation failed', details: error.issues });
         }
-        res.status(500).json({ error: error.message || 'Failed to update team member' });
+        res.status(500).json({ error: error.message || 'Failed to update branch manager' });
     }
 };
 
-// Delete/Suspend team member
+// Suspend branch manager
 export const deleteTeamMember = async (req: Request, res: Response) => {
     try {
         const userId = (req as any).user.userId;
@@ -222,77 +190,28 @@ export const deleteTeamMember = async (req: Request, res: Response) => {
         const { id } = req.params;
 
         if (userId !== merchantId) {
-            return res.status(403).json({ error: 'Only the account owner can delete team members' });
+            return res.status(403).json({ error: 'Only the account owner can suspend branch managers' });
         }
 
         // Verify ownership
-        const member = await prisma.teamMember.findFirst({
-            where: { id, merchantId: userId }
+        const branchManager = await prisma.user.findFirst({
+            where: { id, parentId: userId }
         });
 
-        if (!member) {
-            return res.status(404).json({ error: 'Team member not found' });
+        if (!branchManager) {
+            return res.status(404).json({ error: 'Branch manager not found' });
         }
 
-        // Suspend instead of delete (preserve audit trail)
-        await prisma.teamMember.update({
+        // Suspend instead of delete
+        await prisma.user.update({
             where: { id },
             data: { status: 'SUSPENDED' }
         });
 
-        res.json({ message: 'Team member suspended successfully' });
+        res.json({ message: 'Branch manager suspended successfully' });
 
     } catch (error) {
-        console.error("Delete Team Member Error:", error);
-        res.status(500).json({ error: 'Failed to remove team member' });
-    }
-};
-
-// Verify PIN
-export const verifyPIN = async (req: Request, res: Response) => {
-    try {
-        const userId = (req as any).user.userId;
-        const merchantId = (req as any).user.merchantId;
-        const { pin, teamMemberId } = req.body;
-
-        if (!pin || !teamMemberId) {
-            return res.status(400).json({ error: 'PIN and team member ID required' });
-        }
-
-        const member = await prisma.teamMember.findFirst({
-            where: {
-                id: teamMemberId,
-                merchantId: merchantId,
-                status: 'ACTIVE'
-            }
-        });
-
-        if (!member) {
-            return res.status(404).json({ error: 'Team member not found or inactive' });
-        }
-
-        if (!member.pin) {
-            return res.status(400).json({ error: 'Team member does not have a PIN set' });
-        }
-
-        const isValid = await bcrypt.compare(pin, member.pin);
-
-        if (!isValid) {
-            return res.status(401).json({ error: 'Invalid PIN' });
-        }
-
-        res.json({
-            valid: true,
-            teamMember: {
-                id: member.id,
-                name: member.name,
-                role: member.role,
-                permissions: JSON.parse(member.permissions || '{}')
-            }
-        });
-
-    } catch (error) {
-        console.error("Verify PIN Error:", error);
-        res.status(500).json({ error: 'Failed to verify PIN' });
+        console.error("Suspend Branch Manager Error:", error);
+        res.status(500).json({ error: 'Failed to suspend branch manager' });
     }
 };
