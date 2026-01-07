@@ -128,14 +128,30 @@ export default function SettingsPage() {
         setSaving(true);
         try {
             const payload = new FormData();
+
+            // Properly handle different data types
             Object.entries(formData).forEach(([key, value]) => {
-                payload.append(key, value as string);
+                if (value === null || value === undefined) return;
+
+                // Convert boolean to string for FormData
+                if (typeof value === 'boolean') {
+                    payload.append(key, value.toString());
+                } else if (typeof value === 'number') {
+                    payload.append(key, value.toString());
+                } else {
+                    payload.append(key, value as string);
+                }
             });
+
             if (logoFile) {
                 payload.append('logo', logoFile);
             }
 
-            await api.put('/profile', payload);
+            await api.put('/profile', payload, {
+                headers: {
+                    'Content-Type': 'multipart/form-data'
+                }
+            });
             showToast('Settings saved successfully!', 'success');
         } catch (error: any) {
             console.error(error);
