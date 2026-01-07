@@ -300,9 +300,9 @@ model Subscription {
 
   // Features (JSON array of enabled features)
   // Example: ["POS", "ANALYTICS", "TEAM_MANAGEMENT", "CRM", "ADVANCED_CRM"]
-  features String @default("[]") @db.Text
-  plan   String @default("FREE") // FREE, BASIC, PRO, ENTERPRISE
-  status String @default("ACTIVE") // ACTIVE, EXPIRED, CANCELLED
+  features     String   @map("features") // JSON string of enabled features
+  plan         String   @default("FREE") // FREE, BASIC, PRO, ENTERPRISE
+  status       String   @default("ACTIVE") // ACTIVE, EXPIRED, CANCELLED
 
   // Transaction tracking for BASIC tier (100/month limit)
   monthlyTxCount   Int      @default(0) @map("monthly_tx_count")
