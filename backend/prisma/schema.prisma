@@ -18,7 +18,7 @@ model User {
   email        String   @unique
   phoneNumber  String   @unique @map("phone_number")
   passwordHash String   @map("password_hash")
-  role         String   @default("MERCHANT") // ADMIN, MERCHANT, SUB_MERCHANT
+  role         String   @default("MERCHANT") // ADMIN, MERCHANT, BRANCH_MANAGER
   status       String   @default("PENDING_VERIFICATION") // ACTIVE, SUSPENDED, PENDING_VERIFICATION, REJECTED
   appealNotes  String?  @map("appeal_notes")
   createdAt    DateTime @default(now()) @map("created_at")
@@ -35,7 +35,12 @@ model User {
   businessProfile BusinessProfile?
   subscription    Subscription?
 
-  // Team Management (new table)
+  // Branch Management (parentId links branch managers to main merchant)
+  parentId String? @map("parent_id")
+  parent   User?   @relation("BranchHierarchy", fields: [parentId], references: [id])
+  branches User[]  @relation("BranchHierarchy")
+
+  // Team Members (staff within a branch)
   teamMembers TeamMember[]
 
   @@map("users")

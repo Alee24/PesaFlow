@@ -7,9 +7,10 @@ const prisma = new PrismaClient();
 export interface AuthRequest extends Request {
     user?: {
         userId: string;
-        merchantId: string; // Same as userId for main merchants
+        merchantId: string; // Main merchant ID (for branch managers, this is parentId)
         role: string;
         status: string;
+        parentId?: string;
     };
 }
 
@@ -31,6 +32,7 @@ export const authenticateToken = async (req: AuthRequest, res: Response, next: N
                 id: true,
                 role: true,
                 status: true,
+                parentId: true,
                 email: true
             }
         });
@@ -46,11 +48,30 @@ export const authenticateToken = async (req: AuthRequest, res: Response, next: N
             return;
         }
 
+        // Branch Manager: merchantId is the parent (main merchant)
+        const merchantId = user.parentId || user.id;
+
+        // Check parent subscription for branch managers
+        if (user.parentId) {
+            const parentSubscription = await prisma.subscription.findUnique({
+                where: { merchantId: merchantId }
+            });
+
+            if (!parentSubscription || parentSubscription.status !== 'ACTIVE') {
+                res.status(403).json({
+                    error: 'Main merchant subscription required. Please contact your account owner.',
+                    requiresUpgrade: true
+                });
+                return;
+            }
+        }
+
         req.user = {
             userId: user.id,
-            merchantId: user.id, // Team members share the merchant's account
+            merchantId,
             role: user.role,
-            status: user.status
+            status: user.status,
+            parentId: user.parentId || undefined
         };
 
         next();

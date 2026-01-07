@@ -129,7 +129,7 @@ export const login = async (req: Request, res: Response): Promise<void> => {
         }
 
         const token = jwt.sign(
-            { userId: user.id, role: user.role, status: user.status },
+            { userId: user.id, role: user.role, status: user.status, parentId: user.parentId },
             process.env.JWT_SECRET || 'fallback_secret',
             { expiresIn: '7d' }
         );
