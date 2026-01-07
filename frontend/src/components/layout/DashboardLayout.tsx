@@ -101,6 +101,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 </footer>
 
                 <SubscriptionBadge />
+                <SubscriptionDebugBox />
             </div>
         </div>
     );
