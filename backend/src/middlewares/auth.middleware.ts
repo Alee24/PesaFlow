@@ -64,6 +64,17 @@ export const authenticateToken = async (req: AuthRequest, res: Response, next: N
                 });
                 return;
             }
+
+            // Branch managers require PRO or ENTERPRISE plan
+            if (parentSubscription.plan !== 'PRO' && parentSubscription.plan !== 'ENTERPRISE') {
+                res.status(403).json({
+                    error: 'Branch manager access requires PRO or ENTERPRISE plan. Please contact your account owner.',
+                    currentPlan: parentSubscription.plan,
+                    requiredPlan: 'PRO',
+                    requiresUpgrade: true
+                });
+                return;
+            }
         }
 
         req.user = {
