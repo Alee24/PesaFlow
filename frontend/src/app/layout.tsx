@@ -22,6 +22,7 @@ export const metadata: Metadata = {
 };
 
 import { ToastProvider } from "@/contexts/ToastContext";
+import { SubscriptionProvider } from "@/contexts/SubscriptionContext";
 
 // ...
 
@@ -37,7 +38,9 @@ export default function RootLayout({
         suppressHydrationWarning
       >
         <ToastProvider>
-          {children}
+          <SubscriptionProvider>
+            {children}
+          </SubscriptionProvider>
         </ToastProvider>
       </body>
     </html>
