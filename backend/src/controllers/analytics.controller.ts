@@ -231,10 +231,12 @@ export const getFinancialMetrics = async (req: AuthRequest, res: Response) => {
         const grossProfit = totalRevenue - totalCOGS;
         const grossMargin = totalRevenue > 0 ? (grossProfit / totalRevenue) * 100 : 0;
 
-        // Withdrawals
+        // Withdrawals - query through wallet
         const withdrawals = await prisma.withdrawal.findMany({
             where: {
-                merchantId: userId,
+                wallet: {
+                    userId: userId
+                },
                 createdAt: { gte: start, lte: end }
             }
         });
@@ -283,9 +285,10 @@ export const getInventoryStatus = async (req: AuthRequest, res: Response) => {
             }
         });
 
-        const lowStock = products.filter(p => Number(p.quantity) <= 10);
-        const outOfStock = products.filter(p => Number(p.quantity) === 0);
-        const totalValue = products.reduce((sum, p) => sum + Number(p.costPrice || 0) * Number(p.quantity), 0);
+        // Use stockQuantity field from schema
+        const lowStock = products.filter(p => Number(p.stockQuantity || 0) <= 10);
+        const outOfStock = products.filter(p => Number(p.stockQuantity || 0) === 0);
+        const totalValue = products.reduce((sum, p) => sum + Number(p.costPrice || 0) * Number(p.stockQuantity || 0), 0);
 
         res.json({
             totalProducts: products.length,
@@ -295,7 +298,7 @@ export const getInventoryStatus = async (req: AuthRequest, res: Response) => {
             lowStockProducts: lowStock.map(p => ({
                 id: p.id,
                 name: p.name,
-                stock: Number(p.quantity),
+                stock: Number(p.stockQuantity || 0),
                 threshold: 10
             }))
         });
