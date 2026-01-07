@@ -174,13 +174,85 @@ export const deleteUser = async (req: AuthRequest, res: Response) => {
             return res.status(400).json({ error: 'Cannot delete your own account' });
         }
 
-        await prisma.user.delete({
-            where: { id }
+        // Delete all related records in a transaction
+        await prisma.$transaction(async (tx) => {
+            // Delete business profile
+            await tx.businessProfile.deleteMany({
+                where: { userId: id }
+            });
+
+            // Delete wallet and related transactions/withdrawals
+            const wallet = await tx.wallet.findUnique({
+                where: { userId: id }
+            });
+
+            if (wallet) {
+                // Delete withdrawals
+                await tx.withdrawal.deleteMany({
+                    where: { walletId: wallet.id }
+                });
+
+                // Delete transactions
+                await tx.transaction.deleteMany({
+                    where: {
+                        OR: [
+                            { senderWalletId: wallet.id },
+                            { recipientWalletId: wallet.id }
+                        ]
+                    }
+                });
+
+                // Delete wallet
+                await tx.wallet.delete({
+                    where: { id: wallet.id }
+                });
+            }
+
+            // Delete sales and sale items
+            const sales = await tx.sale.findMany({
+                where: { merchantId: id }
+            });
+
+            for (const sale of sales) {
+                await tx.saleItem.deleteMany({
+                    where: { saleId: sale.id }
+                });
+            }
+
+            await tx.sale.deleteMany({
+                where: { merchantId: id }
+            });
+
+            // Delete products
+            await tx.product.deleteMany({
+                where: { merchantId: id }
+            });
+
+            // Delete categories
+            await tx.category.deleteMany({
+                where: { merchantId: id }
+            });
+
+            // Delete team members
+            await tx.teamMember.deleteMany({
+                where: { merchantId: id }
+            });
+
+            // Delete subscription
+            await tx.subscription.deleteMany({
+                where: { userId: id }
+            });
+
+            // Finally, delete the user
+            await tx.user.delete({
+                where: { id }
+            });
         });
 
         res.json({ message: 'User deleted successfully' });
     } catch (error: any) {
-        res.status(500).json({ error: error.message });
+        console.error('Delete user error:', error);
+        res.status(500).json({ error: error.message || 'Failed to delete user' });
     }
 };
 
