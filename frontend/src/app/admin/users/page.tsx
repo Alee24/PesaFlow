@@ -507,7 +507,7 @@ export default function UserManagementPage() {
                     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
                         <Card className="w-full max-w-md animate-in zoom-in-95">
                             <div className="flex justify-between items-center mb-6">
-                                <h2 className="text-xl font-bold">Manage Subscription</h2>
+                                <h2 className="text-xl font-bold">Assign Subscription</h2>
                                 <button onClick={() => setSubModal(prev => ({ ...prev, isOpen: false }))}>
                                     <XCircle className="w-5 h-5 text-gray-400 hover:text-gray-600" />
                                 </button>
@@ -516,55 +516,42 @@ export default function UserManagementPage() {
                                 Managing subscription for <span className="font-bold">{subModal.userName}</span>.
                             </p>
 
-                            <div className="flex gap-2 mb-4 p-1 bg-gray-100 dark:bg-gray-800 rounded-lg">
-                                <button
-                                    type="button"
-                                    onClick={() => setSubModal(prev => ({ ...prev, action: 'SET_PLAN' }))}
-                                    className={`flex-1 py-1.5 text-sm font-medium rounded-md transition-all ${subModal.action === 'SET_PLAN' ? 'bg-white dark:bg-gray-700 shadow text-indigo-600' : 'text-gray-500'}`}
-                                >
-                                    Set Plan
-                                </button>
-                                <button
-                                    type="button"
-                                    onClick={() => setSubModal(prev => ({ ...prev, action: 'EXTEND' }))}
-                                    className={`flex-1 py-1.5 text-sm font-medium rounded-md transition-all ${subModal.action === 'EXTEND' ? 'bg-white dark:bg-gray-700 shadow text-indigo-600' : 'text-gray-500'}`}
-                                >
-                                    Extend Validity
-                                </button>
-                            </div>
-
                             <form onSubmit={handleSubSubmit} className="space-y-4">
-                                {subModal.action === 'SET_PLAN' ? (
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">Select Plan</label>
-                                        <select
-                                            className="w-full p-2 border rounded-lg dark:bg-gray-800 dark:border-gray-700"
-                                            value={subModal.plan}
-                                            onChange={e => setSubModal(prev => ({ ...prev, plan: e.target.value }))}
-                                        >
-                                            <option value="NONE">No Plan (Cancel)</option>
-                                            <option value="BASIC">Basic Plan</option>
-                                            <option value="PRO">Pro Plan</option>
-                                        </select>
-                                        <p className="text-xs text-gray-500 mt-1">Setting a plan will reset validity to 30 days from now.</p>
-                                    </div>
-                                ) : (
-                                    <div>
-                                        <Input
-                                            label="Days to Extend"
-                                            type="number"
-                                            value={subModal.extendDays}
-                                            onChange={e => setSubModal(prev => ({ ...prev, extendDays: Number(e.target.value) }))}
-                                            min={1}
-                                            required
-                                        />
-                                        <p className="text-xs text-gray-500 mt-1">Adds days to the current expiry date.</p>
-                                    </div>
-                                )}
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                        Subscription Plan
+                                    </label>
+                                    <select
+                                        className="w-full p-2 border rounded-lg dark:bg-gray-800 dark:border-gray-700"
+                                        value={subModal.plan}
+                                        onChange={e => setSubModal(prev => ({ ...prev, plan: e.target.value }))}
+                                        required
+                                    >
+                                        <option value="FREE">FREE - POS + Inventory Only</option>
+                                        <option value="BASIC">BASIC - + Invoices (KES 1,500/month)</option>
+                                        <option value="PRO">PRO - All Features (KES 2,500/month)</option>
+                                        <option value="ENTERPRISE">ENTERPRISE - Standalone (KES 75,000)</option>
+                                    </select>
+                                    <p className="text-xs text-gray-500 mt-1">
+                                        This will immediately update the merchant's subscription in the database
+                                    </p>
+                                </div>
 
                                 <div className="pt-4 flex justify-end gap-3">
-                                    <Button type="button" variant="outline" onClick={() => setSubModal(prev => ({ ...prev, isOpen: false }))}>Cancel</Button>
-                                    <Button type="submit" isLoading={subModal.loading}>Save Changes</Button>
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        onClick={() => setSubModal(prev => ({ ...prev, isOpen: false }))}
+                                        disabled={subModal.loading}
+                                    >
+                                        Cancel
+                                    </Button>
+                                    <Button
+                                        type="submit"
+                                        isLoading={subModal.loading}
+                                    >
+                                        Assign Subscription
+                                    </Button>
                                 </div>
                             </form>
                         </Card>

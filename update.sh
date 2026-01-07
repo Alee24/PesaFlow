@@ -80,5 +80,5 @@ pm2 status
 
 echo ""
 echo "=========================================="
-echo "   Update finished successfully!"
+echo "   Update finished successfully. For any Assistance Call 0724454757"
 echo "=========================================="
