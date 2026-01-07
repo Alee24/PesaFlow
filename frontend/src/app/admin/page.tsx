@@ -27,12 +27,20 @@ export default function AdminDashboard() {
     const [stats, setStats] = useState<any>(null);
     const [recentTransactions, setRecentTransactions] = useState<any[]>([]);
     const [recentUsers, setRecentUsers] = useState<any[]>([]);
+    const [systemLogs, setSystemLogs] = useState<any[]>([]);
 
     useEffect(() => {
         fetchDashboardData();
         // Refresh every 30 seconds
         const interval = setInterval(fetchDashboardData, 30000);
         return () => clearInterval(interval);
+    }, []);
+
+    useEffect(() => {
+        fetchSystemLogs();
+        // Refresh logs every 5 seconds
+        const logsInterval = setInterval(fetchSystemLogs, 5000);
+        return () => clearInterval(logsInterval);
     }, []);
 
     const fetchDashboardData = async () => {
@@ -50,6 +58,15 @@ export default function AdminDashboard() {
             console.error('Failed to fetch dashboard data:', error);
         } finally {
             setLoading(false);
+        }
+    };
+
+    const fetchSystemLogs = async () => {
+        try {
+            const response = await api.get('/admin/system/logs');
+            setSystemLogs(response.data.logs || []);
+        } catch (error: any) {
+            console.error('Failed to fetch system logs:', error);
         }
     };
 
