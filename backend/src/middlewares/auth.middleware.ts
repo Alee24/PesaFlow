@@ -7,10 +7,9 @@ const prisma = new PrismaClient();
 export interface AuthRequest extends Request {
     user?: {
         userId: string;
-        merchantId: string; // The owner of the data (could be self or parent)
+        merchantId: string; // Same as userId for main merchants
         role: string;
         status: string;
-        parentId?: string;
     };
 }
 
@@ -26,15 +25,12 @@ export const authenticateToken = async (req: AuthRequest, res: Response, next: N
     try {
         const payload = jwt.verify(token, process.env.JWT_SECRET || 'fallback_secret') as any;
 
-        // Fetch fresh user data from DB to ensure validity and current hierarchy
-        // This fixes issues where 'parentId' might be missing from legacy tokens
         const user = await prisma.user.findUnique({
             where: { id: payload.userId },
             select: {
                 id: true,
                 role: true,
                 status: true,
-                parentId: true,
                 email: true
             }
         });
@@ -44,38 +40,17 @@ export const authenticateToken = async (req: AuthRequest, res: Response, next: N
             return;
         }
 
-        // Broad guard: REJECTED or SUSPENDED users are blocked entirely
+        // Block rejected or suspended users
         if (user.status === 'REJECTED' || user.status === 'SUSPENDED') {
             res.status(403).json({ error: `Account ${user.status}. Please contact support.` });
             return;
         }
 
-        // Team Logic:
-        // If user has a parentId, they are a sub-user.
-        // Their 'merchantId' (scope) is the parent.
-        const merchantId = user.parentId || user.id;
-        console.log(`[Auth] User: ${user.email}, Role: ${user.role}, ParentId: ${user.parentId}, Effective MerchantId: ${merchantId}`);
-
-        // Sub-Merchant/Team Member Guard:
-        // If this is a sub-user, ensure the PARENT has an active subscription.
-        if (user.parentId) {
-            const parentSubscription = await prisma.subscription.findUnique({
-                where: { merchantId: merchantId }
-            });
-
-            // If parent has no subscription or it's expired/cancelled
-            if (!parentSubscription || parentSubscription.status !== 'ACTIVE') {
-                res.status(403).json({ error: 'Parent merchant subscription is inactive. Access denied.' });
-                return;
-            }
-        }
-
         req.user = {
             userId: user.id,
-            merchantId,
+            merchantId: user.id, // Team members share the merchant's account
             role: user.role,
-            status: user.status,
-            parentId: user.parentId || undefined
+            status: user.status
         };
 
         next();
