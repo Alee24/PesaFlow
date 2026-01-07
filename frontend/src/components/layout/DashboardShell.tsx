@@ -27,7 +27,7 @@ const menuItems = [
 ];
 
 
-export function Sidebar({ user }: { user?: any }) {
+export function Sidebar({ user, isMobileOpen, setIsMobileOpen }: { user?: any; isMobileOpen?: boolean; setIsMobileOpen?: (open: boolean) => void }) {
     const pathname = usePathname();
 
     const filteredMenuItems = menuItems.filter(item => {
@@ -52,70 +52,101 @@ export function Sidebar({ user }: { user?: any }) {
         return false;
     };
 
+    const handleLinkClick = () => {
+        if (setIsMobileOpen) {
+            setIsMobileOpen(false);
+        }
+    };
+
     return (
-        <aside className="fixed left-0 top-0 z-40 h-screen w-64 bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800 hidden md:block transition-all duration-300 ease-in-out">
-            <div className="flex h-16 items-center border-b border-gray-200 dark:border-gray-800 px-6">
-                <div className="flex items-center gap-2 font-bold text-xl text-indigo-600 dark:text-indigo-400 animate-fade-in">
-                    <Store className="w-6 h-6 hover:rotate-12 transition-transform duration-300" />
-                    <span className="bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 to-violet-600">Mpesa Connect</span>
+        <>
+            {/* Mobile Overlay */}
+            {isMobileOpen && (
+                <div
+                    className="fixed inset-0 bg-black/50 z-40 md:hidden"
+                    onClick={() => setIsMobileOpen?.(false)}
+                />
+            )}
+
+            {/* Sidebar */}
+            <aside className={cn(
+                "fixed left-0 top-0 z-50 h-screen w-64 bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800 transition-transform duration-300 ease-in-out",
+                "md:translate-x-0 md:z-40",
+                isMobileOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
+            )}>
+                <div className="flex h-16 items-center justify-between border-b border-gray-200 dark:border-gray-800 px-6">
+                    <div className="flex items-center gap-2 font-bold text-xl text-indigo-600 dark:text-indigo-400 animate-fade-in">
+                        <Store className="w-6 h-6 hover:rotate-12 transition-transform duration-300" />
+                        <span className="bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 to-violet-600">Mpesa Connect</span>
+                    </div>
+                    {/* Close button for mobile */}
+                    <button
+                        onClick={() => setIsMobileOpen?.(false)}
+                        className="md:hidden p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800"
+                    >
+                        <X className="w-5 h-5" />
+                    </button>
                 </div>
-            </div>
 
-            <nav className="p-4 space-y-1">
-                {filteredMenuItems.map((item) => {
-                    const isActive = pathname === item.href;
-                    const locked = isItemLocked(item);
+                <nav className="p-4 space-y-1 overflow-y-auto h-[calc(100vh-8rem)]">
+                    {filteredMenuItems.map((item) => {
+                        const isActive = pathname === item.href;
+                        const locked = isItemLocked(item);
 
-                    if (locked) {
+                        if (locked) {
+                            return (
+                                <div
+                                    key={item.href}
+                                    className="group flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 ease-out text-gray-400 cursor-not-allowed opacity-60"
+                                    title="Requires account activation"
+                                >
+                                    <item.icon className="w-5 h-5" />
+                                    {item.name}
+                                    <Lock className="w-3 h-3 ml-auto text-amber-500" />
+                                </div>
+                            );
+                        }
+
                         return (
-                            <div
+                            <Link
                                 key={item.href}
-                                className="group flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 ease-out text-gray-400 cursor-not-allowed opacity-60"
-                                title="Requires account activation"
-                            >
-                                <item.icon className="w-5 h-5" />
-                                {item.name}
-                                <Lock className="w-3 h-3 ml-auto text-amber-500" />
-                            </div>
-                        );
-                    }
-
-                    return (
-                        <Link
-                            key={item.href}
-                            href={item.href}
-                            className={`group flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 ease-out 
+                                href={item.href}
+                                onClick={handleLinkClick}
+                                className={`group flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 ease-out 
                                 ${isActive
-                                    ? 'bg-indigo-50 text-indigo-600 dark:bg-indigo-900/20 dark:text-indigo-400 shadow-sm translate-x-1'
-                                    : 'text-gray-600 hover:bg-gray-50 dark:text-gray-400 dark:hover:bg-gray-800 hover:translate-x-1 hover:shadow-xs'
-                                }`}
-                        >
-                            <item.icon className={`w-5 h-5 transition-transform duration-200 ${isActive ? 'scale-110' : 'group-hover:scale-110'}`} />
-                            {item.name}
-                        </Link>
-                    );
-                })}
-            </nav>
+                                        ? 'bg-indigo-50 text-indigo-600 dark:bg-indigo-900/20 dark:text-indigo-400 shadow-sm translate-x-1'
+                                        : 'text-gray-600 hover:bg-gray-50 dark:text-gray-400 dark:hover:bg-gray-800 hover:translate-x-1 hover:shadow-xs'
+                                    }`}
+                            >
+                                <item.icon className={`w-5 h-5 transition-transform duration-200 ${isActive ? 'scale-110' : 'group-hover:scale-110'}`} />
+                                {item.name}
+                            </Link>
+                        );
+                    })}
+                </nav>
 
-            <div className="absolute bottom-0 w-full p-4 border-t border-gray-200 dark:border-gray-800">
-                <button
-                    onClick={() => {
-                        localStorage.removeItem('token');
-                        localStorage.removeItem('user');
-                        window.location.href = '/auth/login';
-                    }}
-                    className="flex items-center gap-3 w-full px-4 py-3 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-xl text-sm font-medium transition-all duration-200 hover:translate-x-1"
-                >
-                    <LogOut className="w-5 h-5" />
-                    Logout
-                </button>
-            </div>
-        </aside>
+                <div className="absolute bottom-0 w-full p-4 border-t border-gray-200 dark:border-gray-800">
+                    <button
+                        onClick={() => {
+                            localStorage.removeItem('token');
+                            localStorage.removeItem('user');
+                            window.location.href = '/auth/login';
+                        }}
+                        className="flex items-center gap-3 w-full px-4 py-3 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-xl text-sm font-medium transition-all duration-200 hover:translate-x-1"
+                    >
+                        <LogOut className="w-5 h-5" />
+                        Logout
+                    </button>
+                </div>
+            </aside>
+        </>
     );
 }
 
 
-export function Header({ user }: { user?: any }) {
+
+
+export function Header({ user, onMenuClick }: { user?: any; onMenuClick?: () => void }) {
     const [showNotifications, setShowNotifications] = useState(false);
     const [notifications, setNotifications] = useState<any[]>([]);
     const [showUserMenu, setShowUserMenu] = useState(false);
@@ -198,9 +229,21 @@ export function Header({ user }: { user?: any }) {
 
     return (
         <>
-            <header className="sticky top-0 z-30 flex h-16 w-full items-center justify-between border-b border-gray-200 bg-white dark:bg-gray-900/95 backdrop-blur-sm px-6 shadow-sm transition-all duration-300">
+            <header className="sticky top-0 z-30 flex h-16 w-full items-center justify-between border-b border-gray-200 bg-white dark:bg-gray-900/95 backdrop-blur-sm px-4 md:px-6 shadow-sm transition-all duration-300">
                 <div className="flex items-center gap-4">
-                    <nav className="flex items-center text-sm font-medium text-gray-500">
+                    {/* Mobile Menu Button */}
+                    <button
+                        onClick={onMenuClick}
+                        className="md:hidden p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                        aria-label="Open menu"
+                    >
+                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                        </svg>
+                    </button>
+
+                    {/* Breadcrumbs */}
+                    <nav className="hidden md:flex items-center text-sm font-medium text-gray-500">
                         <span className="text-gray-400 mr-2">/</span>
                         {pathSegments.map((segment, index) => (
                             <span key={index} className="flex items-center">
