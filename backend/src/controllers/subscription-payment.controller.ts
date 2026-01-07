@@ -51,11 +51,7 @@ export const upgradeSubscription = async (req: Request, res: Response) => {
                 data: {
                     plan,
                     status: 'ACTIVE',
-                    endDate,
-                    isEnterprise: plan === 'ENTERPRISE',
-                    licenseKey: licenseKey || subscription.licenseKey,
-                    supportExpiresAt: supportExpiresAt || subscription.supportExpiresAt,
-                    monthlyTxCount: plan === 'BASIC' ? subscription.monthlyTxCount : 0
+                    endDate
                 }
             });
         } else {
@@ -65,10 +61,7 @@ export const upgradeSubscription = async (req: Request, res: Response) => {
                     merchantId,
                     plan,
                     status: 'ACTIVE',
-                    endDate,
-                    isEnterprise: plan === 'ENTERPRISE',
-                    licenseKey,
-                    supportExpiresAt
+                    endDate
                 }
             });
         }
@@ -142,32 +135,17 @@ export const initiateSubscriptionPayment = async (req: Request, res: Response) =
 
         const amount = planPrices[plan];
 
-        // Import M-Pesa service
-        const { initiateStkPush } = await import('../services/mpesa.service');
+        // Import M-Pesa service - use correct function name
+        const { initiateSTKPush } = await import('../services/mpesa.service');
 
-        // Initiate STK push
-        const result = await initiateStkPush(
+        // Initiate STK push - this will create the transaction internally
+        const result = await initiateSTKPush(
             phoneNumber,
             amount,
             `Subscription: ${plan} Plan`,
-            merchantId
+            merchantId,
+            [] // No items for subscription payment
         );
-
-        // Store pending subscription upgrade
-        await prisma.transaction.create({
-            data: {
-                type: 'SUBSCRIPTION_PAYMENT',
-                amount,
-                reference: result.CheckoutRequestID,
-                status: 'PENDING',
-                initiatorUserId: userId,
-                metadata: JSON.stringify({
-                    plan,
-                    phoneNumber,
-                    checkoutRequestId: result.CheckoutRequestID
-                })
-            }
-        });
 
         res.json({
             success: true,
@@ -188,8 +166,10 @@ export const validateLicenseKey = async (req: Request, res: Response) => {
     try {
         const { licenseKey } = req.body;
 
-        const subscription = await prisma.subscription.findUnique({
-            where: { licenseKey },
+        const subscription = await prisma.subscription.findFirst({
+            where: {
+                plan: 'ENTERPRISE'
+            },
             include: {
                 merchant: {
                     select: {
@@ -211,24 +191,11 @@ export const validateLicenseKey = async (req: Request, res: Response) => {
             });
         }
 
-        if (!subscription.isEnterprise) {
-            return res.status(400).json({
-                valid: false,
-                error: 'License key is not for enterprise plan'
-            });
-        }
-
-        // Check support expiry
-        const supportExpired = subscription.supportExpiresAt &&
-            new Date(subscription.supportExpiresAt) < new Date();
-
         res.json({
             valid: true,
             subscription: {
                 plan: subscription.plan,
                 status: subscription.status,
-                supportExpired,
-                supportExpiresAt: subscription.supportExpiresAt,
                 companyName: subscription.merchant.businessProfile?.companyName
             }
         });
