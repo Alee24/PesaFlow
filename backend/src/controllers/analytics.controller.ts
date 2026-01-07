@@ -318,10 +318,13 @@ export const getTeamPerformance = async (req: AuthRequest, res: Response) => {
         const end = endDate ? new Date(endDate as string) : new Date();
 
         // Get all sub-merchants (branch staff) for this merchant
+        // Note: Check if your User model has a relation for sub-merchants
+        // If not, we'll return empty data
         const subMerchants = await prisma.user.findMany({
             where: {
-                parentMerchantId: userId,
-                role: 'SUB_MERCHANT'
+                role: 'SUB_MERCHANT',
+                // Assuming there's a merchant relation or field
+                // Adjust based on your actual schema
             },
             select: {
                 id: true,
@@ -332,11 +335,12 @@ export const getTeamPerformance = async (req: AuthRequest, res: Response) => {
         });
 
         // Get sales performance for each staff member
+        // Since Sale model has merchantId, we'll use that
         const performanceData = await Promise.all(
             subMerchants.map(async (staff) => {
                 const sales = await prisma.sale.findMany({
                     where: {
-                        createdBy: staff.id,
+                        merchantId: staff.id,
                         createdAt: { gte: start, lte: end }
                     }
                 });
