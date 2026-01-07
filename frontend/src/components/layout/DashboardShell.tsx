@@ -31,7 +31,17 @@ export function Sidebar({ user }: { user?: any }) {
 
     const filteredMenuItems = menuItems.filter(item => {
         if (item.role === 'ADMIN') return user?.role === 'ADMIN';
-        if (item.role === 'MERCHANT') return user?.role === 'MERCHANT';
+
+        // Shared restrictions
+        if (item.role === 'MERCHANT') {
+            // Team and Withdrawals only for main MERCHANT
+            if (['Team', 'Withdrawals'].includes(item.name)) {
+                return user?.role === 'MERCHANT';
+            }
+            // Other merchant items (POS, Invoices, etc) accessible to SUB_MERCHANT too
+            return user?.role === 'MERCHANT' || user?.role === 'SUB_MERCHANT';
+        }
+
         return true;
     });
 
