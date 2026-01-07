@@ -173,6 +173,15 @@ interface InvoicePDFProps {
 
 const InvoicePDF: React.FC<InvoicePDFProps> = ({ invoice }) => {
     const biz = invoice.initiator?.businessProfile;
+
+    // Helper to get full image URL
+    const getImageUrl = (path: string | null | undefined): string | undefined => {
+        if (!path) return undefined;
+        if (path.startsWith('http')) return path;
+        const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+        return `${API_URL}${path}`;
+    };
+
     // ... rest of setup
     // Parse metadata safely
     let metadata: any = {};
@@ -203,7 +212,7 @@ const InvoicePDF: React.FC<InvoicePDFProps> = ({ invoice }) => {
                         {biz?.logoUrl && (
                             <Image
                                 style={styles.logo}
-                                src={biz.logoUrl}
+                                src={getImageUrl(biz.logoUrl) || ''}
                             />
                         )}
                         <Text style={styles.companyName}>{biz?.companyName || 'Company Name'}</Text>
