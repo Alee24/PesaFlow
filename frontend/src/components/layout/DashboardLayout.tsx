@@ -7,6 +7,7 @@ import { Sidebar, Header } from './DashboardShell';
 import { AlertCircle, XCircle } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '../ui/Button';
+import { SubscriptionBadge } from '../subscription/SubscriptionBadge';
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
     const router = useRouter();
@@ -97,6 +98,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                         Powered by <span className="font-semibold text-gray-500 dark:text-gray-400">KK Dynamic Enterprise Solutions LTD</span>
                     </p>
                 </footer>
+
+                <SubscriptionBadge />
             </div>
         </div>
     );
