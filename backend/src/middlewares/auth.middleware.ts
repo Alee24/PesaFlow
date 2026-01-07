@@ -54,6 +54,7 @@ export const authenticateToken = async (req: AuthRequest, res: Response, next: N
         // If user has a parentId, they are a sub-user.
         // Their 'merchantId' (scope) is the parent.
         const merchantId = user.parentId || user.id;
+        console.log(`[Auth] User: ${user.email}, Role: ${user.role}, ParentId: ${user.parentId}, Effective MerchantId: ${merchantId}`);
 
         // Sub-Merchant/Team Member Guard:
         // If this is a sub-user, ensure the PARENT has an active subscription.

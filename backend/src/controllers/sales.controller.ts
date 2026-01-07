@@ -368,6 +368,7 @@ export const getSalesStats = async (req: Request, res: Response) => {
 export const getStaffPerformance = async (req: Request, res: Response) => {
     try {
         const merchantId = (req as any).user.merchantId;
+        console.log(`[Sales] Getting Staff Performance for Merchant: ${merchantId}`);
         const { startDate, endDate } = req.query;
 
         const where: any = {

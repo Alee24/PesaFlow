@@ -21,6 +21,8 @@ export const getDashboardStats = async (req: Request, res: Response) => {
         let walletId = null;
         if (userRole !== 'ADMIN') {
             const wallet = await prisma.wallet.findFirst({ where: { userId: userId } });
+            console.log(`[Dashboard] Fetching for MerchantId: ${userId}, Found Wallet: ${wallet?.id}`);
+
             if (!wallet) return res.json({ summary: {}, chartData: [], transactions: [] });
             walletId = wallet.id;
         }

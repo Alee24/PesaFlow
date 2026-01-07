@@ -27,16 +27,23 @@ export default function TeamPage() {
     }, []);
 
     const fetchData = async () => {
+        setLoading(true);
+        // Fetch team members first (Critical)
         try {
-            const [teamData, perfData] = await Promise.all([
-                getTeamMembers(),
-                getStaffPerformance()
-            ]);
+            const teamData = await getTeamMembers();
             setTeam(teamData);
+        } catch (error) {
+            console.error("Team Fetch Error:", error);
+            showToast('Failed to fetch team members', 'error');
+        }
+
+        // Fetch performance stats separately (Non-critical)
+        try {
+            const perfData = await getStaffPerformance();
             setPerformance(perfData);
         } catch (error) {
-            console.error(error);
-            showToast('Failed to fetch team data', 'error');
+            console.error("Performance Stats Error:", error);
+            // Don't show toast for this to avoid annoyance if it's just empty data
         } finally {
             setLoading(false);
         }
