@@ -13,6 +13,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     const router = useRouter();
     const [user, setUser] = useState<any>(null);
     const [isClient, setIsClient] = useState(false);
+    const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
     useEffect(() => {
         setIsClient(true);
@@ -50,11 +51,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     return (
         <div className="flex min-h-screen bg-gray-100 dark:bg-gray-900 font-sans print:block print:bg-white print:min-h-0">
             <div className="print:hidden">
-                <Sidebar user={user} />
+                <Sidebar user={user} isMobileOpen={isMobileMenuOpen} setIsMobileOpen={setIsMobileMenuOpen} />
             </div>
             <div className="flex-1 md:ml-64 flex flex-col min-h-screen transition-all duration-300 ease-in-out print:ml-0 print:min-h-0 print:block">
                 <div className="print:hidden">
-                    <Header user={user} />
+                    <Header user={user} onMenuClick={() => setIsMobileMenuOpen(true)} />
                 </div>
 
                 {/* Restriction Banner for Merchants */}
@@ -89,7 +90,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                     </div>
                 )}
 
-                <main className={`flex-1 p-6 md:p-8 overflow-y-auto print:p-0 print:overflow-visible ${(user.status === 'REJECTED' || user.status === 'SUSPENDED') ? 'pointer-events-none grayscale opacity-50 blur-[2px]' : ''}`}>
+                <main className={`flex-1 p-4 md:p-6 lg:p-8 overflow-y-auto print:p-0 print:overflow-visible ${(user.status === 'REJECTED' || user.status === 'SUSPENDED') ? 'pointer-events-none grayscale opacity-50 blur-[2px]' : ''}`}>
                     {children}
                 </main>
 
