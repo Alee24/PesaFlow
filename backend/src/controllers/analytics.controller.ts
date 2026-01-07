@@ -307,3 +307,66 @@ export const getInventoryStatus = async (req: AuthRequest, res: Response) => {
         res.status(500).json({ error: 'Failed to fetch inventory status' });
     }
 };
+
+// Team/Branch Performance Analytics
+export const getTeamPerformance = async (req: AuthRequest, res: Response) => {
+    try {
+        const userId = req.user?.userId;
+        const { startDate, endDate } = req.query;
+
+        const start = startDate ? new Date(startDate as string) : new Date(new Date().setDate(new Date().getDate() - 30));
+        const end = endDate ? new Date(endDate as string) : new Date();
+
+        // Get all sub-merchants (branch staff) for this merchant
+        const subMerchants = await prisma.user.findMany({
+            where: {
+                parentMerchantId: userId,
+                role: 'SUB_MERCHANT'
+            },
+            select: {
+                id: true,
+                name: true,
+                email: true,
+                phoneNumber: true
+            }
+        });
+
+        // Get sales performance for each staff member
+        const performanceData = await Promise.all(
+            subMerchants.map(async (staff) => {
+                const sales = await prisma.sale.findMany({
+                    where: {
+                        createdBy: staff.id,
+                        createdAt: { gte: start, lte: end }
+                    }
+                });
+
+                const totalSales = sales.length;
+                const totalRevenue = sales.reduce((sum, sale) => sum + Number(sale.totalAmount), 0);
+                const averageOrderValue = totalSales > 0 ? totalRevenue / totalSales : 0;
+
+                return {
+                    staffId: staff.id,
+                    staffName: staff.name,
+                    staffEmail: staff.email,
+                    staffPhone: staff.phoneNumber,
+                    totalSales,
+                    totalRevenue,
+                    averageOrderValue
+                };
+            })
+        );
+
+        // Sort by revenue
+        const sortedPerformance = performanceData.sort((a, b) => b.totalRevenue - a.totalRevenue);
+
+        res.json({
+            totalStaff: subMerchants.length,
+            performance: sortedPerformance,
+            period: { start, end }
+        });
+    } catch (error: any) {
+        console.error('Team performance error:', error);
+        res.status(500).json({ error: 'Failed to fetch team performance' });
+    }
+};

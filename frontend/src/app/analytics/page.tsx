@@ -31,6 +31,7 @@ export default function AnalyticsPage() {
     const [customerData, setCustomerData] = useState<any>(null);
     const [financialData, setFinancialData] = useState<any>(null);
     const [inventoryData, setInventoryData] = useState<any>(null);
+    const [teamData, setTeamData] = useState<any>(null);
     const [businessProfile, setBusinessProfile] = useState<any>(null);
     const { showToast } = useToast();
 
@@ -51,12 +52,13 @@ export default function AnalyticsPage() {
     const fetchAnalytics = async () => {
         setLoading(true);
         try {
-            const [sales, products, customers, financial, inventory] = await Promise.all([
+            const [sales, products, customers, financial, inventory, team] = await Promise.all([
                 api.get(`/analytics/sales-overview?startDate=${dateRange.start}&endDate=${dateRange.end}`),
                 api.get(`/analytics/product-performance?startDate=${dateRange.start}&endDate=${dateRange.end}`),
                 api.get('/analytics/customer-insights'),
                 api.get(`/analytics/financial-metrics?startDate=${dateRange.start}&endDate=${dateRange.end}`),
-                api.get('/analytics/inventory-status')
+                api.get('/analytics/inventory-status'),
+                api.get(`/analytics/team-performance?startDate=${dateRange.start}&endDate=${dateRange.end}`)
             ]);
 
             setSalesData(sales.data);
@@ -64,6 +66,7 @@ export default function AnalyticsPage() {
             setCustomerData(customers.data);
             setFinancialData(financial.data);
             setInventoryData(inventory.data);
+            setTeamData(team.data);
         } catch (error: any) {
             showToast(error.response?.data?.error || 'Failed to load analytics', 'error');
         } finally {
@@ -85,6 +88,7 @@ export default function AnalyticsPage() {
                         customerData={customerData}
                         financialData={financialData}
                         inventoryData={inventoryData}
+                        teamData={teamData}
                         dateRange={dateRange}
                     />
                 ).toBlob();

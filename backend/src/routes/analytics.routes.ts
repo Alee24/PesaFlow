@@ -4,7 +4,8 @@ import {
     getProductPerformance,
     getCustomerInsights,
     getFinancialMetrics,
-    getInventoryStatus
+    getInventoryStatus,
+    getTeamPerformance
 } from '../controllers/analytics.controller';
 import { authenticateToken } from '../middlewares/auth.middleware';
 import { requireFeature } from '../middlewares/subscription.middleware';
@@ -20,5 +21,6 @@ router.get('/product-performance', getProductPerformance);
 router.get('/customer-insights', getCustomerInsights);
 router.get('/financial-metrics', getFinancialMetrics);
 router.get('/inventory-status', getInventoryStatus);
+router.get('/team-performance', getTeamPerformance);
 
 export default router;

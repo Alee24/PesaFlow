@@ -134,6 +134,7 @@ interface AnalyticsReportPDFProps {
     customerData: any;
     financialData: any;
     inventoryData: any;
+    teamData: any;
     dateRange: { start: string; end: string };
 }
 
@@ -144,6 +145,7 @@ export const AnalyticsReportPDF: React.FC<AnalyticsReportPDFProps> = ({
     customerData,
     financialData,
     inventoryData,
+    teamData,
     dateRange
 }) => {
     const formatCurrency = (amount: number) => {
@@ -309,6 +311,29 @@ export const AnalyticsReportPDF: React.FC<AnalyticsReportPDFProps> = ({
                         </Text>
                     </View>
                 </View>
+
+                {/* Branch Performance */}
+                {teamData?.performance && teamData.performance.length > 0 && (
+                    <View style={styles.section}>
+                        <Text style={styles.sectionTitle}>👥 Branch Staff Performance</Text>
+                        <View style={styles.table}>
+                            <View style={styles.tableHeader}>
+                                <Text style={[styles.tableCell, { flex: 2 }]}>Staff Member</Text>
+                                <Text style={styles.tableCell}>Sales</Text>
+                                <Text style={styles.tableCell}>Revenue</Text>
+                                <Text style={styles.tableCell}>Avg Order</Text>
+                            </View>
+                            {teamData.performance.slice(0, 10).map((staff: any, index: number) => (
+                                <View key={index} style={styles.tableRow}>
+                                    <Text style={[styles.tableCell, { flex: 2 }]}>{staff.staffName}</Text>
+                                    <Text style={styles.tableCell}>{staff.totalSales}</Text>
+                                    <Text style={styles.tableCell}>{formatCurrency(staff.totalRevenue)}</Text>
+                                    <Text style={styles.tableCell}>{formatCurrency(staff.averageOrderValue)}</Text>
+                                </View>
+                            ))}
+                        </View>
+                    </View>
+                )}
 
                 {/* Footer */}
                 <Text style={styles.footer}>
