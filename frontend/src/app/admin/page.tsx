@@ -1,371 +1,374 @@
-
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import DashboardLayout from '@/components/layout/DashboardLayout';
+import api from '@/lib/api';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
-import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, Legend } from 'recharts';
-import { Users, CreditCard, Activity, Server, AlertTriangle, CheckCircle, TrendingUp, DollarSign, RefreshCw, GitCommit } from 'lucide-react';
-import { useToast } from '@/contexts/ToastContext';
-import api from '@/lib/api';
+import {
+    Users,
+    DollarSign,
+    AlertCircle,
+    TrendingUp,
+    Activity,
+    RefreshCw,
+    CheckCircle,
+    XCircle,
+    Clock,
+    ArrowUpRight,
+    ArrowDownRight
+} from 'lucide-react';
+import { formatDistanceToNow } from 'date-fns';
 
-// Mock Data for Charts
-const revenueData = [
-    { name: 'Mon', revenue: 12000, profit: 4000 },
-    { name: 'Tue', revenue: 19000, profit: 6500 },
-    { name: 'Wed', revenue: 15000, profit: 5000 },
-    { name: 'Thu', revenue: 25000, profit: 9000 },
-    { name: 'Fri', revenue: 32000, profit: 12000 },
-    { name: 'Sat', revenue: 28000, profit: 10000 },
-    { name: 'Sun', revenue: 22000, profit: 8000 },
-];
-
-const userActivityData = [
-    { name: '00:00', active: 120 },
-    { name: '04:00', active: 50 },
-    { name: '08:00', active: 450 },
-    { name: '12:00', active: 890 },
-    { name: '16:00', active: 1100 },
-    { name: '20:00', active: 670 },
-];
-
-export default function AdminPage() {
+export default function AdminDashboard() {
     const router = useRouter();
-    const [isLoading, setIsLoading] = useState(true);
+    const [loading, setLoading] = useState(true);
     const [stats, setStats] = useState<any>(null);
-    const [currency, setCurrency] = useState('KES');
-    const [userRole, setUserRole] = useState('');
-    const { showToast } = useToast();
-    const [updating, setUpdating] = useState(false);
-    const [showTerminal, setShowTerminal] = useState(false);
-    const [terminalLogs, setTerminalLogs] = useState<string[]>([]);
-    const [updaterInterval, setUpdaterInterval] = useState<NodeJS.Timeout | null>(null);
-
+    const [recentTransactions, setRecentTransactions] = useState<any[]>([]);
+    const [recentUsers, setRecentUsers] = useState<any[]>([]);
 
     useEffect(() => {
-        const init = async () => {
-            // ... existing init logic (unchanged)
-            const userDataStr = localStorage.getItem('user');
-            if (!userDataStr) {
-                router.push('/auth/login');
-                return;
-            }
+        fetchDashboardData();
+        // Refresh every 30 seconds
+        const interval = setInterval(fetchDashboardData, 30000);
+        return () => clearInterval(interval);
+    }, []);
 
-            const user = JSON.parse(userDataStr);
-            setUserRole(user.role);
-
-            if (user.role !== 'ADMIN') {
-                router.push('/dashboard');
-                return;
-            }
-
-            try {
-                const statsPro = api.get('/admin/stats');
-                const profilePro = api.get('/profile');
-                const systemPro = api.get('/admin/system/status');
-
-                const [statsRes, profileRes, systemRes] = await Promise.all([statsPro, profilePro, systemPro]);
-
-                setStats({ ...statsRes.data, system: systemRes.data });
-                if (profileRes.data?.currency) {
-                    setCurrency(profileRes.data.currency);
-                }
-            } catch (error) {
-                console.error("Failed to fetch admin data", error);
-            } finally {
-                setIsLoading(false);
-            }
-        };
-        init();
-    }, [router]);
-
-    // Polling effect
-    useEffect(() => {
-        if (updating) {
-            const interval = setInterval(async () => {
-                try {
-                    const res = await api.get('/admin/system/update/status');
-                    setTerminalLogs(res.data.logs || []);
-                    if (res.data.isUpdating === false && res.data.logs.length > 0) {
-                        setUpdating(false); // Stop polling if done
-                    }
-                } catch (error) {
-                    console.error("Failed to poll logs", error);
-                }
-            }, 1000);
-            setUpdaterInterval(interval);
-
-            return () => clearInterval(interval);
-        } else {
-            if (updaterInterval) clearInterval(updaterInterval);
-        }
-    }, [updating]);
-
-    const handleSystemUpdate = async () => {
-        if (!confirm("Are you sure you want to update the server? This will pull the latest code and restart requirements.")) return;
-
-        setShowTerminal(true);
-        setTerminalLogs(['Initializing update request...']);
-        setUpdating(true);
-
+    const fetchDashboardData = async () => {
         try {
-            await api.post('/admin/system/update');
-            showToast('System update initiated!', 'success');
+            const [statsRes, transactionsRes, usersRes] = await Promise.all([
+                api.get('/admin/stats'),
+                api.get('/transactions?limit=10'),
+                api.get('/admin/users?limit=5')
+            ]);
+
+            setStats(statsRes.data);
+            setRecentTransactions(transactionsRes.data.transactions || []);
+            setRecentUsers(usersRes.data.slice(0, 5) || []);
         } catch (error: any) {
-            showToast('Failed to trigger update', 'error');
-            setTerminalLogs(prev => [...prev, 'Failed to trigger update: ' + error.message]);
-            setUpdating(false);
+            console.error('Failed to fetch dashboard data:', error);
+        } finally {
+            setLoading(false);
         }
     };
 
-    if (isLoading) return (
-        <DashboardLayout>
-            <div className="flex justify-center items-center h-full">Loading Admin Portal...</div>
-        </DashboardLayout>
-    );
+    const formatCurrency = (amount: number) => {
+        return new Intl.NumberFormat('en-KE', {
+            style: 'currency',
+            currency: 'KES'
+        }).format(amount);
+    };
 
-    if (userRole !== 'ADMIN') return null;
+    const getStatusColor = (status: string) => {
+        switch (status) {
+            case 'ACTIVE':
+            case 'COMPLETED':
+                return 'text-green-600 bg-green-100';
+            case 'PENDING':
+            case 'PENDING_VERIFICATION':
+                return 'text-yellow-600 bg-yellow-100';
+            case 'REJECTED':
+            case 'FAILED':
+                return 'text-red-600 bg-red-100';
+            case 'SUSPENDED':
+                return 'text-orange-600 bg-orange-100';
+            default:
+                return 'text-gray-600 bg-gray-100';
+        }
+    };
+
+    if (loading) {
+        return (
+            <div className="flex items-center justify-center min-h-screen">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+            </div>
+        );
+    }
 
     return (
-        <DashboardLayout>
-            <div className="max-w-7xl mx-auto space-y-8 pb-12">
-                <header className="flex justify-between items-end">
-                    <div>
-                        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Admin Portal</h1>
-                        <p className="text-gray-500 text-sm">System Overview & Monitoring</p>
-                    </div>
-                    <Button onClick={() => router.push('/admin/users')} className="flex items-center gap-2">
-                        <Users className="w-4 h-4" /> Manage Users
+        <div className="space-y-6">
+            {/* Header */}
+            <div className="flex justify-between items-center">
+                <div>
+                    <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Admin Dashboard</h1>
+                    <p className="text-gray-500 dark:text-gray-400 mt-1">System Overview & Monitoring</p>
+                </div>
+                <div className="flex gap-3">
+                    <Button
+                        onClick={fetchDashboardData}
+                        variant="outline"
+                        className="flex items-center gap-2"
+                    >
+                        <RefreshCw className="w-4 h-4" />
+                        Refresh
                     </Button>
-                </header>
-
-                {/* 1. Colorful Stat Cards */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                    {/* Total Merchants */}
-                    <div className="relative overflow-hidden rounded-2xl p-6 bg-gradient-to-br from-violet-600 to-indigo-600 text-white shadow-lg group">
-                        <div className="relative z-10">
-                            <div className="flex justify-between items-start">
-                                <div className="p-2 bg-white/20 rounded-lg backdrop-blur-sm">
-                                    <Users className="w-6 h-6 text-white" />
-                                </div>
-                                <span className="flex items-center gap-1 text-xs font-medium bg-green-400/20 text-green-200 px-2 py-1 rounded-full">
-                                    <TrendingUp className="w-3 h-3" /> Live
-                                </span>
-                            </div>
-                            <div className="mt-4">
-                                <h3 className="text-3xl font-bold">{stats?.activeMerchants || 0}</h3>
-                                <p className="text-indigo-100 text-sm font-medium">Active Merchants</p>
-                            </div>
-                        </div>
-                        <Users className="absolute -bottom-4 -right-4 w-32 h-32 text-white/10 group-hover:scale-110 transition-transform duration-300" />
-                    </div>
-
-                    {/* Platform Revenue */}
-                    <div className="relative overflow-hidden rounded-2xl p-6 bg-gradient-to-br from-emerald-500 to-teal-600 text-white shadow-lg group">
-                        <div className="relative z-10">
-                            <div className="flex justify-between items-start">
-                                <div className="p-2 bg-white/20 rounded-lg backdrop-blur-sm">
-                                    <DollarSign className="w-6 h-6 text-white" />
-                                </div>
-                                <span className="flex items-center gap-1 text-xs font-medium bg-white/20 px-2 py-1 rounded-full">
-                                    Lifetime
-                                </span>
-                            </div>
-                            <div className="mt-4">
-                                <h3 className="text-3xl font-bold">{currency} {Number(stats?.totalVolume || 0).toLocaleString()}</h3>
-                                <p className="text-emerald-100 text-sm font-medium">Total Volume</p>
-                            </div>
-                        </div>
-                        <Activity className="absolute -bottom-4 -right-4 w-32 h-32 text-white/10 group-hover:scale-110 transition-transform duration-300" />
-                    </div>
-
-                    {/* Pending Withdrawals */}
-                    <div className="relative overflow-hidden rounded-2xl p-6 bg-gradient-to-br from-orange-500 to-red-500 text-white shadow-lg group">
-                        <div className="relative z-10">
-                            <div className="flex justify-between items-start">
-                                <div className="p-2 bg-white/20 rounded-lg backdrop-blur-sm">
-                                    <AlertTriangle className="w-6 h-6 text-white" />
-                                </div>
-                                <span className="text-xs font-medium bg-white/20 px-2 py-1 rounded-full">Action Req.</span>
-                            </div>
-                            <div className="mt-4">
-                                <h3 className="text-3xl font-bold">{stats?.pendingPayouts || 0}</h3>
-                                <p className="text-orange-100 text-sm font-medium">Pending Payouts</p>
-                            </div>
-                        </div>
-                        <CreditCard className="absolute -bottom-4 -right-4 w-32 h-32 text-white/10 group-hover:scale-110 transition-transform duration-300" />
-                    </div>
-
-                    {/* System Health */}
-                    <div className="relative overflow-hidden rounded-2xl p-6 bg-gradient-to-br from-blue-500 to-cyan-500 text-white shadow-lg group">
-                        <div className="relative z-10">
-                            <div className="flex justify-between items-start">
-                                <div className="p-2 bg-white/20 rounded-lg backdrop-blur-sm">
-                                    <Server className="w-6 h-6 text-white" />
-                                </div>
-                                <span className="flex items-center gap-1 text-xs font-medium bg-green-400/20 text-white px-2 py-1 rounded-full">
-                                    <CheckCircle className="w-3 h-3" /> 99.9%
-                                </span>
-                            </div>
-                            <div className="mt-4">
-                                <h3 className="text-3xl font-bold">{stats?.system?.status || 'Active'}</h3>
-                                <p className="text-blue-100 text-sm font-medium">System Status</p>
-                                <div className="mt-2 flex items-center gap-2">
-                                    <span className="text-[10px] bg-blue-400/30 px-2 py-0.5 rounded text-white font-mono flex items-center gap-1">
-                                        <GitCommit className="w-3 h-3" /> {stats?.system?.version || 'Unknown'}
-                                    </span>
-                                    <button
-                                        onClick={handleSystemUpdate}
-                                        disabled={updating}
-                                        className="text-xs bg-white text-blue-600 font-bold px-3 py-1.5 rounded-md hover:bg-blue-50 transition-colors flex items-center gap-2 disabled:opacity-50 shadow-sm"
-                                    >
-                                        <RefreshCw className={`w-3.5 h-3.5 ${updating ? 'animate-spin' : ''}`} />
-                                        {updating ? 'Updating System...' : 'System Update'}
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                        <Server className="absolute -bottom-4 -right-4 w-32 h-32 text-white/10 group-hover:scale-110 transition-transform duration-300" />
-                    </div>
+                    <Button
+                        onClick={() => router.push('/admin/users')}
+                        className="flex items-center gap-2"
+                    >
+                        <Users className="w-4 h-4" />
+                        Manage Users
+                    </Button>
                 </div>
+            </div>
 
-                {/* 2. Charts Section (Keep Mock for Visuals as backend doesn't support generic analytics yet) */}
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                    {/* Revenue Chart */}
-                    <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-sm border border-gray-100 dark:border-gray-700">
-                        <div className="flex justify-between items-center mb-6">
-                            <h3 className="text-lg font-bold text-gray-800 dark:text-white">Revenue Analytics</h3>
-                            <span className="text-xs font-medium text-gray-500 bg-gray-100 px-2 py-1 rounded">Simulated Data</span>
+            {/* KPI Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                {/* Active Merchants */}
+                <Card className="p-6 bg-gradient-to-br from-purple-500 to-purple-600 text-white border-0">
+                    <div className="flex items-center justify-between mb-4">
+                        <div className="p-3 bg-white/20 rounded-lg">
+                            <Users className="w-6 h-6" />
                         </div>
-                        <div className="h-80 w-full">
-                            <ResponsiveContainer width="100%" height="100%">
-                                <AreaChart data={revenueData}>
-                                    <defs>
-                                        <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
-                                            <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.3} />
-                                            <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0} />
-                                        </linearGradient>
-                                        <linearGradient id="colorProfit" x1="0" y1="0" x2="0" y2="1">
-                                            <stop offset="5%" stopColor="#10b981" stopOpacity={0.3} />
-                                            <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
-                                        </linearGradient>
-                                    </defs>
-                                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E5E7EB" />
-                                    <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#9CA3AF' }} />
-                                    <YAxis axisLine={false} tickLine={false} tick={{ fill: '#9CA3AF' }} />
-                                    <Tooltip
-                                        contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)' }}
-                                    />
-                                    <Legend />
-                                    <Area type="monotone" dataKey="revenue" stroke="#8b5cf6" strokeWidth={3} fillOpacity={1} fill="url(#colorRevenue)" name="Revenue" />
-                                    <Area type="monotone" dataKey="profit" stroke="#10b981" strokeWidth={3} fillOpacity={1} fill="url(#colorProfit)" name="Net Profit" />
-                                </AreaChart>
-                            </ResponsiveContainer>
+                        <span className="text-sm font-medium bg-white/20 px-3 py-1 rounded-full">
+                            Live
+                        </span>
+                    </div>
+                    <div className="space-y-1">
+                        <p className="text-sm opacity-90">Active Merchants</p>
+                        <p className="text-3xl font-bold">{stats?.activeMerchants || 0}</p>
+                        <p className="text-xs opacity-75">
+                            {stats?.pendingMerchants || 0} pending verification
+                        </p>
+                    </div>
+                </Card>
+
+                {/* Total Volume */}
+                <Card className="p-6 bg-gradient-to-br from-green-500 to-green-600 text-white border-0">
+                    <div className="flex items-center justify-between mb-4">
+                        <div className="p-3 bg-white/20 rounded-lg">
+                            <DollarSign className="w-6 h-6" />
+                        </div>
+                        <span className="text-sm font-medium bg-white/20 px-3 py-1 rounded-full">
+                            Lifetime
+                        </span>
+                    </div>
+                    <div className="space-y-1">
+                        <p className="text-sm opacity-90">Total Volume</p>
+                        <p className="text-3xl font-bold">
+                            {formatCurrency(stats?.totalVolume || 0)}
+                        </p>
+                        <div className="flex items-center gap-1 text-xs opacity-75">
+                            <ArrowUpRight className="w-3 h-3" />
+                            <span>{stats?.volumeGrowth || 0}% from last month</span>
                         </div>
                     </div>
+                </Card>
 
-                    {/* User Activity Bar Chart */}
-                    <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-sm border border-gray-100 dark:border-gray-700">
-                        <div className="flex justify-between items-center mb-6">
-                            <h3 className="text-lg font-bold text-gray-800 dark:text-white">Live Traffic</h3>
-                            <span className="text-xs font-medium text-gray-500 bg-gray-100 px-2 py-1 rounded">Simulated Data</span>
+                {/* Pending Payouts */}
+                <Card className="p-6 bg-gradient-to-br from-orange-500 to-orange-600 text-white border-0">
+                    <div className="flex items-center justify-between mb-4">
+                        <div className="p-3 bg-white/20 rounded-lg">
+                            <AlertCircle className="w-6 h-6" />
                         </div>
-                        <div className="h-80 w-full">
-                            <ResponsiveContainer width="100%" height="100%">
-                                <BarChart data={userActivityData}>
-                                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E5E7EB" />
-                                    <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#9CA3AF' }} />
-                                    <YAxis axisLine={false} tickLine={false} tick={{ fill: '#9CA3AF' }} />
-                                    <Tooltip
-                                        cursor={{ fill: 'transparent' }}
-                                        contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)' }}
-                                    />
-                                    <Bar dataKey="active" fill="#3b82f6" radius={[4, 4, 0, 0]} name="Active Sessions" />
-                                </BarChart>
-                            </ResponsiveContainer>
-                        </div>
+                        <span className="text-sm font-medium bg-white/20 px-3 py-1 rounded-full">
+                            Action Req
+                        </span>
                     </div>
-                </div>
+                    <div className="space-y-1">
+                        <p className="text-sm opacity-90">Pending Payouts</p>
+                        <p className="text-3xl font-bold">{stats?.pendingPayouts || 0}</p>
+                        <p className="text-xs opacity-75">
+                            {formatCurrency(stats?.pendingPayoutAmount || 0)} total
+                        </p>
+                    </div>
+                </Card>
 
-                {/* 3. Recent Logs Table */}
-                <Card title="Recent Transactions Log" className="overflow-hidden">
-                    <div className=" overflow-x-auto">
-                        <table className="w-full text-left">
-                            <thead className="bg-gray-50/50 dark:bg-gray-800/50 border-b dark:border-gray-700">
-                                <tr>
-                                    <th className="p-4 text-xs uppercase text-gray-500 font-semibold">Time</th>
-                                    <th className="p-4 text-xs uppercase text-gray-500 font-semibold">User</th>
-                                    <th className="p-4 text-xs uppercase text-gray-500 font-semibold">Action</th>
-                                    <th className="p-4 text-xs uppercase text-gray-500 font-semibold">Amount</th>
-                                    <th className="p-4 text-xs uppercase text-gray-500 font-semibold text-center">Status</th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
-                                {stats?.recentLogs && stats.recentLogs.length > 0 ? (
-                                    stats.recentLogs.map((log: any) => (
-                                        <tr key={log.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
-                                            <td className="p-4 text-sm text-gray-500">{new Date(log.createdAt).toLocaleString()}</td>
-                                            <td className="p-4 text-sm font-medium text-gray-900 dark:text-white">
-                                                {log.initiator?.name || log.initiator?.email || 'Unknown'}
-                                            </td>
-                                            <td className="p-4 text-sm text-gray-600 dark:text-gray-300">{log.type} - {log.reference || 'N/A'}</td>
-                                            <td className="p-4 text-sm font-bold text-gray-800 dark:text-white">{currency} {Number(log.amount).toLocaleString()}</td>
-                                            <td className="p-4 text-center">
-                                                <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium 
-                                                    ${log.status === 'COMPLETED' ? 'bg-green-100 text-green-700' :
-                                                        log.status === 'FAILED' ? 'bg-red-100 text-red-700' : 'bg-yellow-100 text-yellow-700'}`}>
-                                                    {log.status}
-                                                </span>
-                                            </td>
-                                        </tr>
-                                    ))
-                                ) : (
-                                    <tr>
-                                        <td colSpan={5} className="p-8 text-center text-gray-500">No recent activity detected.</td>
-                                    </tr>
-                                )}
-                            </tbody>
-                        </table>
+                {/* System Status */}
+                <Card className="p-6 bg-gradient-to-br from-blue-500 to-blue-600 text-white border-0">
+                    <div className="flex items-center justify-between mb-4">
+                        <div className="p-3 bg-white/20 rounded-lg">
+                            <Activity className="w-6 h-6" />
+                        </div>
+                        <span className="text-sm font-medium bg-green-400 px-3 py-1 rounded-full">
+                            {stats?.systemStatus || 'ONLINE'}
+                        </span>
+                    </div>
+                    <div className="space-y-1">
+                        <p className="text-sm opacity-90">System Status</p>
+                        <p className="text-3xl font-bold">{stats?.uptime || '99.9'}%</p>
+                        <div className="flex items-center gap-2 text-xs opacity-75">
+                            <button className="hover:underline">Reboot</button>
+                            <span>•</span>
+                            <button className="hover:underline">System Update</button>
+                        </div>
                     </div>
                 </Card>
             </div>
-            {/* Terminal Modal */}
-            {showTerminal && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm animate-in fade-in duration-200">
-                    <div className="bg-gray-900 w-full max-w-3xl rounded-xl shadow-2xl overflow-hidden border border-gray-700 font-mono text-sm max-h-[80vh] flex flex-col">
-                        <div className="flex justify-between items-center px-4 py-3 bg-gray-800 border-b border-gray-700">
-                            <div className="flex items-center gap-2">
-                                <div className="flex gap-1.5">
-                                    <div className="w-3 h-3 rounded-full bg-red-500"></div>
-                                    <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
-                                    <div className="w-3 h-3 rounded-full bg-green-500"></div>
-                                </div>
-                                <span className="text-gray-400 ml-2 font-medium">deploy-terminal -- bash</span>
-                            </div>
-                            <button
-                                onClick={() => {
-                                    setShowTerminal(false);
-                                    if (!updating) setUpdating(false); // Clean up if manually closed
-                                }}
-                                className="text-gray-400 hover:text-white transition-colors"
-                            >
-                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-                            </button>
+
+            {/* Charts Row */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Revenue Analytics */}
+                <Card className="p-6">
+                    <div className="flex items-center justify-between mb-6">
+                        <div>
+                            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                                Revenue Analytics
+                            </h3>
+                            <p className="text-sm text-gray-500 dark:text-gray-400">
+                                Last 7 days performance
+                            </p>
                         </div>
-                        <div className="p-4 overflow-y-auto flex-1 bg-black text-green-400 space-y-1 font-mono">
-                            {terminalLogs.length === 0 && <p className="text-gray-500 italic">Waiting for logs...</p>}
-                            {terminalLogs.map((log, i) => (
-                                <div key={i} className="break-all whitespace-pre-wrap leading-relaxed">{log}</div>
-                            ))}
-                            {updating && (
-                                <div className="animate-pulse">_</div>
-                            )}
-                        </div>
+                        <span className="text-xs text-gray-500 bg-gray-100 dark:bg-gray-800 px-3 py-1 rounded-full">
+                            Simulated Data
+                        </span>
                     </div>
+                    <div className="h-64 flex items-end justify-between gap-2">
+                        {[65, 45, 78, 52, 90, 67, 85].map((height, i) => (
+                            <div key={i} className="flex-1 flex flex-col items-center gap-2">
+                                <div
+                                    className="w-full bg-gradient-to-t from-indigo-500 to-indigo-400 rounded-t-lg transition-all hover:from-indigo-600 hover:to-indigo-500 cursor-pointer"
+                                    style={{ height: `${height}%` }}
+                                ></div>
+                                <span className="text-xs text-gray-500">
+                                    {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'][i]}
+                                </span>
+                            </div>
+                        ))}
+                    </div>
+                </Card>
+
+                {/* Live Traffic */}
+                <Card className="p-6">
+                    <div className="flex items-center justify-between mb-6">
+                        <div>
+                            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                                Live Traffic
+                            </h3>
+                            <p className="text-sm text-gray-500 dark:text-gray-400">
+                                Active users by hour
+                            </p>
+                        </div>
+                        <span className="text-xs text-gray-500 bg-gray-100 dark:bg-gray-800 px-3 py-1 rounded-full">
+                            Simulated Data
+                        </span>
+                    </div>
+                    <div className="h-64 flex items-end justify-between gap-2">
+                        {[120, 450, 890, 1100, 650, 320].map((value, i) => (
+                            <div key={i} className="flex-1 flex flex-col items-center gap-2">
+                                <div
+                                    className="w-full bg-gradient-to-t from-blue-500 to-blue-400 rounded-t-lg transition-all hover:from-blue-600 hover:to-blue-500 cursor-pointer"
+                                    style={{ height: `${(value / 1200) * 100}%` }}
+                                ></div>
+                                <span className="text-xs text-gray-500">
+                                    {['00:00', '04:00', '08:00', '12:00', '16:00', '20:00'][i]}
+                                </span>
+                            </div>
+                        ))}
+                    </div>
+                </Card>
+            </div>
+
+            {/* Recent Transactions */}
+            <Card className="p-6">
+                <div className="flex items-center justify-between mb-6">
+                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                        Recent Transactions Log
+                    </h3>
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => router.push('/transactions')}
+                    >
+                        View All
+                    </Button>
                 </div>
-            )}
-        </DashboardLayout>
+                <div className="overflow-x-auto">
+                    <table className="w-full">
+                        <thead>
+                            <tr className="border-b border-gray-200 dark:border-gray-700">
+                                <th className="text-left py-3 px-4 text-sm font-medium text-gray-500 dark:text-gray-400">TIME</th>
+                                <th className="text-left py-3 px-4 text-sm font-medium text-gray-500 dark:text-gray-400">USER</th>
+                                <th className="text-left py-3 px-4 text-sm font-medium text-gray-500 dark:text-gray-400">ACTION</th>
+                                <th className="text-right py-3 px-4 text-sm font-medium text-gray-500 dark:text-gray-400">AMOUNT</th>
+                                <th className="text-center py-3 px-4 text-sm font-medium text-gray-500 dark:text-gray-400">STATUS</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {recentTransactions.length > 0 ? (
+                                recentTransactions.map((transaction: any) => (
+                                    <tr key={transaction.id} className="border-b border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800/50">
+                                        <td className="py-3 px-4 text-sm text-gray-600 dark:text-gray-400">
+                                            {formatDistanceToNow(new Date(transaction.createdAt), { addSuffix: true })}
+                                        </td>
+                                        <td className="py-3 px-4 text-sm text-gray-900 dark:text-white font-medium">
+                                            {transaction.initiator?.name || transaction.initiator?.email || 'System'}
+                                        </td>
+                                        <td className="py-3 px-4 text-sm text-gray-600 dark:text-gray-400">
+                                            {transaction.type.replace(/_/g, ' ')}
+                                        </td>
+                                        <td className="py-3 px-4 text-sm text-right font-semibold text-gray-900 dark:text-white">
+                                            {formatCurrency(Number(transaction.amount))}
+                                        </td>
+                                        <td className="py-3 px-4 text-center">
+                                            <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(transaction.status)}`}>
+                                                {transaction.status === 'COMPLETED' && <CheckCircle className="w-3 h-3" />}
+                                                {transaction.status === 'PENDING' && <Clock className="w-3 h-3" />}
+                                                {transaction.status === 'FAILED' && <XCircle className="w-3 h-3" />}
+                                                {transaction.status}
+                                            </span>
+                                        </td>
+                                    </tr>
+                                ))
+                            ) : (
+                                <tr>
+                                    <td colSpan={5} className="py-8 text-center text-gray-500 dark:text-gray-400">
+                                        No recent transactions
+                                    </td>
+                                </tr>
+                            )}
+                        </tbody>
+                    </table>
+                </div>
+            </Card>
+
+            {/* Recent Users */}
+            <Card className="p-6">
+                <div className="flex items-center justify-between mb-6">
+                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                        Recent User Registrations
+                    </h3>
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => router.push('/admin/users')}
+                    >
+                        Manage Users
+                    </Button>
+                </div>
+                <div className="space-y-4">
+                    {recentUsers.length > 0 ? (
+                        recentUsers.map((user: any) => (
+                            <div key={user.id} className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-800/50 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+                                <div className="flex items-center gap-4">
+                                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-semibold">
+                                        {user.name?.charAt(0).toUpperCase() || 'U'}
+                                    </div>
+                                    <div>
+                                        <p className="font-medium text-gray-900 dark:text-white">{user.name}</p>
+                                        <p className="text-sm text-gray-500 dark:text-gray-400">{user.email}</p>
+                                    </div>
+                                </div>
+                                <div className="flex items-center gap-4">
+                                    <div className="text-right">
+                                        <p className="text-sm font-medium text-gray-900 dark:text-white">{user.role}</p>
+                                        <p className="text-xs text-gray-500 dark:text-gray-400">
+                                            {formatDistanceToNow(new Date(user.createdAt), { addSuffix: true })}
+                                        </p>
+                                    </div>
+                                    <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(user.status)}`}>
+                                        {user.status}
+                                    </span>
+                                </div>
+                            </div>
+                        ))
+                    ) : (
+                        <div className="py-8 text-center text-gray-500 dark:text-gray-400">
+                            No recent users
+                        </div>
+                    )}
+                </div>
+            </Card>
+        </div>
     );
 }
