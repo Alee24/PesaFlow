@@ -382,7 +382,7 @@ export const AnalyticsReportPDF: React.FC<AnalyticsReportPDFProps> = ({
                             <Text style={[styles.tableCell, styles.tableHeaderText]}>Profit</Text>
                         </View>
                         {productData?.topProducts?.slice(0, 10).map((product: any, index: number) => (
-                            <View key={index} style={[styles.tableRow, index % 2 === 1 && styles.tableRowAlt]}>
+                            <View key={index} style={[styles.tableRow, index % 2 === 1 ? styles.tableRowAlt : {}]}>
                                 <Text style={[styles.tableCell, styles.tableCellBold, { flex: 2 }]}>{product.name}</Text>
                                 <Text style={styles.tableCell}>{product.quantity}</Text>
                                 <Text style={[styles.tableCell, styles.dataValueGreen]}>
@@ -480,7 +480,7 @@ export const AnalyticsReportPDF: React.FC<AnalyticsReportPDFProps> = ({
                                 <Text style={[styles.tableCell, styles.tableHeaderText]}>Avg Order</Text>
                             </View>
                             {teamData.performance.slice(0, 10).map((staff: any, index: number) => (
-                                <View key={index} style={[styles.tableRow, index % 2 === 1 && styles.tableRowAlt]}>
+                                <View key={index} style={[styles.tableRow, index % 2 === 1 ? styles.tableRowAlt : {}]}>
                                     <Text style={[styles.tableCell, styles.tableCellBold, { flex: 2 }]}>{staff.staffName}</Text>
                                     <Text style={styles.tableCell}>{staff.totalSales}</Text>
                                     <Text style={[styles.tableCell, styles.dataValueGreen]}>
