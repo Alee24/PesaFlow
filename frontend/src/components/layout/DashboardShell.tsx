@@ -4,21 +4,23 @@
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { LayoutDashboard, ShoppingCart, Package, CreditCard, ArrowLeftRight, Settings, LogOut, User, Store, FileText, Bell, X, CheckCircle, AlertCircle, Info, Lock, ShieldCheck } from 'lucide-react';
+import { LayoutDashboard, ShoppingCart, Package, CreditCard, ArrowLeftRight, Settings, LogOut, User, Store, FileText, Bell, X, CheckCircle, AlertCircle, Info, Lock, ShieldCheck, TrendingUp, BarChart3, Users, Wallet } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useState, useEffect, useRef } from 'react';
 import { formatDistanceToNow } from 'date-fns';
 import api from '@/lib/api';
 
 const menuItems = [
-    { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
-    { name: 'POS System', href: '/pos', icon: Store },
-    { name: 'Invoices', href: '/invoices', icon: FileText, requiresActive: true },
-    { name: 'Inventory', href: '/products', icon: Package },
-    { name: 'Transactions', href: '/transactions', icon: ArrowLeftRight },
-    { name: 'Analytics', href: '/analytics', icon: ShieldCheck, role: 'MERCHANT', requiresActive: true },
-    { name: 'Branch', href: '/team', icon: User, role: 'MERCHANT', requiresActive: true },
-    { name: 'Withdrawals', href: '/withdrawals', icon: CreditCard, role: 'MERCHANT', requiresActive: true },
-    { name: 'Settings', href: '/settings', icon: Settings },
+    { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard, feature: null },
+    { name: 'POS', href: '/pos', icon: ShoppingCart, feature: 'POS' },
+    { name: 'Products', href: '/products', icon: Package, feature: null },
+    { name: 'Sales', href: '/sales', icon: TrendingUp, feature: null },
+    { name: 'Analytics', href: '/analytics', icon: BarChart3, feature: 'ANALYTICS' },
+    { name: 'Customers', href: '/customers', icon: Users, feature: 'CRM' },
+    { name: 'Wallet', href: '/wallet', icon: Wallet, feature: null },
+    { name: 'Withdrawals', href: '/withdrawals', icon: CreditCard, feature: null },
+    { name: 'Team', href: '/team', icon: Users, feature: 'TEAM_MANAGEMENT' },
+    { name: 'Settings', href: '/settings', icon: Settings, feature: null },
     { name: 'Merchant Verification', href: '/admin/verification', icon: CheckCircle, role: 'ADMIN' },
     { name: 'Users', href: '/admin/users', icon: User, role: 'ADMIN' },
     { name: 'Withdrawal Approvals', href: '/admin/withdrawals', icon: CreditCard, role: 'ADMIN' },

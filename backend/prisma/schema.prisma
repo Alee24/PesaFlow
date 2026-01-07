@@ -298,6 +298,9 @@ model Subscription {
   merchantId String @unique @map("merchant_id")
   merchant   User   @relation(fields: [merchantId], references: [id])
 
+  // Features (JSON array of enabled features)
+  // Example: ["POS", "ANALYTICS", "TEAM_MANAGEMENT", "CRM", "ADVANCED_CRM"]
+  features String @default("[]") @db.Text
   plan   String @default("FREE") // FREE, BASIC, PRO, ENTERPRISE
   status String @default("ACTIVE") // ACTIVE, EXPIRED, CANCELLED
 
