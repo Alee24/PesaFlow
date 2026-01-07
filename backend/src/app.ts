@@ -19,6 +19,7 @@ import walletRoutes from './routes/wallet.routes';
 import dashboardRoutes from './routes/dashboard.routes';
 import salesRoutes from './routes/sales.routes';
 import subscriptionRoutes from './routes/subscription.routes';
+import analyticsRoutes from './routes/analytics.routes';
 
 
 const app = express();
@@ -49,6 +50,7 @@ app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/sales', salesRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/subscription', subscriptionRoutes);
+app.use('/api/analytics', analyticsRoutes);
 
 app.get('/', (req, res) => {
 
