@@ -208,7 +208,7 @@ export const updateTeamMember = async (req: Request, res: Response) => {
     } catch (error: any) {
         console.error("Update Team Member Error:", error);
         if (error instanceof z.ZodError) {
-            return res.status(400).json({ error: 'Validation failed', details: error.errors });
+            return res.status(400).json({ error: 'Validation failed', details: error.issues });
         }
         res.status(500).json({ error: error.message || 'Failed to update team member' });
     }
