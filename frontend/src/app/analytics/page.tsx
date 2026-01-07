@@ -359,6 +359,69 @@ export default function AnalyticsPage() {
                             </div>
                         </Card>
                     </div>
+
+                    {/* Branch Staff Performance */}
+                    {teamData?.performance && teamData.performance.length > 0 && (
+                        <Card className="p-6 mb-8">
+                            <div className="flex items-center gap-2 mb-4">
+                                <Users className="w-5 h-5 text-purple-600" />
+                                <h3 className="text-lg font-semibold">Branch Staff Performance</h3>
+                            </div>
+                            <p className="text-sm text-gray-500 mb-4">
+                                Total Staff: {teamData.totalStaff} | Period: {new Date(dateRange.start).toLocaleDateString()} - {new Date(dateRange.end).toLocaleDateString()}
+                            </p>
+                            <div className="overflow-x-auto">
+                                <table className="w-full">
+                                    <thead>
+                                        <tr className="border-b dark:border-gray-700">
+                                            <th className="text-left py-3 px-4">Staff Member</th>
+                                            <th className="text-left py-3 px-4">Contact</th>
+                                            <th className="text-right py-3 px-4">Total Sales</th>
+                                            <th className="text-right py-3 px-4">Revenue</th>
+                                            <th className="text-right py-3 px-4">Avg Order Value</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {teamData.performance.map((staff: any, index: number) => (
+                                            <tr key={index} className="border-b dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800">
+                                                <td className="py-3 px-4">
+                                                    <div>
+                                                        <p className="font-medium">{staff.staffName}</p>
+                                                        <p className="text-xs text-gray-500">{staff.staffEmail}</p>
+                                                    </div>
+                                                </td>
+                                                <td className="py-3 px-4 text-sm text-gray-600">{staff.staffPhone}</td>
+                                                <td className="text-right py-3 px-4 font-semibold">{staff.totalSales}</td>
+                                                <td className="text-right py-3 px-4 text-green-600 font-semibold">
+                                                    {formatCurrency(staff.totalRevenue)}
+                                                </td>
+                                                <td className="text-right py-3 px-4 text-blue-600">
+                                                    {formatCurrency(staff.averageOrderValue)}
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                    <tfoot className="bg-gray-50 dark:bg-gray-800">
+                                        <tr className="font-bold">
+                                            <td className="py-3 px-4" colSpan={2}>Total</td>
+                                            <td className="text-right py-3 px-4">
+                                                {teamData.performance.reduce((sum: number, s: any) => sum + s.totalSales, 0)}
+                                            </td>
+                                            <td className="text-right py-3 px-4 text-green-600">
+                                                {formatCurrency(teamData.performance.reduce((sum: number, s: any) => sum + s.totalRevenue, 0))}
+                                            </td>
+                                            <td className="text-right py-3 px-4 text-blue-600">
+                                                {formatCurrency(
+                                                    teamData.performance.reduce((sum: number, s: any) => sum + s.totalRevenue, 0) /
+                                                    teamData.performance.reduce((sum: number, s: any) => sum + s.totalSales, 0) || 0
+                                                )}
+                                            </td>
+                                        </tr>
+                                    </tfoot>
+                                </table>
+                            </div>
+                        </Card>
+                    )}
                 </div>
             </FeatureGate>
         </DashboardLayout>
