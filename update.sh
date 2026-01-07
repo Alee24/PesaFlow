@@ -7,9 +7,11 @@ echo "=========================================="
 echo "🚀 Starting System Update $(date)"
 echo "=========================================="
 
-# 0. Self-Update (git pull only first)
-echo "📥 Pulling latest changes from git..."
-git pull origin main
+# 0. Self-Update (Force Clean Sync)
+echo "📥 Fetching and resetting to latest remote version..."
+git fetch --all
+git reset --hard origin/main
+
 
 # 1. Update Backend
 echo "------------------------------------------"
