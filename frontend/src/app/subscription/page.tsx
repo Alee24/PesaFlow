@@ -1,258 +1,235 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
-import { PricingCard } from '@/components/subscription/PricingCard';
-import { Modal } from '@/components/ui/Modal';
-import { Input } from '@/components/ui/Input';
-import api from '@/lib/api';
-import { AlertCircle, CheckCircle, ShieldCheck, Zap, CreditCard, Clock } from 'lucide-react';
-import { useToast } from '@/contexts/ToastContext';
+import { Check, TrendingUp, Zap, Users, Lock, Infinity as InfinityIcon } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { useSubscription } from '@/contexts/SubscriptionContext';
 
-interface Subscription {
-    id: string;
-    plan: 'NONE' | 'BASIC' | 'PRO';
-    status: 'ACTIVE' | 'INACTIVE' | 'EXPIRED' | 'SUSPENDED';
-    startDate?: string;
-    endDate?: string;
-    daysRemaining: number;
-    canAccess: boolean;
-    isInGracePeriod: boolean;
-}
+const PLANS = [
+    {
+        name: 'FREE',
+        price: 0,
+        period: 'forever',
+        description: 'Perfect for getting started',
+        features: [
+            'POS System',
+            'Inventory Management',
+            'Unlimited transactions',
+            'Basic support'
+        ],
+        limitations: [
+            'No invoices',
+            'No withdrawals',
+            'No team management',
+            'No reports'
+        ],
+        cta: 'Current Plan',
+        popular: false,
+        gradient: 'from-gray-500 to-slate-600'
+    },
+    {
+        name: 'BASIC',
+        price: 1500,
+        period: 'month',
+        description: 'For small businesses',
+        features: [
+            'Everything in FREE',
+            'Invoice Management',
+            'Basic Reports',
+            '100 transactions/month',
+            'Email support'
+        ],
+        limitations: [
+            'No withdrawals',
+            'No team management',
+            'Limited transactions'
+        ],
+        cta: 'Upgrade to BASIC',
+        popular: false,
+        gradient: 'from-blue-500 to-cyan-600'
+    },
+    {
+        name: 'PRO',
+        price: 2500,
+        period: 'month',
+        description: 'For growing businesses',
+        features: [
+            'Everything in BASIC',
+            'Unlimited transactions',
+            'Up to 10 branches',
+            'Withdrawal management',
+            'Advanced analytics',
+            'Priority support'
+        ],
+        limitations: [],
+        cta: 'Upgrade to PRO',
+        popular: true,
+        gradient: 'from-purple-500 to-pink-600'
+    },
+    {
+        name: 'ENTERPRISE',
+        price: 75000,
+        period: 'one-time',
+        description: 'Full system ownership',
+        features: [
+            'Everything in PRO',
+            'Unlimited branches',
+            'Custom branding',
+            'Self-hosted deployment',
+            '1 year support included',
+            'Lifetime updates',
+            'Dedicated account manager'
+        ],
+        limitations: [],
+        cta: 'Contact Sales',
+        popular: false,
+        gradient: 'from-indigo-500 to-purple-600'
+    }
+];
 
 export default function SubscriptionPage() {
-    const [subscription, setSubscription] = useState<Subscription | null>(null);
-    const [loading, setLoading] = useState(true);
-    const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
-    const [paymentPhone, setPaymentPhone] = useState('');
-    const [processing, setProcessing] = useState(false);
-    const { showToast } = useToast();
+    const router = useRouter();
+    const { subscription, loading } = useSubscription();
+    const [processingPlan, setProcessingPlan] = useState<string | null>(null);
 
-    // Default to user's phone if available (would need context, but simplistic for now)
-
-    useEffect(() => {
-        fetchSubscription();
-        const user = localStorage.getItem('user');
-        if (user) {
-            try {
-                const u = JSON.parse(user);
-                if (u.phoneNumber) setPaymentPhone(u.phoneNumber);
-            } catch (e) { }
-        }
-    }, []);
-
-    const fetchSubscription = async () => {
-        try {
-            const res = await api.get('/subscriptions');
-            setSubscription(res.data);
-        } catch (error) {
-            console.error("Failed to load subscription", error);
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const handleSelectPlan = (plan: string) => {
-        if (subscription?.plan === plan && subscription?.status === 'ACTIVE') {
-            showToast('You are already subscribed to this plan', 'info');
+    const handleUpgrade = async (planName: string) => {
+        if (planName === 'ENTERPRISE') {
+            // Open contact modal or redirect
+            window.location.href = 'mailto:sales@mpesaconnect.co.ke?subject=Enterprise Plan Inquiry';
             return;
         }
-        setSelectedPlan(plan);
+
+        setProcessingPlan(planName);
+
+        // TODO: Implement M-Pesa payment flow
+        alert(`Upgrade to ${planName} - Payment integration coming soon!`);
+
+        setProcessingPlan(null);
     };
 
-    const handlePayment = async () => {
-        if (!paymentPhone || !selectedPlan) return;
-        setProcessing(true);
-        try {
-            await api.post('/subscriptions/pay', {
-                plan: selectedPlan,
-                phoneNumber: paymentPhone
-            });
-            showToast("Payment Initiated! Please check your phone for the M-Pesa prompt.", 'success');
-            setSelectedPlan(null);
-            // Optimistic update or wait a bit?
-            // The backend prototype auto-activates, so refreshing immediately should work
-            setTimeout(fetchSubscription, 2000);
-        } catch (error: any) {
-            console.error(error);
-            showToast(error.response?.data?.error || "Payment Initiation Failed", 'error');
-        } finally {
-            setProcessing(false);
-        }
-    };
-
-    if (loading) {
-        return (
-            <DashboardLayout>
-                <div className="flex flex-col items-center justify-center h-96 space-y-4">
-                    <div className="w-8 h-8 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
-                    <p className="text-gray-500 font-medium">Loading subscription details...</p>
-                </div>
-            </DashboardLayout>
-        );
-    }
-
-    const currentPlan = subscription?.plan || 'NONE';
-    const isActive = subscription?.status === 'ACTIVE';
-
-    // Calculate nice formatted date
-    const formatDate = (dateString?: string) => {
-        if (!dateString) return 'N/A';
-        return new Date(dateString).toLocaleDateString('en-KE', { year: 'numeric', month: 'long', day: 'numeric' });
-    };
+    const currentPlan = subscription?.plan || 'FREE';
 
     return (
         <DashboardLayout>
-            <div className="max-w-6xl mx-auto space-y-10 pb-20">
-                {/* Header Section */}
-                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                    <div>
-                        <h1 className="text-3xl font-extrabold text-gray-900 dark:text-white flex items-center gap-3">
-                            Subscription & Billing
-                            {isActive && <span className="px-3 py-1 bg-green-100 text-green-700 text-xs rounded-full font-bold tracking-wide uppercase">Active</span>}
-                        </h1>
-                        <p className="text-gray-500 mt-2 text-lg">Manage your business plan and payment methods.</p>
-                    </div>
-                </div>
-
-                {/* Hero Status Card */}
-                <div className="grid md:grid-cols-3 gap-6">
-                    <Card className="md:col-span-2 relative overflow-hidden text-white border-0 shadow-xl bg-gradient-to-br from-indigo-600 to-purple-700">
-                        <div className="absolute top-0 right-0 p-32 bg-white/5 rounded-full blur-3xl -mr-16 -mt-16 pointer-events-none"></div>
-                        <div className="relative p-8 z-10">
-                            <div className="flex items-center gap-4 mb-6">
-                                <div className="p-3 bg-white/20 backdrop-blur-sm rounded-xl">
-                                    <ShieldCheck className="w-8 h-8 text-white" />
-                                </div>
-                                <div>
-                                    <h2 className="text-sm font-medium text-indigo-100 uppercase tracking-wider">Current Plan</h2>
-                                    <p className="text-3xl font-bold">{currentPlan === 'NONE' ? 'Free Tier' : `${currentPlan} Plan`}</p>
-                                </div>
-                            </div>
-
-                            <div className="grid grid-cols-2 gap-8 mt-8 border-t border-white/10 pt-8">
-                                <div>
-                                    <p className="text-indigo-200 text-sm mb-1">Status</p>
-                                    <div className="flex items-center gap-2">
-                                        {isActive ? (
-                                            <CheckCircle className="w-5 h-5 text-green-400" />
-                                        ) : (
-                                            <AlertCircle className="w-5 h-5 text-yellow-400" />
-                                        )}
-                                        <span className="font-semibold">{subscription?.status || 'INACTIVE'}</span>
-                                    </div>
-                                </div>
-                                <div>
-                                    <p className="text-indigo-200 text-sm mb-1">Validity</p>
-                                    <div className="flex items-center gap-2">
-                                        <Clock className="w-5 h-5 text-indigo-300" />
-                                        <span className="font-semibold">
-                                            {subscription?.daysRemaining !== undefined && subscription.daysRemaining > 0
-                                                ? `${subscription.daysRemaining} Days Remaining`
-                                                : 'Expired'}
-                                        </span>
-                                    </div>
-                                    {subscription?.endDate && (
-                                        <p className="text-xs text-indigo-300 mt-1">Renews on {formatDate(subscription.endDate)}</p>
-                                    )}
-                                </div>
-                            </div>
+            <div className="max-w-7xl mx-auto">
+                {/* Header */}
+                <div className="text-center mb-12">
+                    <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-4">
+                        Choose Your Plan
+                    </h1>
+                    <p className="text-xl text-gray-600 dark:text-gray-400">
+                        Unlock powerful features and grow your business
+                    </p>
+                    {subscription && (
+                        <div className="mt-4 inline-flex items-center gap-2 px-4 py-2 bg-blue-50 dark:bg-blue-900/20 rounded-full">
+                            <span className="text-sm text-blue-700 dark:text-blue-300">
+                                Current Plan: <strong>{currentPlan}</strong>
+                            </span>
                         </div>
-                    </Card>
-
-                    <Card className="flex flex-col justify-center items-center p-8 bg-gray-50 dark:bg-gray-800 text-center border border-gray-100 dark:border-gray-700">
-                        <Zap className="w-12 h-12 text-yellow-500 mb-4" />
-                        <h3 className="font-bold text-gray-900 dark:text-white text-lg">Need More Power?</h3>
-                        <p className="text-gray-500 text-sm mt-2 mb-6">Upgrade to our Pro plan to unlock unlimited transactions and advanced analytics.</p>
-                        <Button onClick={() => window.scrollTo({ top: 600, behavior: 'smooth' })} variant="outline" className="w-full">
-                            View Plans
-                        </Button>
-                    </Card>
+                    )}
                 </div>
 
-                {/* Plans Grid */}
-                <div>
-                    <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-6">Available Plans</h2>
-                    <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
-                        <PricingCard
-                            title="Basic Plan"
-                            price={1000}
-                            features={[
-                                'Up to 100 Transactions/mo',
-                                'Basic Reporting',
-                                'Email Support',
-                                'Single User',
-                                'Standard Analytics'
-                            ]}
-                            current={currentPlan === 'BASIC'}
-                            onSelect={() => handleSelectPlan('BASIC')}
-                        />
-                        <PricingCard
-                            title="Pro Plan"
-                            price={2500}
-                            recommended
-                            features={[
-                                'Unlimited Transactions',
-                                'Advanced Analytics & PDF Reports',
-                                'Priority Support (24/7)',
-                                'Multiple Users (Coming Soon)',
-                                'Inventory Management',
-                                'API Access'
-                            ]}
-                            current={currentPlan === 'PRO'}
-                            onSelect={() => handleSelectPlan('PRO')}
-                        />
+                {/* Pricing Cards */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+                    {PLANS.map((plan) => {
+                        const isCurrentPlan = plan.name === currentPlan;
+                        const canUpgrade = !isCurrentPlan && plan.name !== 'FREE';
+
+                        return (
+                            <Card
+                                key={plan.name}
+                                className={`relative overflow-hidden ${plan.popular ? 'ring-2 ring-purple-500 shadow-2xl scale-105' : ''}`}
+                            >
+                                {plan.popular && (
+                                    <div className="absolute top-0 right-0 bg-gradient-to-r from-purple-500 to-pink-600 text-white text-xs font-bold px-3 py-1 rounded-bl-lg">
+                                        POPULAR
+                                    </div>
+                                )}
+
+                                <div className="p-6">
+                                    {/* Plan Name */}
+                                    <div className={`inline-block bg-gradient-to-r ${plan.gradient} text-white px-3 py-1 rounded-lg text-sm font-bold mb-4`}>
+                                        {plan.name}
+                                    </div>
+
+                                    {/* Price */}
+                                    <div className="mb-4">
+                                        <div className="flex items-baseline gap-2">
+                                            <span className="text-4xl font-bold text-gray-900 dark:text-white">
+                                                {plan.price === 0 ? 'Free' : `KES ${plan.price.toLocaleString()}`}
+                                            </span>
+                                            {plan.price > 0 && (
+                                                <span className="text-gray-600 dark:text-gray-400">
+                                                    /{plan.period}
+                                                </span>
+                                            )}
+                                        </div>
+                                        <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">
+                                            {plan.description}
+                                        </p>
+                                    </div>
+
+                                    {/* Features */}
+                                    <ul className="space-y-3 mb-6">
+                                        {plan.features.map((feature, index) => (
+                                            <li key={index} className="flex items-start gap-2">
+                                                <Check className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" />
+                                                <span className="text-sm text-gray-700 dark:text-gray-300">{feature}</span>
+                                            </li>
+                                        ))}
+                                    </ul>
+
+                                    {/* CTA Button */}
+                                    <Button
+                                        onClick={() => handleUpgrade(plan.name)}
+                                        disabled={isCurrentPlan || processingPlan === plan.name}
+                                        isLoading={processingPlan === plan.name}
+                                        className={`w-full ${isCurrentPlan ? 'bg-gray-300 cursor-not-allowed' : `bg-gradient-to-r ${plan.gradient}`}`}
+                                    >
+                                        {isCurrentPlan ? 'Current Plan' : plan.cta}
+                                    </Button>
+                                </div>
+                            </Card>
+                        );
+                    })}
+                </div>
+
+                {/* FAQ Section */}
+                <Card className="p-8">
+                    <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">
+                        Frequently Asked Questions
+                    </h2>
+                    <div className="space-y-6">
+                        <div>
+                            <h3 className="font-semibold text-gray-900 dark:text-white mb-2">
+                                Can I change my plan later?
+                            </h3>
+                            <p className="text-gray-600 dark:text-gray-400">
+                                Yes! You can upgrade or downgrade your plan at any time. Changes take effect immediately.
+                            </p>
+                        </div>
+                        <div>
+                            <h3 className="font-semibold text-gray-900 dark:text-white mb-2">
+                                What happens when I reach the transaction limit?
+                            </h3>
+                            <p className="text-gray-600 dark:text-gray-400">
+                                On the BASIC plan, you're limited to 100 transactions per month. Upgrade to PRO for unlimited transactions.
+                            </p>
+                        </div>
+                        <div>
+                            <h3 className="font-semibold text-gray-900 dark:text-white mb-2">
+                                How does the ENTERPRISE plan work?
+                            </h3>
+                            <p className="text-gray-600 dark:text-gray-400">
+                                ENTERPRISE is a one-time purchase of 75,000 KSh. You get the full system installed on your own server with 1 year of support and lifetime updates.
+                            </p>
+                        </div>
                     </div>
-                </div>
+                </Card>
             </div>
-
-            {/* Payment Modal */}
-            <Modal isOpen={!!selectedPlan} onClose={() => setSelectedPlan(null)} title={`Subscribe to ${selectedPlan}`}>
-                <div className="space-y-6">
-                    <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 p-6 rounded-xl border border-blue-100 dark:border-blue-900/50">
-                        <div className="flex gap-4">
-                            <div className="p-3 bg-blue-100 dark:bg-blue-900/50 rounded-lg h-fit">
-                                <CreditCard className="w-6 h-6 text-blue-600 dark:text-blue-400" />
-                            </div>
-                            <div>
-                                <h4 className="font-bold text-gray-900 dark:text-white text-lg mb-1">Confirm Payment</h4>
-                                <p className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed">
-                                    You are about to subscribe to the <strong>{selectedPlan} Plan</strong>.
-                                    A request will be sent to your M-Pesa number to pay
-                                    <strong className="text-indigo-600 dark:text-indigo-400"> KES {selectedPlan === 'PRO' ? '2,500' : '1,000'}</strong>.
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="space-y-4">
-                        <Input
-                            label="M-Pesa Phone Number"
-                            placeholder="0712345678"
-                            value={paymentPhone}
-                            onChange={(e) => setPaymentPhone(e.target.value)}
-                            className="text-lg tracking-wide"
-                        />
-                        <p className="text-xs text-gray-500 flex items-center gap-1">
-                            <ShieldCheck className="w-3 h-3" /> Secure payment via Safaricom M-Pesa
-                        </p>
-                    </div>
-
-                    <div className="flex gap-3 justify-end pt-6 border-t dark:border-gray-700">
-                        <Button variant="ghost" onClick={() => setSelectedPlan(null)}>Cancel</Button>
-                        <Button
-                            onClick={handlePayment}
-                            isLoading={processing}
-                            disabled={!paymentPhone || processing}
-                            className="bg-green-600 hover:bg-green-700 text-white min-w-[120px]"
-                        >
-                            {processing ? 'Processing...' : 'Pay Now'}
-                        </Button>
-                    </div>
-                </div>
-            </Modal>
         </DashboardLayout>
     );
 }
