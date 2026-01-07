@@ -90,13 +90,31 @@ export default function CustomersPage() {
                             Manage your customer relationships and interactions
                         </p>
                     </div>
-                    <Button
-                        onClick={() => router.push('/customers/new')}
-                        className="flex items-center gap-2"
-                    >
-                        <UserPlus className="w-4 h-4" />
-                        Add Customer
-                    </Button>
+                    <div className="flex gap-2">
+                        <Button
+                            variant="outline"
+                            onClick={() => router.push('/customers/segments')}
+                            className="hidden md:flex items-center gap-2"
+                        >
+                            <Filter className="w-4 h-4" />
+                            Segments
+                        </Button>
+                        <Button
+                            variant="outline"
+                            onClick={() => router.push('/customers/campaigns')}
+                            className="hidden md:flex items-center gap-2"
+                        >
+                            <Mail className="w-4 h-4" />
+                            Campaigns
+                        </Button>
+                        <Button
+                            onClick={() => router.push('/customers/new')}
+                            className="flex items-center gap-2"
+                        >
+                            <UserPlus className="w-4 h-4" />
+                            Add Customer
+                        </Button>
+                    </div>
                 </div>
 
                 {/* Stats Cards */}
@@ -251,8 +269,8 @@ export default function CustomersPage() {
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap">
                                             <span className={`px-2 py-1 text-xs font-semibold rounded-full ${customer.status === 'ACTIVE' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' :
-                                                    customer.status === 'LEAD' ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200' :
-                                                        'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200'
+                                                customer.status === 'LEAD' ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200' :
+                                                    'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200'
                                                 }`}>
                                                 {customer.status}
                                             </span>
