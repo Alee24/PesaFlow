@@ -12,6 +12,8 @@ import profileRoutes from './routes/profile.routes';
 import invoiceRoutes from './routes/invoice.routes';
 import setupRoutes from './routes/setup.routes';
 import adminRoutes from './routes/admin.routes';
+import teamRoutes from './routes/team.routes';
+import crmRoutes from './routes/crm.routes';
 import categoryRoutes from './routes/category.routes';
 import notificationRoutes from './routes/notification.routes';
 
@@ -51,6 +53,8 @@ app.use('/api/sales', salesRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/subscription', subscriptionRoutes);
 app.use('/api/analytics', analyticsRoutes);
+app.use('/api/team', teamRoutes);
+app.use('/api/crm', crmRoutes);
 
 app.get('/', (req, res) => {
 
