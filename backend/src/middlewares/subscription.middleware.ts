@@ -53,6 +53,13 @@ export const requireFeature = (feature: string) => {
     return async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
         try {
             const merchantId = req.user?.merchantId;
+            const userRole = req.user?.role;
+
+            // ADMIN users have access to all features
+            if (userRole === 'ADMIN') {
+                next();
+                return;
+            }
 
             if (!merchantId) {
                 res.status(401).json({ error: 'Authentication required' });

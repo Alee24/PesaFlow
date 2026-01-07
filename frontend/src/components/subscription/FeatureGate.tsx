@@ -13,6 +13,19 @@ interface FeatureGateProps {
 
 export const FeatureGate: React.FC<FeatureGateProps> = ({ feature, children, fallback }) => {
     const { hasFeature, subscription } = useSubscription();
+    const [user, setUser] = React.useState<any>(null);
+
+    React.useEffect(() => {
+        const userData = localStorage.getItem('user');
+        if (userData) {
+            setUser(JSON.parse(userData));
+        }
+    }, []);
+
+    // ADMIN users have access to all features
+    if (user?.role === 'ADMIN') {
+        return <>{children}</>;
+    }
 
     if (hasFeature(feature)) {
         return <>{children}</>;
