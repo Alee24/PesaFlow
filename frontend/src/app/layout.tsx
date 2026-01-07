@@ -15,6 +15,10 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Mpesa Connect - Complete Business Management Platform",
   description: "Advanced POS, Inventory Management, M-Pesa Integration & Merchant Verification System",
+  icons: {
+    icon: '/favicon.png',
+    apple: '/favicon.png',
+  },
 };
 
 import { ToastProvider } from "@/contexts/ToastContext";
