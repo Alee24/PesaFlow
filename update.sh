@@ -1,63 +1,84 @@
 #!/bin/bash
 
-# Mpesa Connect Update Script
-# Usage: ./update.sh
+# PesaFlow Update Script
+# This script pulls latest code, cleans old builds, and restarts services
+
+set -e  # Exit on any error
 
 echo "=========================================="
-echo "🚀 Starting System Update $(date)"
+echo "   PesaFlow - Update & Restart Script"
 echo "=========================================="
 
-# 0. Self-Update (Force Clean Sync)
-echo "📥 Fetching and resetting to latest remote version..."
-git fetch --all
+# Navigate to project root
+cd "$(dirname "$0")"
+
+echo ""
+echo "📥 Pulling latest code from GitHub..."
+git fetch origin
 git reset --hard origin/main
+git pull origin main
 
+echo ""
+echo "🧹 Cleaning old builds and dependencies..."
 
-# 1. Update Backend
-echo "------------------------------------------"
-echo "📦 Updating Backend..."
-echo "------------------------------------------"
-cd backend || { echo "❌ Backend directory not found"; exit 1; }
+# Clean backend
+echo "   Cleaning backend..."
+cd backend
+rm -rf node_modules/.cache
+rm -rf dist
+rm -rf build
+npm cache clean --force 2>/dev/null || true
 
-# Install dependencies if package.json changed
-echo "   Running npm install..."
-npm install
-
-# Database Updates
-echo "   Pushing DB Schema..."
-npx prisma db push --accept-data-loss
-npx prisma generate
-
-# Build TypeScript
-echo "   Building Backend..."
-npm run build
-
-# Restart PM2 Service
-echo "   Restarting Backend Service..."
-pm2 reload pesaflow-backend || pm2 start dist/server.js --name pesaflow-backend
+# Clean frontend
+echo "   Cleaning frontend..."
+cd ../frontend
+rm -rf .next
+rm -rf node_modules/.cache
+rm -rf out
+npm cache clean --force 2>/dev/null || true
 
 cd ..
 
-# 2. Update Frontend
-echo "------------------------------------------"
-echo "🎨 Updating Frontend..."
-echo "------------------------------------------"
-cd frontend || { echo "❌ Frontend directory not found"; exit 1; }
+echo ""
+echo "📦 Installing dependencies..."
 
-# Install dependencies
-echo "   Running npm install..."
+# Backend dependencies
+echo "   Installing backend dependencies..."
+cd backend
 npm install
 
-# Build Next.js
-echo "   Building Frontend..."
-npm run build
-
-# Restart PM2 Service
-echo "   Restarting Frontend Service..."
-pm2 reload pesaflow-frontend || pm2 start npm --name pesaflow-frontend -- start
+# Frontend dependencies
+echo "   Installing frontend dependencies..."
+cd ../frontend
+npm install
 
 cd ..
 
+echo ""
+echo "🔨 Building applications..."
+
+# Build backend
+echo "   Building backend..."
+cd backend
+npm run build
+
+# Build frontend
+echo "   Building frontend..."
+cd ../frontend
+npm run build
+
+cd ..
+
+echo ""
+echo "🔄 Restarting services with PM2..."
+pm2 restart all
+
+echo ""
+echo "✅ Update complete!"
+echo ""
+pm2 status
+
+echo ""
 echo "=========================================="
-echo "✅ Update Complete! System is live."
+echo "   Update finished successfully!"
 echo "=========================================="
