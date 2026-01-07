@@ -16,7 +16,7 @@ const menuItems = [
     { name: 'Inventory', href: '/products', icon: Package },
     { name: 'Transactions', href: '/transactions', icon: ArrowLeftRight },
     { name: 'Analytics', href: '/analytics', icon: ShieldCheck, role: 'MERCHANT', requiresActive: true },
-    { name: 'Team', href: '/team', icon: User, role: 'MERCHANT', requiresActive: true },
+    { name: 'Branch', href: '/team', icon: User, role: 'MERCHANT', requiresActive: true },
     { name: 'Withdrawals', href: '/withdrawals', icon: CreditCard, role: 'MERCHANT', requiresActive: true },
     { name: 'Settings', href: '/settings', icon: Settings },
     { name: 'Merchant Verification', href: '/admin/verification', icon: CheckCircle, role: 'ADMIN' },

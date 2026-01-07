@@ -127,7 +127,7 @@ export default function TeamPage() {
                         className="flex items-center gap-2"
                     >
                         <UserPlus className="w-4 h-4" />
-                        Add Team Member
+                        Add Branch Member
                     </Button>
                 </header>
 
@@ -160,8 +160,8 @@ export default function TeamPage() {
                                             </td>
                                             <td className="py-3 px-4">
                                                 <span className={`text-xs px-2 py-1 rounded-full ${member.status === 'ACTIVE'
-                                                        ? 'bg-green-100 text-green-800'
-                                                        : 'bg-red-100 text-red-800'
+                                                    ? 'bg-green-100 text-green-800'
+                                                    : 'bg-red-100 text-red-800'
                                                     }`}>
                                                     {member.status}
                                                 </span>
@@ -239,7 +239,7 @@ export default function TeamPage() {
             {showModal && (
                 <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={() => setShowModal(false)}>
                     <div className="bg-white dark:bg-gray-800 rounded-xl p-6 w-full max-w-md" onClick={e => e.stopPropagation()}>
-                        <h2 className="text-xl font-bold mb-4">Add Team Member</h2>
+                        <h2 className="text-xl font-bold mb-4">Add Branch Member</h2>
                         <form onSubmit={handleSubmit} className="space-y-4">
                             <div>
                                 <label className="block text-sm font-medium mb-1">Full Name</label>
