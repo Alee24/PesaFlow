@@ -35,8 +35,8 @@ export function Sidebar({ user }: { user?: any }) {
 
         // Shared restrictions
         if (item.role === 'MERCHANT') {
-            // Team and Withdrawals only for main MERCHANT
-            if (['Team', 'Withdrawals'].includes(item.name)) {
+            // Branch and Withdrawals only for main MERCHANT
+            if (['Branch', 'Withdrawals'].includes(item.name)) {
                 return user?.role === 'MERCHANT';
             }
             // Other merchant items (POS, Invoices, etc) accessible to SUB_MERCHANT too

@@ -118,9 +118,9 @@ export default function TeamPage() {
                     <div>
                         <h1 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
                             <Users className="w-6 h-6" />
-                            Team Management
+                            Branch Management
                         </h1>
-                        <p className="text-gray-500 text-sm">Manage your staff and view performance</p>
+                        <p className="text-gray-500 text-sm">Manage your branch staff and view performance</p>
                     </div>
                     <Button
                         onClick={() => setShowModal(true)}
