@@ -216,14 +216,12 @@ export default function UserManagementPage() {
     };
 
     const handleSubClick = (user: any) => {
-        // Assume user object might have subscription info eager loaded later, 
-        // for now just open modal to set/overwrite
         setSubModal({
             isOpen: true,
             userId: user.id,
             userName: user.name,
             loading: false,
-            plan: 'NONE', // Default or fetch current if available
+            plan: 'FREE', // Default plan
             extendDays: 30,
             action: 'SET_PLAN'
         });
@@ -233,12 +231,11 @@ export default function UserManagementPage() {
         e.preventDefault();
         setSubModal(prev => ({ ...prev, loading: true }));
         try {
-            await api.post(`/admin/users/${subModal.userId}/subscription`, {
-                action: subModal.action,
-                plan: subModal.plan,
-                extendDays: subModal.extendDays
+            // Use the new assign-subscription endpoint
+            await api.patch(`/admin/users/${subModal.userId}/assign-subscription`, {
+                plan: subModal.plan
             });
-            showToast('Subscription updated successfully', 'success');
+            showToast(`Subscription updated to ${subModal.plan} successfully`, 'success');
             setSubModal(prev => ({ ...prev, isOpen: false }));
             fetchUsers();
         } catch (error: any) {
