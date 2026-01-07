@@ -3,65 +3,63 @@ generator client {
 }
 
 datasource db {
-// SQLite Configuration (Development)
-// provider = "sqlite"
-// url      = "file:./dev.db"
+  // SQLite Configuration (Development)
+  // provider = "sqlite"
+  // url      = "file:./dev.db"
 
-// MySQL Configuration (Production)
-provider = "mysql"
-url      = env("DATABASE_URL")
+  // MySQL Configuration (Production)
+  provider = "mysql"
+  url      = env("DATABASE_URL")
 }
 
 model User {
-  id            String   @id @default(uuid())
-  name          String?
-  email         String   @unique
-  phoneNumber   String   @unique @map("phone_number")
-  passwordHash  String   @map("password_hash")
-  role          String   @default("MERCHANT") // ADMIN, MERCHANT, SUB_MERCHANT
-  status        String   @default("PENDING_VERIFICATION") // ACTIVE, SUSPENDED, PENDING_VERIFICATION, REJECTED
-  appealNotes   String?  @map("appeal_notes")
-  createdAt     DateTime @default(now()) @map("created_at")
-  updatedAt     DateTime @updatedAt @map("updated_at")
+  id           String   @id @default(uuid())
+  name         String?
+  email        String   @unique
+  phoneNumber  String   @unique @map("phone_number")
+  passwordHash String   @map("password_hash")
+  role         String   @default("MERCHANT") // ADMIN, MERCHANT, SUB_MERCHANT
+  status       String   @default("PENDING_VERIFICATION") // ACTIVE, SUSPENDED, PENDING_VERIFICATION, REJECTED
+  appealNotes  String?  @map("appeal_notes")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
 
-  wallet        Wallet?
-  notifications Notification[]
-  products      Product[]
-  sales         Sale[]
-  initiatedTx   Transaction[] @relation("Initiator")
-  approvedWithdrawals Withdrawal[] @relation("Approver")
-  
-  categories    Category[]
+  wallet              Wallet?
+  notifications       Notification[]
+  products            Product[]
+  sales               Sale[]
+  initiatedTx         Transaction[]  @relation("Initiator")
+  approvedWithdrawals Withdrawal[]   @relation("Approver")
+
+  categories      Category[]
   businessProfile BusinessProfile?
-  subscription  Subscription?
+  subscription    Subscription?
 
-  // Team Management
-  parentId     String?  @map("parent_id")
-  parent       User?    @relation("Team", fields: [parentId], references: [id])
-  children     User[]   @relation("Team")
+  // Team Management (new table)
+  teamMembers TeamMember[]
 
   @@map("users")
 }
 
 model BusinessProfile {
-  id            String   @id @default(uuid())
-  userId        String   @unique @map("user_id")
-  user          User     @relation(fields: [userId], references: [id])
-  companyName   String   @map("company_name")
-  logoUrl       String?  @map("logo_url")
-  contactPhone  String?  @map("contact_phone")
-  email         String?
-  location      String?
-  website       String?
-  kraPinNumber  String?  @map("kra_pin_number")
-  bankDetails   String?  @map("bank_details")
-  mpesaDetails  String?  @map("mpesa_details")
-  
+  id           String  @id @default(uuid())
+  userId       String  @unique @map("user_id")
+  user         User    @relation(fields: [userId], references: [id])
+  companyName  String  @map("company_name")
+  logoUrl      String? @map("logo_url")
+  contactPhone String? @map("contact_phone")
+  email        String?
+  location     String?
+  website      String?
+  kraPinNumber String? @map("kra_pin_number")
+  bankDetails  String? @map("bank_details")
+  mpesaDetails String? @map("mpesa_details")
+
   // SMTP Settings
-  smtpHost      String?  @map("smtp_host")
-  smtpPort      Int?     @map("smtp_port")
-  smtpUser      String?  @map("smtp_user")
-  smtpPass      String?  @map("smtp_pass")
+  smtpHost String? @map("smtp_host")
+  smtpPort Int?    @map("smtp_port")
+  smtpUser String? @map("smtp_user")
+  smtpPass String? @map("smtp_pass")
 
   // M-Pesa API Credentials
   mpesaConsumerKey    String? @map("mpesa_consumer_key")
@@ -77,17 +75,17 @@ model BusinessProfile {
   vatRate             Float   @default(16.0)
 
   // KYC Fields
-  idNumber            String?  @map("id_number")
-  idFrontUrl          String?  @map("id_front_url")
-  idBackUrl           String?  @map("id_back_url")
-  businessPermitUrl   String?  @map("business_permit_url")
-  registrationCertUrl String?  @map("registration_cert_url")
-  kraCertUrl          String?  @map("kra_cert_url")
-  dataPolicyAccepted  Boolean  @default(false) @map("data_policy_accepted")
-  verificationNotes   String?  @map("verification_notes")
+  idNumber            String? @map("id_number")
+  idFrontUrl          String? @map("id_front_url")
+  idBackUrl           String? @map("id_back_url")
+  businessPermitUrl   String? @map("business_permit_url")
+  registrationCertUrl String? @map("registration_cert_url")
+  kraCertUrl          String? @map("kra_cert_url")
+  dataPolicyAccepted  Boolean @default(false) @map("data_policy_accepted")
+  verificationNotes   String? @map("verification_notes")
 
-  createdAt     DateTime @default(now()) @map("created_at")
-  updatedAt     DateTime @updatedAt @map("updated_at")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
   @@map("business_profiles")
 }
@@ -100,59 +98,59 @@ model Wallet {
   currency      String   @default("KES")
   lastUpdatedAt DateTime @updatedAt @map("last_updated_at")
 
-  transactions  Transaction[]
-  withdrawals   Withdrawal[]
+  transactions Transaction[]
+  withdrawals  Withdrawal[]
 
   @@map("wallets")
 }
 
 model Category {
-  id            String   @id @default(uuid())
-  merchantId    String   @map("merchant_id")
-  merchant      User     @relation(fields: [merchantId], references: [id])
-  name          String
-  products      Product[]
-  createdAt     DateTime @default(now()) @map("created_at")
+  id         String    @id @default(uuid())
+  merchantId String    @map("merchant_id")
+  merchant   User      @relation(fields: [merchantId], references: [id])
+  name       String
+  products   Product[]
+  createdAt  DateTime  @default(now()) @map("created_at")
 
   @@map("categories")
 }
 
 model Product {
-  id            String   @id @default(uuid())
-  merchantId    String   @map("merchant_id")
-  merchant      User     @relation(fields: [merchantId], references: [id])
-  name          String
-  description   String?
-  imageUrl      String?  @map("image_url")
-  sku           String?
-  barcode       String?
-  price         Decimal
-  costPrice     Decimal? @map("cost_price")
-  stockQuantity Int      @default(0) @map("stock_quantity")
-  minStockLevel Int      @default(0) @map("min_stock_level")
-  maxStockLevel Int?     @map("max_stock_level")
-  reorderPoint  Int      @default(10) @map("reorder_point")
-  reorderQuantity Int?   @map("reorder_quantity")
-  isTaxable     Boolean  @default(false) @map("is_taxable")
-  taxRate       Decimal? @default(0) @map("tax_rate")
-  status        String   @default("ACTIVE") // ACTIVE, ARCHIVED, OUT_OF_STOCK
-  unit          String?  @default("pcs") // pcs, kg, liters, etc
-  
+  id              String   @id @default(uuid())
+  merchantId      String   @map("merchant_id")
+  merchant        User     @relation(fields: [merchantId], references: [id])
+  name            String
+  description     String?
+  imageUrl        String?  @map("image_url")
+  sku             String?
+  barcode         String?
+  price           Decimal
+  costPrice       Decimal? @map("cost_price")
+  stockQuantity   Int      @default(0) @map("stock_quantity")
+  minStockLevel   Int      @default(0) @map("min_stock_level")
+  maxStockLevel   Int?     @map("max_stock_level")
+  reorderPoint    Int      @default(10) @map("reorder_point")
+  reorderQuantity Int?     @map("reorder_quantity")
+  isTaxable       Boolean  @default(false) @map("is_taxable")
+  taxRate         Decimal? @default(0) @map("tax_rate")
+  status          String   @default("ACTIVE") // ACTIVE, ARCHIVED, OUT_OF_STOCK
+  unit            String?  @default("pcs") // pcs, kg, liters, etc
+
   // Supplier Information
-  supplierName  String?  @map("supplier_name")
+  supplierName    String? @map("supplier_name")
   supplierContact String? @map("supplier_contact")
-  
+
   // Batch/Lot Tracking
-  batchNumber   String?  @map("batch_number")
-  expiryDate    DateTime? @map("expiry_date")
-  
-  categoryId    String?  @map("category_id")
-  category      Category? @relation(fields: [categoryId], references: [id])
-  
-  createdAt     DateTime @default(now()) @map("created_at")
-  updatedAt     DateTime @updatedAt @map("updated_at")
-  
-  saleItems     SaleItem[]
+  batchNumber String?   @map("batch_number")
+  expiryDate  DateTime? @map("expiry_date")
+
+  categoryId String?   @map("category_id")
+  category   Category? @relation(fields: [categoryId], references: [id])
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  saleItems      SaleItem[]
   stockMovements StockMovement[]
 
   @@map("products")
@@ -163,12 +161,12 @@ model StockMovement {
   productId     String   @map("product_id")
   product       Product  @relation(fields: [productId], references: [id])
   merchantId    String   @map("merchant_id")
-  type          String   // IN, OUT, ADJUSTMENT, RETURN, DAMAGED
+  type          String // IN, OUT, ADJUSTMENT, RETURN, DAMAGED
   quantity      Int
   previousStock Int      @map("previous_stock")
   newStock      Int      @map("new_stock")
   reason        String?
-  reference     String?  // Sale ID, Purchase Order, etc
+  reference     String? // Sale ID, Purchase Order, etc
   notes         String?
   createdAt     DateTime @default(now()) @map("created_at")
 
@@ -176,92 +174,94 @@ model StockMovement {
 }
 
 model Transaction {
-  id              String   @id @default(uuid())
-  type            String   // DEPOSIT_STK, WITHDRAWAL, FEE, SALE_CREDIT
-  reference       String?  // M-Pesa Receipt or internal ref
-  merchantRequestId String? @map("merchant_request_id")
-  checkoutRequestId String? @map("checkout_request_id")
-  amount          Decimal
-  feeCharged      Decimal  @default(0) @map("fee_charged")
-  status          String   @default("PENDING") // PENDING, COMPLETED, FAILED
-  initiatorUserId String?  @map("initiator_user_id")
-  initiator       User?    @relation("Initiator", fields: [initiatorUserId], references: [id])
-  recipientWalletId String @map("recipient_wallet_id")
-  recipientWallet Wallet   @relation(fields: [recipientWalletId], references: [id])
-  metadata        String?  @db.Text // JSON stringified
-  createdAt       DateTime @default(now()) @map("created_at")
+  id                    String      @id @default(uuid())
+  type                  String // DEPOSIT_STK, WITHDRAWAL, FEE, SALE_CREDIT
+  reference             String? // M-Pesa Receipt or internal ref
+  merchantRequestId     String?     @map("merchant_request_id")
+  checkoutRequestId     String?     @map("checkout_request_id")
+  amount                Decimal
+  feeCharged            Decimal     @default(0) @map("fee_charged")
+  status                String      @default("PENDING") // PENDING, COMPLETED, FAILED
+  initiatorUserId       String?     @map("initiator_user_id")
+  initiator             User?       @relation("Initiator", fields: [initiatorUserId], references: [id])
+  initiatorTeamMemberId String?     @map("initiator_team_member_id")
+  initiatorTeamMember   TeamMember? @relation("TeamMemberInitiator", fields: [initiatorTeamMemberId], references: [id])
+  recipientWalletId     String      @map("recipient_wallet_id")
+  recipientWallet       Wallet      @relation(fields: [recipientWalletId], references: [id])
+  metadata              String?     @db.Text // JSON stringified
+  createdAt             DateTime    @default(now()) @map("created_at")
 
-  sale            Sale?
+  sale Sale?
 
   @@map("transactions")
 }
 
 model Sale {
-  id              String   @id @default(uuid())
-  merchantId      String   @map("merchant_id")
-  merchant        User     @relation(fields: [merchantId], references: [id])
-  
-  // Customer Information
-  customerName    String?  @map("customer_name")
-  customerPhone   String?  @map("customer_phone")
-  customerEmail   String?  @map("customer_email")
-  
-  // Pricing
-  subtotal        Decimal  @default(0)
-  discountType    String?  @map("discount_type") // PERCENTAGE, FIXED
-  discountValue   Decimal? @default(0) @map("discount_value")
-  discountAmount  Decimal  @default(0) @map("discount_amount")
-  taxAmount       Decimal  @default(0) @map("tax_amount")
-  totalAmount     Decimal  @map("total_amount")
-  
-  // Payment
-  paymentMethod   String   @default("CASH") @map("payment_method") // CASH, MPESA_STK, SPLIT
-  paymentStatus   String   @default("PAID") @map("payment_status") // PAID, PARTIAL, PENDING
-  amountPaid      Decimal  @default(0) @map("amount_paid")
-  amountDue       Decimal  @default(0) @map("amount_due")
-  changeGiven     Decimal? @default(0) @map("change_given")
-  
-  // Split Payment Details (JSON)
-  splitPayments   String?  @map("split_payments") // JSON: [{method: 'CASH', amount: 100}, {method: 'MPESA', amount: 200}]
-  
-  transactionId   String?  @unique @map("transaction_id")
-  transaction     Transaction? @relation(fields: [transactionId], references: [id])
-  
-  notes           String?
-  createdAt       DateTime @default(now()) @map("created_at")
+  id         String @id @default(uuid())
+  merchantId String @map("merchant_id")
+  merchant   User   @relation(fields: [merchantId], references: [id])
 
-  items           SaleItem[]
+  // Customer Information
+  customerName  String? @map("customer_name")
+  customerPhone String? @map("customer_phone")
+  customerEmail String? @map("customer_email")
+
+  // Pricing
+  subtotal       Decimal  @default(0)
+  discountType   String?  @map("discount_type") // PERCENTAGE, FIXED
+  discountValue  Decimal? @default(0) @map("discount_value")
+  discountAmount Decimal  @default(0) @map("discount_amount")
+  taxAmount      Decimal  @default(0) @map("tax_amount")
+  totalAmount    Decimal  @map("total_amount")
+
+  // Payment
+  paymentMethod String   @default("CASH") @map("payment_method") // CASH, MPESA_STK, SPLIT
+  paymentStatus String   @default("PAID") @map("payment_status") // PAID, PARTIAL, PENDING
+  amountPaid    Decimal  @default(0) @map("amount_paid")
+  amountDue     Decimal  @default(0) @map("amount_due")
+  changeGiven   Decimal? @default(0) @map("change_given")
+
+  // Split Payment Details (JSON)
+  splitPayments String? @map("split_payments") // JSON: [{method: 'CASH', amount: 100}, {method: 'MPESA', amount: 200}]
+
+  transactionId String?      @unique @map("transaction_id")
+  transaction   Transaction? @relation(fields: [transactionId], references: [id])
+
+  notes     String?
+  createdAt DateTime @default(now()) @map("created_at")
+
+  items SaleItem[]
 
   @@map("sales")
 }
 
 model SaleItem {
-  id        String   @id @default(uuid())
-  saleId    String   @map("sale_id")
-  sale      Sale     @relation(fields: [saleId], references: [id])
-  productId String   @map("product_id")
-  product   Product  @relation(fields: [productId], references: [id])
+  id        String  @id @default(uuid())
+  saleId    String  @map("sale_id")
+  sale      Sale    @relation(fields: [saleId], references: [id])
+  productId String  @map("product_id")
+  product   Product @relation(fields: [productId], references: [id])
   quantity  Int
-  unitPrice Decimal  @map("unit_price")
-  discount  Decimal  @default(0)
-  tax       Decimal  @default(0)
+  unitPrice Decimal @map("unit_price")
+  discount  Decimal @default(0)
+  tax       Decimal @default(0)
   subtotal  Decimal
 
   @@map("sale_items")
 }
 
 model Withdrawal {
-  id            String   @id @default(uuid())
-  walletId      String   @map("wallet_id")
-  wallet        Wallet   @relation(fields: [walletId], references: [id])
-  amount        Decimal
-  fee           Decimal  @default(0)
-  mpesaNumber   String   @map("mpesa_number")
-  status        String   @default("PENDING") // PENDING, APPROVED, PROCESSING, COMPLETED, REJECTED
-  approvedBy    String?  @map("approved_by")
-  approver      User?    @relation("Approver", fields: [approvedBy], references: [id])
-  createdAt     DateTime @default(now()) @map("created_at")
-  updatedAt     DateTime @updatedAt @map("updated_at")
+  id          String   @id @default(uuid())
+  walletId    String   @map("wallet_id")
+  wallet      Wallet   @relation(fields: [walletId], references: [id])
+  amount      Decimal
+  fee         Decimal  @default(0)
+  mpesaNumber String   @map("mpesa_number")
+  status      String   @default("PENDING") // PENDING, APPROVED, PROCESSING, COMPLETED, REJECTED
+  approvedBy  String?  @map("approved_by")
+  approver    User?    @relation("Approver", fields: [approvedBy], references: [id])
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
 
   @@map("withdrawals")
 }
@@ -275,22 +275,49 @@ model Notification {
   read      Boolean  @default(false)
   createdAt DateTime @default(now()) @map("created_at")
 
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
-
 model Subscription {
-  id              String   @id @default(uuid())
-  merchantId      String   @unique @map("merchant_id")
-  merchant        User     @relation(fields: [merchantId], references: [id])
-  plan            String   // BASIC, PRO, ENTERPRISE
-  status          String   @default("ACTIVE") // ACTIVE, EXPIRED, CANCELLED
-  startDate       DateTime @default(now()) @map("start_date")
-  endDate         DateTime @map("end_date")
-  autoRenew       Boolean  @default(true) @map("auto_renew")
-  lastPaymentId   String?  @map("last_payment_id") // Reference to Transaction
-  createdAt       DateTime @default(now()) @map("created_at")
-  updatedAt       DateTime @updatedAt @map("updated_at")
+  id            String   @id @default(uuid())
+  merchantId    String   @unique @map("merchant_id")
+  merchant      User     @relation(fields: [merchantId], references: [id])
+  plan          String // BASIC, PRO, ENTERPRISE
+  status        String   @default("ACTIVE") // ACTIVE, EXPIRED, CANCELLED
+  startDate     DateTime @default(now()) @map("start_date")
+  endDate       DateTime @map("end_date")
+  autoRenew     Boolean  @default(true) @map("auto_renew")
+  lastPaymentId String?  @map("last_payment_id") // Reference to Transaction
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
 
   @@map("subscriptions")
+}
+
+// Team Member Table - Separate from User accounts
+model TeamMember {
+  id         String @id @default(uuid())
+  merchantId String @map("merchant_id")
+  merchant   User   @relation(fields: [merchantId], references: [id], onDelete: Cascade)
+
+  name        String
+  email       String  @unique
+  phoneNumber String? @map("phone_number")
+  pin         String? // 4-digit PIN for POS access (hashed)
+
+  role   String @default("STAFF") // STAFF, MANAGER, CASHIER
+  status String @default("ACTIVE") // ACTIVE, SUSPENDED
+
+  // Permissions (JSON)
+  permissions String? @db.Text // {"canMakeSales": true, "canViewReports": false}
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Audit trail
+  salesInitiated Transaction[] @relation("TeamMemberInitiator")
+
+  @@index([merchantId])
+  @@index([email])
+  @@map("team_members")
 }
