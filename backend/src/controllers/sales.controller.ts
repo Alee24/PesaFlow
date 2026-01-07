@@ -376,8 +376,8 @@ export const getStaffPerformance = async (req: Request, res: Response) => {
         const { startDate, endDate } = req.query;
 
         const where: any = {
-            merchantId: merchantId,
-            status: { in: ['COMPLETED'] } // Only completed transactions count
+            status: { in: ['COMPLETED'] }, // Only completed transactions count
+            type: 'SALE_CASH' // Filter for sales
         };
 
         if (startDate || endDate) {
@@ -393,8 +393,7 @@ export const getStaffPerformance = async (req: Request, res: Response) => {
             by: ['initiatorUserId'],
             where: {
                 ...where,
-                initiatorUserId: { not: null }, // Only human initiated
-                type: 'SALE_CASH' // Filter for sales
+                initiatorUserId: { not: null } // Only human initiated
             },
             _count: {
                 id: true
