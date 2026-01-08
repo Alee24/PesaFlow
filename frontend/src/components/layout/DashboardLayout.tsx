@@ -115,7 +115,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
                 <footer className="p-4 border-t border-gray-100 dark:border-gray-800 text-center print:hidden">
                     <p className="text-xs text-gray-400">
-                        Powered by <span className="font-semibold text-gray-500 dark:text-gray-400">KK Dynamic Enterprise Solutions LTD</span>
+                        Powered by <a href="https://kkdes.co.ke/" target="_blank" rel="noopener noreferrer" className="font-semibold text-gray-500 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400">KK Dynamic Enterprise Solutions LTD</a>
                     </p>
                 </footer>
 

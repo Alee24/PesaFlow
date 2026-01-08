@@ -10,7 +10,7 @@ export default function NotificationsPage() {
     const notifications = [
         {
             id: 1,
-            title: 'Welcome to PesaFlow!',
+            title: 'Welcome to Mpesa Connect!',
             message: 'Your account has been successfully created. Start by setting up your business profile.',
             type: 'info',
             date: 'Just now'

@@ -64,7 +64,7 @@ export default function RegisterPage() {
             <div className="w-full max-w-md">
                 <div className="text-center mb-8">
                     <h1 className="text-4xl font-black bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 to-purple-600 tracking-tight">
-                        PesaFlow
+                        Mpesa Connect
                     </h1>
                     <p className="text-gray-500 mt-2">Create your merchant account</p>
                 </div>

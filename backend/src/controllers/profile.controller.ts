@@ -132,7 +132,7 @@ export const testSmtpConnection = async (req: Request, res: Response) => {
             await transporter.sendMail({
                 from: `"${profile.companyName}" <${profile.smtpUser}>`,
                 to: toEmail,
-                subject: 'Test Email from PesaFlow',
+                subject: 'Test Email from Mpesa Connect',
                 text: 'This is a test email to confirm your SMTP settings are working correctly.',
                 html: '<p>This is a <b>test email</b> to confirm your SMTP settings are working correctly.</p>'
             });

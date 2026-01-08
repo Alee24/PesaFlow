@@ -1,8 +1,10 @@
 
 import { Router } from 'express';
 import { register, login, updateUser, getCurrentUser, completeProfile } from '../controllers/auth.controller';
+import { authenticateToken } from '../middlewares/auth.middleware';
+import { upload } from '../middlewares/upload.middleware';
 
-// ... other imports
+const router = Router();
 
 router.post('/register', register);
 router.post('/complete-profile', authenticateToken, upload.fields([

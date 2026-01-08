@@ -22,6 +22,11 @@ const completeProfileSchema = z.object({
     dataPolicyAccepted: z.any().transform(v => v === 'true' || v === true || v === 'on'),
 });
 
+const loginSchema = z.object({
+    email: z.string().email(),
+    password: z.string(),
+});
+
 export const register = async (req: Request, res: Response): Promise<void> => {
     try {
         const body = req.body;
