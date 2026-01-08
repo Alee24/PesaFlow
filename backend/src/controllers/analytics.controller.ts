@@ -329,24 +329,27 @@ export const getTeamPerformance = async (req: AuthRequest, res: Response) => {
         // Get all sub-merchants (branch staff) for this merchant
         // Note: Check if your User model has a relation for sub-merchants
         // If not, we'll return empty data
-        const subMerchants = await prisma.user.findMany({
+        // Get merchant and their staff (branch managers/sub-merchants)
+        const teamMembers = await prisma.user.findMany({
             where: {
-                role: 'SUB_MERCHANT',
-                // Assuming there's a merchant relation or field
-                // Adjust based on your actual schema
+                OR: [
+                    { id: userId },           // The merchant themselves
+                    { parentId: userId }      // Staff belonging to this merchant
+                ]
             },
             select: {
                 id: true,
                 name: true,
                 email: true,
-                phoneNumber: true
+                phoneNumber: true,
+                role: true
             }
         });
 
         // Get sales performance for each staff member
         // Since Sale model has merchantId, we'll use that
         const performanceData = await Promise.all(
-            subMerchants.map(async (staff) => {
+            teamMembers.map(async (staff) => {
                 const sales = await prisma.sale.findMany({
                     where: {
                         merchantId: staff.id,
@@ -363,6 +366,7 @@ export const getTeamPerformance = async (req: AuthRequest, res: Response) => {
                     staffName: staff.name,
                     staffEmail: staff.email,
                     staffPhone: staff.phoneNumber,
+                    role: staff.role, // Added role to response
                     totalSales,
                     totalRevenue,
                     averageOrderValue
@@ -374,7 +378,7 @@ export const getTeamPerformance = async (req: AuthRequest, res: Response) => {
         const sortedPerformance = performanceData.sort((a, b) => b.totalRevenue - a.totalRevenue);
 
         res.json({
-            totalStaff: subMerchants.length,
+            totalStaff: teamMembers.length, // totalStaff might be misleading if it includes Merchant, but "Total Team Members" is accurate
             performance: sortedPerformance,
             period: { start, end }
         });
