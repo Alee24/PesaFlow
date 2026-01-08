@@ -63,6 +63,18 @@ const FEATURE_ACCESS: Record<string, Record<string, boolean>> = {
         BASIC: true,
         PRO: true,
         ENTERPRISE: true
+    },
+    'CRM': {
+        FREE: true,
+        BASIC: true,
+        PRO: true,
+        ENTERPRISE: true
+    },
+    'POS': {
+        FREE: true,
+        BASIC: true,
+        PRO: true,
+        ENTERPRISE: true
     }
 };
 

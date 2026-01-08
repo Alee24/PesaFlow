@@ -18,18 +18,20 @@ const menuItems = [
     { name: 'POS', href: '/pos', icon: ShoppingCart, feature: 'POS' },
     { name: 'Products', href: '/products', icon: Package, feature: null },
     { name: 'Sales', href: '/sales', icon: TrendingUp, feature: null },
-    { name: 'Analytics', href: '/analytics', icon: BarChart3, feature: 'ANALYTICS' },
     { name: 'Invoices', href: '/invoices', icon: FileText, feature: 'invoices' },
     { name: 'Customers', href: '/customers', icon: Users, feature: 'CRM' },
     { name: 'Wallet', href: '/wallet', icon: Wallet, feature: null },
     { name: 'Withdrawals', href: '/withdrawals', icon: CreditCard, feature: null },
+    { name: 'Analytics', href: '/analytics', icon: BarChart3, feature: 'ANALYTICS' },
     { name: 'Team', href: '/team', icon: Users, feature: 'TEAM_MANAGEMENT' },
+    { name: 'Subscription', href: '/subscription', icon: ShieldCheck },
     { name: 'Settings', href: '/settings', icon: Settings, feature: null },
+
+    // Admin only items
+    { name: 'Admin Dashboard', href: '/admin', icon: LayoutDashboard, role: 'ADMIN' },
     { name: 'Merchant Verification', href: '/admin/verification', icon: CheckCircle, role: 'ADMIN' },
     { name: 'Users', href: '/admin/users', icon: User, role: 'ADMIN' },
     { name: 'Withdrawal Approvals', href: '/admin/withdrawals', icon: CreditCard, role: 'ADMIN' },
-    { name: 'Subscription', href: '/subscription', icon: ShieldCheck },
-    { name: 'Admin Dashboard', href: '/admin', icon: LayoutDashboard, role: 'ADMIN' },
 ];
 
 
