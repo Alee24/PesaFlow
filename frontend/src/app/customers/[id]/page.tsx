@@ -240,16 +240,16 @@ export default function CustomerDetailPage() {
                     </div>
                 </Card>
 
-                {/* Tabs */}
-                <div className="border-b border-gray-200 dark:border-gray-700">
-                    <nav className="flex gap-4">
+                {/* Tabs - Scrollable on mobile */}
+                <div className="border-b border-gray-200 dark:border-gray-700 overflow-x-auto">
+                    <nav className="flex gap-4 min-w-max pb-1">
                         {['overview', 'notes', 'interactions', 'sales'].map((tab) => (
                             <button
                                 key={tab}
                                 onClick={() => setActiveTab(tab)}
-                                className={`px-4 py-2 font-medium capitalize ${activeTab === tab
-                                        ? 'border-b-2 border-indigo-600 text-indigo-600'
-                                        : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'
+                                className={`px-4 py-2 font-medium capitalize whitespace-nowrap ${activeTab === tab
+                                    ? 'border-b-2 border-indigo-600 text-indigo-600'
+                                    : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'
                                     }`}
                             >
                                 {tab}
@@ -270,8 +270,8 @@ export default function CustomerDetailPage() {
                                     <dt className="text-sm font-medium text-gray-500 dark:text-gray-400">Status</dt>
                                     <dd className="mt-1">
                                         <span className={`px-2 py-1 text-xs font-semibold rounded-full ${customer.status === 'ACTIVE' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' :
-                                                customer.status === 'LEAD' ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200' :
-                                                    'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200'
+                                            customer.status === 'LEAD' ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200' :
+                                                'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200'
                                             }`}>
                                             {customer.status}
                                         </span>
