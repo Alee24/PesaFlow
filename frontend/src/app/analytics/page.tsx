@@ -19,6 +19,19 @@ import {
     Activity
 } from 'lucide-react';
 import { useToast } from '@/contexts/ToastContext';
+import {
+    BarChart,
+    Bar,
+    XAxis,
+    YAxis,
+    CartesianGrid,
+    Tooltip,
+    ResponsiveContainer,
+    PieChart as RechartsPieChart,
+    Pie,
+    Cell,
+    Legend
+} from 'recharts';
 
 export default function AnalyticsPage() {
     const [loading, setLoading] = useState(true);
@@ -261,8 +274,32 @@ export default function AnalyticsPage() {
                                 <BarChart3 className="w-5 h-5 text-blue-600" />
                                 <h3 className="text-lg font-semibold">Revenue Trend</h3>
                             </div>
-                            <div className="h-64 flex items-center justify-center bg-gray-50 dark:bg-gray-800 rounded-lg">
-                                <p className="text-gray-500">Chart visualization coming soon</p>
+                            <div className="h-64 w-full">
+                                {salesData?.revenueByDay?.length > 0 ? (
+                                    <ResponsiveContainer width="100%" height="100%">
+                                        <BarChart data={salesData.revenueByDay}>
+                                            <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                                            <XAxis
+                                                dataKey="date"
+                                                tickFormatter={(value) => new Date(value).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+                                                fontSize={12}
+                                            />
+                                            <YAxis
+                                                tickFormatter={(value) => `Ksh ${value}`}
+                                                fontSize={12}
+                                            />
+                                            <Tooltip
+                                                formatter={(value: any) => [`Ksh ${value.toLocaleString()}`, 'Revenue']}
+                                                labelFormatter={(label) => new Date(label).toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+                                            />
+                                            <Bar dataKey="revenue" fill="#3b82f6" radius={[4, 4, 0, 0]} />
+                                        </BarChart>
+                                    </ResponsiveContainer>
+                                ) : (
+                                    <div className="flex items-center justify-center h-full text-gray-500">
+                                        No revenue data for this period
+                                    </div>
+                                )}
                             </div>
                         </Card>
 
@@ -272,13 +309,32 @@ export default function AnalyticsPage() {
                                 <PieChart className="w-5 h-5 text-purple-600" />
                                 <h3 className="text-lg font-semibold">Payment Methods</h3>
                             </div>
-                            <div className="space-y-3">
-                                {salesData?.paymentMethods && Object.entries(salesData.paymentMethods).map(([method, count]: [string, any]) => (
-                                    <div key={method} className="flex items-center justify-between">
-                                        <span className="text-gray-600 dark:text-gray-400 capitalize">{method}</span>
-                                        <span className="font-semibold">{count} transactions</span>
+                            <div className="h-64 w-full flex items-center justify-center">
+                                {salesData?.paymentMethods && Object.keys(salesData.paymentMethods).length > 0 ? (
+                                    <ResponsiveContainer width="100%" height="100%">
+                                        <RechartsPieChart>
+                                            <Pie
+                                                data={Object.entries(salesData.paymentMethods).map(([name, value]) => ({ name, value }))}
+                                                cx="50%"
+                                                cy="50%"
+                                                innerRadius={60}
+                                                outerRadius={80}
+                                                paddingAngle={5}
+                                                dataKey="value"
+                                            >
+                                                {Object.entries(salesData.paymentMethods).map((entry, index) => (
+                                                    <Cell key={`cell-${index}`} fill={['#3b82f6', '#10b981', '#f59e0b', '#ef4444'][index % 4]} />
+                                                ))}
+                                            </Pie>
+                                            <Tooltip />
+                                            <Legend />
+                                        </RechartsPieChart>
+                                    </ResponsiveContainer>
+                                ) : (
+                                    <div className="flex items-center justify-center h-full text-gray-500">
+                                        No data available
                                     </div>
-                                ))}
+                                )}
                             </div>
                         </Card>
                     </div>

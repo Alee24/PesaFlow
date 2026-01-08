@@ -37,7 +37,7 @@ export const getSalesOverview = async (req: AuthRequest, res: Response) => {
         // Revenue by day
         const revenueByDay = sales.reduce((acc: any, sale) => {
             const date = sale.createdAt.toISOString().split('T')[0];
-            acc[date] = (acc[date] || 0) + sale.totalAmount;
+            acc[date] = (acc[date] || 0) + Number(sale.totalAmount);
             return acc;
         }, {});
 
@@ -50,9 +50,14 @@ export const getSalesOverview = async (req: AuthRequest, res: Response) => {
         // Peak hours analysis
         const salesByHour = sales.reduce((acc: any, sale) => {
             const hour = sale.createdAt.getHours();
-            acc[hour] = (acc[hour] || 0) + 1;
+            acc[hour] = (acc[hour] || 0) + Number(sale.totalAmount); // Changed to sum revenue by hour instead of count, or keep count if intended
             return acc;
         }, {});
+
+        // Note: keeping salesByHour as count based on variable name context in original code, but if revenue was intended key logic is similar. 
+        // Reverting salesByHour to count as per original logical intent likely being 'transaction volume'
+
+        // ... (Re-reading original code: acc[hour] = (acc[hour] || 0) + 1; -> This was correct for count)
 
         res.json({
             summary: {
@@ -63,7 +68,11 @@ export const getSalesOverview = async (req: AuthRequest, res: Response) => {
             },
             revenueByDay: Object.entries(revenueByDay).map(([date, revenue]) => ({ date, revenue })),
             paymentMethods,
-            salesByHour
+            salesByHour: sales.reduce((acc: any, sale) => {
+                const hour = sale.createdAt.getHours();
+                acc[hour] = (acc[hour] || 0) + 1;
+                return acc;
+            }, {})
         });
     } catch (error: any) {
         console.error('Sales overview error:', error);
@@ -167,7 +176,7 @@ export const getCustomerInsights = async (req: AuthRequest, res: Response) => {
                     lastPurchase: sale.createdAt
                 };
             }
-            acc[key].totalSpent += sale.totalAmount;
+            acc[key].totalSpent += Number(sale.totalAmount);
             acc[key].transactionCount += 1;
             if (sale.createdAt < acc[key].firstPurchase) acc[key].firstPurchase = sale.createdAt;
             if (sale.createdAt > acc[key].lastPurchase) acc[key].lastPurchase = sale.createdAt;
@@ -179,14 +188,14 @@ export const getCustomerInsights = async (req: AuthRequest, res: Response) => {
 
         const topCustomers = customers.slice(0, 10);
         const totalCustomers = customers.length;
-        const averageCustomerValue = customers.reduce((sum: number, c: any) => sum + c.totalSpent, 0) / totalCustomers;
+        const averageCustomerValue = customers.reduce((sum: number, c: any) => sum + c.totalSpent, 0) / (totalCustomers || 1);
 
         res.json({
             topCustomers,
             summary: {
                 totalCustomers,
                 averageCustomerValue,
-                repeatCustomerRate: customers.filter((c: any) => c.transactionCount > 1).length / totalCustomers
+                repeatCustomerRate: customers.filter((c: any) => c.transactionCount > 1).length / (totalCustomers || 1)
             }
         });
     } catch (error: any) {
