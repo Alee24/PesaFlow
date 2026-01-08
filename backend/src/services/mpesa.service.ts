@@ -59,6 +59,7 @@ export const initiateSTKPush = async (
     invoiceId?: string
 ) => {
     const creds = await getCredentials(userId);
+    console.log(`[M-Pesa Service] Using Environment: ${creds.env}`);
     const token = await getAccessToken(creds);
 
     const date = new Date();

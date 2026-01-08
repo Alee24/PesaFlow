@@ -26,7 +26,7 @@ export const stkPush = async (req: AuthRequest, res: Response): Promise<void> =>
             return;
         }
 
-        console.log(`Initiating STK Push for ${phoneNumber} amount ${amount} [${creds.env}]`);
+        console.log(`Initiating STK Push for ${phoneNumber} amount ${amount}`);
         const response = await initiateSTKPush(phoneNumber, Number(amount), 'POS Sale', req.user.userId, items);
         console.log('STK Initiation Successful:', response);
         res.json(response);
