@@ -6,12 +6,13 @@ import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Plus, Trash2, Printer, Save } from 'lucide-react';
 import api from '@/lib/api';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useToast } from '@/contexts/ToastContext';
 import { getImageUrl } from '@/lib/utils';
 
 export default function CreateInvoicePage() {
     const router = useRouter();
+    const searchParams = useSearchParams();
     const { showToast } = useToast();
     const [loading, setLoading] = useState(false);
 
@@ -34,7 +35,23 @@ export default function CreateInvoicePage() {
 
     useEffect(() => {
         fetchProfile();
-    }, []);
+
+        // Pre-fill from query params if available (from Customer page)
+        const name = searchParams.get('name');
+        const email = searchParams.get('email');
+        const phone = searchParams.get('phone');
+        const address = searchParams.get('address');
+
+        if (name) {
+            setInvoiceData(prev => ({
+                ...prev,
+                clientName: name || '',
+                clientEmail: email || '',
+                clientPhone: phone || '',
+                clientAddress: address || ''
+            }));
+        }
+    }, [searchParams]);
 
     const fetchProfile = async () => {
         try {

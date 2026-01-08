@@ -148,6 +148,22 @@ export default function CustomerDetailPage() {
                     <div className="flex gap-2">
                         <Button
                             variant="outline"
+                            onClick={() => {
+                                const params = new URLSearchParams({
+                                    name: customer.name || '',
+                                    email: customer.email || '',
+                                    phone: customer.phone || '',
+                                    address: `${customer.address || ''} ${customer.city || ''} ${customer.country || ''}`.trim()
+                                });
+                                router.push(`/invoices/new?${params.toString()}`);
+                            }}
+                            className="flex items-center gap-2"
+                        >
+                            <DollarSign className="w-4 h-4" />
+                            Create Invoice
+                        </Button>
+                        <Button
+                            variant="outline"
                             onClick={() => router.push(`/customers/${customerId}/edit`)}
                             className="flex items-center gap-2"
                         >
