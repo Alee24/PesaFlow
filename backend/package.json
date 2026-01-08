@@ -7,7 +7,9 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "nodemon --exec ts-node --transpile-only src/server.ts",
     "build": "tsc",
-    "start": "node dist/server.js"
+    "build": "tsc",
+    "start": "node dist/server.js",
+    "db:seed": "ts-node -r dotenv/config prisma/seed.ts"
   },
   "keywords": [],
   "author": "",

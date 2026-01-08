@@ -2,7 +2,24 @@ import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcryptjs';
 import dotenv from 'dotenv';
 
-dotenv.config();
+import path from 'path';
+
+// Try to load .env from multiple probable locations
+const envPath = path.resolve(__dirname, '../.env');
+const result = dotenv.config({ path: envPath });
+
+if (result.error) {
+    // Fallback to default check (PWD)
+    dotenv.config();
+}
+
+console.log(`[Seed Debug] Loading env from: ${envPath}`);
+console.log(`[Seed Debug] DATABASE_URL loaded: ${process.env.DATABASE_URL ? 'YES' : 'NO'}`);
+
+if (!process.env.DATABASE_URL) {
+    console.error('❌ Error: DATABASE_URL is missing. Please ensure backend/.env exists and contains DATABASE_URL.');
+    process.exit(1);
+}
 
 const prisma = new PrismaClient();
 
