@@ -2,7 +2,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { Sidebar, Header } from './DashboardShell';
 import { AlertCircle, XCircle } from 'lucide-react';
 import Link from 'next/link';
@@ -11,6 +11,7 @@ import { SubscriptionBadge } from '../subscription/SubscriptionBadge';
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
     const router = useRouter();
+    const pathname = usePathname();
     const [user, setUser] = useState<any>(null);
     const [isClient, setIsClient] = useState(false);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -24,7 +25,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         }
 
         // Load initial data from storage
-        setUser(JSON.parse(userData));
+        const parsedUser = JSON.parse(userData);
+        setUser(parsedUser);
 
         // Fetch fresh data from API to ensure status/name are up to date
         import('@/lib/api').then(({ default: api }) => {
@@ -40,6 +42,23 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 });
         });
     }, [router]);
+
+    // Handle Profile Completion Redirects
+    useEffect(() => {
+        if (!user || !isClient) return;
+        if (user.role !== 'MERCHANT') return;
+
+        // 1. If profile is NOT complete (strictly false), redirect to onboarding
+        // We check strictly false to avoid redirecting old cached users who might have undefined
+        if (user.isProfileComplete === false && pathname !== '/onboarding') {
+            router.push('/onboarding');
+        }
+
+        // 2. If profile IS complete, prevent access to onboarding
+        if (user.isProfileComplete === true && pathname === '/onboarding') {
+            router.push('/dashboard');
+        }
+    }, [user, pathname, router, isClient]);
 
     if (!isClient) return null; // Prevent hydration mismatch
 

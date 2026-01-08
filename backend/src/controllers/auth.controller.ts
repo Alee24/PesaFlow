@@ -12,7 +12,9 @@ const registerSchema = z.object({
     phoneNumber: z.string().min(10),
     password: z.string().min(6),
     role: z.string().optional().default('MERCHANT'),
-    // Business Profile Fields
+});
+
+const completeProfileSchema = z.object({
     companyName: z.string().min(1),
     idNumber: z.string().min(1),
     kraPinNumber: z.string().min(1),
@@ -20,16 +22,10 @@ const registerSchema = z.object({
     dataPolicyAccepted: z.any().transform(v => v === 'true' || v === true || v === 'on'),
 });
 
-const loginSchema = z.object({
-    email: z.string().email(),
-    password: z.string(),
-});
-
 export const register = async (req: Request, res: Response): Promise<void> => {
     try {
         const body = req.body;
-        // Parse the body with Zod
-        const { email, phoneNumber, password, role, companyName, idNumber, kraPinNumber, location, dataPolicyAccepted } = registerSchema.parse(body);
+        const { email, phoneNumber, password, role } = registerSchema.parse(body);
 
         const existingUser = await prisma.user.findFirst({
             where: { OR: [{ email }, { phoneNumber }] },
@@ -41,17 +37,6 @@ export const register = async (req: Request, res: Response): Promise<void> => {
         }
 
         const passwordHash = await bcrypt.hash(password, 10);
-        const protocol = req.protocol;
-        const host = req.get('host');
-        const files = req.files as any;
-
-        const getFileUrl = (fieldName: string) => {
-            if (files && files[fieldName] && files[fieldName][0]) {
-                // Return relative path to avoid localhost/mixed-content issues
-                return `/uploads/${files[fieldName][0].filename}`;
-            }
-            return null;
-        };
 
         const result = await prisma.$transaction(async (tx) => {
             // 1. Create User
@@ -77,23 +62,6 @@ export const register = async (req: Request, res: Response): Promise<void> => {
                 data: { userId: user.id },
             });
 
-            // 3. Create Business Profile with KYC Docs
-            await tx.businessProfile.create({
-                data: {
-                    userId: user.id,
-                    companyName,
-                    idNumber,
-                    kraPinNumber,
-                    location,
-                    dataPolicyAccepted,
-                    idFrontUrl: getFileUrl('idFront'),
-                    idBackUrl: getFileUrl('idBack'),
-                    businessPermitUrl: getFileUrl('businessPermit'),
-                    registrationCertUrl: getFileUrl('registrationCert'),
-                    kraCertUrl: getFileUrl('kraCert'),
-                }
-            });
-
             return user;
         });
 
@@ -104,7 +72,7 @@ export const register = async (req: Request, res: Response): Promise<void> => {
         );
 
         res.status(201).json({
-            message: 'Registration submitted successfully. Your account is pending verification by our team.',
+            message: 'Account created successfully. Please complete your profile.',
             token,
             user: { id: result.id, email: result.email, name: result.name, role: result.role, status: result.status }
         });
@@ -119,11 +87,66 @@ export const register = async (req: Request, res: Response): Promise<void> => {
     }
 };
 
+export const completeProfile = async (req: Request, res: Response): Promise<void> => {
+    try {
+        const userId = (req as any).user.userId;
+        const body = req.body;
+
+        // Parse body
+        const { companyName, idNumber, kraPinNumber, location, dataPolicyAccepted } = completeProfileSchema.parse(body);
+
+        // Check if profile already exists
+        const existingProfile = await prisma.businessProfile.findUnique({ where: { userId } });
+        if (existingProfile) {
+            res.status(400).json({ error: 'Business profile already exists' });
+            return;
+        }
+
+        const files = req.files as any;
+        const getFileUrl = (fieldName: string) => {
+            if (files && files[fieldName] && files[fieldName][0]) {
+                return `/uploads/${files[fieldName][0].filename}`;
+            }
+            return null;
+        };
+
+        await prisma.businessProfile.create({
+            data: {
+                userId,
+                companyName,
+                idNumber,
+                kraPinNumber,
+                location,
+                dataPolicyAccepted,
+                idFrontUrl: getFileUrl('idFront'),
+                idBackUrl: getFileUrl('idBack'),
+                businessPermitUrl: getFileUrl('businessPermit'),
+                registrationCertUrl: getFileUrl('registrationCert'),
+                kraCertUrl: getFileUrl('kraCert'),
+            }
+        });
+
+        res.json({ message: 'Profile completed successfully. Pending verification.' });
+
+    } catch (error) {
+        if (error instanceof z.ZodError) {
+            const errorMessage = (error as any).errors.map((e: any) => `${e.path.join('.')}: ${e.message}`).join(', ');
+            res.status(400).json({ error: errorMessage });
+        } else {
+            console.error("Complete Profile Error:", error);
+            res.status(500).json({ error: 'Internal Server Error' });
+        }
+    }
+};
+
 export const login = async (req: Request, res: Response): Promise<void> => {
     try {
         const { email, password } = loginSchema.parse(req.body);
 
-        const user = await prisma.user.findUnique({ where: { email } });
+        const user = await prisma.user.findUnique({
+            where: { email },
+            include: { businessProfile: true }
+        });
 
         if (!user || !(await bcrypt.compare(password, user.passwordHash))) {
             res.status(401).json({ error: 'Invalid credentials' });
@@ -144,7 +167,14 @@ export const login = async (req: Request, res: Response): Promise<void> => {
         res.json({
             message: 'Login successful',
             token,
-            user: { id: user.id, email: user.email, name: user.name, role: user.role, status: user.status }
+            user: {
+                id: user.id,
+                email: user.email,
+                name: user.name,
+                role: user.role,
+                status: user.status,
+                isProfileComplete: !!user.businessProfile
+            }
         });
     } catch (error) {
         if (error instanceof z.ZodError) {
@@ -209,11 +239,19 @@ export const updateUser = async (req: Request, res: Response): Promise<void> => 
         const updatedUser = await prisma.user.update({
             where: { id: userId },
             data: updates,
+            include: { businessProfile: true }
         });
 
         res.json({
             message: 'User updated successfully',
-            user: { id: updatedUser.id, email: updatedUser.email, name: updatedUser.name, role: updatedUser.role, status: updatedUser.status }
+            user: {
+                id: updatedUser.id,
+                email: updatedUser.email,
+                name: updatedUser.name,
+                role: updatedUser.role,
+                status: updatedUser.status,
+                isProfileComplete: !!updatedUser.businessProfile
+            }
         });
 
     } catch (error) {
@@ -226,7 +264,8 @@ export const getCurrentUser = async (req: Request, res: Response): Promise<void>
     try {
         const userId = (req as any).user.userId;
         const user = await prisma.user.findUnique({
-            where: { id: userId }
+            where: { id: userId },
+            include: { businessProfile: true }
         });
 
         if (!user) {
@@ -240,7 +279,8 @@ export const getCurrentUser = async (req: Request, res: Response): Promise<void>
                 email: user.email,
                 name: user.name,
                 role: user.role,
-                status: user.status
+                status: user.status,
+                isProfileComplete: !!user.businessProfile
             }
         });
     } catch (error) {

@@ -1,19 +1,17 @@
 
 import { Router } from 'express';
-import { register, login, updateUser, getCurrentUser } from '../controllers/auth.controller';
-import { authenticateToken } from '../middlewares/auth.middleware';
+import { register, login, updateUser, getCurrentUser, completeProfile } from '../controllers/auth.controller';
 
-import { upload } from '../middlewares/upload.middleware';
+// ... other imports
 
-const router = Router();
-
-router.post('/register', upload.fields([
+router.post('/register', register);
+router.post('/complete-profile', authenticateToken, upload.fields([
     { name: 'idFront', maxCount: 1 },
     { name: 'idBack', maxCount: 1 },
     { name: 'businessPermit', maxCount: 1 },
     { name: 'registrationCert', maxCount: 1 },
     { name: 'kraCert', maxCount: 1 }
-]), register);
+]), completeProfile);
 router.post('/login', login);
 router.get('/me', authenticateToken, getCurrentUser);
 router.put('/me', authenticateToken, updateUser);
