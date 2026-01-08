@@ -52,7 +52,7 @@ const getSystemTransporter = () => {
 
 export const sendVerificationEmail = async (email: string, token: string) => {
     // For local dev, update BASE_URL in .env
-    const baseUrl = process.env.BASE_URL || 'http://localhost:3000';
+    const baseUrl = process.env.BASE_URL || 'https://mpesaconnect.co.ke';
     const verifyUrl = `${baseUrl}/auth/verify?token=${token}`;
 
     const transporter = getSystemTransporter();
