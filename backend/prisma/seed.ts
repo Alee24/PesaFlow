@@ -60,59 +60,131 @@ const prisma = new PrismaClient();
 async function main() {
     try {
         await prisma.$connect();
-        console.log('Database connected.');
+        const maskedUrl = process.env.DATABASE_URL?.replace(/:[^:@]+@/, ':****@');
+        console.log(`[Seed Debug] Database connected to: ${maskedUrl}`);
 
-        const email = 'mettoalex@gmail.com';
         const password = 'Digital2025';
         const hashedPassword = await bcrypt.hash(password, 10);
-        const phoneNumber = '0700448448';
 
-        console.log(`Seeding user: ${email}`);
-
-        // Cast to any to bypass strict TS checks in seed script (schema vs generated client sync issues)
-        const updateData: any = {
-            passwordHash: hashedPassword,
-            role: 'ADMIN',
-            status: 'ACTIVE',
-            subscription: {
-                upsert: {
+        // --- 1. Admin User ---
+        console.log(`\n🌱 Seeding Admin: mettoalex@gmail.com`);
+        const admin = await prisma.user.upsert({
+            where: { email: 'mettoalex@gmail.com' },
+            update: {
+                passwordHash: hashedPassword,
+                role: 'ADMIN',
+                status: 'ACTIVE',
+                subscription: {
+                    upsert: {
+                        create: {
+                            plan: 'PRO',
+                            features: JSON.stringify(["POS", "ANALYTICS", "TEAM_MANAGEMENT", "CRM", "ADVANCED_CRM"]),
+                            status: 'ACTIVE'
+                        },
+                        update: {
+                            plan: 'PRO',
+                            features: JSON.stringify(["POS", "ANALYTICS", "TEAM_MANAGEMENT", "CRM", "ADVANCED_CRM"]),
+                            status: 'ACTIVE'
+                        }
+                    }
+                }
+            },
+            create: {
+                email: 'mettoalex@gmail.com',
+                name: 'Metto Alex',
+                phoneNumber: '0700448448',
+                passwordHash: hashedPassword,
+                role: 'ADMIN',
+                status: 'ACTIVE',
+                subscription: {
                     create: {
                         plan: 'PRO',
                         features: JSON.stringify(["POS", "ANALYTICS", "TEAM_MANAGEMENT", "CRM", "ADVANCED_CRM"]),
                         status: 'ACTIVE'
-                    },
-                    update: {
-                        plan: 'PRO',
-                        features: JSON.stringify(["POS", "ANALYTICS", "TEAM_MANAGEMENT", "CRM", "ADVANCED_CRM"]),
-                        status: 'ACTIVE'
+                    }
+                },
+                wallet: { create: { balance: 0 } }
+            }
+        });
+        console.log(`✅ Admin created/updated: ${admin.id}`);
+
+        // --- 2. Active Merchant ---
+        console.log(`\n🌱 Seeding Active Merchant: merchant@mpesaconnect.com`);
+        const merchant = await prisma.user.upsert({
+            where: { email: 'merchant@mpesaconnect.com' },
+            update: {
+                passwordHash: hashedPassword,
+                status: 'ACTIVE',
+                // Upsert subscription for merchant too
+                subscription: {
+                    upsert: {
+                        create: { plan: 'BASIC', features: '[]', status: 'ACTIVE' },
+                        update: { plan: 'BASIC', features: '[]', status: 'ACTIVE' }
                     }
                 }
-            }
-        };
-
-        const createData: any = {
-            email,
-            name: 'Metto Alex',
-            phoneNumber,
-            passwordHash: hashedPassword,
-            role: 'ADMIN',
-            status: 'ACTIVE',
-            subscription: {
-                create: {
-                    plan: 'PRO',
-                    features: JSON.stringify(["POS", "ANALYTICS", "TEAM_MANAGEMENT", "CRM", "ADVANCED_CRM"]),
-                    status: 'ACTIVE'
+            },
+            create: {
+                name: 'Active Merchant',
+                email: 'merchant@mpesaconnect.com',
+                phoneNumber: '0723456789',
+                passwordHash: hashedPassword,
+                role: 'MERCHANT',
+                status: 'ACTIVE',
+                wallet: { create: { balance: 0 } },
+                businessProfile: {
+                    create: {
+                        companyName: 'Test Business Ltd',
+                        idNumber: '12345678',
+                        kraPinNumber: 'A001234567P',
+                        location: 'Nairobi, Kenya',
+                        dataPolicyAccepted: true
+                    }
+                },
+                subscription: {
+                    create: { plan: 'BASIC', features: '[]', status: 'ACTIVE' }
                 }
             }
-        };
-
-        const user = await prisma.user.upsert({
-            where: { email },
-            update: updateData,
-            create: createData
         });
+        console.log(`✅ Merchant created/updated: ${merchant.id}`);
 
-        console.log('Seeded successfully:', user.id);
+        // --- 3. Pending Merchant ---
+        console.log(`\n🌱 Seeding Pending Merchant: pending@mpesaconnect.com`);
+        const pending = await prisma.user.upsert({
+            where: { email: 'pending@mpesaconnect.com' },
+            update: {
+                passwordHash: hashedPassword,
+                status: 'PENDING_VERIFICATION'
+            },
+            create: {
+                name: 'Pending Merchant',
+                email: 'pending@mpesaconnect.com',
+                phoneNumber: '0734567890',
+                passwordHash: hashedPassword,
+                role: 'MERCHANT',
+                status: 'PENDING_VERIFICATION',
+                wallet: { create: { balance: 0 } },
+                businessProfile: {
+                    create: {
+                        companyName: 'Pending Business',
+                        idNumber: '87654321',
+                        kraPinNumber: 'A007654321P',
+                        location: 'Mombasa, Kenya',
+                        dataPolicyAccepted: true
+                    }
+                },
+                subscription: {
+                    create: { plan: 'FREE', features: '[]', status: 'ACTIVE' }
+                }
+            }
+        });
+        console.log(`✅ Pending Merchant created/updated: ${pending.id}`);
+
+        console.log('\n🎉 ALL SEEDING COMPLETE');
+        console.log('---------------------------------------------------');
+        console.log('Admin:    mettoalex@gmail.com       (Pass: Digital2025)');
+        console.log('Merchant: merchant@mpesaconnect.com (Pass: Digital2025)');
+        console.log('Pending:  pending@mpesaconnect.com  (Pass: Digital2025)');
+        console.log('---------------------------------------------------');
 
     } catch (error) {
         console.error('SEED FAILURE:', error);
