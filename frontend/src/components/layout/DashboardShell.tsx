@@ -19,6 +19,7 @@ const menuItems = [
     { name: 'Products', href: '/products', icon: Package, feature: null },
     { name: 'Sales', href: '/sales', icon: TrendingUp, feature: null },
     { name: 'Analytics', href: '/analytics', icon: BarChart3, feature: 'ANALYTICS' },
+    { name: 'Invoices', href: '/invoices', icon: FileText, feature: 'invoices' },
     { name: 'Customers', href: '/customers', icon: Users, feature: 'CRM' },
     { name: 'Wallet', href: '/wallet', icon: Wallet, feature: null },
     { name: 'Withdrawals', href: '/withdrawals', icon: CreditCard, feature: null },
