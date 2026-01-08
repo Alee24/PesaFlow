@@ -60,13 +60,13 @@ export default function SegmentsPage() {
                             className="flex items-center gap-2"
                         >
                             <ArrowLeft className="w-4 h-4" />
-                            Customers
+                            <span className="hidden md:inline">Customers</span>
                         </Button>
                         <div>
-                            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-                                Customer Segments
+                            <h1 className="text-xl md:text-2xl font-bold text-gray-900 dark:text-white">
+                                Segments
                             </h1>
-                            <p className="text-gray-500 dark:text-gray-400">
+                            <p className="hidden md:block text-gray-500 dark:text-gray-400">
                                 Group customers based on smart criteria
                             </p>
                         </div>
@@ -76,7 +76,7 @@ export default function SegmentsPage() {
                         className="flex items-center gap-2 bg-gradient-to-r from-purple-600 to-indigo-600 text-white"
                     >
                         <Plus className="w-4 h-4" />
-                        Create Segment
+                        <span className="hidden md:inline">Create Segment</span>
                     </Button>
                 </div>
 
