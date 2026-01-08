@@ -1,7 +1,7 @@
 
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Card } from '@/components/ui/Card';
@@ -9,9 +9,8 @@ import { Button } from '@/components/ui/Button';
 import { ShieldCheck, XCircle, Loader2 } from 'lucide-react';
 import api from '@/lib/api';
 
-export default function VerifyEmailPage() {
+function VerifyContent() {
     const searchParams = useSearchParams();
-    const router = useRouter();
     const token = searchParams.get('token');
 
     const [status, setStatus] = useState<'verifying' | 'success' | 'error'>('verifying');
@@ -39,6 +38,46 @@ export default function VerifyEmailPage() {
     }, [token]);
 
     return (
+        <Card className="p-8 text-center shadow-xl border-none">
+            {status === 'verifying' && (
+                <div className="flex flex-col items-center">
+                    <Loader2 className="w-16 h-16 text-indigo-600 animate-spin mb-4" />
+                    <h2 className="text-2xl font-bold text-gray-900 mb-2">Verifying...</h2>
+                    <p className="text-gray-500">Please wait while we check your verification token.</p>
+                </div>
+            )}
+
+            {status === 'success' && (
+                <div className="flex flex-col items-center">
+                    <div className="w-16 h-16 bg-green-100 text-green-600 rounded-full flex items-center justify-center mb-6">
+                        <ShieldCheck className="w-8 h-8" />
+                    </div>
+                    <h2 className="text-2xl font-bold text-gray-900 mb-2">Email Verified!</h2>
+                    <p className="text-gray-600 mb-8">{message}</p>
+                    <Link href="/auth/login" className="w-full">
+                        <Button className="w-full">Continue to Login</Button>
+                    </Link>
+                </div>
+            )}
+
+            {status === 'error' && (
+                <div className="flex flex-col items-center">
+                    <div className="w-16 h-16 bg-red-100 text-red-600 rounded-full flex items-center justify-center mb-6">
+                        <XCircle className="w-8 h-8" />
+                    </div>
+                    <h2 className="text-2xl font-bold text-gray-900 mb-2">Verification Failed</h2>
+                    <p className="text-gray-600 mb-8">{message}</p>
+                    <Link href="/auth/login" className="w-full">
+                        <Button variant="outline" className="w-full">Back to Login</Button>
+                    </Link>
+                </div>
+            )}
+        </Card>
+    );
+}
+
+export default function VerifyEmailPage() {
+    return (
         <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 p-4">
             <div className="w-full max-w-md">
                 <div className="text-center mb-8">
@@ -46,42 +85,16 @@ export default function VerifyEmailPage() {
                         Mpesa Connect
                     </h1>
                 </div>
-
-                <Card className="p-8 text-center shadow-xl border-none">
-                    {status === 'verifying' && (
+                <Suspense fallback={
+                    <Card className="p-8 text-center shadow-xl border-none">
                         <div className="flex flex-col items-center">
                             <Loader2 className="w-16 h-16 text-indigo-600 animate-spin mb-4" />
-                            <h2 className="text-2xl font-bold text-gray-900 mb-2">Verifying...</h2>
-                            <p className="text-gray-500">Please wait while we check your verification token.</p>
+                            <h2 className="text-2xl font-bold text-gray-900 mb-2">Loading...</h2>
                         </div>
-                    )}
-
-                    {status === 'success' && (
-                        <div className="flex flex-col items-center">
-                            <div className="w-16 h-16 bg-green-100 text-green-600 rounded-full flex items-center justify-center mb-6">
-                                <ShieldCheck className="w-8 h-8" />
-                            </div>
-                            <h2 className="text-2xl font-bold text-gray-900 mb-2">Email Verified!</h2>
-                            <p className="text-gray-600 mb-8">{message}</p>
-                            <Link href="/auth/login" className="w-full">
-                                <Button className="w-full">Continue to Login</Button>
-                            </Link>
-                        </div>
-                    )}
-
-                    {status === 'error' && (
-                        <div className="flex flex-col items-center">
-                            <div className="w-16 h-16 bg-red-100 text-red-600 rounded-full flex items-center justify-center mb-6">
-                                <XCircle className="w-8 h-8" />
-                            </div>
-                            <h2 className="text-2xl font-bold text-gray-900 mb-2">Verification Failed</h2>
-                            <p className="text-gray-600 mb-8">{message}</p>
-                            <Link href="/auth/login" className="w-full">
-                                <Button variant="outline" className="w-full">Back to Login</Button>
-                            </Link>
-                        </div>
-                    )}
-                </Card>
+                    </Card>
+                }>
+                    <VerifyContent />
+                </Suspense>
             </div>
         </div>
     );
