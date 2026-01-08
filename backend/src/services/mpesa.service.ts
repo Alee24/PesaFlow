@@ -55,7 +55,8 @@ export const initiateSTKPush = async (
     amount: number,
     reference: string,
     userId: string,
-    items: Array<{ name: string; price: number; quantity: number, id?: string }> = []
+    items: Array<{ name: string; price: number; quantity: number, id?: string }> = [],
+    invoiceId?: string
 ) => {
     const creds = await getCredentials(userId);
     const token = await getAccessToken(creds);
@@ -114,7 +115,7 @@ export const initiateSTKPush = async (
                     initiatorUserId: userId,
                     recipientWalletId: wallet.id,
                     status: 'PENDING',
-                    metadata: JSON.stringify(response.data)
+                    metadata: JSON.stringify({ ...response.data, invoiceId })
                 }
             });
 

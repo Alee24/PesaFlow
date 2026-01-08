@@ -26,7 +26,7 @@ export const stkPush = async (req: AuthRequest, res: Response): Promise<void> =>
             return;
         }
 
-        console.log(`Initiating STK Push for ${phoneNumber} amount ${amount}`);
+        console.log(`Initiating STK Push for ${phoneNumber} amount ${amount} [${creds.env}]`);
         const response = await initiateSTKPush(phoneNumber, Number(amount), 'POS Sale', req.user.userId, items);
         console.log('STK Initiation Successful:', response);
         res.json(response);
@@ -101,6 +101,22 @@ export const mpesaCallback = async (req: Request, res: Response): Promise<void> 
 
                 console.log(`Credited wallet ${transaction.recipientWalletId} with ${creditAmount}`);
 
+                // Check for linked Invoice and update it
+                try {
+                    if (transaction.metadata) {
+                        const meta = JSON.parse(transaction.metadata);
+                        if (meta.invoiceId) {
+                            console.log(`Marking linked invoice ${meta.invoiceId} as COMPLETED`);
+                            await prisma.transaction.update({
+                                where: { id: meta.invoiceId },
+                                data: { status: 'COMPLETED' }
+                            });
+                        }
+                    }
+                } catch (e) {
+                    console.error("Failed to parse metadata or update linked invoice", e);
+                }
+
                 // Send Notification
                 if (transaction.initiatorUserId) {
                     await prisma.notification.create({
@@ -145,6 +161,59 @@ export const mpesaCallback = async (req: Request, res: Response): Promise<void> 
     } catch (error) {
         console.error('Callback Error', error);
         res.status(500).json({ error: 'Callback processing failed' });
+    }
+};
+
+export const initiateInvoicePayment = async (req: AuthRequest, res: Response): Promise<void> => {
+    try {
+        if (!req.user) {
+            res.status(401).json({ error: 'Unauthorized' });
+            return;
+        }
+
+        const { invoiceId, phoneNumber } = req.body;
+
+        if (!invoiceId || !phoneNumber) {
+            res.status(400).json({ error: 'Invoice ID and Phone Number required' });
+            return;
+        }
+
+        // Verify Invoice
+        const invoice = await prisma.transaction.findUnique({
+            where: { id: invoiceId }
+        });
+
+        if (!invoice) {
+            res.status(404).json({ error: 'Invoice not found' });
+            return;
+        }
+
+        if (invoice.initiatorUserId !== req.user.userId) {
+            res.status(403).json({ error: 'Unauthorized access to this invoice' });
+            return;
+        }
+
+        if (invoice.status === 'COMPLETED') {
+            res.status(400).json({ error: 'Invoice already paid' });
+            return;
+        }
+
+        console.log(`Initiating Invoice Payment for ${invoiceId} - ${phoneNumber}`);
+
+        const response = await initiateSTKPush(
+            phoneNumber,
+            Number(invoice.amount),
+            `Inv ${invoice.reference || 'Ref'}`,
+            req.user.userId,
+            [],
+            invoiceId
+        );
+
+        res.json(response);
+
+    } catch (error: any) {
+        console.error('Invoice Payment Error:', error.message);
+        res.status(500).json({ error: error.message });
     }
 };
 

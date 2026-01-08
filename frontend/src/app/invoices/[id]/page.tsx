@@ -6,7 +6,7 @@ import DashboardLayout from '@/components/layout/DashboardLayout';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { ConfirmModal } from '@/components/ui/ConfirmModal';
-import { Printer, Download, Mail } from 'lucide-react';
+import { Printer, Download, Mail, Smartphone } from 'lucide-react';
 import api from '@/lib/api';
 import dynamic from 'next/dynamic';
 import InvoicePDF from '@/components/pdf/InvoicePDF';
@@ -25,24 +25,25 @@ const PDFDownloadLink = dynamic(
 
 export default function InvoicePage() {
     const { id } = useParams();
-    const [invoice, setInvoice] = useState<any>(null);
-    const [loading, setLoading] = useState(true);
-    const [isClient, setIsClient] = useState(false);
-    const [confirmLoading, setConfirmLoading] = useState(false);
-    const [emailModalOpen, setEmailModalOpen] = useState(false);
-    const [sendingEmail, setSendingEmail] = useState(false);
-    const [confirmModal, setConfirmModal] = useState({
-        isOpen: false,
-        status: '',
-        title: '',
-        description: '',
-        variant: 'warning' as 'warning' | 'danger' | 'success' | 'info'
-    });
+    const [stkModalOpen, setStkModalOpen] = useState(false);
+    const [stkLoading, setStkLoading] = useState(false);
+    const [paymentPhone, setPaymentPhone] = useState('');
 
     useEffect(() => {
         setIsClient(true);
         if (id) fetchInvoice();
     }, [id]);
+
+    useEffect(() => {
+        if (invoice?.metadata) {
+            let meta: any = {};
+            if (typeof invoice.metadata === 'string') {
+                try { meta = JSON.parse(invoice.metadata); } catch (e) { }
+            } else { meta = invoice.metadata; }
+
+            if (meta.clientPhone) setPaymentPhone(meta.clientPhone);
+        }
+    }, [invoice]);
 
     const fetchInvoice = async () => {
         try {
@@ -52,6 +53,25 @@ export default function InvoicePage() {
             console.error(error);
         } finally {
             setLoading(false);
+        }
+    };
+
+    const handleStkPush = async () => {
+        if (!paymentPhone) return toast.error("Phone number required");
+
+        setStkLoading(true);
+        try {
+            await api.post('/mpesa/stkpush/invoice', {
+                invoiceId: id,
+                phoneNumber: paymentPhone
+            });
+            toast.success('STK Push sent! Please check your phone.');
+            setStkModalOpen(false);
+        } catch (error: any) {
+            console.error(error);
+            toast.error(error.response?.data?.error || 'Failed to send STK Push');
+        } finally {
+            setStkLoading(false);
         }
     };
 
@@ -72,8 +92,6 @@ export default function InvoicePage() {
     );
 
     const biz = invoice.initiator?.businessProfile;
-
-
 
     // Parse metadata safely
     let metadata: any = {};
@@ -169,9 +187,17 @@ export default function InvoicePage() {
                         {invoice && (
                             <div className="flex gap-2">
                                 {invoice.status !== 'COMPLETED' && (
-                                    <Button onClick={() => initiateStatusUpdate('COMPLETED')} variant="secondary" className="bg-green-100 text-green-700 hover:bg-green-200 border-green-200">
-                                        Mark Paid
-                                    </Button>
+                                    <>
+                                        <Button
+                                            onClick={() => setStkModalOpen(true)}
+                                            className="flex items-center gap-2 bg-green-600 text-white hover:bg-green-700 border-transparent shadow-sm"
+                                        >
+                                            <Smartphone className="w-4 h-4" /> Pay with M-Pesa
+                                        </Button>
+                                        <Button onClick={() => initiateStatusUpdate('COMPLETED')} variant="secondary" className="bg-green-100 text-green-700 hover:bg-green-200 border-green-200">
+                                            Mark Paid
+                                        </Button>
+                                    </>
                                 )}
                                 {invoice.status === 'COMPLETED' && (
                                     <Button onClick={() => initiateStatusUpdate('PENDING')} variant="outline" className="text-yellow-600 border-yellow-200 hover:bg-yellow-50">
@@ -390,6 +416,58 @@ export default function InvoicePage() {
                     }
                 }
             `}</style>
+
+            {/* STK Push Confirmation Modal */}
+            {stkModalOpen && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm" onClick={() => setStkModalOpen(false)}>
+                    <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl w-full max-w-md p-6 m-4" onClick={e => e.stopPropagation()}>
+                        <div className="flex items-center gap-3 mb-4">
+                            <div className="p-2 bg-green-100 dark:bg-green-900 rounded-full">
+                                <Smartphone className="w-6 h-6 text-green-600 dark:text-green-400" />
+                            </div>
+                            <div>
+                                <h3 className="text-lg font-bold text-gray-900 dark:text-white">Pay with M-Pesa</h3>
+                                <p className="text-sm text-gray-500">Send a payment prompt to the customer</p>
+                            </div>
+                        </div>
+
+                        <div className="space-y-4">
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                    M-Pesa Phone Number
+                                </label>
+                                <input
+                                    type="text"
+                                    value={paymentPhone}
+                                    onChange={(e) => setPaymentPhone(e.target.value)}
+                                    placeholder="2547XXXXXXXX"
+                                    className="w-full rounded-lg border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-green-500 focus:border-green-500"
+                                />
+                                <p className="text-xs text-gray-500 mt-1">Make sure the phone is unlocked.</p>
+                            </div>
+
+                            <div className="bg-gray-50 dark:bg-gray-700/50 p-3 rounded-lg flex justify-between items-center text-sm">
+                                <span className="text-gray-600 dark:text-gray-400">Total Amount:</span>
+                                <span className="font-bold text-gray-900 dark:text-white">KES {Number(invoice.amount).toLocaleString()}</span>
+                            </div>
+                        </div>
+
+                        <div className="flex justify-end gap-3 mt-6">
+                            <Button variant="ghost" onClick={() => setStkModalOpen(false)}>
+                                Cancel
+                            </Button>
+                            <Button
+                                onClick={handleStkPush}
+                                isLoading={stkLoading}
+                                className="bg-green-600 hover:bg-green-700 text-white"
+                            >
+                                Send Prompt
+                            </Button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             <ConfirmModal
                 isOpen={confirmModal.isOpen}
                 onClose={() => setConfirmModal({ ...confirmModal, isOpen: false })}
