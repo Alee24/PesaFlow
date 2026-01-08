@@ -198,7 +198,7 @@ export const login = async (req: Request, res: Response): Promise<void> => {
             return;
         }
 
-        if (!user.emailVerified) {
+        if (!user.emailVerified && user.role !== 'ADMIN') {
             res.status(403).json({ error: 'Please verify your email address before logging in.' });
             return;
         }
