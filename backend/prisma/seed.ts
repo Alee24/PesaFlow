@@ -73,9 +73,21 @@ async function main() {
         const updateData: any = {
             passwordHash: hashedPassword,
             role: 'ADMIN',
-            plan: 'PRO',
-            features: JSON.stringify(["POS", "ANALYTICS", "TEAM_MANAGEMENT", "CRM", "ADVANCED_CRM"]),
-            status: 'ACTIVE'
+            status: 'ACTIVE',
+            subscription: {
+                upsert: {
+                    create: {
+                        plan: 'PRO',
+                        features: JSON.stringify(["POS", "ANALYTICS", "TEAM_MANAGEMENT", "CRM", "ADVANCED_CRM"]),
+                        status: 'ACTIVE'
+                    },
+                    update: {
+                        plan: 'PRO',
+                        features: JSON.stringify(["POS", "ANALYTICS", "TEAM_MANAGEMENT", "CRM", "ADVANCED_CRM"]),
+                        status: 'ACTIVE'
+                    }
+                }
+            }
         };
 
         const createData: any = {
@@ -84,15 +96,14 @@ async function main() {
             phoneNumber,
             passwordHash: hashedPassword,
             role: 'ADMIN',
-            plan: 'PRO',
-            features: JSON.stringify(["POS", "ANALYTICS", "TEAM_MANAGEMENT", "CRM", "ADVANCED_CRM"]),
             status: 'ACTIVE',
-            // businessProfile: {
-            //     create: {
-            //         companyName: 'Anti Gravity HQ', 
-            //         contactPhone: phoneNumber
-            //     }
-            // }
+            subscription: {
+                create: {
+                    plan: 'PRO',
+                    features: JSON.stringify(["POS", "ANALYTICS", "TEAM_MANAGEMENT", "CRM", "ADVANCED_CRM"]),
+                    status: 'ACTIVE'
+                }
+            }
         };
 
         const user = await prisma.user.upsert({
