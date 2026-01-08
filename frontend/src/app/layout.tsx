@@ -15,6 +15,7 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Mpesa Connect - Complete Business Management Platform",
   description: "Advanced POS, Inventory Management, M-Pesa Integration & Merchant Verification System",
+  viewport: "width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0",
   icons: {
     icon: '/favicon.png',
     apple: '/favicon.png',
