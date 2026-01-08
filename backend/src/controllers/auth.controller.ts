@@ -61,7 +61,14 @@ export const register = async (req: Request, res: Response): Promise<void> => {
                     phoneNumber,
                     passwordHash,
                     role,
-                    status: 'PENDING_VERIFICATION'
+                    status: 'PENDING_VERIFICATION',
+                    subscription: {
+                        create: {
+                            plan: 'FREE',
+                            status: 'ACTIVE',
+                            features: '[]'
+                        }
+                    }
                 },
             });
 
