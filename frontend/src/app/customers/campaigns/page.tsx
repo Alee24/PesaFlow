@@ -72,13 +72,13 @@ export default function CampaignsPage() {
                             className="flex items-center gap-2"
                         >
                             <ArrowLeft className="w-4 h-4" />
-                            Customers
+                            <span className="hidden md:inline">Customers</span>
                         </Button>
                         <div>
-                            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+                            <h1 className="text-xl md:text-2xl font-bold text-gray-900 dark:text-white">
                                 Email Campaigns
                             </h1>
-                            <p className="text-gray-500 dark:text-gray-400">
+                            <p className="hidden md:block text-gray-500 dark:text-gray-400">
                                 Create and manage email marketing campaigns
                             </p>
                         </div>
@@ -88,7 +88,7 @@ export default function CampaignsPage() {
                         className="flex items-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white"
                     >
                         <Plus className="w-4 h-4" />
-                        New Campaign
+                        <span className="hidden md:inline">New Campaign</span>
                     </Button>
                 </div>
 
