@@ -21,6 +21,12 @@ model User {
   role         String   @default("MERCHANT") // ADMIN, MERCHANT, BRANCH_MANAGER
   status       String   @default("PENDING_VERIFICATION") // ACTIVE, SUSPENDED, PENDING_VERIFICATION, REJECTED
   appealNotes  String?  @map("appeal_notes")
+
+  // Authentication & Verification
+  emailVerified     Boolean   @default(false) @map("email_verified")
+  verificationToken String?   @unique @map("verification_token")
+  tokenExpiresAt    DateTime? @map("token_expires_at")
+
   createdAt    DateTime @default(now()) @map("created_at")
   updatedAt    DateTime @updatedAt @map("updated_at")
 

@@ -13,14 +13,7 @@ import { User, ShieldCheck } from 'lucide-react';
 
 export default function RegisterPage() {
     const router = useRouter();
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState('');
-    const [formData, setFormData] = useState({
-        email: '',
-        phoneNumber: '',
-        password: '',
-        confirmPassword: '',
-    });
+    const [success, setSuccess] = useState(false);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -39,18 +32,14 @@ export default function RegisterPage() {
 
         try {
             const normalizedPhone = normalizePhoneNumber(formData.phoneNumber);
-            const res = await api.post('/auth/register', {
+            await api.post('/auth/register', {
                 email: formData.email,
                 phoneNumber: normalizedPhone,
                 password: formData.password
             });
 
-            // Store token
-            localStorage.setItem('token', res.data.token);
-            localStorage.setItem('user', JSON.stringify(res.data.user));
-
-            // Redirect to dashboard (which will redirect to onboarding)
-            window.location.href = '/dashboard';
+            setSuccess(true);
+            setFormData({ email: '', phoneNumber: '', password: '', confirmPassword: '' });
 
         } catch (err: any) {
             setError(err.response?.data?.error || 'Failed to create account');
@@ -58,6 +47,32 @@ export default function RegisterPage() {
             setLoading(false);
         }
     };
+
+    if (success) {
+        return (
+            <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 p-4">
+                <div className="w-full max-w-md">
+                    <div className="text-center mb-8">
+                        <h1 className="text-4xl font-black bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 to-purple-600 tracking-tight">
+                            Mpesa Connect
+                        </h1>
+                    </div>
+                    <Card className="p-8 text-center shadow-2xl border-none">
+                        <div className="w-16 h-16 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-6">
+                            <ShieldCheck className="w-8 h-8" />
+                        </div>
+                        <h2 className="text-2xl font-bold text-gray-900 mb-4">Check your email</h2>
+                        <p className="text-gray-600 mb-8">
+                            We've sent a verification link to your email address. Please click the link to verify your account and log in.
+                        </p>
+                        <Link href="/auth/login">
+                            <Button className="w-full">Return to Login</Button>
+                        </Link>
+                    </Card>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 p-4 py-12">

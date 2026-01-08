@@ -1,12 +1,13 @@
 
 import { Router } from 'express';
-import { register, login, updateUser, getCurrentUser, completeProfile } from '../controllers/auth.controller';
+import { register, login, updateUser, getCurrentUser, completeProfile, verifyEmail } from '../controllers/auth.controller';
 import { authenticateToken } from '../middlewares/auth.middleware';
 import { upload } from '../middlewares/upload.middleware';
 
 const router = Router();
 
 router.post('/register', register);
+router.get('/verify-email', verifyEmail);
 router.post('/complete-profile', authenticateToken, upload.fields([
     { name: 'idFront', maxCount: 1 },
     { name: 'idBack', maxCount: 1 },
