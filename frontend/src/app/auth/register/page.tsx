@@ -14,6 +14,14 @@ import { User, ShieldCheck } from 'lucide-react';
 export default function RegisterPage() {
     const router = useRouter();
     const [success, setSuccess] = useState(false);
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState('');
+    const [formData, setFormData] = useState({
+        email: '',
+        phoneNumber: '',
+        password: '',
+        confirmPassword: '',
+    });
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
