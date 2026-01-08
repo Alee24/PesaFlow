@@ -127,43 +127,43 @@ export default function LandingPage() {
                 Mpesa Connect
               </span>
             </div>
-            <div className="flex gap-4">
+            <div className="flex gap-2 sm:gap-4">
               <Link href="/auth/login">
-                <Button variant="outline">Sign In</Button>
+                <Button variant="outline" size="sm" className="sm:px-5 sm:py-2.5 sm:text-base">Sign In</Button>
               </Link>
               <Link href="/auth/register">
-                <Button>Get Started Free</Button>
+                <Button size="sm" className="sm:px-5 sm:py-2.5 sm:text-base">Get Started Free</Button>
               </Link>
             </div>
           </div>
         </nav>
 
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 md:py-32">
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-32">
           <div className="text-center">
             <div className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-100 dark:bg-indigo-900/30 rounded-full text-indigo-600 dark:text-indigo-400 text-sm font-semibold mb-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
               <Zap className="w-4 h-4" />
               Complete Business Management Platform
             </div>
 
-            <h1 className="text-5xl md:text-7xl font-bold text-gray-900 dark:text-white mb-6 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-100">
+            <h1 className="text-4xl md:text-7xl font-bold text-gray-900 dark:text-white mb-6 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-100">
               Manage Your Business
               <span className="block bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600">
                 All in One Place
               </span>
             </h1>
 
-            <p className="text-xl md:text-2xl text-gray-600 dark:text-gray-300 mb-10 max-w-3xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-700 delay-200">
+            <p className="text-lg md:text-2xl text-gray-600 dark:text-gray-300 mb-10 max-w-3xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-700 delay-200 px-4">
               Advanced POS, Inventory Management, M-Pesa Integration, and Merchant Verification.
               Everything you need to run a successful business in Kenya.
             </p>
 
-            <div className="flex flex-col sm:flex-row gap-4 justify-center animate-in fade-in slide-in-from-bottom-4 duration-700 delay-300">
-              <Link href="/auth/register">
-                <Button size="lg" className="text-lg px-8 py-6 shadow-2xl shadow-indigo-500/50">
+            <div className="flex flex-col sm:flex-row gap-4 justify-center animate-in fade-in slide-in-from-bottom-4 duration-700 delay-300 px-4">
+              <Link href="/auth/register" className="w-full sm:w-auto">
+                <Button size="lg" className="w-full sm:w-auto text-lg px-8 py-6 shadow-2xl shadow-indigo-500/50">
                   Start Free Trial <ArrowRight className="w-5 h-5 ml-2" />
                 </Button>
               </Link>
-              <Button size="lg" variant="outline" className="text-lg px-8 py-6">
+              <Button size="lg" variant="outline" className="w-full sm:w-auto text-lg px-8 py-6 !border-white/30 !text-gray-200 hover:!bg-white/10 hover:!text-white dark:!border-white/30 dark:!text-gray-200">
                 Watch Demo
               </Button>
             </div>
