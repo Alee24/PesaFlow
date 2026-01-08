@@ -83,10 +83,36 @@ export const getDashboardStats = async (req: Request, res: Response) => {
 
         const chartData = Array.from(chartMap.values());
 
-        // 4. Wallet Balance (Only relevant for merchants, but we can show system total for admin)
-        const wallet = userRole === 'ADMIN'
-            ? await prisma.wallet.aggregate({ _sum: { balance: true } })
-            : await prisma.wallet.findUnique({ where: { userId } });
+        // 4. Wallet Balance Calculation (Dynamic, STK-only logic)
+        let walletBalance = 0;
+
+        if (userRole === 'ADMIN') {
+            const walletAgg = await prisma.wallet.aggregate({ _sum: { balance: true } });
+            walletBalance = Number(walletAgg._sum.balance || 0);
+        } else {
+            // For Merchants, calculate strictly from STK deposits - Withdrawals
+            const stkStats = await prisma.transaction.aggregate({
+                where: {
+                    recipientWalletId: walletId!,
+                    type: 'DEPOSIT_STK',
+                    status: 'COMPLETED'
+                },
+                _sum: { amount: true, feeCharged: true }
+            });
+
+            const withdrawalsStats = await prisma.withdrawal.aggregate({
+                where: {
+                    walletId: walletId!,
+                    status: 'COMPLETED'
+                },
+                _sum: { amount: true }
+            });
+
+            const netStkIncome = Number(stkStats._sum.amount || 0) - Number(stkStats._sum.feeCharged || 0);
+            const totalWithdrawnLifetime = Number(withdrawalsStats._sum.amount || 0);
+
+            walletBalance = netStkIncome - totalWithdrawnLifetime;
+        }
 
         res.json({
             summary: {
@@ -95,7 +121,7 @@ export const getDashboardStats = async (req: Request, res: Response) => {
                 totalSalesCount,
                 totalFeeIncome,
                 netVolume: totalIncome - totalWithdrawals,
-                walletBalance: userRole === 'ADMIN' ? (wallet as any)._sum.balance : (wallet as any)?.balance || 0
+                walletBalance: walletBalance
             },
             chartData,
             transactions: transactions.slice(0, 10).reverse()

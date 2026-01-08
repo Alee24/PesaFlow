@@ -100,7 +100,7 @@ export default function DashboardPage() {
                             <div>
                                 <h3 className="text-sm font-medium opacity-80 uppercase tracking-wider">{user.role === 'ADMIN' ? 'System Liquidity' : 'Wallet Balance'}</h3>
                                 <div className="mt-2 text-3xl font-bold">KES {Number(summary?.walletBalance || 0).toLocaleString()}</div>
-                                <p className="text-xs opacity-75 mt-1">Available Funds</p>
+                                <p className="text-xs opacity-75 mt-1">Available Funds <span className="text-[10px] opacity-60 ml-1">(Only M-Pesa Payments)</span></p>
                             </div>
                             <div className="p-3 bg-white/20 rounded-full backdrop-blur-sm">
                                 <DollarSign className="w-6 h-6 text-white" />
@@ -302,7 +302,18 @@ export default function DashboardPage() {
                                     transactions.map((tx: any) => (
                                         <tr key={tx.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
                                             <td className="px-6 py-4">{new Date(tx.createdAt).toLocaleString()}</td>
-                                            <td className="px-6 py-4 font-medium">{tx.type}</td>
+                                            <td className="px-6 py-4 font-medium">
+                                                <span className={`text-xs px-2 py-1 rounded-full ${tx.type === 'DEPOSIT_STK' ? 'bg-green-100 text-green-700' :
+                                                        tx.type === 'SALE_CASH' ? 'bg-blue-100 text-blue-700' :
+                                                            tx.type === 'WITHDRAWAL' ? 'bg-red-100 text-red-700' :
+                                                                'bg-gray-100 text-gray-700'
+                                                    }`}>
+                                                    {tx.type === 'DEPOSIT_STK' ? 'M-Pesa' :
+                                                        tx.type === 'SALE_CASH' ? 'Cash' :
+                                                            tx.type === 'WITHDRAWAL' ? 'Withdrawal' :
+                                                                tx.type.replace('_', ' ')}
+                                                </span>
+                                            </td>
                                             <td className="px-6 py-4 font-mono text-xs">{tx.reference || tx.id.slice(0, 8)}</td>
                                             <td className={`px-6 py-4 text-right font-medium ${tx.type === 'WITHDRAWAL' ? 'text-red-500' : 'text-green-600'}`}>
                                                 {tx.type === 'WITHDRAWAL' ? '-' : '+'} KES {Number(tx.amount).toLocaleString()}

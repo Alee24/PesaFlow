@@ -78,7 +78,7 @@ export default function WithdrawalsPage() {
                                     </div>
                                     <span className="text-xs font-medium bg-white/20 px-2 py-1 rounded-full">{stats?.currency || 'KES'}</span>
                                 </div>
-                                <p className="text-indigo-100 text-sm font-medium">Available Balance</p>
+                                <p className="text-indigo-100 text-sm font-medium">Available Balance <span className="text-xs opacity-75 ml-1">(Only M-Pesa Payments)</span></p>
                                 <h3 className="text-3xl font-bold mt-1 tracking-tight">
                                     {Number(balance).toLocaleString()}
                                 </h3>

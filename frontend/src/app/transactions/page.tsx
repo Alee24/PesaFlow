@@ -210,8 +210,16 @@ export default function TransactionsPage() {
                                                 {new Date(tx.createdAt).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })}
                                             </td>
                                             <td className="py-4 px-6 font-medium text-gray-900 dark:text-white">
-                                                <span className="text-[10px] bg-gray-100 dark:bg-gray-700 px-2 py-0.5 rounded-full">
-                                                    {tx.type.replace('_', ' ')}
+                                                <span className={`text-[10px] px-2 py-0.5 rounded-full ${tx.type === 'DEPOSIT_STK' ? 'bg-green-100 text-green-700' :
+                                                        tx.type === 'SALE_CASH' ? 'bg-blue-100 text-blue-700' :
+                                                            tx.type === 'WITHDRAWAL' ? 'bg-red-100 text-red-700' :
+                                                                'bg-gray-100 text-gray-700'
+                                                    }`}>
+                                                    {tx.type === 'DEPOSIT_STK' ? 'M-Pesa Payment' :
+                                                        tx.type === 'SALE_CASH' ? 'Cash Sale' :
+                                                            tx.type === 'WITHDRAWAL' ? 'Withdrawal' :
+                                                                tx.type === 'FEE' ? 'Service Fee' :
+                                                                    tx.type.replace('_', ' ')}
                                                 </span>
                                             </td>
                                             <td className="py-4 px-6 font-mono text-xs text-gray-500">{tx.reference || '-'}</td>
