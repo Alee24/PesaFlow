@@ -311,7 +311,8 @@ export const manageSubscription = async (req: AuthRequest, res: Response) => {
                         plan,
                         status: 'ACTIVE',
                         startDate: new Date(),
-                        endDate
+                        endDate,
+                        features: '[]'
                     }
                 });
             } else if (action === 'EXTEND') {

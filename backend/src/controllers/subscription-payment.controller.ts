@@ -61,7 +61,8 @@ export const upgradeSubscription = async (req: Request, res: Response) => {
                     merchantId,
                     plan,
                     status: 'ACTIVE',
-                    endDate
+                    endDate,
+                    features: '[]'
                 }
             });
         }
@@ -103,7 +104,8 @@ export const getSubscriptionStatus = async (req: Request, res: Response) => {
                 data: {
                     merchantId,
                     plan: 'FREE',
-                    status: 'ACTIVE'
+                    status: 'ACTIVE',
+                    features: '[]'
                 }
             });
         }

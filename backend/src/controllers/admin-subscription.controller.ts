@@ -47,7 +47,8 @@ export const assignSubscription = async (req: Request, res: Response) => {
                 merchantId: userId,
                 plan,
                 status: 'ACTIVE',
-                endDate
+                endDate,
+                features: '[]'
             }
         });
 

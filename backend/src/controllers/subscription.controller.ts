@@ -139,6 +139,7 @@ export const initiateSubscription = async (req: Request, res: Response) => {
                 status: 'ACTIVE',
                 startDate,
                 endDate,
+                features: '[]',
                 lastPaymentId: stkRes.data.CheckoutRequestID
             }
         });

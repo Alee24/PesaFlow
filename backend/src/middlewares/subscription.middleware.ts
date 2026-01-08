@@ -76,7 +76,8 @@ export const requireFeature = (feature: string) => {
                     data: {
                         merchantId,
                         plan: 'FREE',
-                        status: 'ACTIVE'
+                        status: 'ACTIVE',
+                        features: '[]'
                     }
                 });
 
@@ -142,7 +143,7 @@ export const checkTransactionLimit = async (req: AuthRequest, res: Response, nex
         if (!subscription) {
             // Create FREE subscription
             await prisma.subscription.create({
-                data: { merchantId, plan: 'FREE', status: 'ACTIVE' }
+                data: { merchantId, plan: 'FREE', status: 'ACTIVE', features: '[]' }
             });
             next();
             return;
