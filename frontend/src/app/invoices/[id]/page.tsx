@@ -25,6 +25,20 @@ const PDFDownloadLink = dynamic(
 
 export default function InvoicePage() {
     const { id } = useParams();
+    const [invoice, setInvoice] = useState<any>(null);
+    const [loading, setLoading] = useState(true);
+    const [isClient, setIsClient] = useState(false);
+    const [confirmLoading, setConfirmLoading] = useState(false);
+    const [emailModalOpen, setEmailModalOpen] = useState(false);
+    const [sendingEmail, setSendingEmail] = useState(false);
+    const [confirmModal, setConfirmModal] = useState({
+        isOpen: false,
+        status: '',
+        title: '',
+        description: '',
+        variant: 'warning' as 'warning' | 'danger' | 'success' | 'info'
+    });
+
     const [stkModalOpen, setStkModalOpen] = useState(false);
     const [stkLoading, setStkLoading] = useState(false);
     const [paymentPhone, setPaymentPhone] = useState('');
