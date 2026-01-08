@@ -34,7 +34,20 @@ if [ ! -f .env ]; then
         cp .env.example .env
         echo "✅ Copied .env.example to .env"
     fi
-    echo "❗ Please edit backend/.env with your database credentials."
+    echo "❗ You MUST configure backend/.env now. The script will pause."
+    read -p "Press Enter after editing backend/.env..."
+fi
+
+# Explicitly load environment variables
+echo "🔄 Loading environment variables..."
+set -a
+source .env
+set +a
+
+if [ -z "$DATABASE_URL" ]; then
+    echo "❌ DATABASE_URL is not set in backend/.env!"
+    echo "❗ Please edit backend/.env and add DATABASE_URL=mysql://..."
+    exit 1
 fi
 
 # Create uploads directory explicitly
