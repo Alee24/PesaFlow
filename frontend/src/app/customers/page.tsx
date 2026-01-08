@@ -94,32 +94,32 @@ export default function CustomersPage() {
                         <Button
                             variant="outline"
                             onClick={() => router.push('/customers/segments')}
-                            className="hidden md:flex items-center gap-2"
+                            className="flex items-center gap-2"
                         >
                             <Filter className="w-4 h-4" />
-                            Segments
+                            <span className="hidden md:inline">Segments</span>
                         </Button>
                         <Button
                             variant="outline"
                             onClick={() => router.push('/customers/campaigns')}
-                            className="hidden md:flex items-center gap-2"
+                            className="flex items-center gap-2"
                         >
                             <Mail className="w-4 h-4" />
-                            Campaigns
+                            <span className="hidden md:inline">Campaigns</span>
                         </Button>
                         <Button
                             onClick={() => router.push('/customers/new')}
                             className="flex items-center gap-2"
                         >
                             <UserPlus className="w-4 h-4" />
-                            Add Customer
+                            <span className="hidden md:inline">Add Customer</span>
                         </Button>
                     </div>
                 </div>
 
-                {/* Stats Cards */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                    <Card className="p-6">
+                {/* Stats Cards - Horizontal Scroll on Mobile */}
+                <div className="flex overflow-x-auto pb-4 gap-4 md:grid md:grid-cols-2 lg:grid-cols-4 md:gap-6 snap-x">
+                    <Card className="min-w-[240px] p-6 snap-center">
                         <div className="flex items-center justify-between">
                             <div>
                                 <p className="text-sm text-gray-500 dark:text-gray-400">Total Customers</p>
@@ -133,7 +133,7 @@ export default function CustomersPage() {
                         </div>
                     </Card>
 
-                    <Card className="p-6">
+                    <Card className="min-w-[240px] p-6 snap-center">
                         <div className="flex items-center justify-between">
                             <div>
                                 <p className="text-sm text-gray-500 dark:text-gray-400">Active Customers</p>
@@ -147,7 +147,7 @@ export default function CustomersPage() {
                         </div>
                     </Card>
 
-                    <Card className="p-6">
+                    <Card className="min-w-[240px] p-6 snap-center">
                         <div className="flex items-center justify-between">
                             <div>
                                 <p className="text-sm text-gray-500 dark:text-gray-400">Leads</p>
@@ -161,7 +161,7 @@ export default function CustomersPage() {
                         </div>
                     </Card>
 
-                    <Card className="p-6">
+                    <Card className="min-w-[240px] p-6 snap-center">
                         <div className="flex items-center justify-between">
                             <div>
                                 <p className="text-sm text-gray-500 dark:text-gray-400">Lifetime Value</p>
@@ -202,8 +202,56 @@ export default function CustomersPage() {
                     </div>
                 </Card>
 
-                {/* Customers Table */}
-                <Card className="overflow-hidden">
+                {/* Customers Table - Stacked on Mobile, Table on Desktop */}
+                <div className="space-y-4 md:hidden">
+                    {customers.map((customer) => (
+                        <Card
+                            key={customer.id}
+                            className="p-4 cursor-pointer hover:shadow-md transition-shadow"
+                            onClick={() => router.push(`/customers/${customer.id}`)}
+                        >
+                            <div className="flex justify-between items-start mb-3">
+                                <div>
+                                    <h3 className="font-medium text-gray-900 dark:text-white">{customer.name}</h3>
+                                    {customer.company && (
+                                        <p className="text-sm text-gray-500 dark:text-gray-400 flex items-center gap-1 mt-1">
+                                            <Building2 className="w-3 h-3" />
+                                            {customer.company}
+                                        </p>
+                                    )}
+                                </div>
+                                <span className={`px-2 py-1 text-xs font-semibold rounded-full ${customer.status === 'ACTIVE' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' :
+                                    customer.status === 'LEAD' ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200' :
+                                        'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200'
+                                    }`}>
+                                    {customer.status}
+                                </span>
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-2 text-sm mb-3">
+                                <div>
+                                    <p className="text-gray-500 dark:text-gray-400 text-xs">Lifetime Value</p>
+                                    <p className="font-medium text-gray-900 dark:text-white">{formatCurrency(Number(customer.lifetimeValue))}</p>
+                                </div>
+                                <div>
+                                    <p className="text-gray-500 dark:text-gray-400 text-xs">Purchases</p>
+                                    <p className="font-medium text-gray-900 dark:text-white">{customer.totalPurchases}</p>
+                                </div>
+                            </div>
+
+                            <div className="border-t border-gray-100 dark:border-gray-700 pt-3 flex justify-between items-center text-sm text-gray-500 dark:text-gray-400">
+                                <div className="flex items-center gap-3">
+                                    {customer.phone && <Phone className="w-4 h-4" />}
+                                    {customer.email && <Mail className="w-4 h-4" />}
+                                </div>
+                                <span>{formatDistanceToNow(new Date(customer.createdAt), { addSuffix: true })}</span>
+                            </div>
+                        </Card>
+                    ))}
+                </div>
+
+                {/* Desktop Table View */}
+                <Card className="hidden md:block overflow-hidden">
                     <div className="overflow-x-auto">
                         <table className="w-full">
                             <thead className="bg-gray-50 dark:bg-gray-800">
