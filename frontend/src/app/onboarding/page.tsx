@@ -78,6 +78,10 @@ export default function OnboardingPage() {
                 headers: { 'Content-Type': 'multipart/form-data' }
             });
 
+            // Update local storage to prevent redirect loop
+            const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
+            localStorage.setItem('user', JSON.stringify({ ...currentUser, isProfileComplete: true }));
+
             // Redirect to dashboard
             window.location.href = '/dashboard';
         } catch (err: any) {
