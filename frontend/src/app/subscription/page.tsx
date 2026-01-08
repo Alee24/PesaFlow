@@ -45,7 +45,7 @@ const PLANS = [
         limitations: [
             'No withdrawals',
             'No team management',
-            'Limited transactions'
+            'No advanced analytics'
         ],
         cta: 'Upgrade to BASIC',
         popular: false,

@@ -65,50 +65,61 @@ export default function LandingPage() {
 
   const pricingPlans = [
     {
-      name: 'Starter',
+      name: 'Free',
       price: 'Free',
       period: 'Forever',
-      description: 'Essential tools for new businesses',
+      description: 'Perfect for getting started',
       features: [
-        'Basic POS System',
-        'Up to 100 Transactions/mo',
-        'M-Pesa Payments (STK Push)',
-        'Basic Inventory Management',
-        'Direct Email Support'
+        'POS System',
+        'Inventory Management',
+        'Unlimited Transactions',
+        'Basic Support'
       ],
       cta: 'Get Started Free',
       popular: false
     },
     {
-      name: 'Professional',
+      name: 'Basic',
+      price: '1,500 KES',
+      period: '/month',
+      description: 'For small businesses',
+      features: [
+        'Everything in Free',
+        'Invoice Management',
+        'Basic Reports',
+        '100 Transactions/mo',
+        'Email Support'
+      ],
+      cta: 'Start Trial',
+      popular: false
+    },
+    {
+      name: 'Pro',
       price: '2,500 KES',
       period: '/month',
-      description: 'Powerhouse for growing retailers',
+      description: 'For growing businesses',
       features: [
+        'Everything in Basic',
         'Unlimited Transactions',
-        'Full CRM (Unlimited Customers)',
-        'Smart Invoicing & PDFs',
-        'Advanced Analytics Dashboard',
-        'Priority M-Pesa Processing',
-        'Barcode Scanning',
-        'Priority Phone Support'
+        'Up to 10 Branches',
+        'Withdrawal Management',
+        'Advanced Analytics',
+        'Priority Suppport'
       ],
-      cta: 'Start 14-Day Trial',
+      cta: 'Start Trial',
       popular: true
     },
     {
       name: 'Enterprise',
-      price: 'Custom',
-      period: '',
-      description: 'Ultimate scale & automation',
+      price: '75,000 KES',
+      period: '/one-time',
+      description: 'Full system ownership',
       features: [
-        'Everything in Professional',
-        'Pro CRM (Segments & Campaigns)',
-        'Multi-Branch / Multi-User',
-        'API Access for Integrations',
-        'Dedicated Account Manager',
-        'Custom Onboarding & Training',
-        'White-label Options'
+        'Full Source Code / Self-Hosted',
+        'Unlimited Branches',
+        'Custom Branding',
+        'Lifetime Updates',
+        'Dedicated Account Manager'
       ],
       cta: 'Contact Sales',
       popular: false
@@ -245,8 +256,8 @@ export default function LandingPage() {
               <div
                 key={index}
                 className={`relative p-8 rounded-3xl transition-all duration-300 ${plan.popular
-                    ? 'bg-white text-gray-900 shadow-2xl shadow-black/20 scale-105 z-10'
-                    : 'bg-indigo-800/50 text-white border border-indigo-700 backdrop-blur-sm'
+                  ? 'bg-white text-gray-900 shadow-2xl shadow-black/20 scale-105 z-10'
+                  : 'bg-indigo-800/50 text-white border border-indigo-700 backdrop-blur-sm'
                   }`}
               >
                 {plan.popular && (
@@ -278,8 +289,8 @@ export default function LandingPage() {
                   <Button
                     size="lg"
                     className={`w-full h-12 rounded-xl text-base font-semibold transition-all ${plan.popular
-                        ? 'bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg shadow-indigo-200 hover:shadow-xl'
-                        : 'bg-indigo-700/50 hover:bg-indigo-700 text-white border border-indigo-600/50'
+                      ? 'bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg shadow-indigo-200 hover:shadow-xl'
+                      : 'bg-indigo-700/50 hover:bg-indigo-700 text-white border border-indigo-600/50'
                       }`}
                   >
                     {plan.cta}
