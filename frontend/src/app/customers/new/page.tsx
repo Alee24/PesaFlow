@@ -39,7 +39,8 @@ export default function NewCustomerPage() {
             router.push(`/customers/${customer.id}`);
         } catch (error: any) {
             console.error('Failed to create customer:', error);
-            alert('Failed to create customer. Please try again.');
+            const message = error.response?.data?.error || 'Failed to create customer. Please try again.';
+            alert(message);
         } finally {
             setLoading(false);
         }
