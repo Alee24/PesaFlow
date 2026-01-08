@@ -13,46 +13,66 @@ import { useState, useEffect, useRef } from 'react';
 import { formatDistanceToNow } from 'date-fns';
 import api from '@/lib/api';
 
-const menuItems = [
-    { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard, feature: null },
-    { name: 'POS', href: '/pos', icon: ShoppingCart, feature: 'POS' },
-    { name: 'Products', href: '/products', icon: Package, feature: null },
-    { name: 'Sales', href: '/sales', icon: TrendingUp, feature: null },
-    { name: 'Invoices', href: '/invoices', icon: FileText, feature: 'invoices' },
-    { name: 'Customers', href: '/customers', icon: Users, feature: 'CRM' },
-    { name: 'Wallet', href: '/wallet', icon: Wallet, feature: null },
-    { name: 'Withdrawals', href: '/withdrawals', icon: CreditCard, feature: null },
-    { name: 'Analytics', href: '/analytics', icon: BarChart3, feature: 'ANALYTICS' },
-    { name: 'Team', href: '/team', icon: Users, feature: 'TEAM_MANAGEMENT' },
-    { name: 'Subscription', href: '/subscription', icon: ShieldCheck },
-    { name: 'Settings', href: '/settings', icon: Settings, feature: null },
-
-    // Admin only items
-    { name: 'Admin Dashboard', href: '/admin', icon: LayoutDashboard, role: 'ADMIN' },
-    { name: 'Merchant Verification', href: '/admin/verification', icon: CheckCircle, role: 'ADMIN' },
-    { name: 'Users', href: '/admin/users', icon: User, role: 'ADMIN' },
-    { name: 'Withdrawal Approvals', href: '/admin/withdrawals', icon: CreditCard, role: 'ADMIN' },
+const menuGroups = [
+    {
+        title: 'Overview',
+        items: [
+            { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard, feature: null },
+            { name: 'Analytics', href: '/analytics', icon: BarChart3, feature: 'ANALYTICS' },
+        ]
+    },
+    {
+        title: 'Business',
+        items: [
+            { name: 'POS', href: '/pos', icon: ShoppingCart, feature: 'POS' },
+            { name: 'Products', href: '/products', icon: Package, feature: null },
+            { name: 'Sales', href: '/sales', icon: TrendingUp, feature: null },
+            { name: 'Invoices', href: '/invoices', icon: FileText, feature: 'invoices' },
+            { name: 'Customers', href: '/customers', icon: Users, feature: 'CRM' },
+        ]
+    },
+    {
+        title: 'Finance',
+        items: [
+            { name: 'Wallet', href: '/wallet', icon: Wallet, feature: null },
+            { name: 'Withdrawals', href: '/withdrawals', icon: CreditCard, feature: null },
+        ]
+    },
+    {
+        title: 'Management',
+        items: [
+            { name: 'Team', href: '/team', icon: Users, feature: 'TEAM_MANAGEMENT' },
+            { name: 'Subscription', href: '/subscription', icon: ShieldCheck },
+            { name: 'Settings', href: '/settings', icon: Settings, feature: null },
+        ]
+    },
+    {
+        title: 'Administration',
+        role: 'ADMIN',
+        items: [
+            { name: 'Dashboard', href: '/admin', icon: LayoutDashboard, role: 'ADMIN' },
+            { name: 'Verification', href: '/admin/verification', icon: CheckCircle, role: 'ADMIN' },
+            { name: 'Users', href: '/admin/users', icon: User, role: 'ADMIN' },
+            { name: 'Withdrawals', href: '/admin/withdrawals', icon: CreditCard, role: 'ADMIN' },
+        ]
+    }
 ];
-
 
 export function Sidebar({ user, isMobileOpen, setIsMobileOpen }: { user?: any; isMobileOpen?: boolean; setIsMobileOpen?: (open: boolean) => void }) {
     const pathname = usePathname();
 
-    const filteredMenuItems = menuItems.filter(item => {
+    const isItemAccessible = (item: any) => {
         if (item.role === 'ADMIN') return user?.role === 'ADMIN';
 
         // Shared restrictions
         if (item.role === 'MERCHANT') {
-            // Branch and Withdrawals only for main MERCHANT
             if (['Branch', 'Withdrawals'].includes(item.name)) {
                 return user?.role === 'MERCHANT';
             }
-            // Other merchant items (POS, Invoices, etc) accessible to SUB_MERCHANT too
             return user?.role === 'MERCHANT' || user?.role === 'SUB_MERCHANT';
         }
-
         return true;
-    });
+    };
 
     const isItemLocked = (item: any) => {
         if (user?.role === 'ADMIN') return false;
@@ -96,39 +116,57 @@ export function Sidebar({ user, isMobileOpen, setIsMobileOpen }: { user?: any; i
                     </button>
                 </div>
 
-                <nav className="p-4 space-y-1 overflow-y-auto h-[calc(100vh-8rem)]">
-                    {filteredMenuItems.map((item) => {
-                        const isActive = pathname === item.href;
-                        const locked = isItemLocked(item);
+                <nav className="p-4 space-y-6 overflow-y-auto h-[calc(100vh-8rem)] custom-scrollbar">
+                    {menuGroups.map((group) => {
+                        // Filter items in this group
+                        const visibleItems = group.items.filter(item => isItemAccessible(item));
 
-                        if (locked) {
-                            return (
-                                <div
-                                    key={item.href}
-                                    className="group flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 ease-out text-gray-400 cursor-not-allowed opacity-60"
-                                    title="Requires account activation"
-                                >
-                                    <item.icon className="w-5 h-5" />
-                                    {item.name}
-                                    <Lock className="w-3 h-3 ml-auto text-amber-500" />
-                                </div>
-                            );
+                        // If group requires ADMIN and user is not, or no visible items, skip
+                        if ((group.role === 'ADMIN' && user?.role !== 'ADMIN') || visibleItems.length === 0) {
+                            return null;
                         }
 
                         return (
-                            <Link
-                                key={item.href}
-                                href={item.href}
-                                onClick={handleLinkClick}
-                                className={`group flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 ease-out 
-                                ${isActive
-                                        ? 'bg-indigo-50 text-indigo-600 dark:bg-indigo-900/20 dark:text-indigo-400 shadow-sm translate-x-1'
-                                        : 'text-gray-600 hover:bg-gray-50 dark:text-gray-400 dark:hover:bg-gray-800 hover:translate-x-1 hover:shadow-xs'
-                                    }`}
-                            >
-                                <item.icon className={`w-5 h-5 transition-transform duration-200 ${isActive ? 'scale-110' : 'group-hover:scale-110'}`} />
-                                {item.name}
-                            </Link>
+                            <div key={group.title}>
+                                <p className="px-4 text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">
+                                    {group.title}
+                                </p>
+                                <div className="space-y-1">
+                                    {visibleItems.map(item => {
+                                        const isActive = pathname === item.href || (pathname.startsWith(item.href) && item.href !== '/' && item.href !== '/dashboard' && item.href !== '/admin');
+                                        const locked = isItemLocked(item);
+
+                                        if (locked) {
+                                            return (
+                                                <div
+                                                    key={item.href}
+                                                    className="group flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 text-gray-400 cursor-not-allowed opacity-60"
+                                                >
+                                                    <item.icon className="w-5 h-5" />
+                                                    {item.name}
+                                                    <Lock className="w-3 h-3 ml-auto text-amber-500" />
+                                                </div>
+                                            );
+                                        }
+
+                                        return (
+                                            <Link
+                                                key={item.href}
+                                                href={item.href}
+                                                onClick={handleLinkClick}
+                                                className={`group flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 ease-out 
+                                                ${isActive
+                                                        ? 'bg-indigo-50 text-indigo-600 dark:bg-indigo-900/20 dark:text-indigo-400 shadow-sm translate-x-1'
+                                                        : 'text-gray-600 hover:bg-gray-50 dark:text-gray-400 dark:hover:bg-gray-800 hover:translate-x-1 hover:shadow-xs'
+                                                    }`}
+                                            >
+                                                <item.icon className={`w-5 h-5 transition-transform duration-200 ${isActive ? 'scale-110' : 'group-hover:scale-110'}`} />
+                                                {item.name}
+                                            </Link>
+                                        );
+                                    })}
+                                </div>
+                            </div>
                         );
                     })}
                 </nav>
