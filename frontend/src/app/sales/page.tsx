@@ -16,9 +16,11 @@ import {
     ShoppingBag,
     User,
     DollarSign,
-    Percent
+    Percent,
+    RefreshCw
 } from 'lucide-react';
 import { ReceiptModal } from '@/components/pos/ReceiptModal';
+import { toast } from 'sonner';
 
 export default function SalesPage() {
     const [sales, setSales] = useState<any[]>([]);
@@ -80,6 +82,38 @@ export default function SalesPage() {
     const handleFilter = () => {
         fetchSales();
         fetchStats();
+    };
+
+    const handleRetryPayment = async (sale: any) => {
+        if (!sale.customerPhone) {
+            toast.error('No phone number found for this sale');
+            return;
+        }
+
+        const loadingToast = toast.loading('Resending M-Pesa request...');
+
+        try {
+            await api.post('/mpesa/stk-push', {
+                amount: Number(sale.totalAmount),
+                phoneNumber: sale.customerPhone,
+                items: sale.items.map((item: any) => ({
+                    id: item.productId,
+                    name: item.product?.name || 'Item',
+                    price: Number(item.unitPrice),
+                    quantity: item.quantity
+                }))
+            });
+
+            toast.dismiss(loadingToast);
+            toast.success('Payment request sent! Customer will receive M-Pesa prompt.');
+
+            // Refresh sales after a delay
+            setTimeout(() => fetchSales(), 2000);
+        } catch (error: any) {
+            toast.dismiss(loadingToast);
+            const errorMessage = error.response?.data?.error || 'Failed to resend payment request';
+            toast.error(errorMessage);
+        }
     };
 
     const formatCurrency = (amount: number) => {
@@ -258,8 +292,8 @@ export default function SalesPage() {
                                             </td>
                                             <td className="py-4 px-6 font-medium text-gray-700 dark:text-gray-300">
                                                 <span className={`px-2 py-1 rounded text-xs font-bold ${sale.paymentMethod === 'CASH' ? 'bg-green-100 text-green-700' :
-                                                        sale.paymentMethod === 'MPESA_STK' ? 'bg-green-100 text-green-700' :
-                                                            'bg-blue-100 text-blue-700'
+                                                    sale.paymentMethod === 'MPESA_STK' ? 'bg-green-100 text-green-700' :
+                                                        'bg-blue-100 text-blue-700'
                                                     }`}>
                                                     {sale.paymentMethod.replace('_', ' ')}
                                                 </span>
@@ -269,21 +303,34 @@ export default function SalesPage() {
                                             </td>
                                             <td className="py-4 px-6 text-center">
                                                 <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${sale.paymentStatus === 'PAID' ? 'bg-green-100 text-green-800' :
-                                                        sale.paymentStatus === 'PARTIAL' ? 'bg-yellow-100 text-yellow-800' :
-                                                            'bg-red-100 text-red-800'
+                                                    sale.paymentStatus === 'PARTIAL' ? 'bg-yellow-100 text-yellow-800' :
+                                                        'bg-red-100 text-red-800'
                                                     }`}>
                                                     {sale.paymentStatus}
                                                 </span>
                                             </td>
                                             <td className="py-4 px-6 text-right">
-                                                <Button
-                                                    variant="ghost"
-                                                    size="sm"
-                                                    onClick={() => setSelectedSale(sale)}
-                                                    className="h-8 px-2 hover:bg-gray-100 dark:hover:bg-gray-800"
-                                                >
-                                                    <Eye className="w-3.5 h-3.5 mr-1" /> View
-                                                </Button>
+                                                <div className="flex items-center justify-end gap-2">
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="sm"
+                                                        onClick={() => setSelectedSale(sale)}
+                                                        className="h-8 px-2 hover:bg-gray-100 dark:hover:bg-gray-800"
+                                                    >
+                                                        <Eye className="w-3.5 h-3.5 mr-1" /> View
+                                                    </Button>
+                                                    {sale.paymentMethod === 'MPESA_STK' && (sale.paymentStatus === 'PENDING' || sale.paymentStatus === 'FAILED') && (
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="sm"
+                                                            onClick={() => handleRetryPayment(sale)}
+                                                            className="h-8 px-2 hover:bg-blue-50 dark:hover:bg-blue-900/20 text-blue-600 dark:text-blue-400"
+                                                            title="Retry M-Pesa Payment"
+                                                        >
+                                                            <RefreshCw className="w-3.5 h-3.5 mr-1" /> Retry
+                                                        </Button>
+                                                    )}
+                                                </div>
                                             </td>
                                         </tr>
                                     ))
