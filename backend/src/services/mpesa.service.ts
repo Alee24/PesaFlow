@@ -19,8 +19,8 @@ const getCredentials = async (userId?: string) => {
     if (userId) {
         const profile = await prisma.businessProfile.findUnique({ where: { userId } });
         if (profile) {
-            if (profile.mpesaConsumerKey) creds.consumerKey = profile.mpesaConsumerKey;
-            if (profile.mpesaConsumerSecret) creds.consumerSecret = profile.mpesaConsumerSecret;
+            if (profile.mpesaConsumerKey) { creds.consumerKey = profile.mpesaConsumerKey; console.log('[M-Pesa] Using DB Consumer Key'); }
+            if (profile.mpesaConsumerSecret) { creds.consumerSecret = profile.mpesaConsumerSecret; console.log('[M-Pesa] Using DB Consumer Secret'); }
             if (profile.mpesaPasskey) creds.passkey = profile.mpesaPasskey;
             if (profile.mpesaShortcode) creds.shortCode = profile.mpesaShortcode;
             if (profile.mpesaInitiatorName) creds.initiatorName = profile.mpesaInitiatorName;
@@ -29,10 +29,16 @@ const getCredentials = async (userId?: string) => {
             if (profile.mpesaEnv) creds.env = profile.mpesaEnv;
         }
     }
+
+    console.log(`[M-Pesa Config] Key: ${creds.consumerKey?.substring(0, 5)}... Secret: ${creds.consumerSecret?.substring(0, 5)}... Env: ${creds.env}`);
     return creds;
 }
 
 const getAccessToken = async (creds: any) => {
+    if (!creds.consumerKey || !creds.consumerSecret) {
+        throw new Error('Missing Consumer Key or Secret');
+    }
+
     const url = creds.env === 'production'
         ? 'https://api.safaricom.co.ke/oauth/v1/generate?grant_type=client_credentials'
         : 'https://sandbox.safaricom.co.ke/oauth/v1/generate?grant_type=client_credentials';

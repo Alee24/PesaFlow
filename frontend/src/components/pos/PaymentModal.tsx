@@ -53,7 +53,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({ totalAmount, items, discoun
         setLoading(true);
         try {
             // 1. Trigger STK Push (Real world: wait for callback)
-            const stkRes = await api.post('/mpesa/stkpush', {
+            const stkRes = await api.post('/mpesa/stk-push', {
                 amount: totalAmount,
                 phoneNumber: normalizePhoneNumber(phone)
             });
