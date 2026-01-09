@@ -17,10 +17,24 @@ const getCredentials = async (userId?: string) => {
     };
 
     if (userId) {
-        const profile = await prisma.businessProfile.findUnique({ where: { userId } });
+        let profile = await prisma.businessProfile.findUnique({ where: { userId } });
+
+        // If no user profile or keys missing, try to find an ADMIN profile to use as system default
+        if (!profile || !profile.mpesaConsumerKey) {
+            console.log('[M-Pesa] No User keys found, checking Admin default...');
+            const adminUser = await prisma.user.findFirst({
+                where: { role: 'ADMIN' },
+                include: { businessProfile: true }
+            });
+            if (adminUser?.businessProfile) {
+                profile = adminUser.businessProfile;
+                console.log('[M-Pesa] Using ADMIN Credentials as System Default');
+            }
+        }
+
         if (profile) {
-            if (profile.mpesaConsumerKey) { creds.consumerKey = profile.mpesaConsumerKey; console.log('[M-Pesa] Using DB Consumer Key'); }
-            if (profile.mpesaConsumerSecret) { creds.consumerSecret = profile.mpesaConsumerSecret; console.log('[M-Pesa] Using DB Consumer Secret'); }
+            if (profile.mpesaConsumerKey) { creds.consumerKey = profile.mpesaConsumerKey; }
+            if (profile.mpesaConsumerSecret) { creds.consumerSecret = profile.mpesaConsumerSecret; }
             if (profile.mpesaPasskey) creds.passkey = profile.mpesaPasskey;
             if (profile.mpesaShortcode) creds.shortCode = profile.mpesaShortcode;
             if (profile.mpesaInitiatorName) creds.initiatorName = profile.mpesaInitiatorName;
