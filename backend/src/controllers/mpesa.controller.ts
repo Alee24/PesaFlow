@@ -219,8 +219,9 @@ export const initiateInvoicePayment = async (req: AuthRequest, res: Response): P
 
 import { testMpesaConnectionService } from '../services/mpesa.service';
 
-export const testConnection = async (req: Request, res: Response): Promise<void> => {
-    const result = await testMpesaConnectionService();
+export const testConnection = async (req: AuthRequest, res: Response): Promise<void> => {
+    const userId = req.user?.userId;
+    const result = await testMpesaConnectionService(userId);
     if (result.success) {
         res.json(result);
     } else {
