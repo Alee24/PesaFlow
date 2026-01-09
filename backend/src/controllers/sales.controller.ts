@@ -243,10 +243,25 @@ export const createCashSale = async (req: Request, res: Response) => {
 
 export const getRecentSales = async (req: Request, res: Response) => {
     try {
-        const merchantId = (req as any).user.merchantId;
+        const userId = (req as any).user.userId;
+        const userRole = (req as any).user.role;
         const { limit = 20, status, paymentMethod, startDate, endDate } = req.query;
 
-        const where: any = { merchantId: merchantId };
+        // Get all user IDs that belong to this merchant (merchant + their branches)
+        let merchantUserIds: string[] = [userId];
+
+        // If user is a merchant, include all their branch staff
+        if (userRole === 'MERCHANT') {
+            const branchUsers = await prisma.user.findMany({
+                where: { parentId: userId },
+                select: { id: true }
+            });
+            merchantUserIds = [userId, ...branchUsers.map(u => u.id)];
+        }
+
+        const where: any = {
+            merchantId: { in: merchantUserIds }
+        };
 
         if (status) {
             where.paymentStatus = status;
@@ -312,10 +327,22 @@ export const getSaleById = async (req: Request, res: Response) => {
 // New endpoint: Get sales statistics
 export const getSalesStats = async (req: Request, res: Response) => {
     try {
-        const merchantId = (req as any).user.merchantId;
+        const userId = (req as any).user.userId;
+        const userRole = (req as any).user.role;
         const { startDate, endDate } = req.query;
 
-        const where: any = { merchantId: merchantId };
+        // Get all user IDs that belong to this merchant (merchant + their branches)
+        let merchantUserIds: string[] = [userId];
+
+        if (userRole === 'MERCHANT') {
+            const branchUsers = await prisma.user.findMany({
+                where: { parentId: userId },
+                select: { id: true }
+            });
+            merchantUserIds = [userId, ...branchUsers.map(u => u.id)];
+        }
+
+        const where: any = { merchantId: { in: merchantUserIds } };
 
         if (startDate || endDate) {
             where.createdAt = {};
@@ -345,7 +372,7 @@ export const getSalesStats = async (req: Request, res: Response) => {
             by: ['productId'],
             where: {
                 sale: {
-                    merchantId: merchantId
+                    merchantId: { in: merchantUserIds }
                 }
             },
             _sum: {
