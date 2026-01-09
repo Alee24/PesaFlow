@@ -51,8 +51,9 @@ const getAccessToken = async (creds: any) => {
         });
         return response.data.access_token;
     } catch (error: any) {
-        console.error('M-Pesa Access Token Error:', error.message);
-        throw new Error('Failed to get M-Pesa access token');
+        console.error('M-Pesa Access Token Error:', error.response?.data || error.message);
+        const detailedError = error.response?.data?.errorMessage || error.response?.data?.error || error.message;
+        throw new Error(`Token Error: ${detailedError}`);
     }
 };
 
