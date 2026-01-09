@@ -99,6 +99,25 @@ export const updateUserStatus = async (req: AuthRequest, res: Response) => {
     }
 };
 
+export const verifyUser = async (req: AuthRequest, res: Response) => {
+    try {
+        const { id } = req.params;
+
+        const updatedUser = await prisma.user.update({
+            where: { id },
+            data: {
+                emailVerified: true,
+                verificationToken: null,
+                status: 'ACTIVE' // Also activate them if they were pending
+            }
+        });
+
+        res.json({ message: 'User manually verified successfully', user: updatedUser });
+    } catch (error: any) {
+        res.status(500).json({ error: error.message });
+    }
+};
+
 export const getAdminStats = async (req: AuthRequest, res: Response) => {
     try {
         const activeMerchants = await prisma.user.count({

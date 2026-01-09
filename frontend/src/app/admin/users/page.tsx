@@ -59,6 +59,14 @@ export default function UserManagementPage() {
         action: 'SET_PLAN' // SET_PLAN | EXTEND
     });
 
+    // Verify Modal State
+    const [verifyModal, setVerifyModal] = useState({
+        isOpen: false,
+        userId: '',
+        userName: '',
+        loading: false
+    });
+
     // Create Form State
     const [newUser, setNewUser] = useState({
         name: '',
@@ -246,6 +254,30 @@ export default function UserManagementPage() {
         }
     };
 
+    const handleVerifyClick = (user: any) => {
+        setVerifyModal({
+            isOpen: true,
+            userId: user.id,
+            userName: user.name,
+            loading: false
+        });
+    };
+
+    const confirmVerify = async () => {
+        if (!verifyModal.userId) return;
+        setVerifyModal(prev => ({ ...prev, loading: true }));
+        try {
+            await api.patch(`/admin/users/${verifyModal.userId}/verify`);
+            showToast('User manually verified successfully', 'success');
+            fetchUsers();
+            setVerifyModal(prev => ({ ...prev, isOpen: false }));
+        } catch (error: any) {
+            showToast(error.response?.data?.error || 'Failed to verify user', 'error');
+        } finally {
+            setVerifyModal(prev => ({ ...prev, loading: false }));
+        }
+    };
+
     return (
         <DashboardLayout>
             <div className="max-w-7xl mx-auto pb-12">
@@ -320,6 +352,17 @@ export default function UserManagementPage() {
                                                 <div className="flex justify-end gap-2">
                                                     {user.role !== 'ADMIN' && (
                                                         <>
+                                                            {!user.emailVerified && (
+                                                                <Button
+                                                                    size="sm"
+                                                                    variant="outline"
+                                                                    className="text-green-600 border-green-200 hover:bg-green-50"
+                                                                    title="Verify User"
+                                                                    onClick={() => handleVerifyClick(user)}
+                                                                >
+                                                                    <ShieldCheck className="w-4 h-4" />
+                                                                </Button>
+                                                            )}
                                                             <Button
                                                                 size="sm"
                                                                 variant="outline"
@@ -377,37 +420,39 @@ export default function UserManagementPage() {
                 </Card>
 
                 {/* Create User Modal */}
-                {showCreateModal && (
-                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-                        <Card className="w-full max-w-md animate-in zoom-in-95">
-                            <div className="flex justify-between items-center mb-6">
-                                <h2 className="text-xl font-bold">Add New User</h2>
-                                <button onClick={() => setShowCreateModal(false)}><XCircle className="w-5 h-5 text-gray-400 hover:text-gray-600" /></button>
-                            </div>
-                            <form onSubmit={handleCreateUser} className="space-y-4">
-                                <Input label="Full Name" value={newUser.name} onChange={e => setNewUser({ ...newUser, name: e.target.value })} required />
-                                <Input label="Email Address" type="email" value={newUser.email} onChange={e => setNewUser({ ...newUser, email: e.target.value })} required />
-                                <Input label="Phone Number" value={newUser.phoneNumber} onChange={e => setNewUser({ ...newUser, phoneNumber: e.target.value })} required placeholder="07..." />
-                                <Input label="Password" type="password" value={newUser.password} onChange={e => setNewUser({ ...newUser, password: e.target.value })} required />
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Role</label>
-                                    <select
-                                        className="w-full p-2 border rounded-lg dark:bg-gray-800 dark:border-gray-700"
-                                        value={newUser.role}
-                                        onChange={e => setNewUser({ ...newUser, role: e.target.value })}
-                                    >
-                                        <option value="MERCHANT">Merchant</option>
-                                        <option value="ADMIN">Admin</option>
-                                    </select>
+                {
+                    showCreateModal && (
+                        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+                            <Card className="w-full max-w-md animate-in zoom-in-95">
+                                <div className="flex justify-between items-center mb-6">
+                                    <h2 className="text-xl font-bold">Add New User</h2>
+                                    <button onClick={() => setShowCreateModal(false)}><XCircle className="w-5 h-5 text-gray-400 hover:text-gray-600" /></button>
                                 </div>
-                                <div className="pt-4 flex justify-end gap-3">
-                                    <Button type="button" variant="outline" onClick={() => setShowCreateModal(false)}>Cancel</Button>
-                                    <Button type="submit">Create Account</Button>
-                                </div>
-                            </form>
-                        </Card>
-                    </div>
-                )}
+                                <form onSubmit={handleCreateUser} className="space-y-4">
+                                    <Input label="Full Name" value={newUser.name} onChange={e => setNewUser({ ...newUser, name: e.target.value })} required />
+                                    <Input label="Email Address" type="email" value={newUser.email} onChange={e => setNewUser({ ...newUser, email: e.target.value })} required />
+                                    <Input label="Phone Number" value={newUser.phoneNumber} onChange={e => setNewUser({ ...newUser, phoneNumber: e.target.value })} required placeholder="07..." />
+                                    <Input label="Password" type="password" value={newUser.password} onChange={e => setNewUser({ ...newUser, password: e.target.value })} required />
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">Role</label>
+                                        <select
+                                            className="w-full p-2 border rounded-lg dark:bg-gray-800 dark:border-gray-700"
+                                            value={newUser.role}
+                                            onChange={e => setNewUser({ ...newUser, role: e.target.value })}
+                                        >
+                                            <option value="MERCHANT">Merchant</option>
+                                            <option value="ADMIN">Admin</option>
+                                        </select>
+                                    </div>
+                                    <div className="pt-4 flex justify-end gap-3">
+                                        <Button type="button" variant="outline" onClick={() => setShowCreateModal(false)}>Cancel</Button>
+                                        <Button type="submit">Create Account</Button>
+                                    </div>
+                                </form>
+                            </Card>
+                        </div>
+                    )
+                }
                 <ConfirmModal
                     isOpen={statusModal.isOpen}
                     onClose={() => setStatusModal(prev => ({ ...prev, isOpen: false }))}
@@ -422,141 +467,159 @@ export default function UserManagementPage() {
                 />
 
                 {/* Edit User Modal */}
-                {editModal.isOpen && (
-                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-                        <Card className="w-full max-w-md animate-in zoom-in-95">
-                            <div className="flex justify-between items-center mb-6">
-                                <h2 className="text-xl font-bold">Edit User</h2>
-                                <button onClick={() => setEditModal(prev => ({ ...prev, isOpen: false }))}>
-                                    <XCircle className="w-5 h-5 text-gray-400 hover:text-gray-600" />
-                                </button>
-                            </div>
-                            <form onSubmit={handleEditSubmit} className="space-y-4">
-                                <Input
-                                    label="Full Name"
-                                    value={editModal.data.name}
-                                    onChange={e => setEditModal(prev => ({ ...prev, data: { ...prev.data, name: e.target.value } }))}
-                                    required
-                                />
-                                <Input
-                                    label="Email Address"
-                                    type="email"
-                                    value={editModal.data.email}
-                                    onChange={e => setEditModal(prev => ({ ...prev, data: { ...prev.data, email: e.target.value } }))}
-                                    required
-                                />
-                                <Input
-                                    label="Phone Number"
-                                    value={editModal.data.phoneNumber}
-                                    onChange={e => setEditModal(prev => ({ ...prev, data: { ...prev.data, phoneNumber: e.target.value } }))}
-                                    required
-                                />
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Role</label>
-                                    <select
-                                        className="w-full p-2 border rounded-lg dark:bg-gray-800 dark:border-gray-700"
-                                        value={editModal.data.role}
-                                        onChange={e => setEditModal(prev => ({ ...prev, data: { ...prev.data, role: e.target.value } }))}
-                                    >
-                                        <option value="MERCHANT">Merchant</option>
-                                        <option value="ADMIN">Admin</option>
-                                    </select>
+                {
+                    editModal.isOpen && (
+                        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+                            <Card className="w-full max-w-md animate-in zoom-in-95">
+                                <div className="flex justify-between items-center mb-6">
+                                    <h2 className="text-xl font-bold">Edit User</h2>
+                                    <button onClick={() => setEditModal(prev => ({ ...prev, isOpen: false }))}>
+                                        <XCircle className="w-5 h-5 text-gray-400 hover:text-gray-600" />
+                                    </button>
                                 </div>
-                                <div className="pt-4 flex justify-end gap-3">
-                                    <Button type="button" variant="outline" onClick={() => setEditModal(prev => ({ ...prev, isOpen: false }))}>Cancel</Button>
-                                    <Button type="submit" isLoading={editModal.loading}>Save Changes</Button>
-                                </div>
-                            </form>
-                        </Card>
-                    </div>
-                )}
+                                <form onSubmit={handleEditSubmit} className="space-y-4">
+                                    <Input
+                                        label="Full Name"
+                                        value={editModal.data.name}
+                                        onChange={e => setEditModal(prev => ({ ...prev, data: { ...prev.data, name: e.target.value } }))}
+                                        required
+                                    />
+                                    <Input
+                                        label="Email Address"
+                                        type="email"
+                                        value={editModal.data.email}
+                                        onChange={e => setEditModal(prev => ({ ...prev, data: { ...prev.data, email: e.target.value } }))}
+                                        required
+                                    />
+                                    <Input
+                                        label="Phone Number"
+                                        value={editModal.data.phoneNumber}
+                                        onChange={e => setEditModal(prev => ({ ...prev, data: { ...prev.data, phoneNumber: e.target.value } }))}
+                                        required
+                                    />
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">Role</label>
+                                        <select
+                                            className="w-full p-2 border rounded-lg dark:bg-gray-800 dark:border-gray-700"
+                                            value={editModal.data.role}
+                                            onChange={e => setEditModal(prev => ({ ...prev, data: { ...prev.data, role: e.target.value } }))}
+                                        >
+                                            <option value="MERCHANT">Merchant</option>
+                                            <option value="ADMIN">Admin</option>
+                                        </select>
+                                    </div>
+                                    <div className="pt-4 flex justify-end gap-3">
+                                        <Button type="button" variant="outline" onClick={() => setEditModal(prev => ({ ...prev, isOpen: false }))}>Cancel</Button>
+                                        <Button type="submit" isLoading={editModal.loading}>Save Changes</Button>
+                                    </div>
+                                </form>
+                            </Card>
+                        </div>
+                    )
+                }
+
+                {/* Verify User Modal */}
+                <ConfirmModal
+                    isOpen={verifyModal.isOpen}
+                    onClose={() => setVerifyModal(prev => ({ ...prev, isOpen: false }))}
+                    onConfirm={confirmVerify}
+                    title="Verify User"
+                    description={`Are you sure you want to verify ${verifyModal.userName}? This will bypass the email verification requirement and activate the account.`}
+                    variant="success"
+                    loading={verifyModal.loading}
+                    confirmText="Verify User"
+                />
 
                 {/* Password Reset Modal */}
-                {passwordModal.isOpen && (
-                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-                        <Card className="w-full max-w-md animate-in zoom-in-95">
-                            <div className="flex justify-between items-center mb-6">
-                                <h2 className="text-xl font-bold">Reset Password</h2>
-                                <button onClick={() => setPasswordModal(prev => ({ ...prev, isOpen: false }))}>
-                                    <XCircle className="w-5 h-5 text-gray-400 hover:text-gray-600" />
-                                </button>
-                            </div>
-                            <p className="text-sm text-gray-500 mb-4">
-                                Enter a new password for <span className="font-bold">{passwordModal.userName}</span>.
-                            </p>
-                            <form onSubmit={handlePasswordSubmit} className="space-y-4">
-                                <Input
-                                    label="New Password"
-                                    type="password"
-                                    value={passwordModal.newPassword}
-                                    onChange={e => setPasswordModal(prev => ({ ...prev, newPassword: e.target.value }))}
-                                    required
-                                    placeholder="Min. 6 characters"
-                                />
-                                <div className="pt-4 flex justify-end gap-3">
-                                    <Button type="button" variant="outline" onClick={() => setPasswordModal(prev => ({ ...prev, isOpen: false }))}>Cancel</Button>
-                                    <Button type="submit" isLoading={passwordModal.loading}>Reset Password</Button>
+                {
+                    passwordModal.isOpen && (
+                        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+                            <Card className="w-full max-w-md animate-in zoom-in-95">
+                                <div className="flex justify-between items-center mb-6">
+                                    <h2 className="text-xl font-bold">Reset Password</h2>
+                                    <button onClick={() => setPasswordModal(prev => ({ ...prev, isOpen: false }))}>
+                                        <XCircle className="w-5 h-5 text-gray-400 hover:text-gray-600" />
+                                    </button>
                                 </div>
-                            </form>
-                        </Card>
-                    </div>
-                )}
+                                <p className="text-sm text-gray-500 mb-4">
+                                    Enter a new password for <span className="font-bold">{passwordModal.userName}</span>.
+                                </p>
+                                <form onSubmit={handlePasswordSubmit} className="space-y-4">
+                                    <Input
+                                        label="New Password"
+                                        type="password"
+                                        value={passwordModal.newPassword}
+                                        onChange={e => setPasswordModal(prev => ({ ...prev, newPassword: e.target.value }))}
+                                        required
+                                        placeholder="Min. 6 characters"
+                                    />
+                                    <div className="pt-4 flex justify-end gap-3">
+                                        <Button type="button" variant="outline" onClick={() => setPasswordModal(prev => ({ ...prev, isOpen: false }))}>Cancel</Button>
+                                        <Button type="submit" isLoading={passwordModal.loading}>Reset Password</Button>
+                                    </div>
+                                </form>
+                            </Card>
+                        </div>
+                    )
+                }
 
                 {/* Subscription Modal */}
-                {subModal.isOpen && (
-                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-                        <Card className="w-full max-w-md animate-in zoom-in-95">
-                            <div className="flex justify-between items-center mb-6">
-                                <h2 className="text-xl font-bold">Assign Subscription</h2>
-                                <button onClick={() => setSubModal(prev => ({ ...prev, isOpen: false }))}>
-                                    <XCircle className="w-5 h-5 text-gray-400 hover:text-gray-600" />
-                                </button>
-                            </div>
-                            <p className="text-sm text-gray-500 mb-4">
-                                Managing subscription for <span className="font-bold">{subModal.userName}</span>.
-                            </p>
-
-                            <form onSubmit={handleSubSubmit} className="space-y-4">
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                        Subscription Plan
-                                    </label>
-                                    <select
-                                        className="w-full p-2 border rounded-lg dark:bg-gray-800 dark:border-gray-700"
-                                        value={subModal.plan}
-                                        onChange={e => setSubModal(prev => ({ ...prev, plan: e.target.value }))}
-                                        required
-                                    >
-                                        <option value="FREE">FREE - POS + Inventory Only</option>
-                                        <option value="BASIC">BASIC - + Invoices (KES 1,500/month)</option>
-                                        <option value="PRO">PRO - All Features (KES 2,500/month)</option>
-                                        <option value="ENTERPRISE">ENTERPRISE - Standalone (KES 75,000)</option>
-                                    </select>
-                                    <p className="text-xs text-gray-500 mt-1">
-                                        This will immediately update the merchant's subscription in the database
-                                    </p>
+                {
+                    subModal.isOpen && (
+                        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+                            <Card className="w-full max-w-md animate-in zoom-in-95">
+                                <div className="flex justify-between items-center mb-6">
+                                    <h2 className="text-xl font-bold">Assign Subscription</h2>
+                                    <button onClick={() => setSubModal(prev => ({ ...prev, isOpen: false }))}>
+                                        <XCircle className="w-5 h-5 text-gray-400 hover:text-gray-600" />
+                                    </button>
                                 </div>
+                                <p className="text-sm text-gray-500 mb-4">
+                                    Managing subscription for <span className="font-bold">{subModal.userName}</span>.
+                                </p>
 
-                                <div className="pt-4 flex justify-end gap-3">
-                                    <Button
-                                        type="button"
-                                        variant="outline"
-                                        onClick={() => setSubModal(prev => ({ ...prev, isOpen: false }))}
-                                        disabled={subModal.loading}
-                                    >
-                                        Cancel
-                                    </Button>
-                                    <Button
-                                        type="submit"
-                                        isLoading={subModal.loading}
-                                    >
-                                        Assign Subscription
-                                    </Button>
-                                </div>
-                            </form>
-                        </Card>
-                    </div>
-                )}
+                                <form onSubmit={handleSubSubmit} className="space-y-4">
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                            Subscription Plan
+                                        </label>
+                                        <select
+                                            className="w-full p-2 border rounded-lg dark:bg-gray-800 dark:border-gray-700"
+                                            value={subModal.plan}
+                                            onChange={e => setSubModal(prev => ({ ...prev, plan: e.target.value }))}
+                                            required
+                                        >
+                                            <option value="FREE">FREE - POS + Inventory Only</option>
+                                            <option value="BASIC">BASIC - + Invoices (KES 1,500/month)</option>
+                                            <option value="PRO">PRO - All Features (KES 2,500/month)</option>
+                                            <option value="ENTERPRISE">ENTERPRISE - Standalone (KES 75,000)</option>
+                                        </select>
+                                        <p className="text-xs text-gray-500 mt-1">
+                                            This will immediately update the merchant's subscription in the database
+                                        </p>
+                                    </div>
+
+                                    <div className="pt-4 flex justify-end gap-3">
+                                        <Button
+                                            type="button"
+                                            variant="outline"
+                                            onClick={() => setSubModal(prev => ({ ...prev, isOpen: false }))}
+                                            disabled={subModal.loading}
+                                        >
+                                            Cancel
+                                        </Button>
+                                        <Button
+                                            type="submit"
+                                            isLoading={subModal.loading}
+                                        >
+                                            Assign Subscription
+                                        </Button>
+                                    </div>
+                                </form>
+                            </Card>
+                        </div>
+                    )
+                }
 
                 <ConfirmModal
                     isOpen={deleteModal.isOpen}
@@ -568,7 +631,7 @@ export default function UserManagementPage() {
                     loading={deleteModal.loading}
                     confirmText="Delete User"
                 />
-            </div>
-        </DashboardLayout>
+            </div >
+        </DashboardLayout >
     );
 }
