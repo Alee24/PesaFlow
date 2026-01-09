@@ -9,6 +9,7 @@ import PaymentModal from '@/components/pos/PaymentModal';
 import { ReceiptModal } from '@/components/pos/ReceiptModal';
 import api from '@/lib/api';
 import { useToast } from '@/contexts/ToastContext';
+import { ShoppingCart, X } from 'lucide-react';
 
 interface Product {
     id: string;
@@ -44,6 +45,7 @@ export default function POSPage() {
     const [lastSale, setLastSale] = useState<any>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [discountData, setDiscountData] = useState<{ discountType: 'PERCENTAGE' | 'FIXED', discountValue: number } | null>(null);
+    const [isCartOpen, setIsCartOpen] = useState(false);
 
     useEffect(() => {
         fetchData();
@@ -65,10 +67,7 @@ export default function POSPage() {
         }
     };
 
-    // ... (rest of cart logic same as before) ...
-
     const addToCart = (product: Product) => {
-        // ... existing logic ...
         setCartItems(prev => {
             const existing = prev.find(item => item.productId === product.id);
             if (existing) {
@@ -91,8 +90,6 @@ export default function POSPage() {
             }];
         });
     };
-
-    // ... updateQuantity, removeItem, handleCheckoutSuccess, totalAmount ...
 
     const updateQuantity = (productId: string, delta: number) => {
         setCartItems(prev => {
@@ -121,25 +118,26 @@ export default function POSPage() {
             discountValue: data.discountValue
         });
         setIsPaymentOpen(true);
+        setIsCartOpen(false);
     };
 
     const handleCheckoutSuccess = (sale: any) => {
         setIsPaymentOpen(false);
         setCartItems([]);
         setLastSale(sale);
-        // showToast('Sale completed successfully!', 'success'); // Receipt modal is confirmation enough
-        fetchData(); // Refresh stock
+        fetchData();
     };
 
-    // Recalculate total with discount for Modal
     const subtotal = cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
     const totalAmount = discountData
         ? Math.max(0, subtotal - (discountData.discountType === 'PERCENTAGE' ? (subtotal * discountData.discountValue / 100) : discountData.discountValue))
         : subtotal;
 
+    const totalItems = cartItems.reduce((sum, item) => sum + item.quantity, 0);
+
     return (
         <DashboardLayout>
-            <div className="flex flex-col md:flex-row h-[calc(100vh-64px)] overflow-hidden bg-gray-50/50 dark:bg-gray-900/50">
+            <div className="flex flex-col md:flex-row h-[calc(100vh-64px)] overflow-hidden bg-gray-50/50 dark:bg-gray-900/50 relative">
                 {/* Main Product Area */}
                 <div className="flex-1 overflow-hidden flex flex-col">
                     <div className="flex-1 overflow-hidden">
@@ -157,8 +155,8 @@ export default function POSPage() {
                     </div>
                 </div>
 
-                {/* Sidebar */}
-                <div className="w-full md:w-96 h-full z-10 border-l border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-xl">
+                {/* Desktop Sidebar */}
+                <div className="hidden md:block w-96 h-full z-10 border-l border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-xl">
                     <CartSidebar
                         cartItems={cartItems}
                         onUpdateQuantity={updateQuantity}
@@ -167,6 +165,53 @@ export default function POSPage() {
                         onCheckout={handleCheckout}
                     />
                 </div>
+
+                {/* Mobile Cart Button */}
+                {!isCartOpen && (
+                    <button
+                        onClick={() => setIsCartOpen(true)}
+                        className="md:hidden fixed bottom-6 right-6 z-50 bg-indigo-600 text-white rounded-full p-4 shadow-2xl hover:bg-indigo-700 active:scale-95 transition-all"
+                    >
+                        <ShoppingCart className="w-6 h-6" />
+                        {totalItems > 0 && (
+                            <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold rounded-full h-6 w-6 flex items-center justify-center">
+                                {totalItems}
+                            </span>
+                        )}
+                    </button>
+                )}
+
+                {/* Mobile Cart Modal */}
+                {isCartOpen && (
+                    <div className="md:hidden fixed inset-0 z-50 bg-black/50 backdrop-blur-sm">
+                        <div className="absolute inset-x-0 bottom-0 bg-white dark:bg-gray-900 rounded-t-3xl shadow-2xl max-h-[85vh] flex flex-col">
+                            {/* Header */}
+                            <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-800">
+                                <h2 className="text-lg font-bold text-gray-900 dark:text-white">Cart ({totalItems} items)</h2>
+                                <button
+                                    onClick={() => setIsCartOpen(false)}
+                                    className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors"
+                                >
+                                    <X className="w-5 h-5" />
+                                </button>
+                            </div>
+
+                            {/* Cart Content */}
+                            <div className="flex-1 overflow-hidden">
+                                <CartSidebar
+                                    cartItems={cartItems}
+                                    onUpdateQuantity={updateQuantity}
+                                    onRemoveItem={removeItem}
+                                    onClearCart={() => {
+                                        setCartItems([]);
+                                        setIsCartOpen(false);
+                                    }}
+                                    onCheckout={handleCheckout}
+                                />
+                            </div>
+                        </div>
+                    </div>
+                )}
             </div>
 
             {isPaymentOpen && (
