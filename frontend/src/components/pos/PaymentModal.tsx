@@ -80,11 +80,12 @@ const PaymentModal: React.FC<PaymentModalProps> = ({ totalAmount, items, discoun
             setMpesaStatus('success');
             onSuccess(saleRes.data.sale);
 
-        } catch (error) {
+        } catch (error: any) {
             console.error(error);
             setMpesaStatus('failed');
             toast.dismiss(loadingToast);
-            toast.error("Payment Failed. Please try again.");
+            const errorMessage = error.response?.data?.error || "Payment Failed. Please try again.";
+            toast.error(errorMessage);
         } finally {
             setLoading(false);
         }

@@ -60,12 +60,16 @@ export const createTicket = async (req: AuthRequest, res: Response) => {
 export const getTickets = async (req: AuthRequest, res: Response) => {
     try {
         const userId = req.user?.userId;
+        const role = req.user?.role;
+
+        const where = role === 'ADMIN' ? {} : { merchantId: userId };
 
         const tickets = await prisma.ticket.findMany({
-            where: { merchantId: userId },
+            where,
             orderBy: { updatedAt: 'desc' },
             include: {
-                _count: { select: { messages: true } }
+                _count: { select: { messages: true } },
+                merchant: { select: { name: true, email: true } }
             }
         });
 
@@ -91,8 +95,12 @@ export const getTicket = async (req: AuthRequest, res: Response) => {
             }
         });
 
-        if (!ticket || ticket.merchantId !== userId) {
+        if (!ticket) {
             return res.status(404).json({ error: 'Ticket not found' });
+        }
+
+        if (req.user?.role !== 'ADMIN' && ticket.merchantId !== userId) {
+            return res.status(403).json({ error: 'Access denied' });
         }
 
         res.json(ticket);
@@ -110,8 +118,12 @@ export const replyTicket = async (req: AuthRequest, res: Response) => {
 
         const ticket = await prisma.ticket.findUnique({ where: { id } });
 
-        if (!ticket || ticket.merchantId !== userId) {
+        if (!ticket) {
             return res.status(404).json({ error: 'Ticket not found' });
+        }
+
+        if (req.user?.role !== 'ADMIN' && ticket.merchantId !== userId) {
+            return res.status(403).json({ error: 'Access denied' });
         }
 
         const newMessage = await prisma.ticketMessage.create({
@@ -119,7 +131,7 @@ export const replyTicket = async (req: AuthRequest, res: Response) => {
                 ticketId: id,
                 senderId: userId!,
                 message,
-                isAdmin: false
+                isAdmin: req.user?.role === 'ADMIN'
             }
         });
 

@@ -9,7 +9,7 @@ const router = Router();
 router.use(authenticateToken);
 
 router.post('/cash', requireActive, checkTransactionLimit, createCashSale); // Check transaction limit
-router.get('/recent', getRecentSales);
+router.get('/', getRecentSales); // List all sales
 router.get('/stats', getSalesStats);
 router.get('/staff-performance', getStaffPerformance);
 router.get('/:id', getSaleById);

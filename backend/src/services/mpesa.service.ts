@@ -170,7 +170,8 @@ export const initiateSTKPush = async (
         return { ...response.data, internalTransactionId: 'pending_lookup' };
     } catch (error: any) {
         console.error('STK Push Error:', error.response?.data || error.message);
-        throw new Error('Failed to initiate STK Push');
+        const safaricomError = error.response?.data?.errorMessage || error.message;
+        throw new Error(safaricomError || 'Failed to initiate STK Push');
     }
 };
 

@@ -244,7 +244,7 @@ export const createCashSale = async (req: Request, res: Response) => {
 export const getRecentSales = async (req: Request, res: Response) => {
     try {
         const merchantId = (req as any).user.merchantId;
-        const { limit = 20, status, paymentMethod } = req.query;
+        const { limit = 20, status, paymentMethod, startDate, endDate } = req.query;
 
         const where: any = { merchantId: merchantId };
 
@@ -254,6 +254,13 @@ export const getRecentSales = async (req: Request, res: Response) => {
 
         if (paymentMethod) {
             where.paymentMethod = paymentMethod;
+        }
+
+        // Add date filtering
+        if (startDate || endDate) {
+            where.createdAt = {};
+            if (startDate) where.createdAt.gte = new Date(startDate as string);
+            if (endDate) where.createdAt.lte = new Date(endDate as string);
         }
 
         const sales = await prisma.sale.findMany({
