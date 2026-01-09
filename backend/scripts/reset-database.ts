@@ -41,8 +41,8 @@ async function clearAndReseed() {
         console.log('Deleting notifications...');
         await prisma.notification.deleteMany({});
 
-        console.log('Deleting support tickets...');
-        await prisma.supportTicket.deleteMany({});
+        console.log('Deleting team members...');
+        await prisma.teamMember.deleteMany({});
 
         console.log('Deleting users...');
         await prisma.user.deleteMany({});
@@ -58,11 +58,12 @@ async function clearAndReseed() {
         const admin = await prisma.user.create({
             data: {
                 email: 'admin@mpesaconnect.co.ke',
-                password: hashedPassword,
+                passwordHash: hashedPassword,
                 name: 'System Admin',
                 role: 'ADMIN',
                 status: 'ACTIVE',
-                phoneNumber: '+254700000000'
+                phoneNumber: '+254700000000',
+                emailVerified: true
             }
         });
         console.log('✅ Created Admin:', admin.email);
@@ -79,15 +80,16 @@ async function clearAndReseed() {
         const merchant = await prisma.user.create({
             data: {
                 email: 'mettoalex@gmail.com',
-                password: hashedPassword,
+                passwordHash: hashedPassword,
                 name: 'Test Merchant',
                 role: 'MERCHANT',
                 status: 'ACTIVE',
                 phoneNumber: '+254712345678',
+                emailVerified: true,
                 businessProfile: {
                     create: {
-                        businessName: 'Test Business',
-                        businessType: 'RETAIL',
+                        name: 'Test Business',
+                        type: 'RETAIL',
                         kraPin: 'A000000000A',
                         location: 'Nairobi, Kenya'
                     }
@@ -112,13 +114,13 @@ async function clearAndReseed() {
                 status: 'ACTIVE',
                 currentPeriodStart: new Date(),
                 currentPeriodEnd: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000), // 1 year
-                features: {
+                features: JSON.stringify({
                     POS: true,
                     ANALYTICS: true,
                     INVOICING: true,
                     MULTI_USER: true,
                     API_ACCESS: true
-                }
+                })
             }
         });
         console.log('✅ Created PRO subscription for merchant');
@@ -127,11 +129,12 @@ async function clearAndReseed() {
         const branchManager = await prisma.user.create({
             data: {
                 email: 'branch@mpesaconnect.co.ke',
-                password: hashedPassword,
+                passwordHash: hashedPassword,
                 name: 'Branch Manager',
                 role: 'BRANCH_MANAGER',
                 status: 'ACTIVE',
                 phoneNumber: '+254723456789',
+                emailVerified: true,
                 parentId: merchant.id
             }
         });
