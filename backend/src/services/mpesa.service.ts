@@ -111,7 +111,17 @@ export const initiateSTKPush = async (
 
         // Use interactive transaction to ensure data integrity
         await prisma.$transaction(async (tx) => {
-            const wallet = await tx.wallet.findFirstOrThrow({ where: { userId } });
+            let wallet = await tx.wallet.findFirst({ where: { userId } });
+
+            if (!wallet) {
+                console.log(`[STK Push] Creating missing wallet for user ${userId}`);
+                wallet = await tx.wallet.create({
+                    data: {
+                        userId,
+                        balance: 0
+                    }
+                });
+            }
 
             const transaction = await tx.transaction.create({
                 data: {
