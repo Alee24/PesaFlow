@@ -9,6 +9,7 @@
     "build": "tsc",
     "start": "node dist/server.js",
     "db:seed": "ts-node -r dotenv/config prisma/seed.ts",
+    "db:reset": "ts-node -r dotenv/config scripts/reset-database.ts",
     "postinstall": "prisma generate"
   },
   "keywords": [],
