@@ -42,11 +42,11 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({ sale, onClose }) => 
                         {/* Store Info */}
                         <div className="text-center mb-4 border-b border-dashed border-gray-300 pb-4">
                             <div className="flex justify-center mb-2">
-                                <img src="/logo.png" alt="Mpesa Connect" className="h-12 w-auto grayscale" />
+                                <img src="/logo.png" alt="Mpesa Connect" className="h-32 w-auto" />
                             </div>
                             <p className="font-bold text-lg uppercase hidden">Mpesa Connect</p>
                             <p className="text-xs text-gray-500">Nairobi, Kenya</p>
-                            <p className="text-xs text-gray-500">info@Mpesaconnect.co.ke</p>
+                            <p className="text-xs text-gray-500">www.mpesaconnect.co.ke</p>
                         </div>
 
                         {/* Transaction Info */}
@@ -145,27 +145,7 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({ sale, onClose }) => 
                     </Button>
                 </div>
             </div>
-            <style jsx global>{`
-                @media print {
-                    .no-print {
-                        display: none !important;
-                    }
-                    body * {
-                        visibility: hidden;
-                    }
-                    .bg-white.p-6.shadow-sm.border.border-gray-100 {
-                        visibility: visible;
-                        position: absolute;
-                        left: 0;
-                        top: 0;
-                        width: 100%;
-                        margin: 0;
-                        padding: 0;
-                        border: none;
-                        box-shadow: none;
-                    }
-                }
-            `}</style>
+
         </div>
     );
 };

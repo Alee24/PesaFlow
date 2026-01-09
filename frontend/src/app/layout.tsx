@@ -28,10 +28,9 @@ export const metadata: Metadata = {
   },
 };
 
+import { Toaster } from 'react-hot-toast';
 import { ToastProvider } from "@/contexts/ToastContext";
 import { SubscriptionProvider } from "@/contexts/SubscriptionContext";
-
-// ...
 
 export default function RootLayout({
   children,
@@ -44,6 +43,7 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
         suppressHydrationWarning
       >
+        <Toaster position="top-right" />
         <ToastProvider>
           <SubscriptionProvider>
             {children}

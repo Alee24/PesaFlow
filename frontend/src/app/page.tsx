@@ -251,7 +251,7 @@ export default function LandingPage() {
             </p>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-8 items-start">
+          <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 items-stretch">
             {pricingPlans.map((plan, index) => (
               <div
                 key={index}

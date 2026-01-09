@@ -80,4 +80,20 @@ export const sendVerificationEmail = async (email: string, token: string) => {
     } catch (error) {
         console.error('Error sending verification email:', error);
     }
+}
+
+
+export const sendSystemEmail = async (to: string, subject: string, html: string) => {
+    const transporter = getSystemTransporter();
+    try {
+        await transporter.sendMail({
+            from: `"Mpesa Connect Support" <${process.env.SMTP_USER || 'system@mpesaconnect.co.ke'}>`,
+            to,
+            subject,
+            html
+        });
+        console.log(`System email sent to ${to}`);
+    } catch (error) {
+        console.error('Error sending system email:', error);
+    }
 };

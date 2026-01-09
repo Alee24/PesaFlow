@@ -6,7 +6,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import {
     LayoutDashboard, ShoppingCart, Package, CreditCard, ArrowLeftRight, Settings,
     LogOut, User, Store, FileText, Bell, X, CheckCircle, AlertCircle, Info, Lock,
-    ShieldCheck, TrendingUp, BarChart3, Users, Wallet
+    ShieldCheck, TrendingUp, BarChart3, Users, Wallet, MessageSquare
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useState, useEffect, useRef } from 'react';
@@ -44,6 +44,7 @@ const menuGroups = [
             { name: 'Team', href: '/team', icon: Users, feature: 'TEAM_MANAGEMENT' },
             { name: 'Subscription', href: '/subscription', icon: ShieldCheck },
             { name: 'Settings', href: '/settings', icon: Settings, feature: null },
+            { name: 'Support', href: '/support', icon: MessageSquare, feature: null },
         ]
     },
     {

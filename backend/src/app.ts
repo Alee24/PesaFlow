@@ -14,6 +14,7 @@ import setupRoutes from './routes/setup.routes';
 import adminRoutes from './routes/admin.routes';
 import teamRoutes from './routes/team.routes';
 import crmRoutes from './routes/crm.routes';
+import supportRoutes from './routes/support.routes';
 import categoryRoutes from './routes/category.routes';
 import notificationRoutes from './routes/notification.routes';
 
@@ -55,6 +56,7 @@ app.use('/api/subscription', subscriptionRoutes);
 app.use('/api/analytics', analyticsRoutes);
 app.use('/api/team', teamRoutes);
 app.use('/api/crm', crmRoutes);
+app.use('/api/support', supportRoutes);
 
 app.get('/', (req, res) => {
 

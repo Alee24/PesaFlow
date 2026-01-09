@@ -57,6 +57,10 @@ model User {
   customerSegments     CustomerSegment[]
   emailCampaigns       EmailCampaign[]
 
+  // Support
+  tickets      Ticket[]
+  sentMessages TicketMessage[]
+
   @@map("users")
 }
 
@@ -532,4 +536,44 @@ model EmailCampaign {
   @@index([merchantId])
   @@index([status])
   @@map("email_campaigns")
+}
+// ============================================
+// SUPPORT SYSTEM MODELS
+// ============================================
+
+model Ticket {
+  id         String @id @default(uuid())
+  merchantId String @map("merchant_id")
+  merchant   User   @relation(fields: [merchantId], references: [id])
+
+  subject  String
+  status   String @default("OPEN") // OPEN, IN_PROGRESS, CLOSED
+  priority String @default("MEDIUM") // LOW, MEDIUM, HIGH
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  messages TicketMessage[]
+
+  @@index([merchantId])
+  @@index([status])
+  @@map("tickets")
+}
+
+model TicketMessage {
+  id       String @id @default(uuid())
+  ticketId String @map("ticket_id")
+  ticket   Ticket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+
+  senderId String @map("sender_id")
+  sender   User   @relation(fields: [senderId], references: [id])
+
+  message      String  @db.Text
+  attachmentUrl String? @map("attachment_url")
+  isAdmin      Boolean @default(false) @map("is_admin")
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([ticketId])
+  @@map("ticket_messages")
 }

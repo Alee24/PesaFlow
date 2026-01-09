@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/Input';
 import { X, CheckCircle, Smartphone, Banknote } from 'lucide-react';
 import api from '@/lib/api';
 import { normalizePhoneNumber } from '@/lib/phoneUtils';
+import toast from 'react-hot-toast';
 
 interface PaymentModalProps {
     totalAmount: number;
@@ -48,9 +49,13 @@ const PaymentModal: React.FC<PaymentModalProps> = ({ totalAmount, items, discoun
         }
     };
 
+    // ... (inside component)
+
     const handleMpesaTrigger = async () => {
         setMpesaStatus('pending');
         setLoading(true);
+        const loadingToast = toast.loading('Sending M-Pesa Request...');
+
         try {
             // 1. Trigger STK Push (Real world: wait for callback)
             const stkRes = await api.post('/mpesa/stk-push', {
@@ -59,7 +64,6 @@ const PaymentModal: React.FC<PaymentModalProps> = ({ totalAmount, items, discoun
             });
 
             // 2. For Prototype/MVP: Record the sale immediately as if it succeeded
-            // In production, we'd poll status or wait for webhook
             const saleRes = await api.post('/sales/cash', {
                 items,
                 totalAmount,
@@ -70,14 +74,17 @@ const PaymentModal: React.FC<PaymentModalProps> = ({ totalAmount, items, discoun
                 paymentMethod: 'MPESA_STK'
             });
 
-            alert(`STK Sent! Recording sale...`);
+            toast.dismiss(loadingToast);
+            toast.success('STK Push Sent! Check your phone.');
+
             setMpesaStatus('success');
             onSuccess(saleRes.data.sale);
 
         } catch (error) {
             console.error(error);
             setMpesaStatus('failed');
-            alert("Payment Failed");
+            toast.dismiss(loadingToast);
+            toast.error("Payment Failed. Please try again.");
         } finally {
             setLoading(false);
         }

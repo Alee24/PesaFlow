@@ -47,6 +47,11 @@ echo "   Installing backend dependencies..."
 cd backend
 npm install
 
+echo "   Updating database schema..."
+npx prisma generate
+npx prisma db push
+
+
 # Frontend dependencies
 echo "   Installing frontend dependencies..."
 cd ../frontend
