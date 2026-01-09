@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import DashboardLayout from '@/components/layout/DashboardShell';
+import DashboardLayout from '@/components/layout/DashboardLayout';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import api from '@/lib/api';
@@ -259,9 +259,9 @@ export default function AdminAnalyticsPage() {
                                     <tr key={merchant.id} className="border-b border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
                                         <td className="py-4 px-4">
                                             <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm ${i === 0 ? 'bg-yellow-100 text-yellow-700' :
-                                                    i === 1 ? 'bg-gray-100 text-gray-700' :
-                                                        i === 2 ? 'bg-orange-100 text-orange-700' :
-                                                            'bg-gray-50 text-gray-600'
+                                                i === 1 ? 'bg-gray-100 text-gray-700' :
+                                                    i === 2 ? 'bg-orange-100 text-orange-700' :
+                                                        'bg-gray-50 text-gray-600'
                                                 }`}>
                                                 {i + 1}
                                             </div>
