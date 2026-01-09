@@ -32,6 +32,8 @@ import { Toaster } from 'react-hot-toast';
 import { ToastProvider } from "@/contexts/ToastContext";
 import { SubscriptionProvider } from "@/contexts/SubscriptionContext";
 
+import { AuthProvider } from "@/contexts/AuthContext";
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -45,9 +47,11 @@ export default function RootLayout({
       >
         <Toaster position="top-right" />
         <ToastProvider>
-          <SubscriptionProvider>
-            {children}
-          </SubscriptionProvider>
+          <AuthProvider>
+            <SubscriptionProvider>
+              {children}
+            </SubscriptionProvider>
+          </AuthProvider>
         </ToastProvider>
       </body>
     </html>

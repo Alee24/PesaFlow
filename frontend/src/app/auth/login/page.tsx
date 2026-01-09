@@ -9,8 +9,11 @@ import { Input } from '@/components/ui/Input';
 import { Card } from '@/components/ui/Card';
 import api from '@/lib/api';
 
+import { useAuth } from '@/contexts/AuthContext';
+
 export default function LoginPage() {
     const router = useRouter();
+    const { login } = useAuth();
     const [formData, setFormData] = useState({ email: '', password: '' });
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
@@ -22,9 +25,7 @@ export default function LoginPage() {
 
         try {
             const res = await api.post('/auth/login', formData);
-            localStorage.setItem('token', res.data.token);
-            localStorage.setItem('user', JSON.stringify(res.data.user));
-            router.push('/dashboard');
+            login(res.data.token, res.data.user);
         } catch (err: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
             const errorMessage = err.response?.data?.error || `Connection Error: ${err.message}`;
             setError(errorMessage);

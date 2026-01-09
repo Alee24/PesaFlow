@@ -12,6 +12,7 @@ import { cn } from '@/lib/utils';
 import { useState, useEffect, useRef } from 'react';
 import { formatDistanceToNow } from 'date-fns';
 import api from '@/lib/api';
+import { useAuth } from '@/contexts/AuthContext';
 
 const menuGroups = [
     {
@@ -60,6 +61,7 @@ const menuGroups = [
 ];
 
 export function Sidebar({ user, isMobileOpen, setIsMobileOpen }: { user?: any; isMobileOpen?: boolean; setIsMobileOpen?: (open: boolean) => void }) {
+    const { logout } = useAuth();
     const pathname = usePathname();
 
     const isItemAccessible = (item: any) => {
@@ -174,11 +176,7 @@ export function Sidebar({ user, isMobileOpen, setIsMobileOpen }: { user?: any; i
 
                 <div className="absolute bottom-0 w-full p-4 border-t border-gray-200 dark:border-gray-800">
                     <button
-                        onClick={() => {
-                            localStorage.removeItem('token');
-                            localStorage.removeItem('user');
-                            window.location.href = '/auth/login';
-                        }}
+                        onClick={logout}
                         className="flex items-center gap-3 w-full px-4 py-3 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-xl text-sm font-medium transition-all duration-200 hover:translate-x-1"
                     >
                         <LogOut className="w-5 h-5" />
@@ -257,10 +255,10 @@ export function Header({ user, onMenuClick }: { user?: any; onMenuClick?: () => 
         }
     };
 
+    const { logout } = useAuth();
+
     const handleLogout = () => {
-        localStorage.removeItem('token');
-        localStorage.removeItem('user');
-        window.location.href = '/auth/login';
+        logout();
     };
 
     const getIcon = (type: string) => {
