@@ -170,6 +170,10 @@ export const initiateSTKPush = async (
                         totalAmount: amount,
                         transactionId: transaction.id,
                         paymentMethod: 'MPESA_STK',
+                        paymentStatus: 'PENDING', // Will be updated to PAID/FAILED by callback
+                        customerPhone: phoneNumber,
+                        amountPaid: 0, // Will be updated by callback
+                        amountDue: amount,
                         items: {
                             create: items.map(item => ({
                                 productId: item.id || defaultProduct!.id,

@@ -57,28 +57,26 @@ const PaymentModal: React.FC<PaymentModalProps> = ({ totalAmount, items, discoun
         const loadingToast = toast.loading('Sending M-Pesa Request...');
 
         try {
-            // 1. Trigger STK Push (Real world: wait for callback)
-            const stkRes = await api.post('/mpesa/stk-push', {
+            // Trigger STK Push - backend will create sale when callback confirms payment
+            await api.post('/mpesa/stk-push', {
                 amount: totalAmount,
-                phoneNumber: normalizePhoneNumber(phone)
-            });
-
-            // 2. For Prototype/MVP: Record the sale immediately as if it succeeded
-            const saleRes = await api.post('/sales/cash', {
-                items,
-                totalAmount,
-                discountType,
-                discountValue,
-                customerPhone: phone,
-                amountPaid: totalAmount,
-                paymentMethod: 'MPESA_STK'
+                phoneNumber: normalizePhoneNumber(phone),
+                items // Pass items to backend for sale creation on callback
             });
 
             toast.dismiss(loadingToast);
-            toast.success('STK Push Sent! Check your phone.');
+            toast.success('STK Push Sent! Please enter your PIN on your phone.');
 
             setMpesaStatus('success');
-            onSuccess(saleRes.data.sale);
+
+            // Close modal and show pending message
+            setTimeout(() => {
+                onClose();
+                toast('Payment pending confirmation. You will be notified once complete.', {
+                    icon: '⏳',
+                    duration: 5000
+                });
+            }, 2000);
 
         } catch (error: any) {
             console.error(error);
