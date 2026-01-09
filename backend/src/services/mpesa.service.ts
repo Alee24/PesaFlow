@@ -77,7 +77,8 @@ export const initiateSTKPush = async (
     reference: string,
     userId: string,
     items: Array<{ name: string; price: number; quantity: number, id?: string }> = [],
-    invoiceId?: string
+    invoiceId?: string,
+    saleId?: string // Existing sale ID for retry
 ) => {
     const creds = await getCredentials(userId);
     console.log(`[M-Pesa Service] Using Environment: ${creds.env}`);
@@ -151,7 +152,8 @@ export const initiateSTKPush = async (
                 }
             });
 
-            if (items.length > 0) {
+            if (items.length > 0 && !saleId) {
+                // Only create new sale if this is not a retry (saleId not provided)
                 let defaultProduct = await tx.product.findFirst({ where: { merchantId: userId } });
                 if (!defaultProduct) {
                     defaultProduct = await tx.product.create({
@@ -193,6 +195,16 @@ export const initiateSTKPush = async (
                         });
                     }
                 }
+            } else if (saleId) {
+                // For retry: link transaction to existing sale
+                await tx.sale.update({
+                    where: { id: saleId },
+                    data: {
+                        transactionId: transaction.id,
+                        paymentStatus: 'PENDING' // Reset to pending for retry
+                    }
+                });
+                console.log(`[STK Push] Linked new transaction to existing sale ${saleId}`);
             }
         });
 

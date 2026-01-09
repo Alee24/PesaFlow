@@ -96,6 +96,7 @@ export default function SalesPage() {
             await api.post('/mpesa/stk-push', {
                 amount: Number(sale.totalAmount),
                 phoneNumber: sale.customerPhone,
+                saleId: sale.id, // Link to existing sale instead of creating new one
                 items: sale.items.map((item: any) => ({
                     id: item.productId,
                     name: item.product?.name || 'Item',
