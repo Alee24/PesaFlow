@@ -58,7 +58,7 @@ export const mpesaCallback = async (req: Request, res: Response): Promise<void> 
         // OR: Add merchantRequestID to Transaction Model. -> BETTER.
 
         if (resultCode === 0) {
-            // Success
+            // Payment Success
             const metaItems = stkCallback.CallbackMetadata.Item;
             const amountItem = metaItems.find((i: any) => i.Name === 'Amount');
             const receiptItem = metaItems.find((i: any) => i.Name === 'MpesaReceiptNumber');
@@ -68,7 +68,10 @@ export const mpesaCallback = async (req: Request, res: Response): Promise<void> 
             const mpesaReceipt = receiptItem?.Value;
             const phone = phoneNumberItem?.Value;
 
-            console.log(`Payment Success: ${mpesaReceipt} of KES ${amount}`);
+            console.log(`✅ Payment Success - MerchantRequestID: ${merchantRequestID}`);
+            console.log(`   Receipt: ${mpesaReceipt}`);
+            console.log(`   Amount: KES ${amount}`);
+            console.log(`   Phone: ${phone}`);
 
             // Update transaction
             const transaction = await prisma.transaction.findFirst({
@@ -99,14 +102,30 @@ export const mpesaCallback = async (req: Request, res: Response): Promise<void> 
                     }
                 });
 
-                console.log(`Credited wallet ${transaction.recipientWalletId} with ${creditAmount}`);
+                console.log(`   Credited wallet ${transaction.recipientWalletId} with KES ${creditAmount}`);
+
+                // Update associated sale to PAID if exists
+                const sale = await prisma.sale.findFirst({
+                    where: { transactionId: transaction.id }
+                });
+
+                if (sale) {
+                    await prisma.sale.update({
+                        where: { id: sale.id },
+                        data: {
+                            paymentStatus: 'PAID',
+                            amountPaid: amount.toString()
+                        }
+                    });
+                    console.log(`   Updated Sale ${sale.id} status to PAID`);
+                }
 
                 // Check for linked Invoice and update it
                 try {
                     if (transaction.metadata) {
                         const meta = JSON.parse(transaction.metadata);
                         if (meta.invoiceId) {
-                            console.log(`Marking linked invoice ${meta.invoiceId} as COMPLETED`);
+                            console.log(`   Marking linked invoice ${meta.invoiceId} as COMPLETED`);
                             await prisma.transaction.update({
                                 where: { id: meta.invoiceId },
                                 data: { status: 'COMPLETED' }
@@ -114,7 +133,7 @@ export const mpesaCallback = async (req: Request, res: Response): Promise<void> 
                         }
                     }
                 } catch (e) {
-                    console.error("Failed to parse metadata or update linked invoice", e);
+                    console.error("   Failed to parse metadata or update linked invoice", e);
                 }
 
                 // Send Notification
@@ -128,20 +147,54 @@ export const mpesaCallback = async (req: Request, res: Response): Promise<void> 
                         }
                     });
                 }
+
+                console.log(`   Transaction ${transaction.id} marked as COMPLETED`);
+            } else {
+                console.error(`   ⚠️  No transaction found for MerchantRequestID: ${merchantRequestID}`);
             }
 
         } else {
-            console.log(`Payment Failed: ${stkCallback.ResultDesc}`);
+            // Payment Failed
+            const failureReason = stkCallback.ResultDesc || 'Unknown error';
+            console.log(`❌ Payment Failed - MerchantRequestID: ${merchantRequestID}`);
+            console.log(`   Reason: ${failureReason}`);
+            console.log(`   ResultCode: ${resultCode}`);
+
             // Mark transaction as failed
             const transaction = await prisma.transaction.findFirst({
                 where: { merchantRequestId: merchantRequestID }
             });
 
             if (transaction) {
+                // Update transaction with failure details
+                const updatedMetadata = transaction.metadata ? JSON.parse(transaction.metadata) : {};
+                updatedMetadata.failureReason = failureReason;
+                updatedMetadata.failureCode = resultCode;
+                updatedMetadata.failureTimestamp = new Date().toISOString();
+
                 await prisma.transaction.update({
                     where: { id: transaction.id },
-                    data: { status: 'FAILED' }
+                    data: {
+                        status: 'FAILED',
+                        metadata: JSON.stringify(updatedMetadata)
+                    }
                 });
+
+                // Update associated sale to FAILED if exists
+                const sale = await prisma.sale.findFirst({
+                    where: { transactionId: transaction.id }
+                });
+
+                if (sale) {
+                    await prisma.sale.update({
+                        where: { id: sale.id },
+                        data: {
+                            paymentStatus: 'FAILED',
+                            notes: `Payment failed: ${failureReason}`
+                        }
+                    });
+                    console.log(`   Updated Sale ${sale.id} status to FAILED`);
+                }
 
                 // Send Notification
                 if (transaction.initiatorUserId) {
@@ -149,11 +202,15 @@ export const mpesaCallback = async (req: Request, res: Response): Promise<void> 
                         data: {
                             userId: transaction.initiatorUserId,
                             title: 'Payment Failed',
-                            message: `Transaction failed: ${stkCallback.ResultDesc}`,
+                            message: `Transaction failed: ${failureReason}`,
                             type: 'error'
                         }
                     });
                 }
+
+                console.log(`   Transaction ${transaction.id} marked as FAILED`);
+            } else {
+                console.error(`   ⚠️  No transaction found for MerchantRequestID: ${merchantRequestID}`);
             }
         }
 
