@@ -88,10 +88,9 @@ async function clearAndReseed() {
                 emailVerified: true,
                 businessProfile: {
                     create: {
-                        name: 'Test Business',
-                        type: 'RETAIL',
-                        kraPin: 'A000000000A',
-                        location: 'Nairobi, Kenya'
+                        companyName: 'Test Business',
+                        location: 'Nairobi, Kenya',
+                        kraPinNumber: 'A000000000A'
                     }
                 }
             }
@@ -112,8 +111,8 @@ async function clearAndReseed() {
                 merchantId: merchant.id,
                 plan: 'PRO',
                 status: 'ACTIVE',
-                currentPeriodStart: new Date(),
-                currentPeriodEnd: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000), // 1 year
+                startDate: new Date(),
+                endDate: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000), // 1 year
                 features: JSON.stringify({
                     POS: true,
                     ANALYTICS: true,
