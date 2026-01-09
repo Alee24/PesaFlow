@@ -1,36 +1,39 @@
 #!/bin/bash
 
-echo "🚀 Starting deployment update..."
+echo "🧹 Cleaning up and restarting services..."
 
-# Navigate to project root
+# Kill all existing Node processes on these ports
+echo "Killing existing processes..."
+sudo kill -9 $(sudo lsof -t -i:3001) 2>/dev/null || echo "Port 3001 already free"
+sudo kill -9 $(sudo lsof -t -i:2424) 2>/dev/null || echo "Port 2424 already free"
+
+# Navigate to project
 cd /var/www/mpesaconnect.co.ke
 
-# Pull latest code
-echo "📥 Pulling latest code from GitHub..."
+# Stash any local changes and pull
+echo "📥 Pulling latest code..."
+git stash
 git pull origin main
 
-# Install dependencies
-echo "📦 Installing dependencies..."
-cd frontend
+# Backend setup
+echo "🔧 Setting up backend..."
+cd backend
 npm install
-cd ../backend
+nohup npm run dev > /var/log/mpesa-backend.log 2>&1 &
+echo "Backend started (PID: $!)"
+
+# Frontend setup
+echo "🎨 Setting up frontend..."
+cd ../frontend
 npm install
+nohup npm run dev > /var/log/mpesa-frontend.log 2>&1 &
+echo "Frontend started (PID: $!)"
 
-# Kill existing processes
-echo "🔪 Stopping existing processes..."
-sudo kill -9 $(sudo lsof -t -i:3001) 2>/dev/null || true
-sudo kill -9 $(sudo lsof -t -i:2424) 2>/dev/null || true
-
-# Start backend
-echo "🔧 Starting backend..."
-cd /var/www/mpesaconnect.co.ke/backend
-npm run dev &
-
-# Start frontend  
-echo "🎨 Starting frontend..."
-cd /var/www/mpesaconnect.co.ke/frontend
-npm run dev &
-
+echo ""
 echo "✅ Deployment complete!"
-echo "Backend: http://mpesaconnect.co.ke:3001"
-echo "Frontend: http://mpesaconnect.co.ke:2424"
+echo "Backend logs: tail -f /var/log/mpesa-backend.log"
+echo "Frontend logs: tail -f /var/log/mpesa-frontend.log"
+echo ""
+echo "Services running at:"
+echo "  Backend:  http://mpesaconnect.co.ke:3001"
+echo "  Frontend: http://mpesaconnect.co.ke:2424"
