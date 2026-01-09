@@ -25,9 +25,16 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({ sale, onClose }) => 
 
                 {/* Header Actions */}
                 <div className="p-4 border-b border-gray-100 dark:border-gray-700 flex justify-between items-center no-print">
-                    <div className="flex items-center gap-2 text-green-600 font-bold">
+                    <div className={`flex items-center gap-2 font-bold ${sale.paymentStatus === 'PAID' ? 'text-green-600' :
+                            sale.paymentStatus === 'PENDING' ? 'text-yellow-600' :
+                                'text-red-600'
+                        }`}>
                         <CheckCircle className="w-5 h-5" />
-                        <span>Sale Complete</span>
+                        <span>
+                            {sale.paymentStatus === 'PAID' ? 'Sale Complete' :
+                                sale.paymentStatus === 'PENDING' ? 'PAYMENT PENDING' :
+                                    'SALE INCOMPLETE'}
+                        </span>
                     </div>
                     <button onClick={onClose}><X className="w-6 h-6 text-gray-400 hover:text-gray-600" /></button>
                 </div>
