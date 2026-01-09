@@ -3,6 +3,7 @@ import { PrismaClient } from '@prisma/client';
 import { z } from 'zod';
 import fs from 'fs';
 import { parse } from 'csv-parse';
+import { getParentMerchantId } from '../utils/merchant-hierarchy';
 
 const prisma = new PrismaClient();
 
@@ -73,8 +74,11 @@ export const getProducts = async (req: AuthRequest, res: Response): Promise<void
 
         const { status, lowStock, search } = req.query;
 
+        // Get parent merchant ID (for shared inventory across branches)
+        const parentMerchantId = getParentMerchantId(req.user.userId, (req.user as any).parentId);
+
         const where: any = {
-            merchantId: req.user.userId,
+            merchantId: parentMerchantId,
         };
 
         // Filter by status

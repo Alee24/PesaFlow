@@ -1,13 +1,13 @@
-
 import { Request, Response } from 'express';
 import { PrismaClient } from '@prisma/client';
 import { startOfDay, startOfWeek, startOfMonth, startOfYear, subDays, format } from 'date-fns';
+import { getMerchantUserIds } from '../utils/merchant-hierarchy';
 
 const prisma = new PrismaClient();
 
 export const getDashboardStats = async (req: Request, res: Response) => {
     try {
-        const userId = (req as any).user.merchantId; // Use Merchant ID for scope
+        const userId = (req as any).user.userId;
         const userRole = (req as any).user.role;
         const { period } = req.query;
 
@@ -16,15 +16,24 @@ export const getDashboardStats = async (req: Request, res: Response) => {
         else if (period === 'week') startDate = startOfWeek(new Date());
         else if (period === 'year') startDate = startOfYear(new Date());
 
-        // For ADMIN, we might show everything. For Merchant, show their data.
-        // We need the WALLET ID for the merchant to filter transactions efficiently
-        let walletId = null;
-        if (userRole !== 'ADMIN') {
-            const wallet = await prisma.wallet.findFirst({ where: { userId: userId } });
-            console.log(`[Dashboard] Fetching for MerchantId: ${userId}, Found Wallet: ${wallet?.id}`);
+        // Get all user IDs in merchant hierarchy
+        const merchantUserIds = await getMerchantUserIds(userId, userRole);
 
-            if (!wallet) return res.json({ summary: {}, chartData: [], transactions: [] });
-            walletId = wallet.id;
+        // Get wallets for all users in hierarchy
+        let walletIds: string[] = [];
+        if (userRole === 'ADMIN') {
+            const allWallets = await prisma.wallet.findMany({ select: { id: true } });
+            walletIds = allWallets.map(w => w.id);
+        } else {
+            const wallets = await prisma.wallet.findMany({
+                where: { userId: { in: merchantUserIds } },
+                select: { id: true }
+            });
+            walletIds = wallets.map(w => w.id);
+        }
+
+        if (walletIds.length === 0 && userRole !== 'ADMIN') {
+            return res.json({ summary: {}, chartData: [], transactions: [] });
         }
 
         // 1. Fetch Transactions
@@ -34,8 +43,7 @@ export const getDashboardStats = async (req: Request, res: Response) => {
         };
 
         if (userRole !== 'ADMIN') {
-            // Filter by Wallet (incoming/outgoing from this wallet)
-            whereClause.recipientWalletId = walletId;
+            whereClause.recipientWalletId = { in: walletIds };
         }
 
         const transactions = await prisma.transaction.findMany({
@@ -83,35 +91,19 @@ export const getDashboardStats = async (req: Request, res: Response) => {
 
         const chartData = Array.from(chartMap.values());
 
-        // 4. Wallet Balance Calculation (Dynamic, STK-only logic)
+        // 4. Wallet Balance Calculation
         let walletBalance = 0;
 
         if (userRole === 'ADMIN') {
             const walletAgg = await prisma.wallet.aggregate({ _sum: { balance: true } });
             walletBalance = Number(walletAgg._sum.balance || 0);
         } else {
-            // For Merchants, calculate strictly from STK deposits - Withdrawals
-            const stkStats = await prisma.transaction.aggregate({
-                where: {
-                    recipientWalletId: walletId!,
-                    type: 'DEPOSIT_STK',
-                    status: 'COMPLETED'
-                },
-                _sum: { amount: true, feeCharged: true }
+            // Aggregate balance for all wallets in hierarchy
+            const walletAgg = await prisma.wallet.aggregate({
+                where: { userId: { in: merchantUserIds } },
+                _sum: { balance: true }
             });
-
-            const withdrawalsStats = await prisma.withdrawal.aggregate({
-                where: {
-                    walletId: walletId!,
-                    status: 'COMPLETED'
-                },
-                _sum: { amount: true }
-            });
-
-            const netStkIncome = Number(stkStats._sum.amount || 0) - Number(stkStats._sum.feeCharged || 0);
-            const totalWithdrawnLifetime = Number(withdrawalsStats._sum.amount || 0);
-
-            walletBalance = netStkIncome - totalWithdrawnLifetime;
+            walletBalance = Number(walletAgg._sum.balance || 0);
         }
 
         res.json({
@@ -136,15 +128,33 @@ export const getDashboardStats = async (req: Request, res: Response) => {
 
 export const getInvoiceStats = async (req: Request, res: Response) => {
     try {
-        const userId = (req as any).user.merchantId;
+        const userId = (req as any).user.userId;
+        const userRole = (req as any).user.role;
 
-        // Fetch wallet first
-        const wallet = await prisma.wallet.findFirst({ where: { userId } });
-        if (!wallet) return res.json({ paid: { count: 0, amount: 0 }, pending: { count: 0, amount: 0 }, overdue: { count: 0, amount: 0 }, cancelled: { count: 0, amount: 0 }, total: { count: 0, amount: 0 } });
+        // Get all user IDs in merchant hierarchy
+        const merchantUserIds = await getMerchantUserIds(userId, userRole);
+
+        // Fetch wallets for all users in hierarchy
+        const wallets = await prisma.wallet.findMany({
+            where: { userId: { in: merchantUserIds } },
+            select: { id: true }
+        });
+
+        if (wallets.length === 0) {
+            return res.json({
+                paid: { count: 0, amount: 0 },
+                pending: { count: 0, amount: 0 },
+                overdue: { count: 0, amount: 0 },
+                cancelled: { count: 0, amount: 0 },
+                total: { count: 0, amount: 0 }
+            });
+        }
+
+        const walletIds = wallets.map(w => w.id);
 
         const transactions = await prisma.transaction.findMany({
             where: {
-                recipientWalletId: wallet.id,
+                recipientWalletId: { in: walletIds },
                 type: { in: ['INVOICE', 'DEPOSIT_STK', 'SALE_CREDIT', 'SALE_CASH'] }
             }
         });

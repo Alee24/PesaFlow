@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import { PrismaClient } from '@prisma/client';
+import { getMerchantUserIds } from '../utils/merchant-hierarchy';
 
 const prisma = new PrismaClient();
 
@@ -13,16 +14,20 @@ interface AuthRequest extends Request {
 // Sales Overview Analytics
 export const getSalesOverview = async (req: AuthRequest, res: Response) => {
     try {
-        const userId = req.user?.userId;
+        const userId = req.user?.userId!;
+        const userRole = req.user?.role!;
         const { startDate, endDate } = req.query;
 
         const start = startDate ? new Date(startDate as string) : new Date(new Date().setDate(new Date().getDate() - 30));
         const end = endDate ? new Date(endDate as string) : new Date();
 
+        // Get all user IDs in merchant hierarchy
+        const merchantUserIds = await getMerchantUserIds(userId, userRole);
+
         // Total revenue
         const sales = await prisma.sale.findMany({
             where: {
-                merchantId: userId,
+                merchantId: { in: merchantUserIds },
                 createdAt: { gte: start, lte: end }
             },
             include: {
