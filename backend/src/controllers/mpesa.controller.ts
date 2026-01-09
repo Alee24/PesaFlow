@@ -227,3 +227,32 @@ export const testConnection = async (req: Request, res: Response): Promise<void>
         res.status(500).json(result);
     }
 };
+
+export const resetMpesaConfig = async (req: AuthRequest, res: Response): Promise<void> => {
+    try {
+        if (!req.user) {
+            res.status(401).json({ error: 'Unauthorized' });
+            return;
+        }
+
+        const userId = req.user.userId;
+        console.log(`Resetting M-Pesa Config for user: ${userId}`);
+
+        await prisma.businessProfile.update({
+            where: { userId },
+            data: {
+                mpesaConsumerKey: null,
+                mpesaConsumerSecret: null,
+                mpesaPasskey: null,
+                mpesaShortcode: null,
+                mpesaInitiatorName: null,
+                mpesaInitiatorPass: null
+            }
+        });
+
+        res.json({ success: true, message: 'Database M-Pesa settings cleared. System will now use .env variables.' });
+    } catch (error: any) {
+        console.error('Reset Config Error:', error);
+        res.status(500).json({ error: 'Failed to reset settings' });
+    }
+};
