@@ -26,8 +26,8 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({ sale, onClose }) => 
                 {/* Header Actions */}
                 <div className="p-4 border-b border-gray-100 dark:border-gray-700 flex justify-between items-center no-print">
                     <div className={`flex items-center gap-2 font-bold ${sale.paymentStatus === 'PAID' ? 'text-green-600' :
-                            sale.paymentStatus === 'PENDING' ? 'text-yellow-600' :
-                                'text-red-600'
+                        sale.paymentStatus === 'PENDING' ? 'text-yellow-600' :
+                            'text-red-600'
                         }`}>
                         <CheckCircle className="w-5 h-5" />
                         <span>
@@ -100,6 +100,12 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({ sale, onClose }) => 
                                 <div className="flex justify-between text-red-500">
                                     <span>Discount:</span>
                                     <span>-{Number(sale.discountAmount).toLocaleString()}</span>
+                                </div>
+                            )}
+                            {sale.paymentMethod === 'MPESA_STK' && sale.transaction?.feeCharged && Number(sale.transaction.feeCharged) > 0 && (
+                                <div className="flex justify-between text-orange-600">
+                                    <span>Service Charge:</span>
+                                    <span>-{Number(sale.transaction.feeCharged).toLocaleString()}</span>
                                 </div>
                             )}
                             <div className="flex justify-between font-bold text-lg mt-2">

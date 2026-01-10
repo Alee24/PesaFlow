@@ -23,6 +23,7 @@ import dashboardRoutes from './routes/dashboard.routes';
 import salesRoutes from './routes/sales.routes';
 import subscriptionRoutes from './routes/subscription.routes';
 import analyticsRoutes from './routes/analytics.routes';
+import settingsRoutes from './routes/settings.routes';
 
 
 const app = express();
@@ -57,6 +58,7 @@ app.use('/api/analytics', analyticsRoutes);
 app.use('/api/team', teamRoutes);
 app.use('/api/crm', crmRoutes);
 app.use('/api/support', supportRoutes);
+app.use('/api/settings', settingsRoutes);
 
 app.get('/', (req, res) => {
 

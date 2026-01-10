@@ -56,6 +56,7 @@ const menuGroups = [
             { name: 'Verification', href: '/admin/verification', icon: CheckCircle, role: 'ADMIN' },
             { name: 'Users', href: '/admin/users', icon: User, role: 'ADMIN' },
             { name: 'Withdrawals', href: '/admin/withdrawals', icon: CreditCard, role: 'ADMIN' },
+            { name: 'Settings', href: '/admin/settings', icon: Settings, role: 'ADMIN' },
         ]
     }
 ];

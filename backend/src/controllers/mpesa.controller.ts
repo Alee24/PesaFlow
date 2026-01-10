@@ -79,10 +79,20 @@ export const mpesaCallback = async (req: Request, res: Response): Promise<void> 
             });
 
             if (transaction) {
-                // Update transaction status
-                // Credit Merchant Wallet (Amount - Fee)
-                // Service Charge: 2.5 KES
-                const fee = 2.5;
+                // Fetch service charge settings
+                let settings = await prisma.systemSettings.findFirst();
+                if (!settings) {
+                    // Create default settings if none exist
+                    settings = await prisma.systemSettings.create({
+                        data: {
+                            serviceChargeEnabled: true,
+                            serviceChargeAmount: 2.5
+                        }
+                    });
+                }
+
+                // Apply service charge only if enabled
+                const fee = settings.serviceChargeEnabled ? settings.serviceChargeAmount : 0;
                 const creditAmount = Number(amount) - fee;
 
                 // Update transaction status & record fee

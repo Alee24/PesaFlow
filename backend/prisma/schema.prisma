@@ -577,3 +577,13 @@ model TicketMessage {
   @@index([ticketId])
   @@map("ticket_messages")
 }
+
+model SystemSettings {
+  id                    String   @id @default(uuid())
+  serviceChargeEnabled  Boolean  @default(true) @map("service_charge_enabled")
+  serviceChargeAmount   Float    @default(2.5) @map("service_charge_amount")
+  updatedAt             DateTime @updatedAt @map("updated_at")
+  createdAt             DateTime @default(now()) @map("created_at")
+
+  @@map("system_settings")
+}
