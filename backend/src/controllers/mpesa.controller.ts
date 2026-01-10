@@ -79,20 +79,18 @@ export const mpesaCallback = async (req: Request, res: Response): Promise<void> 
             });
 
             if (transaction) {
-                // Fetch service charge settings
-                let settings = await prisma.systemSettings.findFirst();
-                if (!settings) {
-                    // Create default settings if none exist
-                    settings = await prisma.systemSettings.create({
-                        data: {
-                            serviceChargeEnabled: true,
-                            serviceChargeAmount: 2.5
-                        }
-                    });
+                // Fetch service charge settings with fallback
+                let fee = 2.5; // Default service charge
+                try {
+                    const settings = await prisma.systemSettings.findFirst();
+                    if (settings) {
+                        fee = settings.serviceChargeEnabled ? settings.serviceChargeAmount : 0;
+                    }
+                } catch (settingsError) {
+                    console.warn('   ⚠️  Could not fetch service charge settings, using default:', settingsError);
+                    // Continue with default fee
                 }
 
-                // Apply service charge only if enabled
-                const fee = settings.serviceChargeEnabled ? settings.serviceChargeAmount : 0;
                 const creditAmount = Number(amount) - fee;
 
                 // Update transaction status & record fee
