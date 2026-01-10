@@ -80,7 +80,7 @@ export const getTopMerchants = async (req: AuthRequest, res: Response): Promise<
                 email: true,
                 createdAt: true,
                 businessProfile: {
-                    select: { businessName: true }
+                    select: { companyName: true }
                 },
                 _count: {
                     select: { sales: true }
@@ -106,7 +106,7 @@ export const getTopMerchants = async (req: AuthRequest, res: Response): Promise<
 
                 return {
                     id: merchant.id,
-                    name: merchant.businessProfile?.businessName || merchant.email,
+                    name: merchant.businessProfile?.companyName || merchant.email,
                     email: merchant.email,
                     totalRevenue,
                     transactionCount: sales.length,
