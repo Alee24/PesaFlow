@@ -117,7 +117,7 @@ export const getAllUserLicenseKeys = async (req: AuthRequest, res: Response) => 
  */
 export const activateUserLicenseKey = async (req: AuthRequest, res: Response) => {
     try {
-        const { licenseKey } = req.body;
+        const { licenseKey, serverFingerprint, domain } = req.body;
         const userId = req.user?.userId;
         const userEmail = req.user?.email;
 
@@ -140,11 +140,16 @@ export const activateUserLicenseKey = async (req: AuthRequest, res: Response) =>
 
         // Check if already used
         if (key.isUsed) {
-            return res.status(400).json({
-                error: 'License key has already been used',
-                usedBy: key.usedByEmail,
-                usedAt: key.usedAt
-            });
+            // OPTIONAL: Allow re-activation on SAME server
+            if (key.serverFingerprint && key.serverFingerprint === serverFingerprint) {
+                // This is a re-activation on same hardware - allow it!
+            } else {
+                return res.status(400).json({
+                    error: 'License key has already been used on another server',
+                    usedBy: key.usedByEmail,
+                    usedAt: key.usedAt
+                });
+            }
         }
 
         // Check if expired
@@ -170,14 +175,16 @@ export const activateUserLicenseKey = async (req: AuthRequest, res: Response) =>
 
         // Activate the license
         await prisma.$transaction([
-            // Mark key as used
+            // Mark key as used & bind to hardware
             prisma.userLicenseKey.update({
                 where: { id: key.id },
                 data: {
                     isUsed: true,
                     usedBy: userId,
                     usedByEmail: userEmail,
-                    usedAt: new Date()
+                    usedAt: new Date(),
+                    serverFingerprint: serverFingerprint || 'UNKNOWN',
+                    domain: domain || 'UNKNOWN'
                 }
             }),
             // Update user with license

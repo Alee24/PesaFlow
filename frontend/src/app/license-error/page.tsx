@@ -36,7 +36,9 @@ export default function LicenseErrorPage() {
         try {
             // Try activating as user license first
             await axios.post(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3002'}/api/user-license/activate`, {
-                licenseKey
+                licenseKey,
+                serverFingerprint: serverInfo?.fingerprint,
+                domain: serverInfo?.domain
             });
 
             toast.success('License Activated Successfully! Redirecting...');
@@ -138,8 +140,8 @@ export default function LicenseErrorPage() {
                         <button
                             onClick={() => setActiveTab('activate')}
                             className={`flex-1 py-2.5 text-sm font-medium rounded-lg transition-all ${activeTab === 'activate'
-                                    ? 'bg-white text-gray-900 shadow-sm'
-                                    : 'text-gray-500 hover:text-gray-700'
+                                ? 'bg-white text-gray-900 shadow-sm'
+                                : 'text-gray-500 hover:text-gray-700'
                                 }`}
                         >
                             Enter License Key
@@ -147,8 +149,8 @@ export default function LicenseErrorPage() {
                         <button
                             onClick={() => setActiveTab('request')}
                             className={`flex-1 py-2.5 text-sm font-medium rounded-lg transition-all ${activeTab === 'request'
-                                    ? 'bg-white text-gray-900 shadow-sm'
-                                    : 'text-gray-500 hover:text-gray-700'
+                                ? 'bg-white text-gray-900 shadow-sm'
+                                : 'text-gray-500 hover:text-gray-700'
                                 }`}
                         >
                             Request Access

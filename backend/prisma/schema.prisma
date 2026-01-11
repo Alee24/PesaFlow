@@ -646,6 +646,8 @@ model UserLicenseKey {
   usedBy          String?   @map("used_by") // User ID who used it
   usedByEmail     String?   @map("used_by_email")
   usedAt          DateTime? @map("used_at")
+  serverFingerprint String? @map("server_fingerprint") // Hardware ID it was used on
+  domain          String?   @map("domain")           // Domain it was used on
   expiresAt       DateTime? @map("expires_at") // Optional expiration
   createdAt       DateTime  @default(now()) @map("created_at")
   
