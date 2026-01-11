@@ -147,9 +147,15 @@ export const activateUserLicenseKey = async (req: AuthRequest, res: Response) =>
 
         // Check if already used
         if (key.isUsed) {
-            // OPTIONAL: Allow re-activation on SAME server
-            if (key.serverFingerprint && key.serverFingerprint === serverFingerprint) {
-                // This is a re-activation on same hardware - allow it!
+            // OPTIONAL: Allow re-activation on SAME server OR if previous activation failed to get fingerprint
+            if (
+                (key.serverFingerprint && key.serverFingerprint === serverFingerprint) ||
+                key.serverFingerprint === 'CONNECTION-FAILED' ||
+                key.serverFingerprint === 'UNKNOWN' ||
+                key.serverFingerprint === 'SERVER-OFFLINE-RETRY'
+            ) {
+                // This is a re-activation or repair - allow it!
+                console.log(`[LICENSE] Allowing re-activation for key ${licenseKey} (Repairing fingerprint)`);
             } else {
                 return res.status(400).json({
                     error: 'License key has already been used on another server',
