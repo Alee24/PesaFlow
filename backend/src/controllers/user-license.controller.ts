@@ -121,9 +121,8 @@ export const activateUserLicenseKey = async (req: AuthRequest, res: Response) =>
         const userId = req.user?.userId;
         const userEmail = req.user?.email;
 
-        if (!userId || !userEmail) {
-            return res.status(401).json({ error: 'User not authenticated' });
-        }
+        // Note: userId is optional for initial system activation (offline/setup mode)
+
 
         if (!licenseKey) {
             return res.status(400).json({ error: 'License key is required' });
@@ -168,65 +167,80 @@ export const activateUserLicenseKey = async (req: AuthRequest, res: Response) =>
             });
         }
 
-        // Check if user already has a license
-        const user = await prisma.user.findUnique({
-            where: { id: userId }
-        });
-
-        if (user?.licenseActivated) {
-            return res.status(400).json({
-                error: 'You already have an active license',
-                licenseType: user.licenseType,
-                activatedAt: user.licenseActivatedAt
+        // Check if user already has a license (only if logged in)
+        if (userId) {
+            const user = await prisma.user.findUnique({
+                where: { id: userId }
             });
+
+            if (user?.licenseActivated) {
+                return res.status(400).json({
+                    error: 'You already have an active license',
+                    licenseType: user.licenseType,
+                    activatedAt: user.licenseActivatedAt
+                });
+            }
         }
 
         // Activate the license
-        await prisma.$transaction([
-            // Mark key as used & bind to hardware
+        const databaseOperations: any[] = [];
+
+        // 1. Mark key as used & bind to hardware (ALWAYS)
+        databaseOperations.push(
             prisma.userLicenseKey.update({
                 where: { id: key.id },
                 data: {
                     isUsed: true,
-                    usedBy: userId,
-                    usedByEmail: userEmail,
+                    usedBy: userId || 'SYSTEM_INSTALLER',
+                    usedByEmail: userEmail || 'system@localhost',
                     usedAt: new Date(),
                     serverFingerprint: serverFingerprint || 'UNKNOWN',
                     domain: domain || 'UNKNOWN'
                 }
-            }),
-            // Update user with license
-            prisma.user.update({
-                where: { id: userId },
-                data: {
-                    licenseActivated: true,
-                    licenseKey: licenseKey.trim().toUpperCase(),
-                    licenseType: 'ACTIVATED',
-                    licenseActivatedAt: new Date()
-                }
-            }),
-            // Upgrade user subscription to Enterprise
-            prisma.subscription.upsert({
-                where: { merchantId: userId as string },
-                create: {
-                    merchantId: userId as string,
-                    plan: 'ENTERPRISE',
-                    status: 'ACTIVE',
-                    features: JSON.stringify(['all']),
-                    isEnterprise: true,
-                    startDate: new Date(),
-                    endDate: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000) // 1 year
-                },
-                update: {
-                    plan: 'ENTERPRISE',
-                    status: 'ACTIVE',
-                    features: JSON.stringify(['all']),
-                    isEnterprise: true,
-                    startDate: new Date(),
-                    endDate: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000)
-                }
             })
-        ]);
+        );
+
+        // 2. Update user & subscription (ONLY IF LOGGED IN)
+        if (userId) {
+            // Update user with license
+            databaseOperations.push(
+                prisma.user.update({
+                    where: { id: userId },
+                    data: {
+                        licenseActivated: true,
+                        licenseKey: licenseKey.trim().toUpperCase(),
+                        licenseType: 'ACTIVATED',
+                        licenseActivatedAt: new Date()
+                    }
+                })
+            );
+
+            // Upgrade user subscription to Enterprise
+            databaseOperations.push(
+                prisma.subscription.upsert({
+                    where: { merchantId: userId as string },
+                    create: {
+                        merchantId: userId as string,
+                        plan: 'ENTERPRISE',
+                        status: 'ACTIVE',
+                        features: JSON.stringify(['all']),
+                        isEnterprise: true,
+                        startDate: new Date(),
+                        endDate: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000) // 1 year
+                    },
+                    update: {
+                        plan: 'ENTERPRISE',
+                        status: 'ACTIVE',
+                        features: JSON.stringify(['all']),
+                        isEnterprise: true,
+                        startDate: new Date(),
+                        endDate: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000)
+                    }
+                })
+            );
+        }
+
+        await prisma.$transaction(databaseOperations);
 
         res.json({
             success: true,

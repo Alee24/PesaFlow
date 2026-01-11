@@ -10,8 +10,8 @@ import { authenticateToken, requireAdmin } from '../middlewares/auth.middleware'
 
 const router = Router();
 
-// User routes - require authentication
-router.post('/activate', authenticateToken, activateUserLicenseKey);
+// User routes - Allow activation without auth (for initial setup)
+router.post('/activate', activateUserLicenseKey);
 router.post('/purchase', authenticateToken, purchaseEnterprisePlan);
 
 // Admin routes - require admin access
