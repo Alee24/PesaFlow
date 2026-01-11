@@ -24,6 +24,11 @@ export function getImageUrl(path?: string) {
     cleanPath = cleanPath.replace(/\\/g, '/');
     if (!cleanPath.startsWith('/')) cleanPath = `/${cleanPath}`;
 
+    // Fix paths that erroneously start with /api/uploads (common migration issue)
+    if (cleanPath.startsWith('/api/uploads/')) {
+        cleanPath = cleanPath.replace('/api/uploads/', '/uploads/');
+    }
+
     // 2. Determine Base URL
     // If it's an upload path, return it relative (so it goes through Next.js proxy)
     // This allows https://domain.com/uploads/... without needing api. subdomain
