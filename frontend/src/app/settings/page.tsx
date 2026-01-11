@@ -211,7 +211,7 @@ export default function SettingsPage() {
                 onClose={() => setToast(prev => ({ ...prev, visible: false }))}
             />
             <div className="max-w-5xl mx-auto py-8 px-4">
-                <header className="mb-8 flex justify-between items-center">
+                <header className="mb-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                     <div>
                         <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Settings</h1>
                         <p className="text-gray-500 mt-1">
@@ -221,7 +221,7 @@ export default function SettingsPage() {
                         </p>
                     </div>
                     {!isBranchManager && (
-                        <Button onClick={handleSubmit} isLoading={saving} className="px-6">
+                        <Button onClick={handleSubmit} isLoading={saving} className="px-6 w-full md:w-auto">
                             Save Changes
                         </Button>
                     )}
