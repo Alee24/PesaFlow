@@ -25,6 +25,7 @@ import subscriptionRoutes from './routes/subscription.routes';
 import analyticsRoutes from './routes/analytics.routes';
 import settingsRoutes from './routes/settings.routes';
 import adminDashboardRoutes from './routes/admin-dashboard.routes';
+import systemHealthRoutes from './routes/system-health.routes';
 
 
 const app = express();
@@ -61,6 +62,7 @@ app.use('/api/crm', crmRoutes);
 app.use('/api/support', supportRoutes);
 app.use('/api/settings', settingsRoutes);
 app.use('/api/admin-dashboard', adminDashboardRoutes);
+app.use('/api/system-health', systemHealthRoutes);
 
 app.get('/', (req, res) => {
 
