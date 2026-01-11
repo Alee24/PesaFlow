@@ -51,9 +51,7 @@ export default function TicketChatPage() {
 
     useEffect(() => {
         fetchTicket();
-        // Poll for new messages every 10 seconds
-        const interval = setInterval(fetchTicket, 10000);
-        return () => clearInterval(interval);
+        // Auto-refresh removed - ticket only updates on manual page refresh
     }, [params.id]);
 
     useEffect(() => {
@@ -124,8 +122,8 @@ export default function TicketChatPage() {
                                     </div>
 
                                     <div className={`p-4 rounded-2xl shadow-sm text-sm leading-relaxed ${msg.isAdmin
-                                            ? 'bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 rounded-tl-none border border-gray-100 dark:border-gray-700'
-                                            : 'bg-indigo-600 text-white rounded-tr-none'
+                                        ? 'bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 rounded-tl-none border border-gray-100 dark:border-gray-700'
+                                        : 'bg-indigo-600 text-white rounded-tr-none'
                                         }`}>
                                         {msg.message}
                                     </div>
