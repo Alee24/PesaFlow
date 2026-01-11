@@ -143,7 +143,7 @@ export const activateUserLicenseKey = async (req: AuthRequest, res: Response) =>
             return res.status(404).json({ error: 'Invalid license key' });
         }
 
-        console.log(`[LICENSE] Key found: ${JSON.stringify(key)}`);
+        console.log(`[LICENSE] Key found: ${JSON.stringify(key)} `);
 
         // Check if already used
         if (key.isUsed) {
