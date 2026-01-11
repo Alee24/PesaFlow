@@ -17,7 +17,13 @@ export default function AdminSettingsPage() {
     const [saving, setSaving] = useState(false);
     const [settings, setSettings] = useState({
         serviceChargeEnabled: true,
-        serviceChargeAmount: 2.5
+        serviceChargeAmount: 2.5,
+        smtpHost: '',
+        smtpPort: 587,
+        smtpUser: '',
+        smtpPass: '',
+        smtpFromName: '',
+        smtpFromEmail: ''
     });
 
     useEffect(() => {
@@ -38,7 +44,13 @@ export default function AdminSettingsPage() {
                 const response = await api.get('/settings');
                 setSettings({
                     serviceChargeEnabled: response.data.serviceChargeEnabled,
-                    serviceChargeAmount: response.data.serviceChargeAmount
+                    serviceChargeAmount: response.data.serviceChargeAmount,
+                    smtpHost: response.data.smtpHost || '',
+                    smtpPort: response.data.smtpPort || 587,
+                    smtpUser: response.data.smtpUser || '',
+                    smtpPass: response.data.smtpPass || '',
+                    smtpFromName: response.data.smtpFromName || '',
+                    smtpFromEmail: response.data.smtpFromEmail || ''
                 });
             } catch (error: any) {
                 console.error('Failed to fetch settings:', error);
@@ -174,6 +186,92 @@ export default function AdminSettingsPage() {
                         </div>
                     </div>
                 </Card>
+
+                {/* SMTP Settings Card */}
+                <Card className="mt-6">
+                    <div className="p-6">
+                        <div className="flex items-center gap-3 mb-6">
+                            <div className="p-2 bg-green-100 dark:bg-green-900/30 rounded-lg">
+                                <Settings className="w-5 h-5 text-green-600 dark:text-green-400" />
+                            </div>
+                            <div>
+                                <h2 className="text-lg font-semibold text-gray-900 dark:text-white">SMTP Settings</h2>
+                                <p className="text-sm text-gray-500">Configure global email server settings</p>
+                            </div>
+                        </div>
+
+                        <div className="space-y-4">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <Input
+                                    label="SMTP Host"
+                                    type="text"
+                                    value={settings.smtpHost}
+                                    onChange={(e) => setSettings({ ...settings, smtpHost: e.target.value })}
+                                    placeholder="smtp.gmail.com"
+                                />
+                                <Input
+                                    label="SMTP Port"
+                                    type="number"
+                                    value={settings.smtpPort}
+                                    onChange={(e) => setSettings({ ...settings, smtpPort: parseInt(e.target.value) || 587 })}
+                                    placeholder="587"
+                                />
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <Input
+                                    label="SMTP Username"
+                                    type="text"
+                                    value={settings.smtpUser}
+                                    onChange={(e) => setSettings({ ...settings, smtpUser: e.target.value })}
+                                    placeholder="your-email@gmail.com"
+                                />
+                                <Input
+                                    label="SMTP Password"
+                                    type="password"
+                                    value={settings.smtpPass}
+                                    onChange={(e) => setSettings({ ...settings, smtpPass: e.target.value })}
+                                    placeholder="••••••••"
+                                />
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <Input
+                                    label="From Name"
+                                    type="text"
+                                    value={settings.smtpFromName}
+                                    onChange={(e) => setSettings({ ...settings, smtpFromName: e.target.value })}
+                                    placeholder="Mpesa Connect"
+                                />
+                                <Input
+                                    label="From Email"
+                                    type="email"
+                                    value={settings.smtpFromEmail}
+                                    onChange={(e) => setSettings({ ...settings, smtpFromEmail: e.target.value })}
+                                    placeholder="noreply@mpesaconnect.co.ke"
+                                />
+                            </div>
+
+                            <div className="p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
+                                <p className="text-sm text-yellow-800 dark:text-yellow-400">
+                                    <strong>Note:</strong> These settings will be used as fallback when merchants don't have their own SMTP configuration.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </Card>
+
+                {/* Save Button */}
+                <div className="mt-6 flex justify-end">
+                    <Button
+                        onClick={handleSave}
+                        isLoading={saving}
+                        className="flex items-center gap-2"
+                    >
+                        <Save className="w-4 h-4" />
+                        Save All Settings
+                    </Button>
+                </div>
             </div>
         </DashboardLayout>
     );

@@ -582,6 +582,15 @@ model SystemSettings {
   id                    String   @id @default(uuid())
   serviceChargeEnabled  Boolean  @default(true) @map("service_charge_enabled")
   serviceChargeAmount   Float    @default(2.5) @map("service_charge_amount")
+  
+  // Global SMTP Settings
+  smtpHost      String? @map("smtp_host")
+  smtpPort      Int?    @map("smtp_port")
+  smtpUser      String? @map("smtp_user")
+  smtpPass      String? @map("smtp_pass")
+  smtpFromName  String? @map("smtp_from_name")
+  smtpFromEmail String? @map("smtp_from_email")
+  
   updatedAt             DateTime @updatedAt @map("updated_at")
   createdAt             DateTime @default(now()) @map("created_at")
 

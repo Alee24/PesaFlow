@@ -58,33 +58,59 @@ export const getSettings = async (req: AuthRequest, res: Response) => {
 // Update settings (admin only)
 export const updateSettings = async (req: AuthRequest, res: Response) => {
     try {
-        const { serviceChargeEnabled, serviceChargeAmount } = req.body;
+        const {
+            serviceChargeEnabled,
+            serviceChargeAmount,
+            smtpHost,
+            smtpPort,
+            smtpUser,
+            smtpPass,
+            smtpFromName,
+            smtpFromEmail
+        } = req.body;
 
-        // Validate inputs
-        if (typeof serviceChargeEnabled !== 'boolean') {
+        // Validate service charge inputs
+        if (serviceChargeEnabled !== undefined && typeof serviceChargeEnabled !== 'boolean') {
             return res.status(400).json({ error: 'serviceChargeEnabled must be a boolean' });
         }
 
-        if (typeof serviceChargeAmount !== 'number' || serviceChargeAmount < 0) {
+        if (serviceChargeAmount !== undefined && (typeof serviceChargeAmount !== 'number' || serviceChargeAmount < 0)) {
             return res.status(400).json({ error: 'serviceChargeAmount must be a positive number' });
+        }
+
+        // Validate SMTP inputs
+        if (smtpPort !== undefined && (typeof smtpPort !== 'number' || smtpPort < 1 || smtpPort > 65535)) {
+            return res.status(400).json({ error: 'smtpPort must be a valid port number (1-65535)' });
+        }
+
+        if (smtpFromEmail !== undefined && smtpFromEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(smtpFromEmail)) {
+            return res.status(400).json({ error: 'smtpFromEmail must be a valid email address' });
         }
 
         // Get existing settings or create new
         let settings = await prisma.systemSettings.findFirst();
 
+        const updateData: any = {};
+        if (serviceChargeEnabled !== undefined) updateData.serviceChargeEnabled = serviceChargeEnabled;
+        if (serviceChargeAmount !== undefined) updateData.serviceChargeAmount = serviceChargeAmount;
+        if (smtpHost !== undefined) updateData.smtpHost = smtpHost || null;
+        if (smtpPort !== undefined) updateData.smtpPort = smtpPort || null;
+        if (smtpUser !== undefined) updateData.smtpUser = smtpUser || null;
+        if (smtpPass !== undefined) updateData.smtpPass = smtpPass || null;
+        if (smtpFromName !== undefined) updateData.smtpFromName = smtpFromName || null;
+        if (smtpFromEmail !== undefined) updateData.smtpFromEmail = smtpFromEmail || null;
+
         if (settings) {
             settings = await prisma.systemSettings.update({
                 where: { id: settings.id },
-                data: {
-                    serviceChargeEnabled,
-                    serviceChargeAmount
-                }
+                data: updateData
             });
         } else {
             settings = await prisma.systemSettings.create({
                 data: {
-                    serviceChargeEnabled,
-                    serviceChargeAmount
+                    serviceChargeEnabled: serviceChargeEnabled ?? true,
+                    serviceChargeAmount: serviceChargeAmount ?? 2.5,
+                    ...updateData
                 }
             });
         }
