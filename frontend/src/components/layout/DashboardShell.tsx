@@ -13,6 +13,7 @@ import { useState, useEffect, useRef } from 'react';
 import { formatDistanceToNow } from 'date-fns';
 import api from '@/lib/api';
 import { useAuth } from '@/contexts/AuthContext';
+import { ThemeToggle } from '../ui/ThemeToggle';
 
 const menuGroups = [
     {
@@ -305,7 +306,8 @@ export function Header({ user, onMenuClick }: { user?: any; onMenuClick?: () => 
                     </nav>
                 </div>
 
-                <div className="flex items-center gap-6">
+                <div className="flex items-center gap-2 md:gap-4">
+                    <ThemeToggle />
                     {/* Notifications */}
                     <button
                         onClick={handleOpenNotifications}

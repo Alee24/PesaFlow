@@ -42,6 +42,7 @@ import { SubscriptionProvider } from "@/contexts/SubscriptionContext";
 import Script from 'next/script';
 import { LicenseGuard } from "@/components/license/LicenseGuard";
 
+import { ThemeProvider } from "@/contexts/ThemeContext";
 import { AuthProvider } from "@/contexts/AuthContext";
 
 export default function RootLayout({
@@ -59,9 +60,11 @@ export default function RootLayout({
         <ToastProvider>
           <AuthProvider>
             <SubscriptionProvider>
-              <LicenseGuard>
-                {children}
-              </LicenseGuard>
+              <ThemeProvider defaultTheme="system" storageKey="mpesa-connect-theme">
+                <LicenseGuard>
+                  {children}
+                </LicenseGuard>
+              </ThemeProvider>
             </SubscriptionProvider>
           </AuthProvider>
         </ToastProvider>
