@@ -609,3 +609,24 @@ model SystemLicense {
 
   @@map("system_licenses")
 }
+
+model LicenseRequest {
+  id              String   @id @default(uuid())
+  companyName     String   @map("company_name")
+  contactEmail    String   @map("contact_email")
+  contactPhone    String   @map("contact_phone")
+  domain          String
+  fingerprint     String
+  hostname        String
+  requestedUsers  Int      @default(100) @map("requested_users")
+  requestedDays   Int      @default(365) @map("requested_days")
+  purpose         String?  @db.Text
+  status          String   @default("PENDING") // PENDING, APPROVED, REJECTED
+  rejectionReason String?  @map("rejection_reason") @db.Text
+  approvedBy      String?  @map("approved_by")
+  approvedAt      DateTime? @map("approved_at")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  @@map("license_requests")
+}
