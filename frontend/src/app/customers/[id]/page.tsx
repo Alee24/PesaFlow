@@ -150,6 +150,7 @@ export default function CustomerDetailPage() {
                             variant="outline"
                             onClick={() => {
                                 const params = new URLSearchParams({
+                                    customerId: customer.id, // Add this
                                     name: customer.name || '',
                                     email: customer.email || '',
                                     phone: customer.phone || '',
@@ -552,8 +553,8 @@ export default function CustomerDetailPage() {
                                     <div className="flex justify-between items-center mb-2">
                                         <div className="flex items-center gap-3">
                                             <div className={`p-2 rounded-full ${sale.paymentStatus === 'PAID' ? 'bg-green-100 text-green-600' :
-                                                    sale.paymentStatus === 'PENDING' ? 'bg-yellow-100 text-yellow-600' :
-                                                        'bg-gray-100 text-gray-600'
+                                                sale.paymentStatus === 'PENDING' ? 'bg-yellow-100 text-yellow-600' :
+                                                    'bg-gray-100 text-gray-600'
                                                 }`}>
                                                 <DollarSign className="w-4 h-4" />
                                             </div>
@@ -571,8 +572,8 @@ export default function CustomerDetailPage() {
                                                 {formatCurrency(Number(sale.totalAmount))}
                                             </p>
                                             <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${sale.paymentStatus === 'PAID' ? 'bg-green-100 text-green-700' :
-                                                    sale.paymentStatus === 'PENDING' ? 'bg-yellow-100 text-yellow-700' :
-                                                        'bg-gray-100 text-gray-700'
+                                                sale.paymentStatus === 'PENDING' ? 'bg-yellow-100 text-yellow-700' :
+                                                    'bg-gray-100 text-gray-700'
                                                 }`}>
                                                 {sale.paymentStatus}
                                             </span>

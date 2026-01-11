@@ -20,6 +20,7 @@ function CreateInvoiceForm() {
     const [invoiceData, setInvoiceData] = useState({
         invoiceNumber: `INV-${Date.now().toString().slice(-6)}`,
         date: new Date().toISOString().split('T')[0],
+        customerId: '', // Store linked customer ID
         clientName: '',
         clientPhone: '',
         clientEmail: '',
@@ -41,10 +42,12 @@ function CreateInvoiceForm() {
         const email = searchParams.get('email');
         const phone = searchParams.get('phone');
         const address = searchParams.get('address');
+        const customerId = searchParams.get('customerId');
 
         if (name) {
             setInvoiceData(prev => ({
                 ...prev,
+                customerId: customerId || '',
                 clientName: name || '',
                 clientEmail: email || '',
                 clientPhone: phone || '',

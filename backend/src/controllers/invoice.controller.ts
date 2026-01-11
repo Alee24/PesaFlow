@@ -8,7 +8,7 @@ export const createInvoice = async (req: Request, res: Response) => {
     try {
         const userId = (req as any).user.userId; // The actor (audit)
         const merchantId = (req as any).user.merchantId; // The data owner
-        const { clientName, clientPhone, clientAddress, clientEmail, date, dueDate, items, invoiceNumber, notes } = req.body;
+        const { customerId, clientName, clientPhone, clientAddress, clientEmail, date, dueDate, items, invoiceNumber, notes } = req.body;
 
         console.log(`[Invoice] Creating for Merchant: ${merchantId} by User: ${userId}`);
         console.log(`[Invoice] Payload:`, JSON.stringify(req.body));
@@ -16,6 +16,13 @@ export const createInvoice = async (req: Request, res: Response) => {
         // Fetch Wallet & Profile of the MERCHANT
         const wallet = await prisma.wallet.findFirstOrThrow({ where: { userId: merchantId } });
         const profile = await prisma.businessProfile.findUnique({ where: { userId: merchantId } });
+
+        // Optional: Match customer by email if ID not provided
+        let targetCustomerId = customerId;
+        if (!targetCustomerId && clientEmail) {
+            const existing = await prisma.customer.findFirst({ where: { email: clientEmail, merchantId } });
+            if (existing) targetCustomerId = existing.id;
+        }
 
         // Calculate Totals
         const subTotal = items.reduce((sum: number, item: any) => sum + (item.price * item.quantity), 0);
@@ -38,11 +45,12 @@ export const createInvoice = async (req: Request, res: Response) => {
                 initiatorUserId: userId,
                 recipientWalletId: wallet.id,
                 metadata: JSON.stringify({
-                    clientName: clientName?.substring(0, 50), // Truncate to save space
+                    clientName: clientName?.substring(0, 50),
                     invoiceDate: date,
                     dueDate: dueDate,
                     hasItems: items.length > 0,
-                    itemsSnapshot: items
+                    itemsSnapshot: items,
+                    customerId: targetCustomerId // Store in metadata too for safety
                 })
             }
         });
@@ -73,6 +81,15 @@ export const createInvoice = async (req: Request, res: Response) => {
                 totalAmount: totalAmount,
                 transactionId: transaction.id,
                 paymentMethod: 'INVOICE',
+                paymentStatus: 'PENDING', // Default to PENDING for Invoices
+                amountDue: totalAmount,   // Initially full amount due
+
+                // Link to Customer
+                customerId: targetCustomerId,
+                customerName: clientName,
+                customerEmail: clientEmail,
+                customerPhone: clientPhone,
+
                 items: {
                     create: items.map((item: any) => ({
                         productId: item.productId || genericProductId,

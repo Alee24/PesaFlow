@@ -273,7 +273,7 @@ export default function InvoicePage() {
                     <div className="flex justify-between items-start mb-12 border-b pb-8 relative z-10">
                         <div>
                             {biz?.logoUrl ? (
-                                <img src={getImageUrl(biz.logoUrl) || ''} alt="Logo" className="h-16 mb-4 object-contain" />
+                                <img src={getImageUrl(biz.logoUrl) || ''} alt="Logo" className="h-24 mb-6 object-contain" />
                             ) : (
                                 <div className="text-3xl font-bold text-gray-800 uppercase mb-4">{biz?.companyName || 'YOUR LOGO'}</div>
                             )}
