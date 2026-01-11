@@ -106,10 +106,10 @@ export default function LicenseErrorPage() {
                             <div className="flex items-center justify-center gap-3">
                                 <Phone className="w-5 h-5 text-indigo-600" />
                                 <a
-                                    href="tel:+254700448448"
+                                    href="tel:+254724454757"
                                     className="text-indigo-600 hover:text-indigo-800 font-semibold text-lg"
                                 >
-                                    +254 700 448 448
+                                    +254 724 454 757
                                 </a>
                             </div>
                         </div>
