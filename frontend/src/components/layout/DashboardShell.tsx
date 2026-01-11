@@ -6,13 +6,14 @@ import { usePathname, useRouter } from 'next/navigation';
 import {
     LayoutDashboard, ShoppingCart, Package, CreditCard, ArrowLeftRight, Settings,
     LogOut, User, Store, FileText, Bell, X, CheckCircle, AlertCircle, Info, Lock,
-    ShieldCheck, TrendingUp, BarChart3, Users, Wallet, MessageSquare, Key
+    ShieldCheck, TrendingUp, BarChart3, Users, Wallet, MessageSquare, Key, Sun, Moon
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useState, useEffect, useRef } from 'react';
 import { formatDistanceToNow } from 'date-fns';
 import api from '@/lib/api';
 import { useAuth } from '@/contexts/AuthContext';
+import { useTheme } from '@/contexts/ThemeContext';
 import { ThemeToggle } from '../ui/ThemeToggle';
 
 const menuGroups = [
@@ -67,6 +68,7 @@ const menuGroups = [
 
 export function Sidebar({ user, isMobileOpen, setIsMobileOpen }: { user?: any; isMobileOpen?: boolean; setIsMobileOpen?: (open: boolean) => void }) {
     const { logout } = useAuth();
+    const { theme, setTheme } = useTheme();
     const pathname = usePathname();
 
     const isItemAccessible = (item: any) => {
@@ -179,7 +181,18 @@ export function Sidebar({ user, isMobileOpen, setIsMobileOpen }: { user?: any; i
                     })}
                 </nav>
 
-                <div className="absolute bottom-0 w-full p-4 border-t border-gray-200 dark:border-gray-800">
+                <div className="absolute bottom-0 w-full p-4 border-t border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900">
+                    <button
+                        onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+                        className="flex items-center gap-3 w-full px-4 py-3 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-xl text-sm font-medium transition-all duration-200 hover:translate-x-1 mb-2"
+                    >
+                        {theme === 'dark' ? (
+                            <Moon className="w-5 h-5 text-indigo-400" />
+                        ) : (
+                            <Sun className="w-5 h-5 text-yellow-500" />
+                        )}
+                        <span>{theme === 'dark' ? 'Dark Mode' : 'Light Mode'}</span>
+                    </button>
                     <button
                         onClick={logout}
                         className="flex items-center gap-3 w-full px-4 py-3 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-xl text-sm font-medium transition-all duration-200 hover:translate-x-1"
