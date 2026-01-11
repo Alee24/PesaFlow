@@ -18,10 +18,9 @@ const router = Router();
 // Public route - submit license request (no auth required)
 router.post('/request', submitLicenseRequest);
 
-// Admin routes - require authentication
-router.get('/status', authenticateToken, requireAdmin, getLicenseStatus);
-router.post('/activate', authenticateToken, requireAdmin, activateLicense);
-router.get('/fingerprint', authenticateToken, requireAdmin, (req, res) => {
+// Public routes (required for license checks and activation page)
+router.get('/status', getLicenseStatus);
+router.get('/fingerprint', (req, res) => {
     const fingerprint = generateServerFingerprint();
     res.json({
         fingerprint,
@@ -29,6 +28,9 @@ router.get('/fingerprint', authenticateToken, requireAdmin, (req, res) => {
         hostname: require('os').hostname()
     });
 });
+
+// Admin routes - require authentication
+router.post('/activate', authenticateToken, requireAdmin, activateLicense);
 
 // License request management (admin only)
 router.get('/requests', authenticateToken, requireAdmin, getAllLicenseRequests);
