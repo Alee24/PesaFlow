@@ -10,6 +10,7 @@ export default function LicenseErrorPage() {
     const router = useRouter();
     const [licenseKey, setLicenseKey] = useState('');
     const [isLoading, setIsLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
     const [serverInfo, setServerInfo] = useState<{ fingerprint: string; domain: string } | null>(null);
     const [activeTab, setActiveTab] = useState<'activate' | 'request'>('activate');
 
@@ -34,6 +35,7 @@ export default function LicenseErrorPage() {
         if (!licenseKey.trim()) return;
 
         setIsLoading(true);
+        setError(null);
         try {
             // Try activating as user license first
             await axios.post('/api/user-license/activate', {
@@ -48,9 +50,8 @@ export default function LicenseErrorPage() {
             }, 1500);
         } catch (error: any) {
             console.error('Activation error:', error);
-            // If user license activation fails, it might be a master key attempt via the admin panel logic
-            // But from this public page, we only support user license keys for now.
             const errorMsg = error.response?.data?.error || 'Activation failed. Invalid key.';
+            setError(errorMsg);
             toast.error(errorMsg);
             setIsLoading(false);
         }
@@ -168,6 +169,21 @@ export default function LicenseErrorPage() {
                             </div>
 
                             <form onSubmit={handleActivate} className="space-y-4">
+                                {error && (
+                                    <div className="rounded-lg bg-red-50 p-4 border border-red-200 animate-in fade-in slide-in-from-top-2">
+                                        <div className="flex">
+                                            <div className="flex-shrink-0">
+                                                <AlertTriangle className="h-5 w-5 text-red-400" aria-hidden="true" />
+                                            </div>
+                                            <div className="ml-3">
+                                                <h3 className="text-sm font-medium text-red-800">Activation Error</h3>
+                                                <div className="mt-1 text-sm text-red-700">
+                                                    <p>{error}</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
                                 <div className="space-y-1.5">
                                     <label className="text-xs font-semibold text-gray-700 uppercase tracking-wide">License Key</label>
                                     <div className="relative">
