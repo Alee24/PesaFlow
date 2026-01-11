@@ -109,8 +109,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                     </div>
                 )}
 
-                <main className={`flex-1 p-4 md:p-6 lg:p-8 overflow-y-auto print:p-0 print:overflow-visible ${(user.status === 'REJECTED' || user.status === 'SUSPENDED') ? 'pointer-events-none grayscale opacity-50 blur-[2px]' : ''}`}>
-                    {children}
+                <main className={`flex-1 p-3 sm:p-4 md:p-6 lg:p-8 overflow-y-auto overflow-x-hidden print:p-0 print:overflow-visible max-w-full ${(user.status === 'REJECTED' || user.status === 'SUSPENDED') ? 'pointer-events-none grayscale opacity-50 blur-[2px]' : ''}`}>
+                    <div className="max-w-7xl mx-auto w-full">
+                        {children}
+                    </div>
                 </main>
 
                 <footer className="p-4 border-t border-gray-100 dark:border-gray-800 text-center print:hidden">

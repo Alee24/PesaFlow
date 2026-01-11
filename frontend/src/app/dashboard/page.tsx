@@ -92,7 +92,7 @@ export default function DashboardPage() {
                 </div>
 
                 {/* Stat Cards */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
 
                     {/* Card 1: Wallet Balance */}
                     <div className="rounded-xl overflow-hidden shadow-lg bg-indigo-600 text-white p-6 relative">
@@ -304,9 +304,9 @@ export default function DashboardPage() {
                                             <td className="px-6 py-4">{new Date(tx.createdAt).toLocaleString()}</td>
                                             <td className="px-6 py-4 font-medium">
                                                 <span className={`text-xs px-2 py-1 rounded-full ${tx.type === 'DEPOSIT_STK' ? 'bg-green-100 text-green-700' :
-                                                        tx.type === 'SALE_CASH' ? 'bg-blue-100 text-blue-700' :
-                                                            tx.type === 'WITHDRAWAL' ? 'bg-red-100 text-red-700' :
-                                                                'bg-gray-100 text-gray-700'
+                                                    tx.type === 'SALE_CASH' ? 'bg-blue-100 text-blue-700' :
+                                                        tx.type === 'WITHDRAWAL' ? 'bg-red-100 text-red-700' :
+                                                            'bg-gray-100 text-gray-700'
                                                     }`}>
                                                     {tx.type === 'DEPOSIT_STK' ? 'M-Pesa' :
                                                         tx.type === 'SALE_CASH' ? 'Cash' :
