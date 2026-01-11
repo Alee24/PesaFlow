@@ -188,17 +188,21 @@ export const activateUserLicenseKey = async (req: AuthRequest, res: Response) =>
             }),
             // Upgrade user subscription to Enterprise
             prisma.subscription.upsert({
-                where: { userId },
+                where: { merchantId: userId },
                 create: {
-                    userId,
+                    merchantId: userId,
                     plan: 'ENTERPRISE',
                     status: 'ACTIVE',
+                    features: JSON.stringify(['all']),
+                    isEnterprise: true,
                     startDate: new Date(),
                     endDate: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000) // 1 year
                 },
                 update: {
                     plan: 'ENTERPRISE',
                     status: 'ACTIVE',
+                    features: JSON.stringify(['all']),
+                    isEnterprise: true,
                     startDate: new Date(),
                     endDate: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000)
                 }
@@ -253,17 +257,21 @@ export const purchaseEnterprisePlan = async (req: AuthRequest, res: Response) =>
                 }
             }),
             prisma.subscription.upsert({
-                where: { userId },
+                where: { merchantId: userId },
                 create: {
-                    userId,
+                    merchantId: userId,
                     plan: 'ENTERPRISE',
                     status: 'ACTIVE',
+                    features: JSON.stringify(['all']),
+                    isEnterprise: true,
                     startDate: new Date(),
                     endDate: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000)
                 },
                 update: {
                     plan: 'ENTERPRISE',
                     status: 'ACTIVE',
+                    features: JSON.stringify(['all']),
+                    isEnterprise: true,
                     startDate: new Date(),
                     endDate: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000)
                 }
