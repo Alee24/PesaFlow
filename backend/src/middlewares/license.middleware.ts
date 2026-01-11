@@ -139,7 +139,40 @@ export const checkLicense = async (): Promise<{
             }
         }
 
-        // SECOND: Check database for license
+        // SECOND: Check for User License Key (Local Activation)
+        // This takes priority over System License and allows offline activation
+        const userLicense = await prisma.userLicenseKey.findFirst({
+            where: {
+                isUsed: true,
+                serverFingerprint: currentFingerprint
+            }
+        });
+
+        if (userLicense) {
+            // Valid User License Found!
+            // Check expiration if applicable (most are lifetime)
+            if (userLicense.expiresAt && new Date(userLicense.expiresAt) < new Date()) {
+                return {
+                    valid: false,
+                    error: 'USER_LICENSE_EXPIRED'
+                };
+            }
+
+            return {
+                valid: true,
+                license: {
+                    domain: currentDomain,
+                    serverFingerprint: currentFingerprint,
+                    activatedAt: userLicense.usedAt || new Date(),
+                    expiresAt: userLicense.expiresAt || new Date('2099-12-31'),
+                    maxUsers: 999, // default for enterprise
+                    features: ['all'],
+                    status: 'ACTIVE'
+                }
+            };
+        }
+
+        // THIRD: Check for Legacy System License stored in DB (Legacy)
         const licenseRecord = await prisma.systemLicense.findFirst({
             where: { domain: currentDomain }
         });
