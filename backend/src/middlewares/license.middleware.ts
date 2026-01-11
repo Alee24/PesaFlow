@@ -96,7 +96,7 @@ const validateWithMasterServer = async (
 
         if (!response.ok) return false;
 
-        const data = await response.json();
+        const data = await response.json() as { valid?: boolean };
         return data.valid === true;
     } catch (error) {
         console.error('Master server validation failed:', error);
