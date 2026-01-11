@@ -33,7 +33,7 @@ export default function LicenseManagementPage() {
     const [serverInfo, setServerInfo] = useState<any>(null);
     const [requests, setRequests] = useState<any[]>([]);
     const [stats, setStats] = useState<any>(null);
-    const [selectedTab, setSelectedTab] = useState<'status' | 'requests' | 'activate' | 'generate'>('requests');
+    const [selectedTab, setSelectedTab] = useState<'status' | 'requests' | 'activate' | 'generate'>('status');
 
 
     const [domain, setDomain] = useState('');
@@ -179,7 +179,7 @@ export default function LicenseManagementPage() {
                             License Management
                         </h1>
                         <p className="text-gray-500 dark:text-gray-400 mt-1">
-                            Manage license requests and activations
+                            View and manage system license status
                         </p>
                     </div>
                     <Button
@@ -245,6 +245,15 @@ export default function LicenseManagementPage() {
                 {/* Tabs */}
                 <div className="flex gap-2 border-b border-gray-200 dark:border-gray-700 overflow-x-auto">
                     <button
+                        onClick={() => setSelectedTab('status')}
+                        className={`px-4 py-2 font-medium whitespace-nowrap ${selectedTab === 'status'
+                            ? 'border-b-2 border-indigo-600 text-indigo-600'
+                            : 'text-gray-500 hover:text-gray-700'
+                            }`}
+                    >
+                        My License
+                    </button>
+                    <button
                         onClick={() => setSelectedTab('requests')}
                         className={`px-4 py-2 font-medium whitespace-nowrap ${selectedTab === 'requests'
                             ? 'border-b-2 border-indigo-600 text-indigo-600'
@@ -252,15 +261,6 @@ export default function LicenseManagementPage() {
                             }`}
                     >
                         License Requests ({stats?.pending || 0})
-                    </button>
-                    <button
-                        onClick={() => setSelectedTab('status')}
-                        className={`px-4 py-2 font-medium whitespace-nowrap ${selectedTab === 'status'
-                            ? 'border-b-2 border-indigo-600 text-indigo-600'
-                            : 'text-gray-500 hover:text-gray-700'
-                            }`}
-                    >
-                        Current License
                     </button>
                     <button
                         onClick={() => setSelectedTab('activate')}
@@ -428,7 +428,9 @@ export default function LicenseManagementPage() {
                                     <div>
                                         <p className="text-xs text-gray-500">Expires</p>
                                         <p className="font-semibold">
-                                            {new Date(licenseStatus.license.expiresAt).toLocaleDateString()}
+                                            {licenseStatus.license.expiresAt
+                                                ? new Date(licenseStatus.license.expiresAt).toLocaleDateString()
+                                                : 'Lifetime Access'}
                                         </p>
                                     </div>
                                 </div>
@@ -436,7 +438,7 @@ export default function LicenseManagementPage() {
                                     <Users className="w-5 h-5 text-gray-400" />
                                     <div>
                                         <p className="text-xs text-gray-500">Max Users</p>
-                                        <p className="font-semibold">{licenseStatus.license.maxUsers}</p>
+                                        <p className="font-semibold">Unlimited</p>
                                     </div>
                                 </div>
                                 <div className="flex items-center gap-3">
