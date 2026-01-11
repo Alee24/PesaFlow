@@ -22,10 +22,18 @@ export const viewport: Viewport = {
 export const metadata: Metadata = {
   title: "Mpesa Connect - Complete Business Management Platform",
   description: "Advanced POS, Inventory Management, M-Pesa Integration & Merchant Verification System",
+  manifest: "/manifest.json",
   icons: {
     icon: '/favicon.png',
     apple: '/favicon.png',
   },
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "Mpesa Connect",
+  },
+  applicationName: "Mpesa Connect",
+  themeColor: "#6366f1",
 };
 
 import { Toaster } from 'react-hot-toast';
