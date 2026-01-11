@@ -47,6 +47,7 @@ app.use('/uploads', express.static(path.join(process.cwd(), 'public/uploads')));
 app.use('/api/categories', categoryRoutes);
 app.use('/api/auth', authRoutes); // Auth routes are NOT protected by license
 app.use('/api/license', licenseRoutes); // License routes are NOT protected by license
+app.use('/api/user-license', userLicenseRoutes); // User activation must be public/accessible
 
 // Apply license middleware to ALL routes below this point
 app.use(requireValidLicense);
@@ -71,7 +72,7 @@ app.use('/api/support', supportRoutes);
 app.use('/api/settings', settingsRoutes);
 app.use('/api/admin-dashboard', adminDashboardRoutes);
 app.use('/api/system-health', systemHealthRoutes);
-app.use('/api/user-license', userLicenseRoutes);
+
 
 app.get('/', (req, res) => {
 
