@@ -26,6 +26,8 @@ import analyticsRoutes from './routes/analytics.routes';
 import settingsRoutes from './routes/settings.routes';
 import adminDashboardRoutes from './routes/admin-dashboard.routes';
 import systemHealthRoutes from './routes/system-health.routes';
+import licenseRoutes from './routes/license.routes';
+import { requireValidLicense } from './middlewares/license.middleware';
 
 
 const app = express();
@@ -42,7 +44,12 @@ app.use(morgan('dev'));
 app.use('/uploads', express.static(path.join(process.cwd(), 'public/uploads')));
 
 app.use('/api/categories', categoryRoutes);
-app.use('/api/auth', authRoutes);
+app.use('/api/auth', authRoutes); // Auth routes are NOT protected by license
+app.use('/api/license', licenseRoutes); // License routes are NOT protected by license
+
+// Apply license middleware to ALL routes below this point
+app.use(requireValidLicense);
+
 app.use('/api/products', productRoutes);
 app.use('/api/mpesa', mpesaRoutes);
 app.use('/api/transactions', transactionRoutes);

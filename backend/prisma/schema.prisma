@@ -596,3 +596,16 @@ model SystemSettings {
 
   @@map("system_settings")
 }
+
+model SystemLicense {
+  id              String   @id @default(uuid())
+  domain          String   @unique
+  licenseKey      String   @map("license_key") @db.Text
+  fingerprint     String
+  status          String   @default("ACTIVE") // ACTIVE, SUSPENDED, EXPIRED
+  expiresAt       DateTime @map("expires_at")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  @@map("system_licenses")
+}
