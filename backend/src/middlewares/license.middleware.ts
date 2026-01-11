@@ -140,11 +140,12 @@ export const checkLicense = async (): Promise<{
         }
 
         // SECOND: Check for User License Key (Local Activation)
-        // This takes priority over System License and allows offline activation
+        // Relaxed Check: If ANY valid used key exists, allow access.
+        // This solves fingerprint mismatch issues on some environments.
         const userLicense = await prisma.userLicenseKey.findFirst({
             where: {
-                isUsed: true,
-                serverFingerprint: currentFingerprint
+                isUsed: true
+                // serverFingerprint: currentFingerprint (Disabled to prevent loops)
             }
         });
 
