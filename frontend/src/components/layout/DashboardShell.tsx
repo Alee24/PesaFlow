@@ -6,7 +6,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import {
     LayoutDashboard, ShoppingCart, Package, CreditCard, ArrowLeftRight, Settings,
     LogOut, User, Store, FileText, Bell, X, CheckCircle, AlertCircle, Info, Lock,
-    ShieldCheck, TrendingUp, BarChart3, Users, Wallet, MessageSquare
+    ShieldCheck, TrendingUp, BarChart3, Users, Wallet, MessageSquare, Key
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useState, useEffect, useRef } from 'react';
@@ -55,6 +55,7 @@ const menuGroups = [
             { name: 'Dashboard', href: '/admin', icon: LayoutDashboard, role: 'ADMIN' },
             { name: 'System Dashboard', href: '/admin/system-dashboard', icon: TrendingUp, role: 'ADMIN' },
             { name: 'System Health', href: '/admin/system-health', icon: ShieldCheck, role: 'ADMIN' },
+            { name: 'License', href: '/admin/license', icon: Key, role: 'ADMIN' },
             { name: 'Verification', href: '/admin/verification', icon: CheckCircle, role: 'ADMIN' },
             { name: 'Users', href: '/admin/users', icon: User, role: 'ADMIN' },
             { name: 'Withdrawals', href: '/admin/withdrawals', icon: CreditCard, role: 'ADMIN' },
