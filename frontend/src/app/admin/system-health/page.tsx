@@ -54,8 +54,8 @@ export default function SystemHealthPage() {
 
     useEffect(() => {
         fetchHealth();
-        // Auto-refresh every 60 seconds
-        const interval = setInterval(fetchHealth, 60000);
+        // Auto-refresh every 5 minutes
+        const interval = setInterval(fetchHealth, 300000);
         return () => clearInterval(interval);
     }, []);
 
@@ -169,8 +169,8 @@ export default function SystemHealthPage() {
 
                 {/* Overall Status Card */}
                 <Card className={`p-6 border-2 ${health.summary.overallStatus === 'healthy' ? 'border-green-500 bg-green-50 dark:bg-green-900/10' :
-                        health.summary.overallStatus === 'degraded' ? 'border-yellow-500 bg-yellow-50 dark:bg-yellow-900/10' :
-                            'border-red-500 bg-red-50 dark:bg-red-900/10'
+                    health.summary.overallStatus === 'degraded' ? 'border-yellow-500 bg-yellow-50 dark:bg-yellow-900/10' :
+                        'border-red-500 bg-red-50 dark:bg-red-900/10'
                     }`}>
                     <div className="flex items-center justify-between">
                         <div>
@@ -200,8 +200,8 @@ export default function SystemHealthPage() {
                             </p>
                         </div>
                         <div className={`text-6xl font-bold ${health.summary.overallStatus === 'healthy' ? 'text-green-500' :
-                                health.summary.overallStatus === 'degraded' ? 'text-yellow-500' :
-                                    'text-red-500'
+                            health.summary.overallStatus === 'degraded' ? 'text-yellow-500' :
+                                'text-red-500'
                             }`}>
                             {health.summary.overallStatus === 'healthy' ? '✓' : '✗'}
                         </div>
@@ -214,8 +214,8 @@ export default function SystemHealthPage() {
                         <Card
                             key={check.name}
                             className={`p-4 ${check.status === 'pass' ? 'border-l-4 border-green-500' :
-                                    check.status === 'warning' ? 'border-l-4 border-yellow-500' :
-                                        'border-l-4 border-red-500'
+                                check.status === 'warning' ? 'border-l-4 border-yellow-500' :
+                                    'border-l-4 border-red-500'
                                 }`}
                         >
                             <div className="flex items-start gap-3">
