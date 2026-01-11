@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import crypto from 'crypto';
 import os from 'os';
 import { PrismaClient } from '@prisma/client';
+import { validateMasterLicense } from '../utils/master-license';
 
 const prisma = new PrismaClient();
 
@@ -117,7 +118,28 @@ export const checkLicense = async (): Promise<{
         const currentFingerprint = generateServerFingerprint();
         const currentDomain = process.env.DOMAIN || 'localhost';
 
-        // Check database for license
+        // FIRST: Check for Master License Key in environment
+        const masterKey = process.env.MASTER_LICENSE_KEY_INSTALLED;
+        if (masterKey) {
+            const masterValidation = validateMasterLicense(masterKey);
+            if (masterValidation.valid && masterValidation.data) {
+                // Master key is valid - bypass all other checks
+                return {
+                    valid: true,
+                    license: {
+                        domain: currentDomain,
+                        serverFingerprint: currentFingerprint,
+                        activatedAt: new Date(masterValidation.data.issuedAt),
+                        expiresAt: new Date(masterValidation.data.expiresAt),
+                        maxUsers: masterValidation.data.maxInstallations,
+                        features: masterValidation.data.features,
+                        status: 'ACTIVE'
+                    }
+                };
+            }
+        }
+
+        // SECOND: Check database for license
         const licenseRecord = await prisma.systemLicense.findFirst({
             where: { domain: currentDomain }
         });
