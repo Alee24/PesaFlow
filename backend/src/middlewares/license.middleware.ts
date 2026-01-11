@@ -148,6 +148,15 @@ export const checkLicense = async (): Promise<{
             }
         });
 
+        console.log(`[LICENSE_CHECK] Fingerprint: ${currentFingerprint} | Found User License: ${!!userLicense}`);
+        if (!userLicense) {
+            // Debug: check if any license exists at all
+            const anyKey = await prisma.userLicenseKey.findFirst({ where: { isUsed: true } });
+            if (anyKey) {
+                console.log(`[LICENSE_CHECK] MISMATCH! Key exists for fingerprint: ${anyKey.serverFingerprint}`);
+            }
+        }
+
         if (userLicense) {
             // Valid User License Found!
             // Check expiration if applicable (most are lifetime)
