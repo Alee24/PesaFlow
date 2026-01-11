@@ -130,13 +130,21 @@ export const activateUserLicenseKey = async (req: AuthRequest, res: Response) =>
         }
 
         // Find the license key
+        console.log(`[LICENSE] Attempting to activate key: '${licenseKey}'`);
         const key = await prisma.userLicenseKey.findUnique({
             where: { licenseKey: licenseKey.trim().toUpperCase() }
         });
 
         if (!key) {
+            console.log(`[LICENSE] Key not found in DB: '${licenseKey}'`);
+            // List all keys to verify DB state
+            const allKeys = await prisma.userLicenseKey.findMany({ select: { licenseKey: true } });
+            console.log(`[LICENSE] Valid keys in DB: ${allKeys.map(k => k.licenseKey).join(', ')}`);
+
             return res.status(404).json({ error: 'Invalid license key' });
         }
+
+        console.log(`[LICENSE] Key found: ${JSON.stringify(key)}`);
 
         // Check if already used
         if (key.isUsed) {
