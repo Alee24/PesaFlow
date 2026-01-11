@@ -28,9 +28,11 @@ export default function AdminDashboard() {
     const [recentTransactions, setRecentTransactions] = useState<any[]>([]);
     const [recentUsers, setRecentUsers] = useState<any[]>([]);
     const [systemLogs, setSystemLogs] = useState<any[]>([]);
+    const [systemHealth, setSystemHealth] = useState<any>(null);
 
     useEffect(() => {
         fetchDashboardData();
+        fetchSystemHealth();
         // Auto-refresh removed - data only updates on manual page refresh
     }, []);
 
@@ -63,6 +65,15 @@ export default function AdminDashboard() {
             setSystemLogs(response.data.logs || []);
         } catch (error: any) {
             console.error('Failed to fetch system logs:', error);
+        }
+    };
+
+    const fetchSystemHealth = async () => {
+        try {
+            const response = await api.get('/system-health/health');
+            setSystemHealth(response.data);
+        } catch (error: any) {
+            console.error('Failed to fetch system health:', error);
         }
     };
 
@@ -128,6 +139,46 @@ export default function AdminDashboard() {
                         </Button>
                     </div>
                 </div>
+
+                {/* System Health Status Card */}
+                {systemHealth && (
+                    <Card className={`p-6 border-2 ${systemHealth.summary.overallStatus === 'healthy' ? 'border-green-500 bg-green-50 dark:bg-green-900/10' :
+                            systemHealth.summary.overallStatus === 'degraded' ? 'border-yellow-500 bg-yellow-50 dark:bg-yellow-900/10' :
+                                'border-red-500 bg-red-50 dark:bg-red-900/10'
+                        }`}>
+                        <div className="flex items-center justify-between">
+                            <div className="flex-1">
+                                <div className="flex items-center gap-3 mb-2">
+                                    {systemHealth.summary.readyForProduction ? (
+                                        <CheckCircle className="w-6 h-6 text-green-500" />
+                                    ) : (
+                                        <XCircle className="w-6 h-6 text-red-500" />
+                                    )}
+                                    <h3 className="text-lg font-bold text-gray-900 dark:text-white">
+                                        System Health: {systemHealth.summary.readyForProduction ? 'Ready for Production' : 'Not Ready'}
+                                    </h3>
+                                </div>
+                                <p className="text-sm text-gray-700 dark:text-gray-300">
+                                    <span className="font-semibold text-green-600">{systemHealth.summary.passed} passed</span>
+                                    {systemHealth.summary.warnings > 0 && (
+                                        <span className="ml-3 font-semibold text-yellow-600">{systemHealth.summary.warnings} warnings</span>
+                                    )}
+                                    {systemHealth.summary.failed > 0 && (
+                                        <span className="ml-3 font-semibold text-red-600">{systemHealth.summary.failed} failed</span>
+                                    )}
+                                </p>
+                            </div>
+                            <Button
+                                onClick={() => router.push('/admin/system-health')}
+                                variant="outline"
+                                className="flex items-center gap-2"
+                            >
+                                View Details
+                                <ArrowUpRight className="w-4 h-4" />
+                            </Button>
+                        </div>
+                    </Card>
+                )}
 
                 {/* KPI Cards */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
