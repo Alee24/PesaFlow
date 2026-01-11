@@ -121,6 +121,10 @@ export const activateUserLicenseKey = async (req: AuthRequest, res: Response) =>
         const userId = req.user?.userId;
         const userEmail = req.user?.email;
 
+        if (!userId || !userEmail) {
+            return res.status(401).json({ error: 'User not authenticated' });
+        }
+
         if (!licenseKey) {
             return res.status(400).json({ error: 'License key is required' });
         }
@@ -188,9 +192,9 @@ export const activateUserLicenseKey = async (req: AuthRequest, res: Response) =>
             }),
             // Upgrade user subscription to Enterprise
             prisma.subscription.upsert({
-                where: { merchantId: userId },
+                where: { merchantId: userId as string },
                 create: {
-                    merchantId: userId,
+                    merchantId: userId as string,
                     plan: 'ENTERPRISE',
                     status: 'ACTIVE',
                     features: JSON.stringify(['all']),
@@ -234,6 +238,10 @@ export const purchaseEnterprisePlan = async (req: AuthRequest, res: Response) =>
     try {
         const userId = req.user?.userId;
 
+        if (!userId) {
+            return res.status(401).json({ error: 'User not authenticated' });
+        }
+
         // Check if user already has a license
         const user = await prisma.user.findUnique({
             where: { id: userId }
@@ -257,9 +265,9 @@ export const purchaseEnterprisePlan = async (req: AuthRequest, res: Response) =>
                 }
             }),
             prisma.subscription.upsert({
-                where: { merchantId: userId },
+                where: { merchantId: userId as string },
                 create: {
-                    merchantId: userId,
+                    merchantId: userId as string,
                     plan: 'ENTERPRISE',
                     status: 'ACTIVE',
                     features: JSON.stringify(['all']),
