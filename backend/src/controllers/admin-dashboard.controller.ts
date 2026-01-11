@@ -148,7 +148,7 @@ export const getSystemDashboard = async (req: AuthRequest, res: Response) => {
         // 4. Transaction Trends (Last 30 days)
         let dailyTrends: any[] = [];
         try {
-            dailyTrends = await prisma.$queryRaw`
+            const rawTrends = await prisma.$queryRaw`
                 SELECT
                     DATE(created_at) as date,
                     COUNT(*) as count,
@@ -158,7 +158,15 @@ export const getSystemDashboard = async (req: AuthRequest, res: Response) => {
                 WHERE created_at >= ${startDate}
                 GROUP BY DATE(created_at)
                 ORDER BY date ASC
-            `;
+            ` as any[];
+
+            // Convert BigInt to Number for JSON serialization
+            dailyTrends = rawTrends.map((trend: any) => ({
+                date: trend.date,
+                count: Number(trend.count),
+                revenue: Number(trend.revenue),
+                fees: Number(trend.fees)
+            }));
         } catch (error) {
             console.error('Error fetching daily trends:', error);
             // Provide empty array as fallback
