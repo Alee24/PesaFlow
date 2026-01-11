@@ -146,17 +146,24 @@ export const getSystemDashboard = async (req: AuthRequest, res: Response) => {
         }));
 
         // 4. Transaction Trends (Last 30 days)
-        const dailyTrends = await prisma.$queryRaw`
-            SELECT
-                DATE(created_at) as date,
-                COUNT(*) as count,
-                SUM(CASE WHEN status = 'COMPLETED' THEN amount ELSE 0 END) as revenue,
-                SUM(CASE WHEN status = 'COMPLETED' THEN fee_charged ELSE 0 END) as fees
-            FROM transactions
-            WHERE created_at >= ${startDate}
-            GROUP BY DATE(created_at)
-            ORDER BY date ASC
-        `;
+        let dailyTrends: any[] = [];
+        try {
+            dailyTrends = await prisma.$queryRaw`
+                SELECT
+                    DATE(created_at) as date,
+                    COUNT(*) as count,
+                    SUM(CASE WHEN status = 'COMPLETED' THEN amount ELSE 0 END) as revenue,
+                    SUM(CASE WHEN status = 'COMPLETED' THEN fee_charged ELSE 0 END) as fees
+                FROM transactions
+                WHERE created_at >= ${startDate}
+                GROUP BY DATE(created_at)
+                ORDER BY date ASC
+            `;
+        } catch (error) {
+            console.error('Error fetching daily trends:', error);
+            // Provide empty array as fallback
+            dailyTrends = [];
+        }
 
         // 5. Subscription Breakdown
         const subscriptionStats = await prisma.subscription.groupBy({
