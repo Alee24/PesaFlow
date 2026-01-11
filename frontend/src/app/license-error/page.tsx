@@ -64,8 +64,8 @@ export default function LicenseErrorPage() {
     };
 
     const handlePurchase = () => {
-        // Redirect to purchase logic or external site
-        window.location.href = 'mailto:info@kkdes.co.ke?subject=Enterprise License Purchase Request';
+        // Redirect to register with enterprise plan selected
+        window.location.href = '/auth/register?plan=ENTERPRISE';
     };
 
     return (
