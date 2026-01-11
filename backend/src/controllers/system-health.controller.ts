@@ -183,7 +183,7 @@ export const getSystemHealth = async (req: Request, res: Response) => {
                     status: 'pass',
                     message: 'System settings configured',
                     details: {
-                        serviceCharge: systemSettings.serviceCharge,
+                        serviceChargeAmount: systemSettings.serviceChargeAmount,
                         hasGlobalSMTP: !!(systemSettings.smtpHost && systemSettings.smtpUser)
                     }
                 });
