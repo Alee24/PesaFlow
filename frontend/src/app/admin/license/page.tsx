@@ -33,9 +33,9 @@ export default function LicenseManagementPage() {
     const [serverInfo, setServerInfo] = useState<any>(null);
     const [requests, setRequests] = useState<any[]>([]);
     const [stats, setStats] = useState<any>(null);
-    const [selectedTab, setSelectedTab] = useState<'status' | 'requests' | 'activate'>('requests');
+    const [selectedTab, setSelectedTab] = useState<'status' | 'requests' | 'activate' | 'generate'>('requests');
 
-    // Activation form
+
     const [domain, setDomain] = useState('');
     const [maxUsers, setMaxUsers] = useState(100);
     const [durationDays, setDurationDays] = useState(365);
@@ -243,33 +243,42 @@ export default function LicenseManagementPage() {
                 )}
 
                 {/* Tabs */}
-                <div className="flex gap-2 border-b border-gray-200 dark:border-gray-700">
+                <div className="flex gap-2 border-b border-gray-200 dark:border-gray-700 overflow-x-auto">
                     <button
                         onClick={() => setSelectedTab('requests')}
-                        className={`px-4 py-2 font-medium ${selectedTab === 'requests'
-                                ? 'border-b-2 border-indigo-600 text-indigo-600'
-                                : 'text-gray-500 hover:text-gray-700'
+                        className={`px-4 py-2 font-medium whitespace-nowrap ${selectedTab === 'requests'
+                            ? 'border-b-2 border-indigo-600 text-indigo-600'
+                            : 'text-gray-500 hover:text-gray-700'
                             }`}
                     >
                         License Requests ({stats?.pending || 0})
                     </button>
                     <button
                         onClick={() => setSelectedTab('status')}
-                        className={`px-4 py-2 font-medium ${selectedTab === 'status'
-                                ? 'border-b-2 border-indigo-600 text-indigo-600'
-                                : 'text-gray-500 hover:text-gray-700'
+                        className={`px-4 py-2 font-medium whitespace-nowrap ${selectedTab === 'status'
+                            ? 'border-b-2 border-indigo-600 text-indigo-600'
+                            : 'text-gray-500 hover:text-gray-700'
                             }`}
                     >
                         Current License
                     </button>
                     <button
                         onClick={() => setSelectedTab('activate')}
-                        className={`px-4 py-2 font-medium ${selectedTab === 'activate'
-                                ? 'border-b-2 border-indigo-600 text-indigo-600'
-                                : 'text-gray-500 hover:text-gray-700'
+                        className={`px-4 py-2 font-medium whitespace-nowrap ${selectedTab === 'activate'
+                            ? 'border-b-2 border-indigo-600 text-indigo-600'
+                            : 'text-gray-500 hover:text-gray-700'
                             }`}
                     >
                         Manual Activation
+                    </button>
+                    <button
+                        onClick={() => setSelectedTab('generate')}
+                        className={`px-4 py-2 font-medium whitespace-nowrap ${selectedTab === 'generate'
+                            ? 'border-b-2 border-indigo-600 text-indigo-600'
+                            : 'text-gray-500 hover:text-gray-700'
+                            }`}
+                    >
+                        Generate Keys
                     </button>
                 </div>
 
@@ -384,8 +393,8 @@ export default function LicenseManagementPage() {
                 {/* Current License Status Tab */}
                 {selectedTab === 'status' && licenseStatus && (
                     <Card className={`p-6 border-2 ${licenseStatus.valid
-                            ? 'border-green-500 bg-green-50 dark:bg-green-900/10'
-                            : 'border-red-500 bg-red-50 dark:bg-red-900/10'
+                        ? 'border-green-500 bg-green-50 dark:bg-green-900/10'
+                        : 'border-red-500 bg-red-50 dark:bg-red-900/10'
                         }`}>
                         <div className="flex items-center gap-4 mb-4">
                             {licenseStatus.valid ? (
@@ -538,6 +547,79 @@ export default function LicenseManagementPage() {
                             </Card>
                         )}
                     </div>
+                )}
+                {/* Generate Keys Tab */}
+                {selectedTab === 'generate' && (
+                    <Card className="p-6">
+                        <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
+                            <Key className="w-5 h-5" />
+                            Generate User License Keys
+                        </h3>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div className="space-y-4">
+                                <div>
+                                    <label className="block text-sm font-medium mb-2">Number of Keys</label>
+                                    <input
+                                        type="number"
+                                        min="1"
+                                        max="50"
+                                        defaultValue="1"
+                                        id="keyCount"
+                                        className="w-full px-4 py-2 border rounded-lg"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium mb-2">Validity (Days)</label>
+                                    <input
+                                        type="number"
+                                        min="1"
+                                        defaultValue="365"
+                                        id="validityDays"
+                                        className="w-full px-4 py-2 border rounded-lg"
+                                    />
+                                </div>
+                                <Button
+                                    onClick={async () => {
+                                        const count = (document.getElementById('keyCount') as HTMLInputElement).value;
+                                        const expiresInDays = (document.getElementById('validityDays') as HTMLInputElement).value;
+
+                                        try {
+                                            const { data } = await api.post('/user-license/generate', {
+                                                count: parseInt(count),
+                                                expiresInDays: parseInt(expiresInDays)
+                                            });
+
+                                            toast.success(`Generated ${data.keys.length} keys!`);
+                                            // Copy to clipboard
+                                            const keysText = data.keys.map((k: any) => k.licenseKey).join('\n');
+                                            navigator.clipboard.writeText(keysText);
+                                            toast.success('Keys copied to clipboard');
+
+                                            // Refresh list
+                                            fetchData();
+                                        } catch (e: any) {
+                                            toast.error(e.response?.data?.error || 'Failed to generate keys');
+                                        }
+                                    }}
+                                    className="w-full"
+                                >
+                                    Generate & Copy Keys
+                                </Button>
+                            </div>
+
+                            <div className="bg-gray-50 p-4 rounded-lg">
+                                <h4 className="font-semibold mb-2 text-sm text-gray-600">Generated Keys</h4>
+                                <p className="text-xs text-gray-500 mb-4">Keys generated here can be used by users on the activation page.</p>
+                                <div className="space-y-2 max-h-60 overflow-y-auto" id="generatedKeysList">
+                                    {/* Keys will be shown here via toast/clipboard for now */}
+                                    <div className="text-center text-gray-400 py-8 text-sm">
+                                        No keys generated yet
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </Card>
                 )}
             </div>
         </DashboardLayout>
