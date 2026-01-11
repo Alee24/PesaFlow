@@ -19,12 +19,13 @@ export default function LicenseErrorPage() {
 
     const fetchServerInfo = async () => {
         try {
-            const { data } = await axios.get(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3002'}/api/license/fingerprint`);
+            // Use relative path for production compatibility
+            const { data } = await axios.get('/api/license/fingerprint');
             setServerInfo(data);
         } catch (error) {
             console.error('Failed to fetch server info:', error);
-            // Fallback for visual testing if API fails
-            setServerInfo({ fingerprint: 'SERVER-OFFLINE-RETRY', domain: window.location.hostname });
+            // Show more descriptive error
+            setServerInfo({ fingerprint: 'CONNECTION-FAILED', domain: window.location.hostname });
         }
     };
 
@@ -35,7 +36,7 @@ export default function LicenseErrorPage() {
         setIsLoading(true);
         try {
             // Try activating as user license first
-            await axios.post(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3002'}/api/user-license/activate`, {
+            await axios.post('/api/user-license/activate', {
                 licenseKey,
                 serverFingerprint: serverInfo?.fingerprint,
                 domain: serverInfo?.domain
