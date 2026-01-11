@@ -73,7 +73,7 @@ export const getCustomers = async (req: AuthRequest, res: Response) => {
     }
 };
 
-// Get single customer
+// Get single customer with stats
 export const getCustomer = async (req: AuthRequest, res: Response) => {
     try {
         const { id } = req.params;
@@ -110,7 +110,7 @@ export const getCustomer = async (req: AuthRequest, res: Response) => {
                 },
                 sales: {
                     orderBy: { createdAt: 'desc' },
-                    take: 10
+                    take: 20 // increased from 10
                 }
             }
         });
@@ -119,7 +119,52 @@ export const getCustomer = async (req: AuthRequest, res: Response) => {
             return res.status(404).json({ error: 'Customer not found' });
         }
 
-        res.json(customer);
+        // Calculate Stats
+        const stats = await prisma.sale.groupBy({
+            by: ['paymentStatus'],
+            where: { customerId: id },
+            _sum: {
+                totalAmount: true,
+                amountPaid: true,
+                amountDue: true
+            },
+            _count: {
+                id: true
+            }
+        });
+
+        const billingStats = {
+            totalPaid: 0,
+            totalPending: 0,
+            totalCanceled: 0,
+            countPaid: 0,
+            countPending: 0,
+            countCanceled: 0
+        };
+
+        stats.forEach(group => {
+            const amount = Number(group._sum.totalAmount || 0);
+            const paid = Number(group._sum.amountPaid || 0);
+            const due = Number(group._sum.amountDue || 0);
+            const count = group._count.id;
+
+            if (group.paymentStatus === 'PAID') {
+                billingStats.totalPaid += amount;
+                billingStats.countPaid += count;
+            } else if (group.paymentStatus === 'PENDING' || group.paymentStatus === 'PARTIAL') {
+                billingStats.totalPaid += paid;
+                billingStats.totalPending += due;
+                billingStats.countPending += count;
+            } else if (group.paymentStatus === 'CANCELED' || group.paymentStatus === 'CANCELLED') {
+                billingStats.totalCanceled += amount;
+                billingStats.countCanceled += count;
+            }
+        });
+
+        res.json({
+            ...customer,
+            billingStats
+        });
     } catch (error: any) {
         console.error('Get customer error:', error);
         res.status(500).json({ error: 'Failed to fetch customer' });

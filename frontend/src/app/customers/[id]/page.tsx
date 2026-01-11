@@ -340,6 +340,59 @@ export default function CustomerDetailPage() {
                                 </div>
                             </div>
                         </Card>
+
+                        {/* Financial Overview */}
+                        <Card className="p-6 md:col-span-2">
+                            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                                Financial Overview
+                            </h3>
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <div className="p-4 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-100 dark:border-green-800">
+                                    <div className="flex items-center gap-2 mb-1">
+                                        <div className="p-1.5 bg-green-100 rounded-full text-green-600">
+                                            <DollarSign className="w-4 h-4" />
+                                        </div>
+                                        <p className="text-sm font-medium text-gray-600 dark:text-gray-300">Total Paid</p>
+                                    </div>
+                                    <p className="text-2xl font-bold text-green-700 dark:text-green-400">
+                                        {formatCurrency(customer.billingStats?.totalPaid || 0)}
+                                    </p>
+                                    <p className="text-xs text-green-600 mt-1">
+                                        {customer.billingStats?.countPaid || 0} invoices
+                                    </p>
+                                </div>
+
+                                <div className="p-4 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg border border-yellow-100 dark:border-yellow-800">
+                                    <div className="flex items-center gap-2 mb-1">
+                                        <div className="p-1.5 bg-yellow-100 rounded-full text-yellow-600">
+                                            <Calendar className="w-4 h-4" />
+                                        </div>
+                                        <p className="text-sm font-medium text-gray-600 dark:text-gray-300">Pending</p>
+                                    </div>
+                                    <p className="text-2xl font-bold text-yellow-700 dark:text-yellow-400">
+                                        {formatCurrency(customer.billingStats?.totalPending || 0)}
+                                    </p>
+                                    <p className="text-xs text-yellow-600 mt-1">
+                                        {customer.billingStats?.countPending || 0} invoices
+                                    </p>
+                                </div>
+
+                                <div className="p-4 bg-red-50 dark:bg-red-900/20 rounded-lg border border-red-100 dark:border-red-800">
+                                    <div className="flex items-center gap-2 mb-1">
+                                        <div className="p-1.5 bg-red-100 rounded-full text-red-600">
+                                            <Trash2 className="w-4 h-4" />
+                                        </div>
+                                        <p className="text-sm font-medium text-gray-600 dark:text-gray-300">Canceled</p>
+                                    </div>
+                                    <p className="text-2xl font-bold text-red-700 dark:text-red-400">
+                                        {formatCurrency(customer.billingStats?.totalCanceled || 0)}
+                                    </p>
+                                    <p className="text-xs text-red-600 mt-1">
+                                        {customer.billingStats?.countCanceled || 0} invoices
+                                    </p>
+                                </div>
+                            </div>
+                        </Card>
                     </div>
                 )}
 
@@ -495,20 +548,41 @@ export default function CustomerDetailPage() {
                         </h3>
                         <div className="space-y-4">
                             {customer.sales?.map((sale: any) => (
-                                <div key={sale.id} className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg">
-                                    <div className="flex justify-between items-start">
-                                        <div>
-                                            <p className="font-medium text-gray-900 dark:text-white">
-                                                Sale #{sale.id.substring(0, 8)}
-                                            </p>
-                                            <p className="text-sm text-gray-500 dark:text-gray-400">
-                                                {format(new Date(sale.createdAt), 'PPP')}
-                                            </p>
+                                <div key={sale.id} className="bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 p-4 rounded-lg hover:shadow-sm transition-shadow">
+                                    <div className="flex justify-between items-center mb-2">
+                                        <div className="flex items-center gap-3">
+                                            <div className={`p-2 rounded-full ${sale.paymentStatus === 'PAID' ? 'bg-green-100 text-green-600' :
+                                                    sale.paymentStatus === 'PENDING' ? 'bg-yellow-100 text-yellow-600' :
+                                                        'bg-gray-100 text-gray-600'
+                                                }`}>
+                                                <DollarSign className="w-4 h-4" />
+                                            </div>
+                                            <div>
+                                                <p className="font-medium text-gray-900 dark:text-white">
+                                                    Invoice #{sale.id.substring(0, 8)}
+                                                </p>
+                                                <p className="text-xs text-gray-500">
+                                                    {format(new Date(sale.createdAt), 'PPP')}
+                                                </p>
+                                            </div>
                                         </div>
-                                        <p className="font-semibold text-gray-900 dark:text-white">
-                                            {formatCurrency(Number(sale.totalAmount))}
-                                        </p>
+                                        <div className="text-right">
+                                            <p className="font-bold text-gray-900 dark:text-white">
+                                                {formatCurrency(Number(sale.totalAmount))}
+                                            </p>
+                                            <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${sale.paymentStatus === 'PAID' ? 'bg-green-100 text-green-700' :
+                                                    sale.paymentStatus === 'PENDING' ? 'bg-yellow-100 text-yellow-700' :
+                                                        'bg-gray-100 text-gray-700'
+                                                }`}>
+                                                {sale.paymentStatus}
+                                            </span>
+                                        </div>
                                     </div>
+                                    {Number(sale.amountPaid) > 0 && Number(sale.amountPaid) < Number(sale.totalAmount) && (
+                                        <div className="mt-2 text-xs text-gray-500 flex justify-end">
+                                            Paid: {formatCurrency(Number(sale.amountPaid))} | Due: <span className="text-red-500 ml-1">{formatCurrency(Number(sale.amountDue))}</span>
+                                        </div>
+                                    )}
                                 </div>
                             ))}
                             {(!customer.sales || customer.sales.length === 0) && (
