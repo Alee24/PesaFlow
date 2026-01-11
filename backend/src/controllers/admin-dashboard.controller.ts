@@ -44,7 +44,7 @@ export const getSystemDashboard = async (req: AuthRequest, res: Response) => {
             serviceCharges
         ] = await Promise.all([
             prisma.user.count({ where: { role: 'MERCHANT' } }),
-            prisma.user.count({ where: { role: 'MERCHANT', isActive: true } }),
+            prisma.user.count({ where: { role: 'MERCHANT', status: 'ACTIVE' } }),
             prisma.transaction.count({ where: { createdAt: { gte: startDate } } }),
             prisma.transaction.count({
                 where: {
@@ -72,8 +72,9 @@ export const getSystemDashboard = async (req: AuthRequest, res: Response) => {
             ? (completedTransactions / totalTransactions) * 100
             : 0;
 
+        const totalRevenueAmount = Number(totalRevenue._sum.amount || 0);
         const avgTransactionValue = completedTransactions > 0
-            ? (totalRevenue._sum.amount || 0) / completedTransactions
+            ? totalRevenueAmount / completedTransactions
             : 0;
 
         // 2. Top Merchants by Revenue
@@ -81,7 +82,8 @@ export const getSystemDashboard = async (req: AuthRequest, res: Response) => {
             by: ['initiatorUserId'],
             where: {
                 status: 'COMPLETED',
-                createdAt: { gte: startDate }
+                createdAt: { gte: startDate },
+                initiatorUserId: { not: null }
             },
             _sum: {
                 amount: true,
@@ -99,7 +101,7 @@ export const getSystemDashboard = async (req: AuthRequest, res: Response) => {
         });
 
         // Fetch merchant details
-        const merchantIds = topMerchants.map(m => m.initiatorUserId);
+        const merchantIds = topMerchants.map(m => m.initiatorUserId).filter((id): id is string => id !== null);
         const merchants = await prisma.user.findMany({
             where: { id: { in: merchantIds } },
             include: {
@@ -112,11 +114,11 @@ export const getSystemDashboard = async (req: AuthRequest, res: Response) => {
         const topMerchantsWithDetails = topMerchants.map(tm => {
             const merchant = merchants.find(m => m.id === tm.initiatorUserId);
             return {
-                merchantId: tm.initiatorUserId,
+                merchantId: tm.initiatorUserId || '',
                 merchantName: merchant?.businessProfile?.companyName || merchant?.name || merchant?.email || 'Unknown',
-                revenue: tm._sum.amount || 0,
+                revenue: Number(tm._sum.amount || 0),
                 transactions: tm._count.id,
-                serviceChargesPaid: tm._sum.feeCharged || 0
+                serviceChargesPaid: Number(tm._sum.feeCharged || 0)
             };
         });
 
@@ -135,17 +137,17 @@ export const getSystemDashboard = async (req: AuthRequest, res: Response) => {
             }
         });
 
-        const totalPayments = paymentMethods.reduce((sum, pm) => sum + (pm._sum.totalAmount || 0), 0);
+        const totalPayments = paymentMethods.reduce((sum, pm) => sum + Number(pm._sum.totalAmount || 0), 0);
         const paymentMethodStats = paymentMethods.map(pm => ({
             method: pm.paymentMethod,
             count: pm._count.id,
-            amount: pm._sum.totalAmount || 0,
-            percentage: totalPayments > 0 ? ((pm._sum.totalAmount || 0) / totalPayments) * 100 : 0
+            amount: Number(pm._sum.totalAmount || 0),
+            percentage: totalPayments > 0 ? (Number(pm._sum.totalAmount || 0) / totalPayments) * 100 : 0
         }));
 
         // 4. Transaction Trends (Last 30 days)
         const dailyTrends = await prisma.$queryRaw`
-            SELECT 
+            SELECT
                 DATE(created_at) as date,
                 COUNT(*) as count,
                 SUM(CASE WHEN status = 'COMPLETED' THEN amount ELSE 0 END) as revenue,
@@ -169,36 +171,17 @@ export const getSystemDashboard = async (req: AuthRequest, res: Response) => {
             return acc;
         }, {} as Record<string, number>);
 
-        // 6. Branch Statistics (if branches exist)
-        const branchStats = await prisma.branch.findMany({
-            include: {
-                merchant: {
-                    include: {
-                        businessProfile: {
-                            select: { companyName: true }
-                        }
-                    }
-                },
-                _count: {
-                    select: { teamMembers: true }
-                }
-            },
-            take: 20
-        });
+        // 6. Branch Statistics - Skip if Branch model doesn't exist
+        const branchPerformance: any[] = [];
 
-        const branchPerformance = branchStats.map(branch => ({
-            branchId: branch.id,
-            branchName: branch.name,
-            merchantName: branch.merchant.businessProfile?.companyName || branch.merchant.name || 'Unknown',
-            teamMembers: branch._count.teamMembers,
-            location: branch.location
-        }));
+        const totalRevenueNum = Number(totalRevenue._sum.amount || 0);
+        const serviceChargesNum = Number(serviceCharges._sum.feeCharged || 0);
 
         res.json({
             overview: {
-                totalRevenue: totalRevenue._sum.amount || 0,
-                serviceCharges: serviceCharges._sum.feeCharged || 0,
-                netRevenue: (totalRevenue._sum.amount || 0) - (serviceCharges._sum.feeCharged || 0),
+                totalRevenue: totalRevenueNum,
+                serviceCharges: serviceChargesNum,
+                netRevenue: totalRevenueNum - serviceChargesNum,
                 totalMerchants,
                 activeMerchants,
                 totalTransactions,
@@ -298,9 +281,9 @@ export const getMerchantPerformance = async (req: AuthRequest, res: Response) =>
                 subscriptionStatus: merchant.subscription?.status || 'ACTIVE'
             },
             performance: {
-                totalRevenue: stats._sum.amount || 0,
-                serviceChargesPaid: stats._sum.feeCharged || 0,
-                netRevenue: (stats._sum.amount || 0) - (stats._sum.feeCharged || 0),
+                totalRevenue: Number(stats._sum.amount || 0),
+                serviceChargesPaid: Number(stats._sum.feeCharged || 0),
+                netRevenue: Number(stats._sum.amount || 0) - Number(stats._sum.feeCharged || 0),
                 transactionCount: stats._count.id
             },
             recentTransactions: transactions
@@ -356,7 +339,7 @@ export const getServiceChargeReport = async (req: AuthRequest, res: Response) =>
             }
         });
 
-        const merchantIds = serviceChargeData.map(sc => sc.initiatorUserId);
+        const merchantIds = serviceChargeData.map(sc => sc.initiatorUserId).filter((id): id is string => id !== null);
         const merchants = await prisma.user.findMany({
             where: { id: { in: merchantIds } },
             include: {
@@ -368,13 +351,15 @@ export const getServiceChargeReport = async (req: AuthRequest, res: Response) =>
 
         const report = serviceChargeData.map(sc => {
             const merchant = merchants.find(m => m.id === sc.initiatorUserId);
+            const feeCharged = Number(sc._sum.feeCharged || 0);
+            const amount = Number(sc._sum.amount || 0);
             return {
-                merchantId: sc.initiatorUserId,
+                merchantId: sc.initiatorUserId || '',
                 merchantName: merchant?.businessProfile?.companyName || merchant?.name || 'Unknown',
-                totalServiceCharges: sc._sum.feeCharged || 0,
-                totalRevenue: sc._sum.amount || 0,
+                totalServiceCharges: feeCharged,
+                totalRevenue: amount,
                 transactionCount: sc._count.id,
-                avgServiceCharge: (sc._sum.feeCharged || 0) / sc._count.id
+                avgServiceCharge: feeCharged / sc._count.id
             };
         });
 
