@@ -39,6 +39,7 @@ export const metadata: Metadata = {
 import { Toaster } from 'react-hot-toast';
 import { ToastProvider } from "@/contexts/ToastContext";
 import { SubscriptionProvider } from "@/contexts/SubscriptionContext";
+import Script from 'next/script';
 
 import { AuthProvider } from "@/contexts/AuthContext";
 
@@ -61,6 +62,7 @@ export default function RootLayout({
             </SubscriptionProvider>
           </AuthProvider>
         </ToastProvider>
+        <Script src="/pwa-register.js" strategy="lazyOnload" />
       </body>
     </html>
   );
