@@ -229,6 +229,17 @@ export const requireValidLicense = async (
     res: Response,
     next: NextFunction
 ) => {
+    // TEMPORARY: Bypass license check for development
+    // TODO: Remove this before production deployment
+    if (process.env.NODE_ENV === 'development' || process.env.BYPASS_LICENSE === 'true') {
+        (req as any).license = {
+            domain: 'localhost',
+            status: 'ACTIVE',
+            features: ['all']
+        };
+        return next();
+    }
+
     const licenseCheck = await checkLicense();
 
     if (!licenseCheck.valid) {
