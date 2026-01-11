@@ -238,8 +238,7 @@ export function Header({ user, onMenuClick }: { user?: any; onMenuClick?: () => 
     useEffect(() => {
         if (user) {
             fetchNotifications();
-            const interval = setInterval(fetchNotifications, 30000); // Poll every 30s
-            return () => clearInterval(interval);
+            // Auto-refresh removed - notifications only update on manual page refresh
         }
     }, [user]);
 
