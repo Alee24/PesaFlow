@@ -24,6 +24,7 @@ import salesRoutes from './routes/sales.routes';
 import subscriptionRoutes from './routes/subscription.routes';
 import analyticsRoutes from './routes/analytics.routes';
 import settingsRoutes from './routes/settings.routes';
+import adminDashboardRoutes from './routes/admin-dashboard.routes';
 
 
 const app = express();
@@ -59,6 +60,7 @@ app.use('/api/team', teamRoutes);
 app.use('/api/crm', crmRoutes);
 app.use('/api/support', supportRoutes);
 app.use('/api/settings', settingsRoutes);
+app.use('/api/admin-dashboard', adminDashboardRoutes);
 
 app.get('/', (req, res) => {
 

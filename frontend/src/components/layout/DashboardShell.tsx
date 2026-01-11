@@ -53,6 +53,7 @@ const menuGroups = [
         role: 'ADMIN',
         items: [
             { name: 'Dashboard', href: '/admin', icon: LayoutDashboard, role: 'ADMIN' },
+            { name: 'System Dashboard', href: '/admin/system-dashboard', icon: TrendingUp, role: 'ADMIN' },
             { name: 'Verification', href: '/admin/verification', icon: CheckCircle, role: 'ADMIN' },
             { name: 'Users', href: '/admin/users', icon: User, role: 'ADMIN' },
             { name: 'Withdrawals', href: '/admin/withdrawals', icon: CreditCard, role: 'ADMIN' },
