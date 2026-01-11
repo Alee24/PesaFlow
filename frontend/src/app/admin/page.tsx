@@ -31,15 +31,15 @@ export default function AdminDashboard() {
 
     useEffect(() => {
         fetchDashboardData();
-        // Refresh every 30 seconds
-        const interval = setInterval(fetchDashboardData, 30000);
+        // Refresh every 60 seconds
+        const interval = setInterval(fetchDashboardData, 60000);
         return () => clearInterval(interval);
     }, []);
 
     useEffect(() => {
         fetchSystemLogs();
-        // Refresh logs every 5 seconds
-        const logsInterval = setInterval(fetchSystemLogs, 5000);
+        // Refresh logs every 30 seconds
+        const logsInterval = setInterval(fetchSystemLogs, 30000);
         return () => clearInterval(logsInterval);
     }, []);
 
