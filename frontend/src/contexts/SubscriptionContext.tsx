@@ -112,12 +112,12 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
         window.addEventListener('focus', handleFocus);
 
-        // Also refresh every 30 seconds if page is active
+        // Also refresh every 60 seconds if page is active
         const interval = setInterval(() => {
             if (document.visibilityState === 'visible') {
                 fetchSubscription();
             }
-        }, 30000);
+        }, 60000);
 
         return () => {
             window.removeEventListener('focus', handleFocus);
