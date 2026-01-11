@@ -40,6 +40,7 @@ import { Toaster } from 'react-hot-toast';
 import { ToastProvider } from "@/contexts/ToastContext";
 import { SubscriptionProvider } from "@/contexts/SubscriptionContext";
 import Script from 'next/script';
+import { LicenseGuard } from "@/components/license/LicenseGuard";
 
 import { AuthProvider } from "@/contexts/AuthContext";
 
@@ -58,7 +59,9 @@ export default function RootLayout({
         <ToastProvider>
           <AuthProvider>
             <SubscriptionProvider>
-              {children}
+              <LicenseGuard>
+                {children}
+              </LicenseGuard>
             </SubscriptionProvider>
           </AuthProvider>
         </ToastProvider>
