@@ -27,6 +27,7 @@ import settingsRoutes from './routes/settings.routes';
 import adminDashboardRoutes from './routes/admin-dashboard.routes';
 import systemHealthRoutes from './routes/system-health.routes';
 import licenseRoutes from './routes/license.routes';
+import userLicenseRoutes from './routes/user-license.routes';
 import { requireValidLicense } from './middlewares/license.middleware';
 
 
@@ -70,6 +71,7 @@ app.use('/api/support', supportRoutes);
 app.use('/api/settings', settingsRoutes);
 app.use('/api/admin-dashboard', adminDashboardRoutes);
 app.use('/api/system-health', systemHealthRoutes);
+app.use('/api/user-license', userLicenseRoutes);
 
 app.get('/', (req, res) => {
 

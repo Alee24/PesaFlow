@@ -30,6 +30,12 @@ model User {
   createdAt    DateTime @default(now()) @map("created_at")
   updatedAt    DateTime @updatedAt @map("updated_at")
 
+  // License Activation
+  licenseActivated Boolean   @default(false) @map("license_activated")
+  licenseKey       String?   @map("license_key")
+  licenseType      String?   @map("license_type") // PURCHASED, ACTIVATED
+  licenseActivatedAt DateTime? @map("license_activated_at")
+
   wallet              Wallet?
   notifications       Notification[]
   products            Product[]
@@ -629,4 +635,19 @@ model LicenseRequest {
   updatedAt       DateTime @updatedAt @map("updated_at")
 
   @@map("license_requests")
+}
+
+model UserLicenseKey {
+  id              String    @id @default(uuid())
+  licenseKey      String    @unique @map("license_key")
+  planType        String    @default("ENTERPRISE") @map("plan_type") // ENTERPRISE, PREMIUM, etc
+  generatedBy     String    @map("generated_by") // Admin email who generated it
+  isUsed          Boolean   @default(false) @map("is_used")
+  usedBy          String?   @map("used_by") // User ID who used it
+  usedByEmail     String?   @map("used_by_email")
+  usedAt          DateTime? @map("used_at")
+  expiresAt       DateTime? @map("expires_at") // Optional expiration
+  createdAt       DateTime  @default(now()) @map("created_at")
+  
+  @@map("user_license_keys")
 }
