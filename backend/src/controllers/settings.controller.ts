@@ -120,3 +120,68 @@ export const updateSettings = async (req: AuthRequest, res: Response) => {
         res.status(500).json({ error: error.message });
     }
 };
+
+// Send test email (admin only)
+export const sendTestEmail = async (req: AuthRequest, res: Response) => {
+    try {
+        const { testEmail } = req.body;
+
+        if (!testEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(testEmail)) {
+            return res.status(400).json({ error: 'Valid email address is required' });
+        }
+
+        // Fetch global SMTP settings
+        const settings = await prisma.systemSettings.findFirst();
+
+        if (!settings?.smtpHost || !settings?.smtpUser || !settings?.smtpPass) {
+            return res.status(400).json({ error: 'SMTP settings not configured. Please configure SMTP settings first.' });
+        }
+
+        // Import nodemailer
+        const nodemailer = require('nodemailer');
+
+        // Create transporter with global settings
+        const transporter = nodemailer.createTransport({
+            host: settings.smtpHost,
+            port: settings.smtpPort || 587,
+            secure: settings.smtpPort === 465,
+            auth: {
+                user: settings.smtpUser,
+                pass: settings.smtpPass,
+            },
+        });
+
+        const fromName = settings.smtpFromName || 'Mpesa Connect';
+        const fromEmail = settings.smtpFromEmail || settings.smtpUser;
+
+        // Send test email
+        await transporter.sendMail({
+            from: `"${fromName}" <${fromEmail}>`,
+            to: testEmail,
+            subject: 'Test Email from Mpesa Connect',
+            html: `
+                <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 8px;">
+                    <h2 style="color: #4f46e5; text-align: center;">✅ SMTP Configuration Test</h2>
+                    <p style="color: #333; font-size: 16px;">Congratulations!</p>
+                    <p style="color: #333; font-size: 16px;">Your SMTP settings are configured correctly and working as expected.</p>
+                    <div style="background-color: #f3f4f6; padding: 15px; border-radius: 6px; margin: 20px 0;">
+                        <p style="margin: 5px 0;"><strong>SMTP Host:</strong> ${settings.smtpHost}</p>
+                        <p style="margin: 5px 0;"><strong>SMTP Port:</strong> ${settings.smtpPort || 587}</p>
+                        <p style="margin: 5px 0;"><strong>From Name:</strong> ${fromName}</p>
+                        <p style="margin: 5px 0;"><strong>From Email:</strong> ${fromEmail}</p>
+                    </div>
+                    <p style="color: #666; font-size: 14px;">This is a test email sent from your Mpesa Connect admin portal.</p>
+                    <p style="color: #999; font-size: 12px; text-align: center; margin-top: 40px;">&copy; ${new Date().getFullYear()} Mpesa Connect. All rights reserved.</p>
+                </div>
+            `
+        });
+
+        res.json({ message: 'Test email sent successfully!' });
+    } catch (error: any) {
+        console.error('Test email error:', error);
+        res.status(500).json({
+            error: 'Failed to send test email',
+            details: error.message
+        });
+    }
+};

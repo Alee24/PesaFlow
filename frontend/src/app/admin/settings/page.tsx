@@ -15,6 +15,8 @@ export default function AdminSettingsPage() {
     const { showToast } = useToast();
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
+    const [sendingTest, setSendingTest] = useState(false);
+    const [testEmail, setTestEmail] = useState('');
     const [settings, setSettings] = useState({
         serviceChargeEnabled: true,
         serviceChargeAmount: 2.5,
@@ -73,6 +75,25 @@ export default function AdminSettingsPage() {
             showToast(errorMessage, 'error');
         } finally {
             setSaving(false);
+        }
+    };
+
+    const handleSendTestEmail = async () => {
+        if (!testEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(testEmail)) {
+            showToast('Please enter a valid email address', 'error');
+            return;
+        }
+
+        setSendingTest(true);
+        try {
+            await api.post('/settings/test-email', { testEmail });
+            showToast('Test email sent successfully! Check your inbox.', 'success');
+            setTestEmail('');
+        } catch (error: any) {
+            const errorMessage = error.response?.data?.error || error.response?.data?.details || 'Failed to send test email';
+            showToast(errorMessage, 'error');
+        } finally {
+            setSendingTest(false);
         }
     };
 
@@ -256,6 +277,37 @@ export default function AdminSettingsPage() {
                                 <p className="text-sm text-yellow-800 dark:text-yellow-400">
                                     <strong>Note:</strong> These settings will be used as fallback when merchants don't have their own SMTP configuration.
                                 </p>
+                            </div>
+
+                            {/* Test Email Section */}
+                            <div className="mt-6 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+                                <h3 className="text-sm font-semibold text-blue-900 dark:text-blue-300 mb-3">Test Email Configuration</h3>
+                                <p className="text-xs text-blue-800 dark:text-blue-400 mb-3">
+                                    Send a test email to verify your SMTP settings are working correctly.
+                                </p>
+                                <div className="flex gap-3">
+                                    <div className="flex-1">
+                                        <Input
+                                            type="email"
+                                            value={testEmail}
+                                            onChange={(e) => setTestEmail(e.target.value)}
+                                            placeholder="Enter test email address"
+                                            onKeyPress={(e) => {
+                                                if (e.key === 'Enter') {
+                                                    handleSendTestEmail();
+                                                }
+                                            }}
+                                        />
+                                    </div>
+                                    <Button
+                                        onClick={handleSendTestEmail}
+                                        isLoading={sendingTest}
+                                        variant="secondary"
+                                        disabled={!testEmail}
+                                    >
+                                        Send Test Email
+                                    </Button>
+                                </div>
                             </div>
                         </div>
                     </div>
