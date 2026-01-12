@@ -1,10 +1,17 @@
 'use client';
 
 import Link from 'next/link';
-import { Store, Package, CreditCard, BarChart3, Shield, Users, Zap, CheckCircle, Smartphone, FileText, ArrowRight, Star, Mail, PieChart, Layers } from 'lucide-react';
+import { Store, Package, CreditCard, BarChart3, Shield, Users, Zap, CheckCircle, Smartphone, FileText, ArrowRight, Star, Mail, PieChart, Layers, Moon, Sun } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 
+import { useTheme } from '@/contexts/ThemeContext';
+
 export default function LandingPage() {
+  const { theme, setTheme } = useTheme();
+
+  const toggleTheme = () => {
+    setTheme(theme === 'dark' ? 'light' : 'dark');
+  };
   const features = [
     {
       icon: Store,
@@ -147,6 +154,14 @@ export default function LandingPage() {
               </span>
             </div>
             <div className="hidden md:flex items-center gap-8">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={toggleTheme}
+                className="text-gray-600 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400"
+              >
+                {theme === 'dark' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+              </Button>
               <Link href="#features" className="text-gray-600 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 font-medium transition-colors">Features</Link>
               <Link href="#pricing" className="text-gray-600 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 font-medium transition-colors">Pricing</Link>
               <Link href="/auth/login" className="text-gray-600 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 font-medium transition-colors">Sign In</Link>
