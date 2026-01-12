@@ -67,3 +67,86 @@ pm2 save
 echo "🎉 Update Complete! Services running on:"
 echo "   - API: Port ${API_PORT}"
 echo "   - Web: Port ${WEB_PORT}"
+
+# 4. Update Apache Configuration
+echo "🌐 Updating Apache Configuration..."
+
+APACHE_CONF="/etc/apache2/sites-available/mpesaconnect.conf" # Adjust if your conf name is different
+# If not distinct conf, maybe 000-default.conf
+# We will create a new config content
+
+echo "⚠️  NOTE: Sudo access required for Apache update. You may be prompted for password."
+
+# Create temporary config file
+cat > /tmp/portal_apache.conf <<EOL
+<VirtualHost *:80>
+    ServerName ${DOMAIN}
+    # Redirect all HTTP to HTTPS
+    RewriteEngine On
+    RewriteCond %{HTTPS} off
+    RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+</VirtualHost>
+
+<VirtualHost *:443>
+    ServerName ${DOMAIN}
+
+    # SSL Configuration (Let's Encrypt usually manages this, check paths)
+    SSLEngine on
+    SSLCertificateFile /etc/letsencrypt/live/${DOMAIN}/fullchain.pem
+    SSLCertificateKeyFile /etc/letsencrypt/live/${DOMAIN}/privkey.pem
+
+    # Proxy Frontend (Next.js)
+    ProxyPreserveHost On
+    ProxyPass / http://localhost:${WEB_PORT}/
+    ProxyPassReverse / http://localhost:${WEB_PORT}/
+
+    # Proxy API requests (NestJS)
+    # Important: This overrides the root / for paths starting with /api/
+    ProxyPass /api/ http://localhost:${API_PORT}/
+    ProxyPassReverse /api/ http://localhost:${API_PORT}/
+    
+    # Enable WebSockets if needed
+    RewriteEngine On
+    RewriteCond %{HTTP:Upgrade} =websocket [NC]
+    RewriteRule /(.*)           ws://localhost:${WEB_PORT}/\$1 [P,L]
+    RewriteCond %{HTTP:Upgrade} !=websocket [NC]
+    RewriteRule /(.*)           http://localhost:${WEB_PORT}/\$1 [P,L]
+
+    ErrorLog \${APACHE_LOG_DIR}/portal-error.log
+    CustomLog \${APACHE_LOG_DIR}/portal-access.log combined
+</VirtualHost>
+EOL
+
+echo "📋 New Apache Config generated at /tmp/portal_apache.conf"
+echo "🛠️  Applying config (requires sudo)..."
+
+# Backup existing
+if [ -f "$APACHE_CONF" ]; then
+    sudo cp "$APACHE_CONF" "${APACHE_CONF}.bak"
+    echo "   Backed up existing config to ${APACHE_CONF}.bak"
+fi
+
+# Move new config (Trying to detect if user has sudo sans password, or will prompt)
+# Note: Creating file directly in /etc requires sudo.
+sudo mv /tmp/portal_apache.conf "$APACHE_CONF"
+
+# Enable modules just in case
+sudo a2enmod proxy
+sudo a2enmod proxy_http
+sudo a2enmod ssl
+sudo a2enmod rewrite
+sudo a2enmod proxy_wstunnel
+
+# Test and Restart
+echo "🧪 Testing Apache Config..."
+if sudo apache2ctl configtest; then
+    echo "✅ Config Syntax OK. Restarting Apache..."
+    sudo systemctl restart apache2
+    echo "🎉 Apache Updated & Restarted!"
+else
+    echo "❌ Apache Config Test Failed! restoring backup..."
+    sudo mv "${APACHE_CONF}.bak" "$APACHE_CONF"
+    sudo systemctl restart apache2
+    echo "⚠️ Restored previous configuration."
+fi
+
