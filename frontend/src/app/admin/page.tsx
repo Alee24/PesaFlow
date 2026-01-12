@@ -116,64 +116,67 @@ export default function AdminDashboard() {
         <DashboardLayout>
             <div className="space-y-6">
                 {/* Header */}
-                <div className="flex justify-between items-center">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                     <div>
-                        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Admin Dashboard</h1>
-                        <p className="text-gray-500 dark:text-gray-400 mt-1">System Overview & Monitoring</p>
+                        <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 dark:text-white">Admin Dashboard</h1>
+                        <p className="text-gray-500 dark:text-gray-400 text-xs sm:text-sm mt-1">System Overview & Monitoring</p>
                     </div>
-                    <div className="flex gap-3">
+                    <div className="flex gap-2 sm:gap-3 w-full sm:w-auto">
                         <Button
                             onClick={fetchDashboardData}
                             variant="outline"
-                            className="flex items-center gap-2"
+                            size="sm"
+                            className="flex-1 sm:flex-none flex items-center justify-center gap-2"
                         >
                             <RefreshCw className="w-4 h-4" />
-                            Refresh
+                            <span className="hidden xs:inline text-xs sm:text-sm">Refresh</span>
                         </Button>
                         <Button
                             onClick={() => router.push('/admin/users')}
-                            className="flex items-center gap-2"
+                            size="sm"
+                            className="flex-1 sm:flex-none flex items-center justify-center gap-2"
                         >
                             <Users className="w-4 h-4" />
-                            Manage Users
+                            <span className="hidden xs:inline text-xs sm:text-sm">Manage Users</span>
                         </Button>
                     </div>
                 </div>
 
                 {/* System Health Status Card */}
                 {systemHealth && (
-                    <Card className={`p-6 border-2 ${systemHealth.summary.overallStatus === 'healthy' ? 'border-green-500 bg-green-50 dark:bg-green-900/10' :
-                            systemHealth.summary.overallStatus === 'degraded' ? 'border-yellow-500 bg-yellow-50 dark:bg-yellow-900/10' :
-                                'border-red-500 bg-red-50 dark:bg-red-900/10'
+                    <Card className={`p-4 sm:p-6 border-2 ${systemHealth.summary.overallStatus === 'healthy' ? 'border-green-500 bg-green-50 dark:bg-green-900/10' :
+                        systemHealth.summary.overallStatus === 'degraded' ? 'border-yellow-500 bg-yellow-50 dark:bg-yellow-900/10' :
+                            'border-red-500 bg-red-50 dark:bg-red-900/10'
                         }`}>
-                        <div className="flex items-center justify-between">
+                        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                             <div className="flex-1">
                                 <div className="flex items-center gap-3 mb-2">
                                     {systemHealth.summary.readyForProduction ? (
-                                        <CheckCircle className="w-6 h-6 text-green-500" />
+                                        <CheckCircle className="w-5 h-5 sm:w-6 sm:h-6 text-green-500" />
                                     ) : (
-                                        <XCircle className="w-6 h-6 text-red-500" />
+                                        <XCircle className="w-5 h-5 sm:w-6 sm:h-6 text-red-500" />
                                     )}
-                                    <h3 className="text-lg font-bold text-gray-900 dark:text-white">
-                                        System Health: {systemHealth.summary.readyForProduction ? 'Ready for Production' : 'Not Ready'}
+                                    <h3 className="text-sm sm:text-lg font-bold text-gray-900 dark:text-white">
+                                        System Health: {systemHealth.summary.readyForProduction ? 'Ready' : 'Not Ready'}
                                     </h3>
                                 </div>
-                                <p className="text-sm text-gray-700 dark:text-gray-300">
+                                <p className="text-xs sm:text-sm text-gray-700 dark:text-gray-300">
                                     <span className="font-semibold text-green-600">{systemHealth.summary.passed} passed</span>
                                     {systemHealth.summary.warnings > 0 && (
-                                        <span className="ml-3 font-semibold text-yellow-600">{systemHealth.summary.warnings} warnings</span>
+                                        <span className="ml-2 font-semibold text-yellow-600">{systemHealth.summary.warnings} w</span>
                                     )}
                                     {systemHealth.summary.failed > 0 && (
-                                        <span className="ml-3 font-semibold text-red-600">{systemHealth.summary.failed} failed</span>
+                                        <span className="ml-2 font-semibold text-red-600">{systemHealth.summary.failed} f</span>
                                     )}
                                 </p>
                             </div>
                             <Button
                                 onClick={() => router.push('/admin/system-health')}
                                 variant="outline"
-                                className="flex items-center gap-2"
+                                size="sm"
+                                className="w-full sm:w-auto flex items-center justify-center gap-2"
                             >
-                                View Details
+                                Details
                                 <ArrowUpRight className="w-4 h-4" />
                             </Button>
                         </div>
@@ -181,84 +184,84 @@ export default function AdminDashboard() {
                 )}
 
                 {/* KPI Cards */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
                     {/* Active Merchants */}
-                    <Card className="p-6 bg-gradient-to-br from-purple-500 to-purple-600 text-white border-0">
-                        <div className="flex items-center justify-between mb-4">
-                            <div className="p-3 bg-white/20 rounded-lg">
-                                <Users className="w-6 h-6" />
+                    <Card className="p-4 sm:p-6 bg-gradient-to-br from-purple-500 to-purple-600 text-white border-0">
+                        <div className="flex items-center justify-between mb-3 sm:mb-4">
+                            <div className="p-2 sm:p-3 bg-white/20 rounded-lg">
+                                <Users className="w-5 h-5 sm:w-6 sm:h-6" />
                             </div>
-                            <span className="text-sm font-medium bg-white/20 px-3 py-1 rounded-full">
+                            <span className="text-[10px] sm:text-xs font-medium bg-white/20 px-2 sm:px-3 py-0.5 sm:py-1 rounded-full">
                                 Live
                             </span>
                         </div>
-                        <div className="space-y-1">
-                            <p className="text-sm opacity-90">Active Merchants</p>
-                            <p className="text-3xl font-bold">{stats?.activeMerchants || 0}</p>
-                            <p className="text-xs opacity-75">
-                                {stats?.pendingMerchants || 0} pending verification
+                        <div className="space-y-0.5 sm:space-y-1">
+                            <p className="text-xs sm:text-sm opacity-90">Active Merchants</p>
+                            <p className="text-2xl sm:text-3xl font-bold">{stats?.activeMerchants || 0}</p>
+                            <p className="text-[10px] sm:text-xs opacity-75">
+                                {stats?.pendingMerchants || 0} pending
                             </p>
                         </div>
                     </Card>
 
                     {/* Total Volume */}
-                    <Card className="p-6 bg-gradient-to-br from-green-500 to-green-600 text-white border-0">
-                        <div className="flex items-center justify-between mb-4">
-                            <div className="p-3 bg-white/20 rounded-lg">
-                                <DollarSign className="w-6 h-6" />
+                    <Card className="p-4 sm:p-6 bg-gradient-to-br from-green-500 to-green-600 text-white border-0">
+                        <div className="flex items-center justify-between mb-3 sm:mb-4">
+                            <div className="p-2 sm:p-3 bg-white/20 rounded-lg">
+                                <DollarSign className="w-5 h-5 sm:w-6 sm:h-6" />
                             </div>
-                            <span className="text-sm font-medium bg-white/20 px-3 py-1 rounded-full">
+                            <span className="text-[10px] sm:text-xs font-medium bg-white/20 px-2 sm:px-3 py-0.5 sm:py-1 rounded-full">
                                 Lifetime
                             </span>
                         </div>
-                        <div className="space-y-1">
-                            <p className="text-sm opacity-90">Total Volume</p>
-                            <p className="text-3xl font-bold">
+                        <div className="space-y-0.5 sm:space-y-1">
+                            <p className="text-xs sm:text-sm opacity-90">Total Volume</p>
+                            <p className="text-2xl sm:text-3xl font-bold truncate">
                                 {formatCurrency(stats?.totalVolume || 0)}
                             </p>
-                            <div className="flex items-center gap-1 text-xs opacity-75">
+                            <div className="flex items-center gap-1 text-[10px] sm:text-xs opacity-75">
                                 <ArrowUpRight className="w-3 h-3" />
-                                <span>{stats?.volumeGrowth || 0}% from last month</span>
+                                <span>{stats?.volumeGrowth || 0}% growth</span>
                             </div>
                         </div>
                     </Card>
 
                     {/* Pending Payouts */}
-                    <Card className="p-6 bg-gradient-to-br from-orange-500 to-orange-600 text-white border-0">
-                        <div className="flex items-center justify-between mb-4">
-                            <div className="p-3 bg-white/20 rounded-lg">
-                                <AlertCircle className="w-6 h-6" />
+                    <Card className="p-4 sm:p-6 bg-gradient-to-br from-orange-500 to-orange-600 text-white border-0">
+                        <div className="flex items-center justify-between mb-3 sm:mb-4">
+                            <div className="p-2 sm:p-3 bg-white/20 rounded-lg">
+                                <AlertCircle className="w-5 h-5 sm:w-6 sm:h-6" />
                             </div>
-                            <span className="text-sm font-medium bg-white/20 px-3 py-1 rounded-full">
-                                Action Req
+                            <span className="text-[10px] sm:text-xs font-medium bg-white/20 px-2 sm:px-3 py-0.5 sm:py-1 rounded-full whitespace-nowrap">
+                                Action Needed
                             </span>
                         </div>
-                        <div className="space-y-1">
-                            <p className="text-sm opacity-90">Pending Payouts</p>
-                            <p className="text-3xl font-bold">{stats?.pendingPayouts || 0}</p>
-                            <p className="text-xs opacity-75">
+                        <div className="space-y-0.5 sm:space-y-1">
+                            <p className="text-xs sm:text-sm opacity-90">Pending Payouts</p>
+                            <p className="text-2xl sm:text-3xl font-bold">{stats?.pendingPayouts || 0}</p>
+                            <p className="text-[10px] sm:text-xs opacity-75 truncate">
                                 {formatCurrency(stats?.pendingPayoutAmount || 0)} total
                             </p>
                         </div>
                     </Card>
 
                     {/* System Status */}
-                    <Card className="p-6 bg-gradient-to-br from-blue-500 to-blue-600 text-white border-0">
-                        <div className="flex items-center justify-between mb-4">
-                            <div className="p-3 bg-white/20 rounded-lg">
-                                <Activity className="w-6 h-6" />
+                    <Card className="p-4 sm:p-6 bg-gradient-to-br from-blue-500 to-blue-600 text-white border-0">
+                        <div className="flex items-center justify-between mb-3 sm:mb-4">
+                            <div className="p-2 sm:p-3 bg-white/20 rounded-lg">
+                                <Activity className="w-5 h-5 sm:w-6 sm:h-6" />
                             </div>
-                            <span className="text-sm font-medium bg-green-400 px-3 py-1 rounded-full">
+                            <span className="text-[10px] sm:text-xs font-medium bg-green-400 px-2 sm:px-3 py-0.5 sm:py-1 rounded-full">
                                 {stats?.systemStatus || 'ONLINE'}
                             </span>
                         </div>
-                        <div className="space-y-1">
-                            <p className="text-sm opacity-90">System Status</p>
-                            <p className="text-3xl font-bold">{stats?.uptime || '99.9'}%</p>
-                            <div className="flex items-center gap-2 text-xs opacity-75">
+                        <div className="space-y-0.5 sm:space-y-1">
+                            <p className="text-xs sm:text-sm opacity-90">System Status</p>
+                            <p className="text-2xl sm:text-3xl font-bold">{stats?.uptime || '99.9'}%</p>
+                            <div className="flex items-center gap-2 text-[10px] sm:text-xs opacity-75">
                                 <button className="hover:underline">Reboot</button>
                                 <span>•</span>
-                                <button className="hover:underline">System Update</button>
+                                <button className="hover:underline">Update</button>
                             </div>
                         </div>
                     </Card>

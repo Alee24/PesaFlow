@@ -38,20 +38,20 @@ function CreateInvoiceForm() {
         fetchProfile();
 
         // Pre-fill from query params if available (from Customer page)
+        const customerId = searchParams.get('customerId');
         const name = searchParams.get('name');
         const email = searchParams.get('email');
         const phone = searchParams.get('phone');
         const address = searchParams.get('address');
-        const customerId = searchParams.get('customerId');
 
-        if (name) {
+        if (customerId || name) {
             setInvoiceData(prev => ({
                 ...prev,
                 customerId: customerId || '',
-                clientName: name || '',
-                clientEmail: email || '',
-                clientPhone: phone || '',
-                clientAddress: address || ''
+                clientName: name || prev.clientName,
+                clientEmail: email || prev.clientEmail,
+                clientPhone: phone || prev.clientPhone,
+                clientAddress: address || prev.clientAddress
             }));
         }
     }, [searchParams]);

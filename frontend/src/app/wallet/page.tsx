@@ -58,23 +58,23 @@ export default function WalletPage() {
             <div className="max-w-7xl mx-auto space-y-8 pb-12">
 
                 {/* Header Section */}
-                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                     <div>
-                        <h1 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
-                            <Wallet className="w-6 h-6 text-indigo-600" />
+                        <h1 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                            <Wallet className="w-5 h-5 sm:w-6 sm:h-6 text-indigo-600" />
                             Merchant Wallet
                         </h1>
-                        <p className="text-sm text-gray-500 mt-1">Manage your automated M-Pesa collections and payouts</p>
+                        <p className="text-xs sm:text-sm text-gray-500 mt-1">Manage automated M-Pesa collections and payouts</p>
                     </div>
-                    <div className="flex gap-3">
-                        <Link href="/withdrawals">
-                            <Button variant="outline" className="gap-2">
-                                <History className="w-4 h-4" /> Withdrawal History
+                    <div className="flex gap-2 w-full sm:w-auto">
+                        <Link href="/withdrawals" className="flex-1 sm:flex-none">
+                            <Button variant="outline" size="sm" className="w-full gap-1 sm:gap-2 text-[10px] sm:text-sm h-9 sm:h-10">
+                                <History className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> History
                             </Button>
                         </Link>
-                        <Link href="/withdrawals">
-                            <Button className="gap-2 bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg shadow-indigo-200 dark:shadow-none">
-                                <ArrowUpRight className="w-4 h-4" /> Withdraw Funds
+                        <Link href="/withdrawals" className="flex-1 sm:flex-none">
+                            <Button size="sm" className="w-full gap-1 sm:gap-2 bg-indigo-600 hover:bg-indigo-700 text-white text-[10px] sm:text-sm h-9 sm:h-10">
+                                <ArrowUpRight className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> Withdraw
                             </Button>
                         </Link>
                     </div>
@@ -124,44 +124,42 @@ export default function WalletPage() {
                     </div>
 
                     {/* 2. Secondary Metrics */}
-                    <div className="lg:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-6">
+                    <div className="lg:col-span-2 grid grid-cols-1 xs:grid-cols-2 gap-4 sm:gap-6">
                         {/* Total Withdrawn */}
-                        <Card className="flex flex-col justify-between relative overflow-hidden group hover:shadow-lg transition-all duration-300 border-l-4 border-l-rose-500">
+                        <Card className="flex flex-col justify-between relative overflow-hidden group hover:shadow-lg transition-all duration-300 border-l-4 border-l-rose-500 p-4 sm:p-6">
                             <div className="absolute right-0 top-0 p-3 opacity-5 group-hover:opacity-10 transition-opacity">
-                                <ArrowDownLeft className="w-24 h-24 text-rose-600" />
+                                <ArrowDownLeft className="w-16 sm:w-24 h-16 sm:h-24 text-rose-600" />
                             </div>
                             <div>
-                                <p className="text-gray-500 dark:text-gray-400 text-sm font-medium uppercase tracking-wider">Total Withdrawn</p>
-                                <h3 className="text-3xl font-bold text-gray-900 dark:text-white mt-2">
-                                    <span className="text-base text-gray-400 font-normal mr-1">KES</span>
+                                <p className="text-gray-500 dark:text-gray-400 text-[10px] sm:text-sm font-medium uppercase tracking-wider">Total Withdrawn</p>
+                                <h3 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mt-1 sm:mt-2">
+                                    <span className="text-xs sm:text-base text-gray-400 font-normal mr-1">KES</span>
                                     {stats.totalWithdrawn?.toLocaleString()}
                                 </h3>
                             </div>
-                            <div className="mt-4 pt-4 border-t border-gray-100 dark:border-gray-800 flex items-center justify-between text-sm">
+                            <div className="mt-3 sm:mt-4 pt-4 border-t border-gray-100 dark:border-gray-800 flex items-center justify-between text-[10px] sm:text-sm">
                                 <span className="text-rose-600 font-medium flex items-center gap-1">
-                                    <TrendingDown className="w-4 h-4" /> Payouts
+                                    <TrendingDown className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> Payouts
                                 </span>
-                                <span className="text-gray-400 text-xs">Lifetime Total</span>
                             </div>
                         </Card>
 
                         {/* Pending Withdrawals */}
-                        <Card className="flex flex-col justify-between relative overflow-hidden group hover:shadow-lg transition-all duration-300 border-l-4 border-l-amber-500">
+                        <Card className="flex flex-col justify-between relative overflow-hidden group hover:shadow-lg transition-all duration-300 border-l-4 border-l-amber-500 p-4 sm:p-6">
                             <div className="absolute right-0 top-0 p-3 opacity-5 group-hover:opacity-10 transition-opacity">
-                                <History className="w-24 h-24 text-amber-600" />
+                                <History className="w-16 sm:w-24 h-16 sm:h-24 text-amber-600" />
                             </div>
                             <div>
-                                <p className="text-gray-500 dark:text-gray-400 text-sm font-medium uppercase tracking-wider">Pending Processing</p>
-                                <h3 className="text-3xl font-bold text-gray-900 dark:text-white mt-2">
-                                    <span className="text-base text-gray-400 font-normal mr-1">KES</span>
+                                <p className="text-gray-500 dark:text-gray-400 text-[10px] sm:text-sm font-medium uppercase tracking-wider">Pending Processing</p>
+                                <h3 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mt-1 sm:mt-2">
+                                    <span className="text-xs sm:text-base text-gray-400 font-normal mr-1">KES</span>
                                     {stats.pendingAmount?.toLocaleString()}
                                 </h3>
                             </div>
-                            <div className="mt-4 pt-4 border-t border-gray-100 dark:border-gray-800 flex items-center justify-between text-sm">
+                            <div className="mt-3 sm:mt-4 pt-4 border-t border-gray-100 dark:border-gray-800 flex items-center justify-between text-[10px] sm:text-sm">
                                 <span className="text-amber-600 font-medium flex items-center gap-1">
-                                    <History className="w-4 h-4" /> In Progress
+                                    <History className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> Reserved
                                 </span>
-                                <span className="text-gray-400 text-xs">Funds Reserved</span>
                             </div>
                         </Card>
                     </div>
@@ -211,8 +209,8 @@ export default function WalletPage() {
                                             <td className="py-4 px-6">
                                                 <div className="flex items-center gap-3">
                                                     <div className={`p-2 rounded-lg ${tx.type === 'DEPOSIT_STK' ? 'bg-green-100 text-green-600' :
-                                                            tx.type === 'WITHDRAWAL' ? 'bg-rose-100 text-rose-600' :
-                                                                'bg-gray-100 text-gray-600'
+                                                        tx.type === 'WITHDRAWAL' ? 'bg-rose-100 text-rose-600' :
+                                                            'bg-gray-100 text-gray-600'
                                                         }`}>
                                                         {tx.type === 'DEPOSIT_STK' ? <ArrowDownLeft className="w-4 h-4" /> :
                                                             tx.type === 'WITHDRAWAL' ? <ArrowUpRight className="w-4 h-4" /> :
@@ -248,8 +246,8 @@ export default function WalletPage() {
                                             </td>
                                             <td className="py-4 px-6 text-center">
                                                 <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${tx.status === 'COMPLETED' ? 'bg-green-100 text-green-700 border border-green-200' :
-                                                        tx.status === 'FAILED' ? 'bg-red-100 text-red-700 border border-red-200' :
-                                                            'bg-amber-100 text-amber-700 border border-amber-200'
+                                                    tx.status === 'FAILED' ? 'bg-red-100 text-red-700 border border-red-200' :
+                                                        'bg-amber-100 text-amber-700 border border-amber-200'
                                                     }`}>
                                                     {tx.status}
                                                 </span>

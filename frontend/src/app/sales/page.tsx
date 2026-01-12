@@ -124,12 +124,11 @@ export default function SalesPage() {
     return (
         <DashboardLayout>
             <div className="max-w-7xl mx-auto space-y-8 pb-12">
-                <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                     <div>
-                        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Sales History</h1>
-                        <p className="text-gray-500 text-sm">Detailed record of all transactions and performance</p>
+                        <h1 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">Sales History</h1>
+                        <p className="text-gray-500 text-xs sm:text-sm mt-1">Detailed record of transactions and performance</p>
                     </div>
-                    {/* Add Export functionality later if needed */}
                 </header>
 
                 {/* Filters */}
@@ -183,48 +182,48 @@ export default function SalesPage() {
 
                 {/* Stats Cards */}
                 {stats && (
-                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                        <Card className="p-4 border border-gray-100 dark:border-gray-700 bg-white dark:bg-gray-800">
-                            <div className="flex items-center gap-3">
-                                <div className="p-2 bg-indigo-50 dark:bg-indigo-900/20 rounded-lg text-indigo-600">
-                                    <ShoppingBag className="w-5 h-5" />
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
+                        <Card className="p-3 sm:p-4 border border-gray-100 dark:border-gray-700 bg-white dark:bg-gray-800">
+                            <div className="flex items-center gap-2 sm:gap-3">
+                                <div className="p-1.5 sm:p-2 bg-indigo-50 dark:bg-indigo-900/20 rounded-lg text-indigo-600">
+                                    <ShoppingBag className="w-4 h-4 sm:w-5 sm:h-5" />
                                 </div>
-                                <div>
-                                    <p className="text-xs font-medium text-gray-500 uppercase">Total Sales</p>
-                                    <p className="text-xl font-bold text-gray-900 dark:text-white">{stats.totalSales}</p>
-                                </div>
-                            </div>
-                        </Card>
-                        <Card className="p-4 border border-gray-100 dark:border-gray-700 bg-white dark:bg-gray-800">
-                            <div className="flex items-center gap-3">
-                                <div className="p-2 bg-green-50 dark:bg-green-900/20 rounded-lg text-green-600">
-                                    <DollarSign className="w-5 h-5" />
-                                </div>
-                                <div>
-                                    <p className="text-xs font-medium text-gray-500 uppercase">Revenue</p>
-                                    <p className="text-xl font-bold text-gray-900 dark:text-white">{formatCurrency(stats.totalRevenue)}</p>
+                                <div className="min-w-0">
+                                    <p className="text-[10px] font-medium text-gray-500 uppercase truncate">Sales</p>
+                                    <p className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white">{stats.totalSales}</p>
                                 </div>
                             </div>
                         </Card>
-                        <Card className="p-4 border border-gray-100 dark:border-gray-700 bg-white dark:bg-gray-800">
-                            <div className="flex items-center gap-3">
-                                <div className="p-2 bg-purple-50 dark:bg-purple-900/20 rounded-lg text-purple-600">
-                                    <Percent className="w-5 h-5" />
+                        <Card className="p-3 sm:p-4 border border-gray-100 dark:border-gray-700 bg-white dark:bg-gray-800">
+                            <div className="flex items-center gap-2 sm:gap-3">
+                                <div className="p-1.5 sm:p-2 bg-green-50 dark:bg-green-900/20 rounded-lg text-green-600">
+                                    <DollarSign className="w-4 h-4 sm:w-5 sm:h-5" />
                                 </div>
-                                <div>
-                                    <p className="text-xs font-medium text-gray-500 uppercase">Avg. Sale</p>
-                                    <p className="text-xl font-bold text-gray-900 dark:text-white">{formatCurrency(stats.averageSale)}</p>
+                                <div className="min-w-0">
+                                    <p className="text-[10px] font-medium text-gray-500 uppercase truncate">Revenue</p>
+                                    <p className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white truncate">{formatCurrency(stats.totalRevenue).replace('KES', '').trim()}</p>
                                 </div>
                             </div>
                         </Card>
-                        <Card className="p-4 border border-gray-100 dark:border-gray-700 bg-white dark:bg-gray-800">
-                            <div className="flex items-center gap-3">
-                                <div className="p-2 bg-amber-50 dark:bg-amber-900/20 rounded-lg text-amber-600">
-                                    <TrendingUp className="w-5 h-5" />
+                        <Card className="p-3 sm:p-4 border border-gray-100 dark:border-gray-700 bg-white dark:bg-gray-800">
+                            <div className="flex items-center gap-2 sm:gap-3">
+                                <div className="p-1.5 sm:p-2 bg-purple-50 dark:bg-purple-900/20 rounded-lg text-purple-600">
+                                    <Percent className="w-4 h-4 sm:w-5 sm:h-5" />
                                 </div>
-                                <div>
-                                    <p className="text-xs font-medium text-gray-500 uppercase">Discounts</p>
-                                    <p className="text-xl font-bold text-gray-900 dark:text-white">{formatCurrency(stats.totalDiscount)}</p>
+                                <div className="min-w-0">
+                                    <p className="text-[10px] font-medium text-gray-500 uppercase truncate">Avg.</p>
+                                    <p className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white truncate">{formatCurrency(stats.averageSale).replace('KES', '').trim()}</p>
+                                </div>
+                            </div>
+                        </Card>
+                        <Card className="p-3 sm:p-4 border border-gray-100 dark:border-gray-700 bg-white dark:bg-gray-800">
+                            <div className="flex items-center gap-2 sm:gap-3">
+                                <div className="p-1.5 sm:p-2 bg-amber-50 dark:bg-amber-900/20 rounded-lg text-amber-600">
+                                    <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5" />
+                                </div>
+                                <div className="min-w-0">
+                                    <p className="text-[10px] font-medium text-gray-500 uppercase truncate">Disc.</p>
+                                    <p className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white truncate">{formatCurrency(stats.totalDiscount).replace('KES', '').trim()}</p>
                                 </div>
                             </div>
                         </Card>

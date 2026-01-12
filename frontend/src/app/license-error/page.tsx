@@ -1,15 +1,18 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Shield, Key, Copy, CheckCircle, AlertTriangle, ExternalLink, Mail, Phone, Server, CreditCard, RefreshCw } from 'lucide-react';
-import toast from 'react-hot-toast';
+import { Shield, Key, Copy, CheckCircle, AlertTriangle, ExternalLink, Mail, Phone, Server, CreditCard, RefreshCw, Loader2 } from 'lucide-react';
 import axios from 'axios';
 import { useRouter } from 'next/navigation';
+import { LoadingOverlay } from '@/components/ui/LoadingOverlay';
+import { useToast } from '@/contexts/ToastContext';
 
 export default function LicenseErrorPage() {
     const router = useRouter();
+    const { showToast } = useToast();
     const [licenseKey, setLicenseKey] = useState('');
     const [isLoading, setIsLoading] = useState(false);
+    const [isPageLoading, setIsPageLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [serverInfo, setServerInfo] = useState<{ fingerprint: string; domain: string } | null>(null);
     const [activeTab, setActiveTab] = useState<'activate' | 'request'>('activate');
@@ -19,6 +22,7 @@ export default function LicenseErrorPage() {
     }, []);
 
     const fetchServerInfo = async () => {
+        setIsPageLoading(true);
         try {
             // Use relative path for production compatibility
             const { data } = await axios.get('/api/license/fingerprint');
@@ -27,6 +31,8 @@ export default function LicenseErrorPage() {
             console.error('Failed to fetch server info:', error);
             // Show more descriptive error
             setServerInfo({ fingerprint: 'CONNECTION-FAILED', domain: window.location.hostname });
+        } finally {
+            setIsPageLoading(false);
         }
     };
 
@@ -39,20 +45,20 @@ export default function LicenseErrorPage() {
         try {
             // Try activating as user license first
             await axios.post('/api/user-license/activate', {
-                licenseKey,
+                licenseKey: licenseKey.trim().toUpperCase(),
                 serverFingerprint: serverInfo?.fingerprint,
                 domain: serverInfo?.domain
             });
 
-            toast.success('License Activated Successfully! Redirecting...');
+            showToast('License Activated Successfully! Redirecting...', 'success');
             setTimeout(() => {
                 router.push('/dashboard');
-            }, 1500);
+            }, 2000);
         } catch (error: any) {
             console.error('Activation error:', error);
             const errorMsg = error.response?.data?.error || 'Activation failed. Invalid key.';
             setError(errorMsg);
-            toast.error(errorMsg);
+            showToast(errorMsg, 'error');
             setIsLoading(false);
         }
     };
@@ -60,7 +66,7 @@ export default function LicenseErrorPage() {
     const handleCopyFingerprint = () => {
         if (serverInfo?.fingerprint) {
             navigator.clipboard.writeText(serverInfo.fingerprint);
-            toast.success('Server Fingerprint Copied!');
+            showToast('Server Fingerprint Copied!', 'success');
         }
     };
 
@@ -68,6 +74,10 @@ export default function LicenseErrorPage() {
         // Redirect to register with enterprise plan selected
         window.location.href = '/auth/register?plan=ENTERPRISE';
     };
+
+    if (isPageLoading) {
+        return <LoadingOverlay message="Initializing Security" subMessage="Preparing secure activation environment..." />;
+    }
 
     return (
         <div className="min-h-screen bg-[#FDF8F6] flex items-center justify-center p-4">
@@ -203,15 +213,15 @@ export default function LicenseErrorPage() {
                                 <button
                                     type="submit"
                                     disabled={isLoading || !licenseKey}
-                                    className="w-full flex justify-center items-center py-3.5 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                                    className="w-full flex justify-center items-center py-3.5 px-4 rounded-xl shadow-lg text-sm font-bold text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all hover:scale-[1.02] active:scale-[0.98] shadow-blue-500/20"
                                 >
                                     {isLoading ? (
                                         <span className="flex items-center gap-2">
-                                            <RefreshCw className="h-4 w-4 animate-spin" /> Verifying...
+                                            <Loader2 className="h-4 w-4 animate-spin" /> Securing License...
                                         </span>
                                     ) : (
                                         <span className="flex items-center gap-2">
-                                            Activate License <CheckCircle className="h-4 w-4" />
+                                            Verify & Activate Access <CheckCircle className="h-4 w-4" />
                                         </span>
                                     )}
                                 </button>
@@ -242,7 +252,7 @@ export default function LicenseErrorPage() {
                                 </p>
                             </div>
 
-                            <form className="space-y-4" onSubmit={(e) => { e.preventDefault(); toast.success('Request sent! We will contact you soon.'); }}>
+                            <form className="space-y-4" onSubmit={(e) => { e.preventDefault(); showToast('Request sent! We will contact you soon.', 'success'); }}>
                                 <div className="grid grid-cols-2 gap-4">
                                     <div className="space-y-1">
                                         <label className="text-xs font-medium text-gray-700">First Name</label>

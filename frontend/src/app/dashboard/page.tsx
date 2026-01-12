@@ -70,17 +70,17 @@ export default function DashboardPage() {
         <DashboardLayout>
             <div className="space-y-8">
                 {/* Welcome Section */}
-                <div className="flex justify-between items-center">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                     <div>
-                        <h1 className="text-2xl font-bold text-gray-800 dark:text-white">Dashboard Overview</h1>
-                        <p className="text-gray-500 text-sm">Welcome back, {user.email} ({user.role})</p>
+                        <h1 className="text-xl sm:text-2xl font-bold text-gray-800 dark:text-white">Dashboard Overview</h1>
+                        <p className="text-gray-500 text-xs sm:text-sm">Welcome back, {user.email} ({user.role})</p>
                     </div>
-                    <div className="flex bg-white dark:bg-gray-800 rounded-lg p-1 shadow-sm border border-gray-200 dark:border-gray-700">
+                    <div className="flex bg-white dark:bg-gray-800 rounded-lg p-1 shadow-sm border border-gray-200 dark:border-gray-700 w-full sm:w-auto overflow-x-auto">
                         {['day', 'week', 'month', 'year'].map((p) => (
                             <button
                                 key={p}
                                 onClick={() => setPeriod(p)}
-                                className={`px-4 py-1.5 text-sm font-medium rounded-md capitalize transition-colors ${period === p
+                                className={`flex-1 sm:flex-none px-3 sm:px-4 py-1.5 text-xs sm:text-sm font-medium rounded-md capitalize transition-colors ${period === p
                                     ? 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/50 dark:text-indigo-300'
                                     : 'text-gray-500 hover:text-gray-900 dark:hover:text-gray-300'
                                     }`}
@@ -95,57 +95,57 @@ export default function DashboardPage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
 
                     {/* Card 1: Wallet Balance */}
-                    <div className="rounded-xl overflow-hidden shadow-lg bg-indigo-600 text-white p-6 relative">
+                    <div className="rounded-xl overflow-hidden shadow-lg bg-indigo-600 text-white p-4 sm:p-6 relative">
                         <div className="flex justify-between items-start z-10 relative">
                             <div>
-                                <h3 className="text-sm font-medium opacity-80 uppercase tracking-wider">{user.role === 'ADMIN' ? 'System Liquidity' : 'Wallet Balance'}</h3>
-                                <div className="mt-2 text-3xl font-bold">KES {Number(summary?.walletBalance || 0).toLocaleString()}</div>
-                                <p className="text-xs opacity-75 mt-1">Available Funds <span className="text-[10px] opacity-60 ml-1">(Only M-Pesa Payments)</span></p>
+                                <h3 className="text-[10px] sm:text-sm font-medium opacity-80 uppercase tracking-wider">{user.role === 'ADMIN' ? 'System Liquidity' : 'Wallet Balance'}</h3>
+                                <div className="mt-1 sm:mt-2 text-2xl sm:text-3xl font-bold">KES {Number(summary?.walletBalance || 0).toLocaleString()}</div>
+                                <p className="text-[10px] sm:text-xs opacity-75 mt-1">Available Funds <span className="text-[9px] opacity-60 ml-1">(Only M-Pesa)</span></p>
                             </div>
-                            <div className="p-3 bg-white/20 rounded-full backdrop-blur-sm">
-                                <DollarSign className="w-6 h-6 text-white" />
+                            <div className="p-2 sm:p-3 bg-white/20 rounded-full backdrop-blur-sm">
+                                <DollarSign className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
                             </div>
                         </div>
                     </div>
 
                     {/* Card 2: Income */}
-                    <div className="rounded-xl overflow-hidden shadow-lg bg-emerald-600 text-white p-6 relative">
+                    <div className="rounded-xl overflow-hidden shadow-lg bg-emerald-600 text-white p-4 sm:p-6 relative">
                         <div className="flex justify-between items-start z-10 relative">
                             <div>
-                                <h3 className="text-sm font-medium opacity-80 uppercase tracking-wider">{user.role === 'ADMIN' ? 'Total GTV' : 'Total Income'}</h3>
-                                <div className="mt-2 text-3xl font-bold">KES {Number(summary?.totalIncome || 0).toLocaleString()}</div>
-                                <p className="text-xs opacity-75 mt-1">Gross Transaction Volume</p>
+                                <h3 className="text-[10px] sm:text-sm font-medium opacity-80 uppercase tracking-wider">{user.role === 'ADMIN' ? 'Total GTV' : 'Total Income'}</h3>
+                                <div className="mt-1 sm:mt-2 text-2xl sm:text-3xl font-bold">KES {Number(summary?.totalIncome || 0).toLocaleString()}</div>
+                                <p className="text-[10px] sm:text-xs opacity-75 mt-1">Gross Transaction Volume</p>
                             </div>
-                            <div className="p-3 bg-white/20 rounded-full backdrop-blur-sm">
-                                <TrendingUp className="w-6 h-6 text-white" />
+                            <div className="p-2 sm:p-3 bg-white/20 rounded-full backdrop-blur-sm">
+                                <TrendingUp className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
                             </div>
                         </div>
                     </div>
 
                     {/* Card 3: Withdrawals */}
-                    <div className="rounded-xl overflow-hidden shadow-lg bg-rose-600 text-white p-6 relative">
+                    <div className="rounded-xl overflow-hidden shadow-lg bg-rose-600 text-white p-4 sm:p-6 relative">
                         <div className="flex justify-between items-start z-10 relative">
                             <div>
-                                <h3 className="text-sm font-medium opacity-80 uppercase tracking-wider">Withdrawals</h3>
-                                <div className="mt-2 text-3xl font-bold">KES {Number(summary?.totalWithdrawals || 0).toLocaleString()}</div>
-                                <p className="text-xs opacity-75 mt-1">Total Payouts ({period})</p>
+                                <h3 className="text-[10px] sm:text-sm font-medium opacity-80 uppercase tracking-wider">Withdrawals</h3>
+                                <div className="mt-1 sm:mt-2 text-2xl sm:text-3xl font-bold">KES {Number(summary?.totalWithdrawals || 0).toLocaleString()}</div>
+                                <p className="text-[10px] sm:text-xs opacity-75 mt-1">Total Payouts ({period})</p>
                             </div>
-                            <div className="p-3 bg-white/20 rounded-full backdrop-blur-sm">
-                                <ArrowRight className="w-6 h-6 text-white rotate-45" />
+                            <div className="p-2 sm:p-3 bg-white/20 rounded-full backdrop-blur-sm">
+                                <ArrowRight className="w-5 h-5 sm:w-6 sm:h-6 text-white rotate-45" />
                             </div>
                         </div>
                     </div>
 
                     {/* Card 4: Service Income / Fees */}
-                    <div className="rounded-xl overflow-hidden shadow-lg bg-amber-500 text-white p-6 relative">
+                    <div className="rounded-xl overflow-hidden shadow-lg bg-amber-500 text-white p-4 sm:p-6 relative">
                         <div className="flex justify-between items-start z-10 relative">
                             <div>
-                                <h3 className="text-sm font-medium opacity-80 uppercase tracking-wider">{user.role === 'ADMIN' ? 'Service Revenue' : 'Transaction Fees'}</h3>
-                                <div className="mt-2 text-3xl font-bold">KES {Number(summary?.totalFeeIncome || 0).toLocaleString()}</div>
-                                <p className="text-xs opacity-75 mt-1">{user.role === 'ADMIN' ? 'Net Platform Income' : 'Service Charges Paid'}</p>
+                                <h3 className="text-[10px] sm:text-sm font-medium opacity-80 uppercase tracking-wider">{user.role === 'ADMIN' ? 'Service Revenue' : 'Transaction Fees'}</h3>
+                                <div className="mt-1 sm:mt-2 text-2xl sm:text-3xl font-bold">KES {Number(summary?.totalFeeIncome || 0).toLocaleString()}</div>
+                                <p className="text-[10px] sm:text-xs opacity-75 mt-1">{user.role === 'ADMIN' ? 'Net Platform Income' : 'Service Charges'}</p>
                             </div>
-                            <div className="p-3 bg-white/20 rounded-full backdrop-blur-sm">
-                                <ShoppingCart className="w-6 h-6 text-white" />
+                            <div className="p-2 sm:p-3 bg-white/20 rounded-full backdrop-blur-sm">
+                                <ShoppingCart className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
                             </div>
                         </div>
                     </div>
@@ -155,26 +155,26 @@ export default function DashboardPage() {
                 {invoiceStats && (
                     <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-6">
                         <h3 className="text-lg font-bold text-gray-800 dark:text-white mb-4">Invoice Analytics</h3>
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                            <div className="p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
-                                <span className="text-xs font-bold text-gray-500 uppercase">Paid Invoices</span>
-                                <div className="text-xl font-bold text-gray-900 dark:text-white mt-1">{invoiceStats.paid.count}</div>
-                                <div className="text-xs text-green-600 font-medium">KES {Number(invoiceStats.paid.amount).toLocaleString()}</div>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+                            <div className="p-3 sm:p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+                                <span className="text-[10px] sm:text-xs font-bold text-gray-500 uppercase">Paid Invoices</span>
+                                <div className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white mt-1">{invoiceStats.paid.count}</div>
+                                <div className="text-[10px] sm:text-xs text-green-600 font-medium truncate">KES {Number(invoiceStats.paid.amount).toLocaleString()}</div>
                             </div>
-                            <div className="p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
-                                <span className="text-xs font-bold text-gray-500 uppercase">Pending Invoices</span>
-                                <div className="text-xl font-bold text-gray-900 dark:text-white mt-1">{invoiceStats.pending.count}</div>
-                                <div className="text-xs text-yellow-600 font-medium">KES {Number(invoiceStats.pending.amount).toLocaleString()}</div>
+                            <div className="p-3 sm:p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+                                <span className="text-[10px] sm:text-xs font-bold text-gray-500 uppercase">Pending Invoices</span>
+                                <div className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white mt-1">{invoiceStats.pending.count}</div>
+                                <div className="text-[10px] sm:text-xs text-yellow-600 font-medium truncate">KES {Number(invoiceStats.pending.amount).toLocaleString()}</div>
                             </div>
-                            <div className="p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
-                                <span className="text-xs font-bold text-gray-500 uppercase">Overdue Invoices</span>
-                                <div className="text-xl font-bold text-gray-900 dark:text-white mt-1">{invoiceStats.overdue.count}</div>
-                                <div className="text-xs text-red-600 font-medium">KES {Number(invoiceStats.overdue.amount).toLocaleString()}</div>
+                            <div className="p-3 sm:p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+                                <span className="text-[10px] sm:text-xs font-bold text-gray-500 uppercase">Overdue Invoices</span>
+                                <div className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white mt-1">{invoiceStats.overdue.count}</div>
+                                <div className="text-[10px] sm:text-xs text-red-600 font-medium truncate">KES {Number(invoiceStats.overdue.amount).toLocaleString()}</div>
                             </div>
-                            <div className="p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
-                                <span className="text-xs font-bold text-gray-500 uppercase">Cancelled</span>
-                                <div className="text-xl font-bold text-gray-900 dark:text-white mt-1">{invoiceStats.cancelled.count}</div>
-                                <div className="text-xs text-gray-500 font-medium">KES {Number(invoiceStats.cancelled.amount).toLocaleString()}</div>
+                            <div className="p-3 sm:p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+                                <span className="text-[10px] sm:text-xs font-bold text-gray-500 uppercase">Cancelled</span>
+                                <div className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white mt-1">{invoiceStats.cancelled.count}</div>
+                                <div className="text-[10px] sm:text-xs text-gray-500 font-medium truncate">KES {Number(invoiceStats.cancelled.amount).toLocaleString()}</div>
                             </div>
                         </div>
                     </div>
