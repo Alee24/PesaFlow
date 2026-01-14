@@ -48,7 +48,7 @@ export function LicenseGuard({ children }: { children: React.ReactNode }) {
     };
 
     if (checking) {
-        return <LoadingOverlay message="Shielding System" subMessage="Verifying your enterprise license status..." />;
+        return <LoadingOverlay message="Encrypting Data" subMessage="Securing your session..." />;
     }
 
     if (licenseValid === false) {
