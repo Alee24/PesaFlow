@@ -59,6 +59,7 @@ model User {
   customers            Customer[]
   customerNotes        CustomerNote[]
   customerInteractions CustomerInteraction[]
+  uploadedDocuments    CustomerDocument[]
   customerTags         CustomerTag[]
   customerSegments     CustomerSegment[]
   emailCampaigns       EmailCampaign[]
