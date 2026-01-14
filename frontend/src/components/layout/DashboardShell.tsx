@@ -62,17 +62,6 @@ const menuGroups = [
             { name: 'Users', href: '/admin/users', icon: User, role: 'ADMIN' },
             { name: 'Withdrawals', href: '/admin/withdrawals', icon: CreditCard, role: 'ADMIN' },
             { name: 'Settings', href: '/admin/settings', icon: Settings, role: 'ADMIN' },
-            // Added explicit link to Settings (Analytics section) if desired, or just trust Settings.
-            // The user explicitly asked for "google analytics link to admin sidebar".
-            // Since it's inside Settings -> Analytics card, I will create a direct entry if meaningful, 
-            // OR I will trust they can find it in settings.
-            // However, often users want a dedicated "Analytics" view.
-            // Let's check if there is an /admin/analytics page.
-            // But for now, I will add it as "Google Analytics" pointing to settings/analytics if that exists, 
-            // or just rely on the fact that I implemented it in Settings page.
-            // Wait, the user asked to "add the google analytics link to admin sidebar".
-            // I'll add a direct link that might likely just scroll to it or go to settings.
-            // Actually, better: I'll add it as a new item.
             { name: 'Google Analytics', href: '/admin/settings', icon: BarChart3, role: 'ADMIN' },
         ]
     }
