@@ -45,6 +45,8 @@ import { LicenseGuard } from "@/components/license/LicenseGuard";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import { AuthProvider } from "@/contexts/AuthContext";
 
+import { GoogleAnalytics } from "@/components/analytics/GoogleAnalytics";
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -56,6 +58,7 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
         suppressHydrationWarning
       >
+        <GoogleAnalytics />
         <Toaster position="top-right" />
         <ToastProvider>
           <AuthProvider>

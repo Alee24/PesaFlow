@@ -6,7 +6,7 @@ import DashboardLayout from '@/components/layout/DashboardLayout';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
-import { Settings, DollarSign, Save } from 'lucide-react';
+import { Settings, DollarSign, Save, BarChart } from 'lucide-react';
 import api from '@/lib/api';
 import { useToast } from '@/contexts/ToastContext';
 
@@ -25,7 +25,8 @@ export default function AdminSettingsPage() {
         smtpUser: '',
         smtpPass: '',
         smtpFromName: '',
-        smtpFromEmail: ''
+        smtpFromEmail: '',
+        googleAnalyticsId: ''
     });
 
     useEffect(() => {
@@ -52,7 +53,8 @@ export default function AdminSettingsPage() {
                     smtpUser: response.data.smtpUser || '',
                     smtpPass: response.data.smtpPass || '',
                     smtpFromName: response.data.smtpFromName || '',
-                    smtpFromEmail: response.data.smtpFromEmail || ''
+                    smtpFromEmail: response.data.smtpFromEmail || '',
+                    googleAnalyticsId: response.data.googleAnalyticsId || ''
                 });
             } catch (error: any) {
                 console.error('Failed to fetch settings:', error);
@@ -309,6 +311,34 @@ export default function AdminSettingsPage() {
                                     </Button>
                                 </div>
                             </div>
+                        </div>
+                    </div>
+                </Card>
+
+                {/* Integrations & Analytics Card */}
+                <Card className="mt-6">
+                    <div className="p-6">
+                        <div className="flex items-center gap-3 mb-6">
+                            <div className="p-2 bg-purple-100 dark:bg-purple-900/30 rounded-lg">
+                                <BarChart className="w-5 h-5 text-purple-600 dark:text-purple-400" />
+                            </div>
+                            <div>
+                                <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Analytics</h2>
+                                <p className="text-sm text-gray-500">Configure external analytics services</p>
+                            </div>
+                        </div>
+
+                        <div className="space-y-4">
+                            <Input
+                                label="Google Analytics Measurement ID"
+                                type="text"
+                                value={settings.googleAnalyticsId}
+                                onChange={(e) => setSettings({ ...settings, googleAnalyticsId: e.target.value })}
+                                placeholder="G-XXXXXXXXXX"
+                            />
+                            <p className="text-xs text-gray-500">
+                                Enter your Google Analytics 4 Measurement ID (starts with "G-").
+                            </p>
                         </div>
                     </div>
                 </Card>

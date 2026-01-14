@@ -597,6 +597,9 @@ model SystemSettings {
   smtpFromName  String? @map("smtp_from_name")
   smtpFromEmail String? @map("smtp_from_email")
   
+  // Google Analytics
+  googleAnalyticsId String? @map("google_analytics_id")
+  
   updatedAt             DateTime @updatedAt @map("updated_at")
   createdAt             DateTime @default(now()) @map("created_at")
 

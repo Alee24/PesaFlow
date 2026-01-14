@@ -27,7 +27,8 @@ export const getPublicSettings = async (req: Request, res: Response) => {
 
         res.json({
             serviceChargeEnabled: settings.serviceChargeEnabled,
-            serviceChargeAmount: settings.serviceChargeAmount
+            serviceChargeAmount: settings.serviceChargeAmount,
+            googleAnalyticsId: settings.googleAnalyticsId
         });
     } catch (error: any) {
         res.status(500).json({ error: error.message });
@@ -66,7 +67,8 @@ export const updateSettings = async (req: AuthRequest, res: Response) => {
             smtpUser,
             smtpPass,
             smtpFromName,
-            smtpFromEmail
+            smtpFromEmail,
+            googleAnalyticsId
         } = req.body;
 
         // Validate service charge inputs
@@ -99,6 +101,7 @@ export const updateSettings = async (req: AuthRequest, res: Response) => {
         if (smtpPass !== undefined) updateData.smtpPass = smtpPass || null;
         if (smtpFromName !== undefined) updateData.smtpFromName = smtpFromName || null;
         if (smtpFromEmail !== undefined) updateData.smtpFromEmail = smtpFromEmail || null;
+        if (googleAnalyticsId !== undefined) updateData.googleAnalyticsId = googleAnalyticsId || null;
 
         if (settings) {
             settings = await prisma.systemSettings.update({
