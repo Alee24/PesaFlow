@@ -41,12 +41,12 @@ npm run build
 check_success "Backend build"
 
 # Verify build output
-if [ ! -f "dist/main.js" ]; then
-    echo "❌ CRITICAL: dist/main.js not found after build!"
+if [ ! -f "dist/server.js" ]; then
+    echo "❌ CRITICAL: dist/server.js not found after build!"
     echo "   Build may have failed silently. Check build logs above."
     exit 1
 fi
-echo "✅ Backend built successfully (dist/main.js verified)"
+echo "✅ Backend built successfully (dist/server.js verified)"
 
 # Update .env for backend
 echo "  → Updating backend .env..."
@@ -94,7 +94,7 @@ pm2 delete mclinic-web 2>/dev/null || true
 echo ""
 echo "  → Starting Backend API..."
 cd "$PROJECT_ROOT/backend"
-pm2 start dist/main.js --name "${APP_NAME}-api"
+pm2 start dist/server.js --name "${APP_NAME}-api"
 check_success "Backend API started"
 
 # Wait a moment and check if it's still running
