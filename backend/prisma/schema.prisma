@@ -402,6 +402,7 @@ model Customer {
   // Relations
   notes        CustomerNote[]
   interactions CustomerInteraction[]
+  documents    CustomerDocument[]
   tags         CustomerTagRelation[]
   segments     CustomerSegmentRelation[]
   sales        Sale[]                    @relation("CustomerSales")
@@ -450,6 +451,27 @@ model CustomerInteraction {
   @@index([customerId])
   @@index([type])
   @@map("customer_interactions")
+}
+
+model CustomerDocument {
+  id         String   @id @default(uuid())
+  customerId String   @map("customer_id")
+  customer   Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+
+  userId String @map("user_id")
+  user   User   @relation(fields: [userId], references: [id])
+
+  title       String
+  fileUrl     String   @map("file_url")
+  fileType    String   @map("file_type")
+  fileSize    Int      @map("file_size") // In bytes
+  description String?  @db.Text
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([customerId])
+  @@map("customer_documents")
 }
 
 model CustomerTag {

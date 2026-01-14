@@ -111,6 +111,14 @@ export const getCustomer = async (req: AuthRequest, res: Response) => {
                 sales: {
                     orderBy: { createdAt: 'desc' },
                     take: 20 // increased from 10
+                },
+                documents: {
+                    include: {
+                        user: {
+                            select: { name: true, email: true }
+                        }
+                    },
+                    orderBy: { createdAt: 'desc' }
                 }
             }
         });
@@ -380,5 +388,101 @@ export const addInteraction = async (req: AuthRequest, res: Response) => {
     } catch (error: any) {
         console.error('Add interaction error:', error);
         res.status(500).json({ error: 'Failed to add interaction' });
+    }
+};
+
+// Upload customer document
+export const uploadDocument = async (req: AuthRequest, res: Response) => {
+    try {
+        const { id } = req.params;
+        const userId = req.user?.userId;
+        const merchantId = req.user?.merchantId || req.user?.userId;
+        const file = req.file;
+        const { title, description } = req.body;
+
+        if (!file) {
+            return res.status(400).json({ error: 'No file uploaded' });
+        }
+
+        // Validate file size (25MB limit)
+        if (file.size > 25 * 1024 * 1024) {
+            return res.status(400).json({ error: 'File size exceeds 25MB limit' });
+        }
+
+        const customer = await prisma.customer.findFirst({
+            where: { id, merchantId }
+        });
+
+        if (!customer) {
+            return res.status(404).json({ error: 'Customer not found' });
+        }
+
+        const document = await prisma.customerDocument.create({
+            data: {
+                customerId: id,
+                userId: userId!,
+                title: title || file.originalname,
+                fileUrl: `/uploads/${file.filename}`,
+                fileType: file.mimetype,
+                fileSize: file.size,
+                description
+            },
+            include: {
+                user: {
+                    select: { name: true, email: true }
+                }
+            }
+        });
+
+        res.status(201).json(document);
+    } catch (error: any) {
+        console.error('Upload document error:', error);
+        res.status(500).json({ error: 'Failed to upload document' });
+    }
+};
+
+// Delete customer document
+export const deleteDocument = async (req: AuthRequest, res: Response) => {
+    try {
+        const { id, documentId } = req.params;
+        const merchantId = req.user?.merchantId || req.user?.userId;
+
+        const customer = await prisma.customer.findFirst({
+            where: { id, merchantId }
+        });
+
+        if (!customer) {
+            return res.status(404).json({ error: 'Customer not found' });
+        }
+
+        const document = await prisma.customerDocument.findFirst({
+            where: { id: documentId, customerId: id }
+        });
+
+        if (!document) {
+            return res.status(404).json({ error: 'Document not found' });
+        }
+
+        // Verify if file exists and delete it (optional, if you want to clean up storage)
+        const fs = require('fs');
+        const path = require('path');
+        const filePath = path.join(__dirname, '../../public', document.fileUrl);
+
+        if (fs.existsSync(filePath)) {
+            try {
+                fs.unlinkSync(filePath);
+            } catch (err) {
+                console.error('Failed to delete physical file:', err);
+            }
+        }
+
+        await prisma.customerDocument.delete({
+            where: { id: documentId }
+        });
+
+        res.json({ message: 'Document deleted successfully' });
+    } catch (error: any) {
+        console.error('Delete document error:', error);
+        res.status(500).json({ error: 'Failed to delete document' });
     }
 };

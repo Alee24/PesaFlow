@@ -9,7 +9,9 @@ import {
     deleteCustomer,
     getCustomerStats,
     addNote,
-    addInteraction
+    addInteraction,
+    uploadDocument,
+    deleteDocument
 } from '../controllers/crm.controller';
 import {
     createSegment,
@@ -20,6 +22,31 @@ import {
     sendCampaign,
     getCampaignAnalytics
 } from '../controllers/crm-pro.controller';
+import multer from 'multer';
+import path from 'path';
+import fs from 'fs';
+
+// Configure multer for file uploads
+const storage = multer.diskStorage({
+    destination: (req, file, cb) => {
+        const uploadDir = 'public/uploads/documents';
+        if (!fs.existsSync(uploadDir)) {
+            fs.mkdirSync(uploadDir, { recursive: true });
+        }
+        cb(null, uploadDir);
+    },
+    filename: (req, file, cb) => {
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+        cb(null, 'doc-' + uniqueSuffix + path.extname(file.originalname));
+    }
+});
+
+const upload = multer({
+    storage: storage,
+    limits: {
+        fileSize: 25 * 1024 * 1024 // 25MB limit
+    }
+});
 
 const router = Router();
 
@@ -37,6 +64,10 @@ router.delete('/customers/:id', requireFeature('CRM'), deleteCustomer);
 // Notes and Interactions (BASIC+)
 router.post('/customers/:id/notes', requireFeature('CRM'), addNote);
 router.post('/customers/:id/interactions', requireFeature('CRM'), addInteraction);
+
+// Customer Documents (BASIC+)
+router.post('/customers/:id/documents', requireFeature('CRM'), upload.single('file'), uploadDocument);
+router.delete('/customers/:id/documents/:documentId', requireFeature('CRM'), deleteDocument);
 
 // Customer Segmentation (PRO only)
 router.post('/segments', requireFeature('ADVANCED_CRM'), createSegment);
