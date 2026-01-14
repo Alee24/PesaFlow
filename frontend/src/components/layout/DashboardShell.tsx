@@ -14,7 +14,7 @@ import { formatDistanceToNow } from 'date-fns';
 import api from '@/lib/api';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTheme } from '@/contexts/ThemeContext';
-import { ThemeToggle } from '../ui/ThemeToggle';
+// import { ThemeToggle } from '../ui/ThemeToggle'; // Removed due to missing file
 
 const menuGroups = [
     {
@@ -320,7 +320,7 @@ export function Header({ user, onMenuClick }: { user?: any; onMenuClick?: () => 
                 </div>
 
                 <div className="flex items-center gap-2 md:gap-4">
-                    <ThemeToggle />
+                    {/* <ThemeToggle /> */}
                     {/* Notifications */}
                     <button
                         onClick={handleOpenNotifications}
