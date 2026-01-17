@@ -25,26 +25,45 @@ export const getSalesOverview = async (req: AuthRequest, res: Response) => {
         const merchantUserIds = await getMerchantUserIds(userId, userRole);
 
         // Total revenue
-        // Total revenue - Filter by PAID/PARTIAL for realized revenue
+        // Total revenue - Fetch ALL sales but calculate revenue based on payment status OR transaction status
         const sales = await prisma.sale.findMany({
             where: {
                 merchantId: { in: merchantUserIds },
-                createdAt: { gte: start, lte: end },
-                paymentStatus: { in: ['PAID', 'PARTIAL'] }
+                createdAt: { gte: start, lte: end }
             },
             include: {
-                items: true
+                items: true,
+                transaction: true // Include transaction to check status
             }
         });
 
-        const totalRevenue = sales.reduce((sum, sale) => sum + Number(sale.amountPaid || sale.totalAmount), 0);
+        const totalRevenue = sales.reduce((sum, sale) => {
+            // Count as revenue if Sale is PAID/PARTIAL OR if linked Transaction is COMPLETED
+            const isPaid = sale.paymentStatus === 'PAID' ||
+                sale.paymentStatus === 'PARTIAL' ||
+                sale.transaction?.status === 'COMPLETED';
+
+            if (isPaid) {
+                const paid = Number(sale.amountPaid);
+                return sum + (paid > 0 ? paid : Number(sale.totalAmount));
+            }
+            return sum;
+        }, 0);
+
         const totalTransactions = sales.length;
         const averageOrderValue = totalTransactions > 0 ? totalRevenue / totalTransactions : 0;
 
         // Revenue by day
         const revenueByDay = sales.reduce((acc: any, sale) => {
-            const date = sale.createdAt.toISOString().split('T')[0];
-            acc[date] = (acc[date] || 0) + Number(sale.totalAmount);
+            const isPaid = sale.paymentStatus === 'PAID' ||
+                sale.paymentStatus === 'PARTIAL' ||
+                sale.transaction?.status === 'COMPLETED';
+
+            if (isPaid) {
+                const date = sale.createdAt.toISOString().split('T')[0];
+                const paid = Number(sale.amountPaid);
+                acc[date] = (acc[date] || 0) + (paid > 0 ? paid : Number(sale.totalAmount));
+            }
             return acc;
         }, {});
 
@@ -221,14 +240,14 @@ export const getFinancialMetrics = async (req: AuthRequest, res: Response) => {
         const end = endDate ? new Date(endDate as string) : new Date();
 
         // Sales revenue
-        // Sales revenue - Only count PAID or PARTIAL
+        // Fetch ALL sales but calculate based on payment status OR transaction status to ensure records are picked up
         const sales = await prisma.sale.findMany({
             where: {
                 merchantId: userId,
-                createdAt: { gte: start, lte: end },
-                paymentStatus: { in: ['PAID', 'PARTIAL'] }
+                createdAt: { gte: start, lte: end }
             },
             include: {
+                transaction: true, // Include transaction to check status
                 items: {
                     include: {
                         product: true
@@ -237,9 +256,8 @@ export const getFinancialMetrics = async (req: AuthRequest, res: Response) => {
             }
         });
 
-        const totalRevenue = sales.reduce((sum, sale) => sum + Number(sale.amountPaid || sale.totalAmount), 0);
-
-        // Calculate COGS and VAT
+        // Calculate Revenue, COGS and VAT Liability based on "Effective Paid Status"
+        let totalRevenue = 0;
         let totalCOGS = 0;
         let totalVATLiability = 0;
 
@@ -253,17 +271,29 @@ export const getFinancialMetrics = async (req: AuthRequest, res: Response) => {
         const isVatEnabled = profile?.vatEnabled || false;
 
         sales.forEach(sale => {
-            // COGS
-            sale.items.forEach(item => {
-                totalCOGS += Number(item.product.costPrice || 0) * item.quantity;
+            // Determine if sale effectively paid
+            const isPaid = sale.paymentStatus === 'PAID' ||
+                sale.paymentStatus === 'PARTIAL' ||
+                sale.transaction?.status === 'COMPLETED';
 
-                // VAT Calculation (Inclusive logic matching dashboard)
-                if (isVatEnabled) {
-                    const itemTotal = Number(item.subtotal);
-                    const vat = itemTotal * (vatRate / 100);
-                    totalVATLiability += vat;
-                }
-            });
+            if (isPaid) {
+                // Revenue
+                const paid = Number(sale.amountPaid);
+                totalRevenue += (paid > 0 ? paid : Number(sale.totalAmount));
+
+                // Items Calculation
+                sale.items.forEach(item => {
+                    // COGS
+                    totalCOGS += Number(item.product.costPrice || 0) * item.quantity;
+
+                    // VAT
+                    if (isVatEnabled) {
+                        const itemTotal = Number(item.subtotal);
+                        const vat = itemTotal * (vatRate / 100);
+                        totalVATLiability += vat;
+                    }
+                });
+            }
         });
 
 
