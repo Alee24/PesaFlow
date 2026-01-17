@@ -102,6 +102,39 @@ async function fixInvoiceStats() {
             }
         }
 
+        // 4. Recalculate Customer Stats (LTV, Total Purchases)
+        console.log('Recalculating Customer LTV...');
+        const customerStats = await prisma.sale.groupBy({
+            by: ['customerId'],
+            where: {
+                paymentStatus: 'PAID',
+                customerId: { not: null }
+            },
+            _sum: {
+                totalAmount: true
+            },
+            _count: {
+                id: true
+            },
+            _max: {
+                createdAt: true
+            }
+        });
+
+        for (const stat of customerStats) {
+            if (stat.customerId) {
+                await prisma.customer.update({
+                    where: { id: stat.customerId },
+                    data: {
+                        lifetimeValue: stat._sum.totalAmount || 0,
+                        totalPurchases: stat._count.id,
+                        lastPurchaseDate: stat._max.createdAt || undefined
+                    }
+                });
+                console.log(`Updated Customer ${stat.customerId} stats: LTV ${stat._sum.totalAmount}`);
+            }
+        }
+
         console.log('Fix Complete.');
 
     } catch (error) {
