@@ -134,10 +134,29 @@ export const mpesaCallback = async (req: Request, res: Response): Promise<void> 
                         const meta = JSON.parse(transaction.metadata);
                         if (meta.invoiceId) {
                             console.log(`   Marking linked invoice ${meta.invoiceId} as COMPLETED`);
+
                             await prisma.transaction.update({
                                 where: { id: meta.invoiceId },
                                 data: { status: 'COMPLETED' }
                             });
+
+                            // CRITICAL FIX: Also mark the Sale associated with this Invoice as PAID
+                            // This ensures CRM stats are updated correctly
+                            const invoiceSale = await prisma.sale.findFirst({
+                                where: { transactionId: meta.invoiceId }
+                            });
+
+                            if (invoiceSale) {
+                                await prisma.sale.update({
+                                    where: { id: invoiceSale.id },
+                                    data: {
+                                        paymentStatus: 'PAID',
+                                        amountPaid: invoiceSale.totalAmount, // Assuming full payment
+                                        amountDue: 0
+                                    }
+                                });
+                                console.log(`   Updated Invoice Sale ${invoiceSale.id} status to PAID`);
+                            }
                         }
                     }
                 } catch (e) {

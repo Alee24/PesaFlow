@@ -347,3 +347,103 @@ export const testEmailSending = async (req: Request, res: Response) => {
         });
     }
 };
+// Fix Invoice Stats Consistency
+export const fixInvoiceStats = async (req: Request, res: Response) => {
+    try {
+        console.log('Running Invoice Stats Fix...');
+        const results: any[] = [];
+
+        // 1. Find all 'INVOICE' transactions that are 'COMPLETED' (Paid)
+        const paidInvoices = await prisma.transaction.findMany({
+            where: {
+                type: 'INVOICE',
+                status: { in: ['COMPLETED', 'PAID'] }
+            }
+        });
+
+        for (const invoice of paidInvoices) {
+            // 2. Find the linked Sale record
+            const sale = await prisma.sale.findUnique({
+                where: { transactionId: invoice.id }
+            });
+
+            if (sale && sale.paymentStatus !== 'PAID') {
+                await prisma.sale.update({
+                    where: { id: sale.id },
+                    data: {
+                        paymentStatus: 'PAID',
+                        amountPaid: invoice.amount,
+                        amountDue: 0
+                    }
+                });
+                results.push(`Fixed Sale ${sale.id} for Invoice ${invoice.reference}`);
+            }
+        }
+
+        // 3. Find STK Push payments linked to invoices
+        const stkPayments = await prisma.transaction.findMany({
+            where: {
+                type: 'DEPOSIT_STK',
+                status: 'COMPLETED'
+            }
+        });
+
+        for (const payment of stkPayments) {
+            if (payment.metadata) {
+                try {
+                    const meta = typeof payment.metadata === 'string'
+                        ? JSON.parse(payment.metadata)
+                        : payment.metadata as any;
+
+                    if (meta.invoiceId) {
+                        const originalInvoiceTx = await prisma.transaction.findUnique({
+                            where: { id: meta.invoiceId }
+                        });
+
+                        if (originalInvoiceTx) {
+                            if (originalInvoiceTx.status !== 'COMPLETED') {
+                                await prisma.transaction.update({
+                                    where: { id: originalInvoiceTx.id },
+                                    data: { status: 'COMPLETED' }
+                                });
+                                results.push(`Marked Invoice Transaction ${originalInvoiceTx.id} as COMPLETED`);
+                            }
+
+                            const originalSale = await prisma.sale.findUnique({
+                                where: { transactionId: originalInvoiceTx.id }
+                            });
+
+                            if (originalSale && originalSale.paymentStatus !== 'PAID') {
+                                await prisma.sale.update({
+                                    where: { id: originalSale.id },
+                                    data: {
+                                        paymentStatus: 'PAID',
+                                        amountPaid: originalSale.totalAmount,
+                                        amountDue: 0
+                                    }
+                                });
+                                results.push(`Marked Invoice Sale ${originalSale.id} as PAID`);
+                            }
+                        }
+                    }
+                } catch (e) {
+                    // ignore JSON parse errors
+                }
+            }
+        }
+
+        res.json({
+            success: true,
+            message: 'Invoice consistency fix completed',
+            fixedItems: results
+        });
+
+    } catch (error: any) {
+        console.error('Fix stats error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Fix failed',
+            error: error.message
+        });
+    }
+};
