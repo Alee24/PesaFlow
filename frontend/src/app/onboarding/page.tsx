@@ -143,13 +143,41 @@ export default function OnboardingPage() {
                                         required
                                         placeholder="12345678"
                                     />
-                                    <Input
-                                        label="KRA PIN Number"
-                                        value={formData.kraPinNumber}
-                                        onChange={(e) => setFormData({ ...formData, kraPinNumber: e.target.value })}
-                                        required
-                                        placeholder="A012345678Z"
-                                    />
+                                    <div className="flex flex-col space-y-1">
+                                        <label className="text-sm font-medium text-gray-700 dark:text-gray-300">KRA PIN Number</label>
+                                        <div className="flex gap-2">
+                                            <input
+                                                className="flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-700 dark:bg-gray-800 dark:text-white dark:focus:ring-indigo-400"
+                                                value={formData.kraPinNumber}
+                                                onChange={(e) => setFormData({ ...formData, kraPinNumber: e.target.value })}
+                                                required
+                                                placeholder="A012345678Z"
+                                            />
+                                            <Button
+                                                type="button"
+                                                onClick={async () => {
+                                                    if (!formData.kraPinNumber) return;
+                                                    setLoading(true);
+                                                    try {
+                                                        const res = await api.post('/kra/verify-pin', { pin: formData.kraPinNumber });
+                                                        if (res.data.valid) {
+                                                            alert(`Verified: ${res.data.taxpayerName}`);
+                                                            // Optional: autofill company name if empty
+                                                            if (!formData.companyName) setFormData(prev => ({ ...prev, companyName: res.data.taxpayerName }));
+                                                        }
+                                                    } catch (e: any) {
+                                                        setError(e.response?.data?.error || 'Validation Failed');
+                                                    } finally {
+                                                        setLoading(false);
+                                                    }
+                                                }}
+                                                variant="outline"
+                                                className="whitespace-nowrap"
+                                            >
+                                                Check Validity
+                                            </Button>
+                                        </div>
+                                    </div>
                                 </div>
                                 <Button type="button" onClick={nextStep} className="w-full mt-4">
                                     Next: Upload Documents

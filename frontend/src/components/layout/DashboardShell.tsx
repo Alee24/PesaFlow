@@ -62,7 +62,8 @@ const menuGroups = [
             { name: 'Users', href: '/admin/users', icon: User, role: 'ADMIN' },
             { name: 'Withdrawals', href: '/admin/withdrawals', icon: CreditCard, role: 'ADMIN' },
             { name: 'Settings', href: '/admin/settings', icon: Settings, role: 'ADMIN' },
-            { name: 'Google Analytics', href: '/admin/settings', icon: BarChart3, role: 'ADMIN' },
+            { name: 'KRA Integration', href: '/admin/kra-integration', icon: Globe, role: 'ADMIN' },
+            { name: 'Google Analytics', href: '/admin/analytics', icon: BarChart3, role: 'ADMIN' },
         ]
     }
 ];
