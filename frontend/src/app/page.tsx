@@ -1,16 +1,25 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import {
   Store, Shield, Users, Zap, CheckCircle, Smartphone,
   FileText, ArrowRight, Sun, Moon, Lock, Server,
-  CreditCard, BarChart2, Globe, Database
+  CreditCard, BarChart2, Globe, Database, Menu, X, LayoutDashboard
 } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { useTheme } from '@/contexts/ThemeContext';
 
 export default function LandingPage() {
   const { theme, setTheme } = useTheme();
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  useEffect(() => {
+    // Check if user is logged in
+    const token = localStorage.getItem('token');
+    setIsLoggedIn(!!token);
+  }, []);
 
   const toggleTheme = () => {
     setTheme(theme === 'dark' ? 'light' : 'dark');
@@ -151,6 +160,7 @@ export default function LandingPage() {
               </span>
             </div>
 
+            {/* Desktop Navigation */}
             <div className="hidden md:flex items-center gap-8">
               <Link href="#features" className="text-sm font-medium text-gray-600 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">Features</Link>
               <Link href="#security" className="text-sm font-medium text-gray-600 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">Security</Link>
@@ -167,15 +177,77 @@ export default function LandingPage() {
                 {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
               </Button>
 
-              <Link href="/auth/login" className="text-sm font-medium text-gray-600 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">Sign In</Link>
-              <Link href="/auth/register">
-                <Button className="bg-indigo-600 hover:bg-indigo-700 text-white rounded-full px-6">
-                  Get Started
-                </Button>
-              </Link>
+              {isLoggedIn ? (
+                <Link href="/dashboard">
+                  <Button className="bg-indigo-600 hover:bg-indigo-700 text-white rounded-full px-6 flex items-center gap-2">
+                    <LayoutDashboard className="w-4 h-4" /> Dashboard
+                  </Button>
+                </Link>
+              ) : (
+                <>
+                  <Link href="/auth/login" className="text-sm font-medium text-gray-600 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">Sign In</Link>
+                  <Link href="/auth/register">
+                    <Button className="bg-indigo-600 hover:bg-indigo-700 text-white rounded-full px-6">
+                      Get Started
+                    </Button>
+                  </Link>
+                </>
+              )}
+            </div>
+
+            {/* Mobile Menu Button */}
+            <div className="md:hidden flex items-center gap-4">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={toggleTheme}
+                className="text-gray-500 hover:text-indigo-600"
+              >
+                {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+              </Button>
+              <button
+                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                className="text-gray-600 dark:text-gray-300 hover:text-indigo-600"
+              >
+                {isMobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+              </button>
             </div>
           </div>
         </div>
+
+        {/* Mobile Menu */}
+        {isMobileMenuOpen && (
+          <div className="md:hidden absolute top-16 left-0 w-full bg-white dark:bg-gray-900 border-b border-gray-100 dark:border-gray-800 shadow-xl animate-in slide-in-from-top-5 duration-200">
+            <div className="px-4 py-6 space-y-4 flex flex-col">
+              <Link href="#features" onClick={() => setIsMobileMenuOpen(false)} className="text-base font-medium text-gray-600 dark:text-gray-300 hover:text-indigo-600 p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800">Features</Link>
+              <Link href="#security" onClick={() => setIsMobileMenuOpen(false)} className="text-base font-medium text-gray-600 dark:text-gray-300 hover:text-indigo-600 p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800">Security</Link>
+              <Link href="#pricing" onClick={() => setIsMobileMenuOpen(false)} className="text-base font-medium text-gray-600 dark:text-gray-300 hover:text-indigo-600 p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800">Pricing</Link>
+
+              <div className="h-px bg-gray-100 dark:bg-gray-800 my-4"></div>
+
+              {isLoggedIn ? (
+                <Link href="/dashboard" onClick={() => setIsMobileMenuOpen(false)}>
+                  <Button className="w-full bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl py-6 flex items-center justify-center gap-2">
+                    <LayoutDashboard className="w-5 h-5" /> Go to Dashboard
+                  </Button>
+                </Link>
+              ) : (
+                <div className="flex flex-col gap-3">
+                  <Link href="/auth/login" onClick={() => setIsMobileMenuOpen(false)}>
+                    <Button variant="outline" className="w-full rounded-xl py-6 border-gray-200 dark:border-gray-700">
+                      Sign In
+                    </Button>
+                  </Link>
+                  <Link href="/auth/register" onClick={() => setIsMobileMenuOpen(false)}>
+                    <Button className="w-full bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl py-6">
+                      Get Started
+                    </Button>
+                  </Link>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
       </nav>
 
       {/* Hero Section */}
@@ -343,8 +415,8 @@ export default function LandingPage() {
               <div
                 key={index}
                 className={`flex flex-col p-8 rounded-3xl transition-all duration-300 ${plan.popular
-                    ? 'bg-white dark:bg-gray-800 shadow-2xl scale-105 z-10 border-2 border-indigo-500'
-                    : 'bg-white dark:bg-gray-800 shadow-lg border border-gray-100 dark:border-gray-700 bg-opacity-60'
+                  ? 'bg-white dark:bg-gray-800 shadow-2xl scale-105 z-10 border-2 border-indigo-500'
+                  : 'bg-white dark:bg-gray-800 shadow-lg border border-gray-100 dark:border-gray-700 bg-opacity-60'
                   }`}
               >
                 {plan.popular && (
@@ -372,8 +444,8 @@ export default function LandingPage() {
                 <Link href="/auth/register" className="w-full">
                   <Button
                     className={`w-full rounded-xl ${plan.popular
-                        ? 'bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg'
-                        : 'bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-900 dark:text-white'
+                      ? 'bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg'
+                      : 'bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-900 dark:text-white'
                       }`}
                   >
                     {plan.cta}
