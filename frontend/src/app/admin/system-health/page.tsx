@@ -54,9 +54,7 @@ export default function SystemHealthPage() {
 
     useEffect(() => {
         fetchHealth();
-        // Auto-refresh every 5 minutes
-        const interval = setInterval(fetchHealth, 300000);
-        return () => clearInterval(interval);
+        // Auto-refresh removed - data only updates on manual refresh
     }, []);
 
     const fetchHealth = async () => {
