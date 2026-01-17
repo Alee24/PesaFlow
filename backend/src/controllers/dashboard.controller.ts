@@ -106,23 +106,75 @@ export const getDashboardStats = async (req: Request, res: Response) => {
             walletBalance = Number(walletAgg._sum.balance || 0);
         }
 
-        res.json({
-            summary: {
-                totalIncome,
-                totalWithdrawals,
-                totalSalesCount,
-                totalFeeIncome,
-                netVolume: totalIncome - totalWithdrawals,
-                walletBalance: walletBalance
-            },
-            chartData,
-            transactions: transactions.slice(0, 10).reverse()
+        // 5. Calculate VAT Statistics (KRA 16%)
+        const userProfile = await prisma.businessProfile.findUnique({
+            where: { userId },
+            select: { vatEnabled: true, vatRate: true }
         });
 
+        let vatStats = {
+            vatEnabled: userProfile?.vatEnabled || false,
+            totalSalesWithVAT: 0,
+            totalVATCollected: 0,
+            kraVATOwed: 0
+        };
+
+        if (userProfile?.vatEnabled) {
+            const vatRate = userProfile.vatRate || 16.0;
+
+            // Get all sales in the period with VAT-enabled products
+            const salesWithVAT = await prisma.sale.findMany({
+                where: {
+                    merchantId: { in: merchantUserIds },
+                    createdAt: { gte: startDate },
+                    paymentStatus: { in: ['PAID', 'PARTIAL'] }
+                },
+                include: {
+                    items: {
+                        include: {
+                            product: {
+                                select: { isTaxable: true }
+                            }
+                        }
+                    }
+                }
+            });
+
+            salesWithVAT.forEach(sale =\u003e {
+                sale.items.forEach(item =\u003e {
+                    if(item.product.isTaxable) {
+                const itemTotal = Number(item.subtotal);
+                vatStats.totalSalesWithVAT += itemTotal;
+
+                // Calculate VAT: subtotal * (vatRate / 100)
+                const vatAmount = itemTotal * (vatRate / 100);
+                vatStats.totalVATCollected += vatAmount;
+            }
+                });
+    });
+
+    // Amount owed to KRA is the total VAT collected
+    vatStats.kraVATOwed = vatStats.totalVATCollected;
+}
+
+res.json({
+    summary: {
+        totalIncome,
+        totalWithdrawals,
+        totalSalesCount,
+        totalFeeIncome,
+        netVolume: totalIncome - totalWithdrawals,
+        walletBalance: walletBalance,
+        ...vatStats
+    },
+    chartData,
+    transactions: transactions.slice(0, 10).reverse()
+});
+
     } catch (error) {
-        console.error("Dashboard Stats Error:", error);
-        res.status(500).json({ error: 'Failed to fetch dashboard stats' });
-    }
+    console.error("Dashboard Stats Error:", error);
+    res.status(500).json({ error: 'Failed to fetch dashboard stats' });
+}
 }
 
 
