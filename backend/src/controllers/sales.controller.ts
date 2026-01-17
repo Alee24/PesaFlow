@@ -127,7 +127,8 @@ export const createCashSale = async (req: Request, res: Response) => {
             const amountDue = Math.max(0, totalAmount - finalAmountPaid);
             const paymentStatus = amountDue > 0 ? 'PARTIAL' : 'PAID';
 
-            // Create transaction (only for cash sales that credit wallet immediately)
+            // Create transaction record for tracking (but don't update wallet for CASH)
+            // Only M-Pesa STK Push payments should add to wallet
             let transaction = null;
             if (paymentMethod === 'CASH' || (paymentMethod === 'SPLIT' && splitPayments)) {
                 transaction = await tx.transaction.create({
@@ -139,18 +140,15 @@ export const createCashSale = async (req: Request, res: Response) => {
                         recipientWalletId: wallet.id,
                         reference: `CASH-${Date.now()}`,
                         metadata: JSON.stringify({
-                            description: 'POS Cash Sale',
+                            description: 'POS Cash Sale (Not added to wallet)',
                             customerName,
                             items: processedItems.length
                         })
                     } as any
                 });
 
-                // Update wallet
-                await tx.wallet.update({
-                    where: { id: wallet.id },
-                    data: { balance: { increment: totalAmount } }
-                });
+                // DO NOT update wallet for cash sales
+                // Wallet should only reflect M-Pesa STK Push payments
             }
 
             // Create sale record
