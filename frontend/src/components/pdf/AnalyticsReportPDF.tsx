@@ -135,6 +135,13 @@ const styles = StyleSheet.create({
     kpiValueYellow: {
         color: '#D97706'
     },
+    kpiCardRed: {
+        borderLeft: '4 solid #EF4444',
+        backgroundColor: '#FEF2F2'
+    },
+    kpiValueRed: {
+        color: '#DC2626'
+    },
     // Table Styles
     table: {
         marginTop: 10
@@ -303,28 +310,34 @@ export const AnalyticsReportPDF: React.FC<AnalyticsReportPDFProps> = ({
                         <Text style={styles.sectionTitle}>Key Performance Indicators</Text>
                     </View>
                     <View style={styles.kpiGrid}>
-                        <View style={[styles.kpiCard, styles.kpiCardGreen]}>
+                        <View style={[styles.kpiCard, styles.kpiCardGreen, { width: '32%' }]}>
                             <Text style={styles.kpiLabel}>Total Revenue</Text>
                             <Text style={[styles.kpiValue, styles.kpiValueGreen]}>
                                 {formatCurrency(salesData?.summary?.totalRevenue || 0)}
                             </Text>
                         </View>
-                        <View style={[styles.kpiCard, styles.kpiCardBlue]}>
+                        <View style={[styles.kpiCard, styles.kpiCardBlue, { width: '32%' }]}>
                             <Text style={styles.kpiLabel}>Transactions</Text>
                             <Text style={[styles.kpiValue, styles.kpiValueBlue]}>
                                 {salesData?.summary?.totalTransactions || 0}
                             </Text>
                         </View>
-                        <View style={[styles.kpiCard, styles.kpiCardPurple]}>
+                        <View style={[styles.kpiCard, styles.kpiCardPurple, { width: '32%' }]}>
                             <Text style={styles.kpiLabel}>Avg Order Value</Text>
                             <Text style={[styles.kpiValue, styles.kpiValuePurple]}>
                                 {formatCurrency(salesData?.summary?.averageOrderValue || 0)}
                             </Text>
                         </View>
-                        <View style={[styles.kpiCard, styles.kpiCardYellow]}>
+                        <View style={[styles.kpiCard, styles.kpiCardYellow, { width: '48%' }]}>
                             <Text style={styles.kpiLabel}>Gross Profit</Text>
                             <Text style={[styles.kpiValue, styles.kpiValueYellow]}>
                                 {formatCurrency(financialData?.grossProfit || 0)}
+                            </Text>
+                        </View>
+                        <View style={[styles.kpiCard, styles.kpiCardRed, { width: '48%' }]}>
+                            <Text style={styles.kpiLabel}>VAT Liability (16%)</Text>
+                            <Text style={[styles.kpiValue, styles.kpiValueRed]}>
+                                {formatCurrency(financialData?.vatLiability || 0)}
                             </Text>
                         </View>
                     </View>
