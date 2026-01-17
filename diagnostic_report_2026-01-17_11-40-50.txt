@@ -1,0 +1,125 @@
+﻿**********************
+Windows PowerShell transcript start
+Start time: 20260117114050
+Username: DESKTOP-CG5Q54V\Metto
+RunAs User: DESKTOP-CG5Q54V\Metto
+Configuration Name: 
+Machine: DESKTOP-CG5Q54V (Microsoft Windows NT 10.0.26100.0)
+Host Application: C:\WINDOWS\System32\WindowsPowerShell\v1.0\powershell.exe -ExecutionPolicy Bypass -File .\diagnose_connection.ps1
+Process ID: 5336
+PSVersion: 5.1.26100.7462
+PSEdition: Desktop
+PSCompatibleVersions: 1.0, 2.0, 3.0, 4.0, 5.0, 5.1.26100.7462
+BuildVersion: 10.0.26100.7462
+CLRVersion: 4.0.30319.42000
+WSManStackVersion: 3.0
+PSRemotingProtocolVersion: 2.3
+SerializationVersion: 1.1.0.1
+**********************
+Transcript started, output file is c:\Users\Metto\Desktop\Anti gravity\diagnostic_report_2026-01-17_11-40-50.txt
+
+================================================
+PESAFLOW CONNECTION DIAGNOSTIC
+================================================
+[INFO] Timestamp: 01/17/2026 11:40:50
+[INFO] Report will be saved to: c:\Users\Metto\Desktop\Anti gravity\diagnostic_report_2026-01-17_11-40-50.txt
+
+================================================
+1. PORT CONFIGURATION CHECK
+================================================
+[OK] Backend .env file found
+[INFO] Backend .env contents:
+  # Database Configuration
+  DATABASE_URL="mysql://root:@localhost:3306/pesaflow"
+  #DATABASE_URL="mysql://m-cl-app:Mclinic%40App2023%3F@localhost:3306/mpesaconnect"
+  PORT=3024
+  SMTP_PORT="587"
+  SMTP_PORT="587"
+[ERROR] Backend PORT is 3024 but should be 5454
+[OK] DATABASE_URL found in .env
+[INFO]   Connection: "mysql://root:@localhost:3306/pesaflow"
+[WARN] Frontend .env.local not found
+
+================================================
+2. RUNNING PROCESSES CHECK
+================================================
+[OK] Found 1 Node.js process(es) running
+[INFO]   PID: 16608 | CPU: 1.234375 | Memory: 2.96 MB
+[INFO] 
+Checking listening ports...
+[ERROR] Port 5454 is NOT listening (Backend API not running)
+[ERROR] Port 5054 is NOT listening (Frontend not running)
+
+================================================
+3. DATABASE CONNECTION CHECK
+================================================
+
+================================================
+4. APPLICATION LOGS ANALYSIS
+================================================
+[INFO] Checking PM2 logs...
+[INFO] PM2 Process List:
+ΓöîΓöÇΓöÇΓöÇΓöÇΓö¼ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓö¼ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓö¼ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓö¼ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓö¼ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓö¼ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓö¼ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓö¼ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓö¼ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓö¼ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓö¼ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓö¼ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÉ Γöé id Γöé name           Γöé namespace   Γöé version Γöé mode    Γöé pid      Γöé uptime Γöé Γå║    Γöé status    Γöé cpu      Γöé mem      Γöé user     Γöé watching Γöé Γö£ΓöÇΓöÇΓöÇΓöÇΓö╝ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓö╝ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓö╝ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓö╝ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓö╝ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓö╝ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓö╝ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓö╝ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓö╝ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓö╝ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓö╝ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓö╝ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöñ Γöé 0  Γöé mclinic-api    Γöé default     Γöé N/A     Γöé fork    Γöé 0        Γöé 0      Γöé 15   Γöé errored   Γöé 0%       Γöé 0b       Γöé Metto    Γöé disabled Γöé ΓööΓöÇΓöÇΓöÇΓöÇΓö┤ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓö┤ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓö┤ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓö┤ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓö┤ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓö┤ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓö┤ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓö┤ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓö┤ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓö┤ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓö┤ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓö┤ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÿ
+[INFO] 
+Recent Backend API logs:
+[TAILING] Tailing last 50 lines for [pesaflow-api] process (change the value with --lines option)
+[INFO] 
+Recent Frontend logs:
+[TAILING] Tailing last 50 lines for [pesaflow-web] process (change the value with --lines option)
+
+================================================
+5. BUILD STATUS CHECK
+================================================
+[OK] Backend is built (dist/server.js exists)
+[INFO]   Last built: 01/11/2026 12:56:29
+[WARN] Backend build is 142.7 hours old. Consider rebuilding.
+[OK] Frontend is built (.next directory exists)
+[INFO]   Last built: 01/12/2026 11:18:17
+[WARN] Frontend build is 120.4 hours old. Consider rebuilding.
+
+================================================
+6. PRISMA DATABASE STATUS
+================================================
+[INFO] Checking Prisma client generation...
+[OK] Prisma client is generated
+[INFO] 
+Checking database migration status...
+node.exe : npm error could not determine executable to run
+At line:1 char:1
++ & "C:\Program Files\nodejs/node.exe" "C:\Program Files\nodejs/node_mo ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (npm error could...ecutable to run:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+npm error A complete log of this run can be found in: 
+C:\Users\Metto\AppData\Local\npm-cache\_logs\2026-01-17T08_40_55_515Z-debug-0.log
+npm error could not determine executable to run npm error A complete log of this run can be found in: C:\Users\Metto\AppData\Local\npm-cache\_logs\2026-01-17T08_40_55_515Z-debug-0.log
+
+================================================
+7. API ENDPOINT TEST
+================================================
+[INFO] Testing API at http://localhost:5454...
+PS>TerminatingError(Invoke-WebRequest): "Unable to connect to the remote server"
+[WARN] Health endpoint not available, trying root...
+PS>TerminatingError(Invoke-WebRequest): "Unable to connect to the remote server"
+[ERROR] API is not responding at http://localhost:5454
+[INFO] Error: Unable to connect to the remote server
+
+================================================
+8. DIAGNOSTIC SUMMARY & RECOMMENDATIONS
+================================================
+
+IDENTIFIED ISSUES:
+  [CRITICAL] Backend API is not running on port 5454
+  [WARNING] Frontend is not running on port 5054
+
+RECOMMENDATIONS:
+  Start backend with 'cd backend && npm start' or check PM2 status
+  Start frontend with 'cd frontend && npm run dev -- -p 5054'
+
+DIAGNOSTIC COMPLETE
+[INFO] Full report saved to: c:\Users\Metto\Desktop\Anti gravity\diagnostic_report_2026-01-17_11-40-50.txt
+
+**********************
+Windows PowerShell transcript end
+End time: 20260117114107
+**********************
