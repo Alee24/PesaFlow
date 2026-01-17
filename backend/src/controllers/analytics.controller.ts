@@ -25,17 +25,19 @@ export const getSalesOverview = async (req: AuthRequest, res: Response) => {
         const merchantUserIds = await getMerchantUserIds(userId, userRole);
 
         // Total revenue
+        // Total revenue - Filter by PAID/PARTIAL for realized revenue
         const sales = await prisma.sale.findMany({
             where: {
                 merchantId: { in: merchantUserIds },
-                createdAt: { gte: start, lte: end }
+                createdAt: { gte: start, lte: end },
+                paymentStatus: { in: ['PAID', 'PARTIAL'] }
             },
             include: {
                 items: true
             }
         });
 
-        const totalRevenue = sales.reduce((sum, sale) => sum + Number(sale.totalAmount), 0);
+        const totalRevenue = sales.reduce((sum, sale) => sum + Number(sale.amountPaid || sale.totalAmount), 0);
         const totalTransactions = sales.length;
         const averageOrderValue = totalTransactions > 0 ? totalRevenue / totalTransactions : 0;
 
@@ -219,10 +221,12 @@ export const getFinancialMetrics = async (req: AuthRequest, res: Response) => {
         const end = endDate ? new Date(endDate as string) : new Date();
 
         // Sales revenue
+        // Sales revenue - Only count PAID or PARTIAL
         const sales = await prisma.sale.findMany({
             where: {
                 merchantId: userId,
-                createdAt: { gte: start, lte: end }
+                createdAt: { gte: start, lte: end },
+                paymentStatus: { in: ['PAID', 'PARTIAL'] }
             },
             include: {
                 items: {
@@ -233,14 +237,35 @@ export const getFinancialMetrics = async (req: AuthRequest, res: Response) => {
             }
         });
 
-        const totalRevenue = sales.reduce((sum, sale) => sum + Number(sale.totalAmount), 0);
+        const totalRevenue = sales.reduce((sum, sale) => sum + Number(sale.amountPaid || sale.totalAmount), 0);
 
-        // Calculate COGS
-        const totalCOGS = sales.reduce((sum, sale) => {
-            return sum + sale.items.reduce((itemSum, item) => {
-                return itemSum + Number(item.product.costPrice || 0) * item.quantity;
-            }, 0);
-        }, 0);
+        // Calculate COGS and VAT
+        let totalCOGS = 0;
+        let totalVATLiability = 0;
+
+        // Get VAT Settings
+        const profile = await prisma.businessProfile.findUnique({
+            where: { userId },
+            select: { vatEnabled: true, vatRate: true }
+        });
+
+        const vatRate = profile?.vatRate ? Number(profile.vatRate) : 16.0;
+        const isVatEnabled = profile?.vatEnabled || false;
+
+        sales.forEach(sale => {
+            // COGS
+            sale.items.forEach(item => {
+                totalCOGS += Number(item.product.costPrice || 0) * item.quantity;
+
+                // VAT Calculation (Inclusive logic matching dashboard)
+                if (isVatEnabled) {
+                    const itemTotal = Number(item.subtotal);
+                    const vat = itemTotal * (vatRate / 100);
+                    totalVATLiability += vat;
+                }
+            });
+        });
+
 
         const grossProfit = totalRevenue - totalCOGS;
         const grossMargin = totalRevenue > 0 ? (grossProfit / totalRevenue) * 100 : 0;
@@ -258,19 +283,15 @@ export const getFinancialMetrics = async (req: AuthRequest, res: Response) => {
         const totalWithdrawals = withdrawals.reduce((sum, w) => sum + Number(w.amount), 0);
 
         // Outstanding invoices
-        // Outstanding invoices - skip if Invoice model doesn't exist
-        let totalOutstanding = 0;
-        try {
-            const outstandingInvoices = await (prisma as any).invoice?.findMany({
-                where: {
-                    merchantId: userId,
-                    status: 'PENDING'
-                }
-            }) || [];
-            totalOutstanding = outstandingInvoices.reduce((sum: number, inv: any) => sum + Number(inv.totalAmount), 0);
-        } catch (error) {
-            // Invoice model might not exist
-        }
+        // Outstanding invoices - Query Sales instead of non-existent Invoice model
+        const outstandingSales = await prisma.sale.findMany({
+            where: {
+                merchantId: userId,
+                paymentStatus: { in: ['PENDING', 'PARTIAL'] },
+                paymentMethod: 'INVOICE'
+            }
+        });
+        const totalOutstanding = outstandingSales.reduce((sum, sale) => sum + Number(sale.amountDue), 0);
 
         res.json({
             revenue: totalRevenue,
@@ -279,7 +300,8 @@ export const getFinancialMetrics = async (req: AuthRequest, res: Response) => {
             grossMargin,
             withdrawals: totalWithdrawals,
             outstandingInvoices: totalOutstanding,
-            netCashFlow: totalRevenue - totalWithdrawals
+            netCashFlow: totalRevenue - totalWithdrawals,
+            vatLiability: totalVATLiability
         });
     } catch (error: any) {
         console.error('Financial metrics error:', error);

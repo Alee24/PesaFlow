@@ -208,7 +208,7 @@ export default function AnalyticsPage() {
                     </Card>
 
                     {/* KPI Cards */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
                         <Card className="p-6">
                             <div className="flex items-center justify-between">
                                 <div>
@@ -261,6 +261,20 @@ export default function AnalyticsPage() {
                                 </div>
                                 <div className="p-3 bg-yellow-100 dark:bg-yellow-900 rounded-full">
                                     <Activity className="w-6 h-6 text-yellow-600 dark:text-yellow-400" />
+                                </div>
+                            </div>
+                        </Card>
+
+                        <Card className="p-6">
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <p className="text-sm text-gray-600 dark:text-gray-400">VAT Liability</p>
+                                    <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1 text-red-600">
+                                        {formatCurrency(financialData?.vatLiability || 0)}
+                                    </p>
+                                </div>
+                                <div className="p-3 bg-red-100 dark:bg-red-900 rounded-full">
+                                    <DollarSign className="w-6 h-6 text-red-600 dark:text-red-400" />
                                 </div>
                             </div>
                         </Card>
