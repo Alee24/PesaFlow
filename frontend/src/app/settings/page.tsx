@@ -273,7 +273,23 @@ export default function SettingsPage() {
                                 </div>
                             </div>
 
-                            <Input label="KRA PIN Number" name="kraPinNumber" value={formData.kraPinNumber} onChange={handleChange} placeholder="P05..." />
+                            <div>
+                                <Input
+                                    label="KRA PIN Number"
+                                    name="kraPinNumber"
+                                    value={formData.kraPinNumber}
+                                    onChange={handleChange}
+                                    placeholder="P05..."
+                                    disabled={!!formData.kraPinNumber}
+                                    className={formData.kraPinNumber ? "bg-gray-100 dark:bg-gray-800 cursor-not-allowed opacity-75" : ""}
+                                />
+                                {formData.kraPinNumber && (
+                                    <p className="text-xs text-green-600 mt-1 flex items-center gap-1">
+                                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+                                        Verified by KRA
+                                    </p>
+                                )}
+                            </div>
 
                             <div className="flex flex-col space-y-2">
                                 <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Default Currency</label>
