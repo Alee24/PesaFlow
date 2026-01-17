@@ -7,6 +7,8 @@ import { z } from 'zod';
 
 const prisma = new PrismaClient();
 
+import { verifyKRAPin } from '../services/kra-verification.service';
+
 const registerSchema = z.object({
     email: z.string().email(),
     phoneNumber: z.string().min(10),
@@ -17,7 +19,7 @@ const registerSchema = z.object({
 const completeProfileSchema = z.object({
     companyName: z.string().min(1),
     idNumber: z.string().min(1),
-    kraPinNumber: z.string().min(1),
+    kraPinNumber: z.string().regex(/^[A-P][0-9]{9}[A-Z]$/i, "Invalid KRA PIN format. Example: P051234567Z"),
     location: z.string().min(1),
     dataPolicyAccepted: z.any().transform(v => v === 'true' || v === true || v === 'on'),
 });
@@ -144,6 +146,13 @@ export const completeProfile = async (req: Request, res: Response): Promise<void
         const existingProfile = await prisma.businessProfile.findUnique({ where: { userId } });
         if (existingProfile) {
             res.status(400).json({ error: 'Business profile already exists' });
+            return;
+        }
+
+        // Verify KRA PIN with KRA Service
+        const kraCheck = await verifyKRAPin(kraPinNumber);
+        if (!kraCheck.isValid) {
+            res.status(400).json({ error: kraCheck.message || 'Invalid KRA PIN provided' });
             return;
         }
 

@@ -48,6 +48,12 @@ export default function OnboardingPage() {
                 setError('Please fill in all business details');
                 return;
             }
+            // Strict KRA PIN Format Check
+            const kraRegex = /^[A-Z][0-9]{9}[A-Z]$/i;
+            if (!kraRegex.test(formData.kraPinNumber)) {
+                setError('Invalid KRA PIN format. Example: P051234567Z');
+                return;
+            }
         }
         setError('');
         setStep(step + 1);
