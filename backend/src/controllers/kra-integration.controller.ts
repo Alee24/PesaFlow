@@ -37,7 +37,11 @@ export const validatePin = async (req: Request, res: Response): Promise<void> =>
             res.json({
                 valid: true,
                 message: result.message,
-                taxpayerName: result.taxpayerName || 'VERIFIED ENTITY'
+                taxpayerName: result.taxpayerName || 'VERIFIED ENTITY',
+                email: result.email,
+                mobileNumber: result.mobileNumber,
+                city: result.city,
+                identityNumber: result.identityNumber
             });
         } else {
             res.status(400).json({

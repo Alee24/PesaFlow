@@ -3,6 +3,10 @@ import axios from 'axios';
 interface KRAVerficationResult {
     isValid: boolean;
     taxpayerName?: string;
+    email?: string;
+    mobileNumber?: string;
+    city?: string;
+    identityNumber?: string;
     pinStatus?: string; // Active, Suspended, etc.
     obligation?: string;
     message?: string;
@@ -63,7 +67,11 @@ export const verifyKRAPin = async (pin: string): Promise<KRAVerficationResult> =
         // Default: Valid
         return {
             isValid: true,
-            taxpayerName: 'VERIFIED BUSINESS NAME', // In real app, this comes from API
+            taxpayerName: 'KK DYNAMIC ENTERPRISE SOLUTIONS LTD',
+            email: 'info@kkdes.co.ke',
+            mobileNumber: '0724454757',
+            city: 'Nairobi',
+            identityNumber: '27940030', // Mock ID
             pinStatus: 'Active',
             message: 'PIN is Active and Valid'
         };

@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Card } from '@/components/ui/Card';
+import Toast from '@/components/ui/Toast';
 import api from '@/lib/api';
 import { Building2, FileUp, CheckCircle2, ShieldCheck, LogOut } from 'lucide-react';
 
@@ -21,12 +22,15 @@ export default function OnboardingPage() {
     const [step, setStep] = useState(1); // 1: Business Info, 2: Documents
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
+    const [toast, setToast] = useState({ visible: false, message: '', type: 'info' as 'success' | 'error' | 'info' });
     const [formData, setFormData] = useState({
         companyName: '',
         location: '',
         idNumber: '',
         kraPinNumber: '',
         dataPolicyAccepted: false,
+        email: '',
+        contactPhone: ''
     });
     const [files, setFiles] = useState<any>({
         idFront: null,
@@ -99,6 +103,7 @@ export default function OnboardingPage() {
 
     return (
         <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 p-4 py-12">
+            <Toast visible={toast.visible} message={toast.message} type={toast.type} onClose={() => setToast({ ...toast, visible: false })} />
             <div className="w-full max-w-xl">
                 <div className="text-center mb-8">
                     <h1 className="text-3xl font-black bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 to-purple-600 tracking-tight">
@@ -121,6 +126,52 @@ export default function OnboardingPage() {
                                     <Building2 className="w-5 h-5" />
                                     <h3 className="font-semibold">Business Identity</h3>
                                 </div>
+
+                                {/* KRA PIN (First) */}
+                                <div className="flex flex-col space-y-1">
+                                    <label className="text-sm font-medium text-gray-700 dark:text-gray-300">KRA PIN Number</label>
+                                    <div className="flex gap-2">
+                                        <input
+                                            className="flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-700 dark:bg-gray-800 dark:text-white dark:focus:ring-indigo-400"
+                                            value={formData.kraPinNumber}
+                                            onChange={(e) => setFormData({ ...formData, kraPinNumber: e.target.value })}
+                                            required
+                                            placeholder="A012345678Z"
+                                        />
+                                        <Button
+                                            type="button"
+                                            onClick={async () => {
+                                                if (!formData.kraPinNumber) return;
+                                                setLoading(true);
+                                                try {
+                                                    const res = await api.post('/kra/verify-pin', { pin: formData.kraPinNumber });
+                                                    if (res.data.valid) {
+                                                        setToast({ visible: true, message: `Detailed Validation Successful. Taxpayer: ${res.data.taxpayerName}`, type: 'success' });
+                                                        // Auto-fill all available fields including ID
+                                                        setFormData(prev => ({
+                                                            ...prev,
+                                                            companyName: res.data.taxpayerName,
+                                                            email: res.data.email || prev.email,
+                                                            location: res.data.city || prev.location,
+                                                            contactPhone: res.data.mobileNumber || prev.contactPhone,
+                                                            idNumber: res.data.identityNumber || prev.idNumber
+                                                        }));
+                                                    }
+                                                } catch (e: any) {
+                                                    setToast({ visible: true, message: e.response?.data?.error || 'Validation Failed', type: 'error' });
+                                                } finally {
+                                                    setLoading(false);
+                                                }
+                                            }}
+                                            variant="outline"
+                                            className="whitespace-nowrap"
+                                        >
+                                            Check Validity
+                                        </Button>
+                                    </div>
+                                    <p className="text-xs text-gray-500">Enter PIN and verify to auto-populate details.</p>
+                                </div>
+
                                 <Input
                                     label="Registered Business Name"
                                     value={formData.companyName}
@@ -135,50 +186,14 @@ export default function OnboardingPage() {
                                     required
                                     placeholder="Nairobi, CBD - Bihi Towers 4th Floor"
                                 />
-                                <div className="grid grid-cols-2 gap-4">
-                                    <Input
-                                        label="ID/Passport Number"
-                                        value={formData.idNumber}
-                                        onChange={(e) => setFormData({ ...formData, idNumber: e.target.value })}
-                                        required
-                                        placeholder="12345678"
-                                    />
-                                    <div className="flex flex-col space-y-1">
-                                        <label className="text-sm font-medium text-gray-700 dark:text-gray-300">KRA PIN Number</label>
-                                        <div className="flex gap-2">
-                                            <input
-                                                className="flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-700 dark:bg-gray-800 dark:text-white dark:focus:ring-indigo-400"
-                                                value={formData.kraPinNumber}
-                                                onChange={(e) => setFormData({ ...formData, kraPinNumber: e.target.value })}
-                                                required
-                                                placeholder="A012345678Z"
-                                            />
-                                            <Button
-                                                type="button"
-                                                onClick={async () => {
-                                                    if (!formData.kraPinNumber) return;
-                                                    setLoading(true);
-                                                    try {
-                                                        const res = await api.post('/kra/verify-pin', { pin: formData.kraPinNumber });
-                                                        if (res.data.valid) {
-                                                            alert(`Verified: ${res.data.taxpayerName}`);
-                                                            // Optional: autofill company name if empty
-                                                            if (!formData.companyName) setFormData(prev => ({ ...prev, companyName: res.data.taxpayerName }));
-                                                        }
-                                                    } catch (e: any) {
-                                                        setError(e.response?.data?.error || 'Validation Failed');
-                                                    } finally {
-                                                        setLoading(false);
-                                                    }
-                                                }}
-                                                variant="outline"
-                                                className="whitespace-nowrap"
-                                            >
-                                                Check Validity
-                                            </Button>
-                                        </div>
-                                    </div>
-                                </div>
+                                <Input
+                                    label="ID/Passport Number"
+                                    value={formData.idNumber}
+                                    onChange={(e) => setFormData({ ...formData, idNumber: e.target.value })}
+                                    required
+                                    placeholder="12345678"
+                                />
+
                                 <Button type="button" onClick={nextStep} className="w-full mt-4">
                                     Next: Upload Documents
                                 </Button>
