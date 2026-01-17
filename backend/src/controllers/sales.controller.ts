@@ -74,8 +74,18 @@ export const createCashSale = async (req: Request, res: Response) => {
         } = validatedData;
 
         const result = await prisma.$transaction(async (tx) => {
-            // Wallet belongs to the MERCHANT
-            const wallet = await tx.wallet.findUniqueOrThrow({ where: { userId: merchantId } });
+            // Get or create wallet for the MERCHANT (needed for transaction record)
+            let wallet = await tx.wallet.findUnique({ where: { userId: merchantId } });
+
+            if (!wallet) {
+                wallet = await tx.wallet.create({
+                    data: {
+                        userId: merchantId,
+                        balance: 0,
+                        currency: 'KES'
+                    }
+                });
+            }
 
             // Calculate totals
             let subtotal = 0;
