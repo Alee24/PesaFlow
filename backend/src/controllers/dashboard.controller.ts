@@ -98,12 +98,32 @@ export const getDashboardStats = async (req: Request, res: Response) => {
             const walletAgg = await prisma.wallet.aggregate({ _sum: { balance: true } });
             walletBalance = Number(walletAgg._sum.balance || 0);
         } else {
-            // Aggregate balance for all wallets in hierarchy
-            const walletAgg = await prisma.wallet.aggregate({
-                where: { userId: { in: merchantUserIds } },
-                _sum: { balance: true }
+            // For Merchant: Calculate 'Liquid' Balance from M-Pesa Transactions only
+            // (Excluding 'SALE_CASH' which might have erroneously inflated the wallet balance in the DB)
+
+            // Inflows (Deposits, M-Pesa Payments)
+            const mpesaIn = await prisma.transaction.aggregate({
+                where: {
+                    recipientWallet: { userId: { in: merchantUserIds } },
+                    status: 'COMPLETED',
+                    type: { in: ['DEPOSIT_STK', 'SALE_CREDIT'] }
+                },
+                _sum: { amount: true }
             });
-            walletBalance = Number(walletAgg._sum.balance || 0);
+
+            // Outflows (Withdrawals)
+            const mpesaOut = await prisma.transaction.aggregate({
+                where: {
+                    recipientWallet: { userId: { in: merchantUserIds } },
+                    status: 'COMPLETED',
+                    type: 'WITHDRAWAL'
+                },
+                _sum: { amount: true, feeCharged: true }
+            });
+
+            walletBalance = (Number(mpesaIn._sum.amount) || 0)
+                - (Number(mpesaOut._sum.amount) || 0)
+                - (Number(mpesaOut._sum.feeCharged) || 0);
         }
 
         // 5. Calculate VAT Statistics (KRA 16%)

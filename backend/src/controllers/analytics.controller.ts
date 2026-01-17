@@ -238,6 +238,9 @@ export const getFinancialMetrics = async (req: AuthRequest, res: Response) => {
 
         const start = startDate ? new Date(startDate as string) : new Date(new Date().setDate(new Date().getDate() - 30));
         const end = endDate ? new Date(endDate as string) : new Date();
+        if (endDate) {
+            end.setHours(23, 59, 59, 999);
+        }
 
         // Sales revenue
         // Fetch ALL sales but calculate based on payment status OR transaction status to ensure records are picked up
