@@ -430,7 +430,7 @@ export default function CustomerDetailPage() {
                                                     {note.user.name}
                                                 </span>
                                                 <span className="text-sm text-gray-500 dark:text-gray-400">
-                                                    {formatDistanceToNow(new Date(note.createdAt), { addSuffix: true })}
+                                                    {format(new Date(note.createdAt), 'do MMM yyyy, h:mm a')}
                                                 </span>
                                             </div>
                                             <p className="text-gray-700 dark:text-gray-300">{note.content}</p>
