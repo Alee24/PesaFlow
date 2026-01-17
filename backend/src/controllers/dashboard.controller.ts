@@ -140,41 +140,41 @@ export const getDashboardStats = async (req: Request, res: Response) => {
                 }
             });
 
-            salesWithVAT.forEach(sale =\u003e {
-                sale.items.forEach(item =\u003e {
-                    if(item.product.isTaxable) {
-                const itemTotal = Number(item.subtotal);
-                vatStats.totalSalesWithVAT += itemTotal;
+            salesWithVAT.forEach(sale => {
+                sale.items.forEach(item => {
+                    if (item.product.isTaxable) {
+                        const itemTotal = Number(item.subtotal);
+                        vatStats.totalSalesWithVAT += itemTotal;
 
-                // Calculate VAT: subtotal * (vatRate / 100)
-                const vatAmount = itemTotal * (vatRate / 100);
-                vatStats.totalVATCollected += vatAmount;
-            }
+                        // Calculate VAT: subtotal * (vatRate / 100)
+                        const vatAmount = itemTotal * (vatRate / 100);
+                        vatStats.totalVATCollected += vatAmount;
+                    }
                 });
-    });
+            });
 
-    // Amount owed to KRA is the total VAT collected
-    vatStats.kraVATOwed = vatStats.totalVATCollected;
-}
+            // Amount owed to KRA is the total VAT collected
+            vatStats.kraVATOwed = vatStats.totalVATCollected;
+        }
 
-res.json({
-    summary: {
-        totalIncome,
-        totalWithdrawals,
-        totalSalesCount,
-        totalFeeIncome,
-        netVolume: totalIncome - totalWithdrawals,
-        walletBalance: walletBalance,
-        ...vatStats
-    },
-    chartData,
-    transactions: transactions.slice(0, 10).reverse()
-});
+        res.json({
+            summary: {
+                totalIncome,
+                totalWithdrawals,
+                totalSalesCount,
+                totalFeeIncome,
+                netVolume: totalIncome - totalWithdrawals,
+                walletBalance: walletBalance,
+                ...vatStats
+            },
+            chartData,
+            transactions: transactions.slice(0, 10).reverse()
+        });
 
     } catch (error) {
-    console.error("Dashboard Stats Error:", error);
-    res.status(500).json({ error: 'Failed to fetch dashboard stats' });
-}
+        console.error("Dashboard Stats Error:", error);
+        res.status(500).json({ error: 'Failed to fetch dashboard stats' });
+    }
 }
 
 
