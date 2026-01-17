@@ -126,6 +126,17 @@ export const mpesaCallback = async (req: Request, res: Response): Promise<void> 
                         }
                     });
                     console.log(`   Updated Sale ${sale.id} status to PAID`);
+
+                    if (sale.customerId) {
+                        await prisma.customer.update({
+                            where: { id: sale.customerId },
+                            data: {
+                                totalPurchases: { increment: 1 },
+                                lifetimeValue: { increment: Number(amount) },
+                                lastPurchaseDate: new Date()
+                            }
+                        });
+                    }
                 }
 
                 // Check for linked Invoice and update it
@@ -156,6 +167,17 @@ export const mpesaCallback = async (req: Request, res: Response): Promise<void> 
                                     }
                                 });
                                 console.log(`   Updated Invoice Sale ${invoiceSale.id} status to PAID`);
+
+                                if (invoiceSale.customerId) {
+                                    await prisma.customer.update({
+                                        where: { id: invoiceSale.customerId },
+                                        data: {
+                                            totalPurchases: { increment: 1 },
+                                            lifetimeValue: { increment: Number(invoiceSale.totalAmount) },
+                                            lastPurchaseDate: new Date()
+                                        }
+                                    });
+                                }
                             }
                         }
                     }
