@@ -142,14 +142,14 @@ export const getDashboardStats = async (req: Request, res: Response) => {
 
             salesWithVAT.forEach(sale => {
                 sale.items.forEach(item => {
-                    if (item.product.isTaxable) {
-                        const itemTotal = Number(item.subtotal);
-                        vatStats.totalSalesWithVAT += itemTotal;
+                    // Calculate VAT on ALL items if VAT is enabled for the business
+                    // This ensures existing sales are captured even if products weren't marked taxable initially
+                    const itemTotal = Number(item.subtotal);
+                    vatStats.totalSalesWithVAT += itemTotal;
 
-                        // Calculate VAT: subtotal * (vatRate / 100)
-                        const vatAmount = itemTotal * (vatRate / 100);
-                        vatStats.totalVATCollected += vatAmount;
-                    }
+                    // Calculate VAT: subtotal * (vatRate / 100)
+                    const vatAmount = itemTotal * (vatRate / 100);
+                    vatStats.totalVATCollected += vatAmount;
                 });
             });
 

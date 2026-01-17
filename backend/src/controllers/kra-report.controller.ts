@@ -57,27 +57,26 @@ export const getKRAVATReport = async (req: Request, res: Response) => {
 
         sales.forEach(sale => {
             sale.items.forEach(item => {
-                if (item.product.isTaxable) {
-                    const subtotal = Number(item.subtotal);
-                    const vatAmount = subtotal * (vatRate / 100);
-                    const totalWithVAT = subtotal + vatAmount;
+                // Calculate VAT on ALL items if VAT is enabled for the business
+                const subtotal = Number(item.subtotal);
+                const vatAmount = subtotal * (vatRate / 100);
+                const totalWithVAT = subtotal + vatAmount;
 
-                    totalSales += subtotal;
-                    totalVAT += vatAmount;
+                totalSales += subtotal;
+                totalVAT += vatAmount;
 
-                    reportData.push({
-                        date: format(sale.createdAt, 'yyyy-MM-dd'),
-                        invoiceNumber: sale.id.substring(0, 8),
-                        productName: item.product.name,
-                        sku: item.product.sku || 'N/A',
-                        quantity: item.quantity,
-                        unitPrice: Number(item.unitPrice),
-                        subtotal: subtotal,
-                        vatRate: vatRate,
-                        vatAmount: vatAmount,
-                        totalWithVAT: totalWithVAT
-                    });
-                }
+                reportData.push({
+                    date: format(sale.createdAt, 'yyyy-MM-dd'),
+                    invoiceNumber: sale.id.substring(0, 8),
+                    productName: item.product.name,
+                    sku: item.product.sku || 'N/A',
+                    quantity: item.quantity,
+                    unitPrice: Number(item.unitPrice),
+                    subtotal: subtotal,
+                    vatRate: vatRate,
+                    vatAmount: vatAmount,
+                    totalWithVAT: totalWithVAT
+                });
             });
         });
 
