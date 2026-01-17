@@ -223,198 +223,198 @@ export default function DashboardPage() {
                             </button>
                         </div>
                     </div>
+
+                )}
+
+                {/* Invoice Stats Section */}
+                {invoiceStats && (
+                    <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-6">
+                        <h3 className="text-lg font-bold text-gray-800 dark:text-white mb-4">Invoice Analytics</h3>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+                            <div className="p-3 sm:p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+                                <span className="text-[10px] sm:text-xs font-bold text-gray-500 uppercase">Paid Invoices</span>
+                                <div className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white mt-1">{invoiceStats.paid.count}</div>
+                                <div className="text-[10px] sm:text-xs text-green-600 font-medium truncate">KES {Number(invoiceStats.paid.amount).toLocaleString()}</div>
+                            </div>
+                            <div className="p-3 sm:p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+                                <span className="text-[10px] sm:text-xs font-bold text-gray-500 uppercase">Pending Invoices</span>
+                                <div className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white mt-1">{invoiceStats.pending.count}</div>
+                                <div className="text-[10px] sm:text-xs text-yellow-600 font-medium truncate">KES {Number(invoiceStats.pending.amount).toLocaleString()}</div>
+                            </div>
+                            <div className="p-3 sm:p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+                                <span className="text-[10px] sm:text-xs font-bold text-gray-500 uppercase">Overdue Invoices</span>
+                                <div className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white mt-1">{invoiceStats.overdue.count}</div>
+                                <div className="text-[10px] sm:text-xs text-red-600 font-medium truncate">KES {Number(invoiceStats.overdue.amount).toLocaleString()}</div>
+                            </div>
+                            <div className="p-3 sm:p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+                                <span className="text-[10px] sm:text-xs font-bold text-gray-500 uppercase">Cancelled</span>
+                                <div className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white mt-1">{invoiceStats.cancelled.count}</div>
+                                <div className="text-[10px] sm:text-xs text-gray-500 font-medium truncate">KES {Number(invoiceStats.cancelled.amount).toLocaleString()}</div>
+                            </div>
+                        </div>
                     </div>
                 )}
 
-            {/* Invoice Stats Section */}
-            {invoiceStats && (
-                <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-6">
-                    <h3 className="text-lg font-bold text-gray-800 dark:text-white mb-4">Invoice Analytics</h3>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
-                        <div className="p-3 sm:p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
-                            <span className="text-[10px] sm:text-xs font-bold text-gray-500 uppercase">Paid Invoices</span>
-                            <div className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white mt-1">{invoiceStats.paid.count}</div>
-                            <div className="text-[10px] sm:text-xs text-green-600 font-medium truncate">KES {Number(invoiceStats.paid.amount).toLocaleString()}</div>
-                        </div>
-                        <div className="p-3 sm:p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
-                            <span className="text-[10px] sm:text-xs font-bold text-gray-500 uppercase">Pending Invoices</span>
-                            <div className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white mt-1">{invoiceStats.pending.count}</div>
-                            <div className="text-[10px] sm:text-xs text-yellow-600 font-medium truncate">KES {Number(invoiceStats.pending.amount).toLocaleString()}</div>
-                        </div>
-                        <div className="p-3 sm:p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
-                            <span className="text-[10px] sm:text-xs font-bold text-gray-500 uppercase">Overdue Invoices</span>
-                            <div className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white mt-1">{invoiceStats.overdue.count}</div>
-                            <div className="text-[10px] sm:text-xs text-red-600 font-medium truncate">KES {Number(invoiceStats.overdue.amount).toLocaleString()}</div>
-                        </div>
-                        <div className="p-3 sm:p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
-                            <span className="text-[10px] sm:text-xs font-bold text-gray-500 uppercase">Cancelled</span>
-                            <div className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white mt-1">{invoiceStats.cancelled.count}</div>
-                            <div className="text-[10px] sm:text-xs text-gray-500 font-medium truncate">KES {Number(invoiceStats.cancelled.amount).toLocaleString()}</div>
-                        </div>
+                {/* Chart Section */}
+                <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 border border-gray-100 dark:border-gray-700">
+                    <h3 className="text-lg font-bold text-gray-800 dark:text-white mb-6">Financial Overview</h3>
+                    <div className="h-80 w-full">
+                        {loading ? (
+                            <div className="h-full flex items-center justify-center text-gray-400">Loading Chart...</div>
+                        ) : (
+                            <ResponsiveContainer width="100%" height="100%">
+                                <AreaChart data={chartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+                                    <defs>
+                                        <linearGradient id="colorIncome" x1="0" y1="0" x2="0" y2="1">
+                                            <stop offset="5%" stopColor="#6366f1" stopOpacity={0.3} />
+                                            <stop offset="95%" stopColor="#6366f1" stopOpacity={0} />
+                                        </linearGradient>
+                                        <linearGradient id="colorWithdrawal" x1="0" y1="0" x2="0" y2="1">
+                                            <stop offset="5%" stopColor="#f43f5e" stopOpacity={0.3} />
+                                            <stop offset="95%" stopColor="#f43f5e" stopOpacity={0} />
+                                        </linearGradient>
+                                        <linearGradient id="colorFees" x1="0" y1="0" x2="0" y2="1">
+                                            <stop offset="5%" stopColor="#f59e0b" stopOpacity={0.3} />
+                                            <stop offset="95%" stopColor="#f59e0b" stopOpacity={0} />
+                                        </linearGradient>
+                                    </defs>
+                                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f3f4f6" />
+                                    <XAxis
+                                        dataKey="date"
+                                        tick={{ fontSize: 11, fill: '#9ca3af' }}
+                                        tickLine={false}
+                                        axisLine={false}
+                                        tickFormatter={(str) => str.slice(5)}
+                                        dy={10}
+                                    />
+                                    <YAxis
+                                        tick={{ fontSize: 11, fill: '#9ca3af' }}
+                                        tickLine={false}
+                                        axisLine={false}
+                                        tickFormatter={(value) => `K${value >= 1000 ? (value / 1000).toFixed(1) + 'k' : value}`}
+                                    />
+                                    <Tooltip
+                                        content={({ active, payload, label }) => {
+                                            if (active && payload && payload.length) {
+                                                return (
+                                                    <div className="bg-white dark:bg-gray-800 p-4 rounded-xl shadow-xl border border-gray-100 dark:border-gray-700">
+                                                        <p className="text-sm font-semibold text-gray-900 dark:text-white mb-2">{label}</p>
+                                                        {payload.map((entry: any, index: number) => (
+                                                            <div key={index} className="flex items-center gap-2 text-xs mb-1">
+                                                                <div
+                                                                    className="w-2 h-2 rounded-full"
+                                                                    style={{ backgroundColor: entry.color }}
+                                                                />
+                                                                <span className="text-gray-500 capitalize">{entry.name}:</span>
+                                                                <span className="font-bold text-gray-900 dark:text-white">
+                                                                    KES {Number(entry.value).toLocaleString()}
+                                                                </span>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                );
+                                            }
+                                            return null;
+                                        }}
+                                    />
+                                    <Area
+                                        type="monotone"
+                                        dataKey="income"
+                                        name="Volume"
+                                        stroke="#6366f1"
+                                        strokeWidth={3}
+                                        fillOpacity={1}
+                                        fill="url(#colorIncome)"
+                                        activeDot={{ r: 6, strokeWidth: 0 }}
+                                    />
+                                    <Area
+                                        type="monotone"
+                                        dataKey="withdrawal"
+                                        name="Payouts"
+                                        stroke="#f43f5e"
+                                        strokeWidth={3}
+                                        fillOpacity={1}
+                                        fill="url(#colorWithdrawal)"
+                                        activeDot={{ r: 6, strokeWidth: 0 }}
+                                    />
+                                    <Area
+                                        type="monotone"
+                                        dataKey="fees"
+                                        name="Fees"
+                                        stroke="#f59e0b"
+                                        strokeWidth={3}
+                                        fillOpacity={1}
+                                        fill="url(#colorFees)"
+                                        activeDot={{ r: 6, strokeWidth: 0 }}
+                                    />
+                                </AreaChart>
+                            </ResponsiveContainer>
+                        )}
                     </div>
                 </div>
-            )}
 
-            {/* Chart Section */}
-            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 border border-gray-100 dark:border-gray-700">
-                <h3 className="text-lg font-bold text-gray-800 dark:text-white mb-6">Financial Overview</h3>
-                <div className="h-80 w-full">
-                    {loading ? (
-                        <div className="h-full flex items-center justify-center text-gray-400">Loading Chart...</div>
-                    ) : (
-                        <ResponsiveContainer width="100%" height="100%">
-                            <AreaChart data={chartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
-                                <defs>
-                                    <linearGradient id="colorIncome" x1="0" y1="0" x2="0" y2="1">
-                                        <stop offset="5%" stopColor="#6366f1" stopOpacity={0.3} />
-                                        <stop offset="95%" stopColor="#6366f1" stopOpacity={0} />
-                                    </linearGradient>
-                                    <linearGradient id="colorWithdrawal" x1="0" y1="0" x2="0" y2="1">
-                                        <stop offset="5%" stopColor="#f43f5e" stopOpacity={0.3} />
-                                        <stop offset="95%" stopColor="#f43f5e" stopOpacity={0} />
-                                    </linearGradient>
-                                    <linearGradient id="colorFees" x1="0" y1="0" x2="0" y2="1">
-                                        <stop offset="5%" stopColor="#f59e0b" stopOpacity={0.3} />
-                                        <stop offset="95%" stopColor="#f59e0b" stopOpacity={0} />
-                                    </linearGradient>
-                                </defs>
-                                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f3f4f6" />
-                                <XAxis
-                                    dataKey="date"
-                                    tick={{ fontSize: 11, fill: '#9ca3af' }}
-                                    tickLine={false}
-                                    axisLine={false}
-                                    tickFormatter={(str) => str.slice(5)}
-                                    dy={10}
-                                />
-                                <YAxis
-                                    tick={{ fontSize: 11, fill: '#9ca3af' }}
-                                    tickLine={false}
-                                    axisLine={false}
-                                    tickFormatter={(value) => `K${value >= 1000 ? (value / 1000).toFixed(1) + 'k' : value}`}
-                                />
-                                <Tooltip
-                                    content={({ active, payload, label }) => {
-                                        if (active && payload && payload.length) {
-                                            return (
-                                                <div className="bg-white dark:bg-gray-800 p-4 rounded-xl shadow-xl border border-gray-100 dark:border-gray-700">
-                                                    <p className="text-sm font-semibold text-gray-900 dark:text-white mb-2">{label}</p>
-                                                    {payload.map((entry: any, index: number) => (
-                                                        <div key={index} className="flex items-center gap-2 text-xs mb-1">
-                                                            <div
-                                                                className="w-2 h-2 rounded-full"
-                                                                style={{ backgroundColor: entry.color }}
-                                                            />
-                                                            <span className="text-gray-500 capitalize">{entry.name}:</span>
-                                                            <span className="font-bold text-gray-900 dark:text-white">
-                                                                KES {Number(entry.value).toLocaleString()}
-                                                            </span>
-                                                        </div>
-                                                    ))}
-                                                </div>
-                                            );
-                                        }
-                                        return null;
-                                    }}
-                                />
-                                <Area
-                                    type="monotone"
-                                    dataKey="income"
-                                    name="Volume"
-                                    stroke="#6366f1"
-                                    strokeWidth={3}
-                                    fillOpacity={1}
-                                    fill="url(#colorIncome)"
-                                    activeDot={{ r: 6, strokeWidth: 0 }}
-                                />
-                                <Area
-                                    type="monotone"
-                                    dataKey="withdrawal"
-                                    name="Payouts"
-                                    stroke="#f43f5e"
-                                    strokeWidth={3}
-                                    fillOpacity={1}
-                                    fill="url(#colorWithdrawal)"
-                                    activeDot={{ r: 6, strokeWidth: 0 }}
-                                />
-                                <Area
-                                    type="monotone"
-                                    dataKey="fees"
-                                    name="Fees"
-                                    stroke="#f59e0b"
-                                    strokeWidth={3}
-                                    fillOpacity={1}
-                                    fill="url(#colorFees)"
-                                    activeDot={{ r: 6, strokeWidth: 0 }}
-                                />
-                            </AreaChart>
-                        </ResponsiveContainer>
-                    )}
-                </div>
-            </div>
-
-            {/* Recent Transactions Table */}
-            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
-                <div className="px-6 py-5 border-b border-gray-100 dark:border-gray-700 flex justify-between items-center">
-                    <h3 className="text-lg font-bold text-gray-800 dark:text-white">Recent Transactions</h3>
-                    <Link href="/transactions" className="text-sm text-indigo-600 font-medium hover:underline flex items-center gap-1">
-                        View All <ArrowRight className="w-4 h-4" />
-                    </Link>
-                </div>
-                <div className="overflow-x-auto">
-                    <table className="w-full text-left text-sm text-gray-500">
-                        <thead className="bg-gray-50 dark:bg-gray-700/50 text-gray-700 dark:text-gray-300 uppercase text-xs">
-                            <tr>
-                                <th className="px-6 py-4 font-semibold">Date</th>
-                                <th className="px-6 py-4 font-semibold">Type</th>
-                                <th className="px-6 py-4 font-semibold">Reference</th>
-                                <th className="px-6 py-4 font-semibold text-right">Amount</th>
-                                <th className="px-6 py-4 font-semibold text-center">Status</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
-                            {transactions && transactions.length > 0 ? (
-                                transactions.map((tx: any) => (
-                                    <tr key={tx.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
-                                        <td className="px-6 py-4">{new Date(tx.createdAt).toLocaleString()}</td>
-                                        <td className="px-6 py-4 font-medium">
-                                            <span className={`text-xs px-2 py-1 rounded-full ${tx.type === 'DEPOSIT_STK' ? 'bg-green-100 text-green-700' :
-                                                tx.type === 'SALE_CASH' ? 'bg-blue-100 text-blue-700' :
-                                                    tx.type === 'WITHDRAWAL' ? 'bg-red-100 text-red-700' :
-                                                        'bg-gray-100 text-gray-700'
-                                                }`}>
-                                                {tx.type === 'DEPOSIT_STK' ? 'M-Pesa' :
-                                                    tx.type === 'SALE_CASH' ? 'Cash' :
-                                                        tx.type === 'WITHDRAWAL' ? 'Withdrawal' :
-                                                            tx.type.replace('_', ' ')}
-                                            </span>
-                                        </td>
-                                        <td className="px-6 py-4 font-mono text-xs">{tx.reference || tx.id.slice(0, 8)}</td>
-                                        <td className={`px-6 py-4 text-right font-medium ${tx.type === 'WITHDRAWAL' ? 'text-red-500' : 'text-green-600'}`}>
-                                            {tx.type === 'WITHDRAWAL' ? '-' : '+'} KES {Number(tx.amount).toLocaleString()}
-                                        </td>
-                                        <td className="px-6 py-4 text-center">
-                                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${tx.status === 'COMPLETED' ? 'bg-green-100 text-green-800' :
-                                                tx.status === 'PENDING' ? 'bg-yellow-100 text-yellow-800' :
-                                                    'bg-red-100 text-red-800'
-                                                }`}>
-                                                {tx.status}
-                                            </span>
+                {/* Recent Transactions Table */}
+                <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
+                    <div className="px-6 py-5 border-b border-gray-100 dark:border-gray-700 flex justify-between items-center">
+                        <h3 className="text-lg font-bold text-gray-800 dark:text-white">Recent Transactions</h3>
+                        <Link href="/transactions" className="text-sm text-indigo-600 font-medium hover:underline flex items-center gap-1">
+                            View All <ArrowRight className="w-4 h-4" />
+                        </Link>
+                    </div>
+                    <div className="overflow-x-auto">
+                        <table className="w-full text-left text-sm text-gray-500">
+                            <thead className="bg-gray-50 dark:bg-gray-700/50 text-gray-700 dark:text-gray-300 uppercase text-xs">
+                                <tr>
+                                    <th className="px-6 py-4 font-semibold">Date</th>
+                                    <th className="px-6 py-4 font-semibold">Type</th>
+                                    <th className="px-6 py-4 font-semibold">Reference</th>
+                                    <th className="px-6 py-4 font-semibold text-right">Amount</th>
+                                    <th className="px-6 py-4 font-semibold text-center">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
+                                {transactions && transactions.length > 0 ? (
+                                    transactions.map((tx: any) => (
+                                        <tr key={tx.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
+                                            <td className="px-6 py-4">{new Date(tx.createdAt).toLocaleString()}</td>
+                                            <td className="px-6 py-4 font-medium">
+                                                <span className={`text-xs px-2 py-1 rounded-full ${tx.type === 'DEPOSIT_STK' ? 'bg-green-100 text-green-700' :
+                                                    tx.type === 'SALE_CASH' ? 'bg-blue-100 text-blue-700' :
+                                                        tx.type === 'WITHDRAWAL' ? 'bg-red-100 text-red-700' :
+                                                            'bg-gray-100 text-gray-700'
+                                                    }`}>
+                                                    {tx.type === 'DEPOSIT_STK' ? 'M-Pesa' :
+                                                        tx.type === 'SALE_CASH' ? 'Cash' :
+                                                            tx.type === 'WITHDRAWAL' ? 'Withdrawal' :
+                                                                tx.type.replace('_', ' ')}
+                                                </span>
+                                            </td>
+                                            <td className="px-6 py-4 font-mono text-xs">{tx.reference || tx.id.slice(0, 8)}</td>
+                                            <td className={`px-6 py-4 text-right font-medium ${tx.type === 'WITHDRAWAL' ? 'text-red-500' : 'text-green-600'}`}>
+                                                {tx.type === 'WITHDRAWAL' ? '-' : '+'} KES {Number(tx.amount).toLocaleString()}
+                                            </td>
+                                            <td className="px-6 py-4 text-center">
+                                                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${tx.status === 'COMPLETED' ? 'bg-green-100 text-green-800' :
+                                                    tx.status === 'PENDING' ? 'bg-yellow-100 text-yellow-800' :
+                                                        'bg-red-100 text-red-800'
+                                                    }`}>
+                                                    {tx.status}
+                                                </span>
+                                            </td>
+                                        </tr>
+                                    ))
+                                ) : (
+                                    <tr>
+                                        <td colSpan={5} className="px-6 py-12 text-center text-gray-400">
+                                            No transactions found for this period.
                                         </td>
                                     </tr>
-                                ))
-                            ) : (
-                                <tr>
-                                    <td colSpan={5} className="px-6 py-12 text-center text-gray-400">
-                                        No transactions found for this period.
-                                    </td>
-                                </tr>
-                            )}
-                        </tbody>
-                    </table>
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
-        </div>
         </DashboardLayout >
     );
 }
