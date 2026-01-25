@@ -18,7 +18,7 @@ export const createInvoice = async (req: Request, res: Response) => {
         const profile = await prisma.businessProfile.findUnique({ where: { userId: merchantId } });
 
         // Optional: Match customer by email if ID not provided
-        let targetCustomerId = customerId;
+        let targetCustomerId = customerId && customerId !== "" ? customerId : null;
         if (!targetCustomerId && clientEmail) {
             const existing = await prisma.customer.findFirst({ where: { email: clientEmail, merchantId } });
             if (existing) targetCustomerId = existing.id;
@@ -77,7 +77,7 @@ export const createInvoice = async (req: Request, res: Response) => {
         // Create Sale Record
         const sale = await prisma.sale.create({
             data: {
-                merchantId: userId,
+                merchantId: merchantId,
                 totalAmount: totalAmount,
                 transactionId: transaction.id,
                 paymentMethod: 'INVOICE',
@@ -95,6 +95,7 @@ export const createInvoice = async (req: Request, res: Response) => {
                         productId: item.productId || genericProductId,
                         quantity: item.quantity,
                         unitPrice: item.price,
+                        description: item.description,
                         subtotal: item.price * item.quantity
                     }))
                 }

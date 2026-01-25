@@ -275,10 +275,11 @@ model SaleItem {
   productId String  @map("product_id")
   product   Product @relation(fields: [productId], references: [id])
   quantity  Int
-  unitPrice Decimal @map("unit_price")
-  discount  Decimal @default(0)
-  tax       Decimal @default(0)
-  subtotal  Decimal
+  unitPrice   Decimal @map("unit_price")
+  description String?
+  discount    Decimal @default(0)
+  tax         Decimal @default(0)
+  subtotal    Decimal
 
   @@map("sale_items")
 }

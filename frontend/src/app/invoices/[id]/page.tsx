@@ -346,7 +346,7 @@ export default function InvoicePage() {
                             ) : invoice.sale ? (
                                 invoice.sale.items.map((item: any) => (
                                     <tr key={item.id}>
-                                        <td className="py-4 text-gray-800">{item.product.name}</td>
+                                        <td className="py-4 text-gray-800">{item.description || item.product.name}</td>
                                         <td className="py-4 text-center text-gray-600">{item.quantity}</td>
                                         <td className="py-4 text-right text-gray-600">{(Number(item.unitPrice)).toLocaleString()}</td>
                                         <td className="py-4 text-right font-medium text-gray-900">{(Number(item.subtotal)).toLocaleString()}</td>
