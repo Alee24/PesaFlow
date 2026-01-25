@@ -106,6 +106,7 @@ export default function LandingPage() {
         'Everything in Free',
         'Invoice Management',
         'Basic Reports',
+        'Custom M-Pesa API Integration',
         '100 Transactions/mo',
         'Email Support'
       ],
@@ -122,7 +123,6 @@ export default function LandingPage() {
         'Unlimited Transactions',
         'Up to 10 Branches',
         'Withdrawal Management',
-        'Custom M-Pesa API Integration',
         'Advanced Analytics',
         'Priority Suppport'
       ],

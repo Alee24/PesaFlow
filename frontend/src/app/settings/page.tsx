@@ -215,7 +215,7 @@ export default function SettingsPage() {
         );
     }
 
-    const isPro = subscription?.plan === 'PRO' || subscription?.plan === 'ENTERPRISE' || user?.role === 'ADMIN';
+    const isPro = subscription?.plan === 'BASIC' || subscription?.plan === 'PRO' || subscription?.plan === 'ENTERPRISE' || user?.role === 'ADMIN';
 
     return (
         <DashboardLayout>

@@ -18,6 +18,8 @@ export default function NewProductPage() {
     const { showToast } = useToast();
     const [loading, setLoading] = useState(false);
     const [categories, setCategories] = useState<any[]>([]);
+    const [vatEnabled, setVatEnabled] = useState(false);
+    const [isVatExempt, setIsVatExempt] = useState(false);
 
     const [formData, setFormData] = useState({
         name: '',
@@ -30,15 +32,21 @@ export default function NewProductPage() {
     });
 
     useEffect(() => {
-        const fetchCategories = async () => {
+        const fetchData = async () => {
             try {
-                const res = await api.get('/categories');
-                setCategories(res.data);
+                const [catsRes, profileRes] = await Promise.all([
+                    api.get('/categories'),
+                    api.get('/profile')
+                ]);
+                setCategories(catsRes.data);
+                if (profileRes.data?.vatEnabled) {
+                    setVatEnabled(true);
+                }
             } catch (err) {
-                console.error("Failed to load categories");
+                console.error("Failed to load initial data", err);
             }
         };
-        fetchCategories();
+        fetchData();
     }, []);
 
     const [imageFile, setImageFile] = useState<File | null>(null);
@@ -70,6 +78,11 @@ export default function NewProductPage() {
             payload.append('stockQuantity', formData.stockQuantity);
             payload.append('sku', formData.sku);
             payload.append('description', formData.description);
+
+            // Logic: If VAT is enabled store-wide, the product is taxable UNLESS exempt.
+            // If VAT is disabled store-wide, the product is NOT taxable.
+            const isTaxable = vatEnabled ? !isVatExempt : false;
+            payload.append('isTaxable', String(isTaxable));
 
             if (formData.categoryId) {
                 payload.append('categoryId', formData.categoryId);
@@ -153,6 +166,24 @@ export default function NewProductPage() {
                                 onChange={e => setFormData({ ...formData, sku: e.target.value })}
                             />
                         </div>
+
+                        {vatEnabled && (
+                            <div className="flex items-center space-x-3 p-4 bg-gray-50 dark:bg-gray-800/50 rounded-lg border border-gray-100 dark:border-gray-700">
+                                <input
+                                    type="checkbox"
+                                    id="vatExempt"
+                                    checked={isVatExempt}
+                                    onChange={e => setIsVatExempt(e.target.checked)}
+                                    className="w-5 h-5 text-indigo-600 rounded border-gray-300 focus:ring-indigo-500"
+                                />
+                                <div className="flex flex-col">
+                                    <label htmlFor="vatExempt" className="text-sm font-medium text-gray-900 dark:text-white cursor-pointer">
+                                        VAT Exempt
+                                    </label>
+                                    <p className="text-xs text-gray-500">Check this if this specific product is not subject to VAT.</p>
+                                </div>
+                            </div>
+                        )}
 
                         <div className="flex flex-col space-y-2 mt-4">
                             <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Product Image</label>

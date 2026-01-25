@@ -33,6 +33,7 @@ const PLANS = [
             'Everything in Free',
             'Invoicing',
             'Basic Reports',
+            'Custom M-Pesa API',
             '100 Transactions/mo',
             'Email Support'
         ],
@@ -49,7 +50,6 @@ const PLANS = [
             'Everything in Basic',
             'Unlimited Transactions',
             '10 Branches',
-            'Custom M-Pesa API',
             'Withdrawals',
             'Advanced Analytics',
             'Priority Support'
