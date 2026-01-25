@@ -21,7 +21,7 @@ const productSchema = z.object({
     description: z.string().optional(),
     imageUrl: z.string().optional(),
     categoryId: z.string().optional().nullable(),
-    isTaxable: z.boolean().optional().default(false),
+    isTaxable: z.string().or(z.boolean()).transform(val => val === 'true' || val === true).optional().default(false),
     taxRate: z.string().or(z.number()).transform(val => Number(val)).optional().default(0),
     unit: z.string().optional().default('pcs'),
     supplierName: z.string().optional(),
