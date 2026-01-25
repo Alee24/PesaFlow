@@ -41,7 +41,7 @@ export default function LandingPage() {
     {
       icon: Smartphone,
       title: 'M-Pesa Integration',
-      description: 'Seamless payments. Trigger STK Pushes directly from invoices or POS, with automatic reconciliation.',
+      description: 'Seamless payments via Mpesa Connect, or integrate your own direct Safaricom API credentials for full control over settlements.',
       color: 'bg-green-500'
     },
     {
@@ -122,6 +122,7 @@ export default function LandingPage() {
         'Unlimited Transactions',
         'Up to 10 Branches',
         'Withdrawal Management',
+        'Custom M-Pesa API Integration',
         'Advanced Analytics',
         'Priority Suppport'
       ],
@@ -137,6 +138,7 @@ export default function LandingPage() {
         'Full Source Code / Self-Hosted',
         'Unlimited Branches',
         'Custom Branding',
+        'Custom M-Pesa API integration',
         'Lifetime Updates',
         'Dedicated Account Manager'
       ],

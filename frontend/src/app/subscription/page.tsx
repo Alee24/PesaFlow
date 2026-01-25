@@ -49,6 +49,7 @@ const PLANS = [
             'Everything in Basic',
             'Unlimited Transactions',
             '10 Branches',
+            'Custom M-Pesa API',
             'Withdrawals',
             'Advanced Analytics',
             'Priority Support'
@@ -66,6 +67,7 @@ const PLANS = [
             'Source Code',
             'Self-Hosted',
             'Custom Brand',
+            'Custom M-Pesa API',
             'Lifetime Updates',
             'Dedicated Manager'
         ],
@@ -223,10 +225,10 @@ export default function SubscriptionPage() {
                                         onClick={() => handleUpgrade(plan.name)}
                                         disabled={isCurrent}
                                         className={`w-full py-2 font-semibold shadow-none ${isCurrent
-                                                ? 'bg-green-600 text-white cursor-default hover:bg-green-600'
-                                                : plan.popular
-                                                    ? 'bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white'
-                                                    : 'bg-gray-900 hover:bg-gray-800 text-white dark:bg-gray-700 dark:hover:bg-gray-600'
+                                            ? 'bg-green-600 text-white cursor-default hover:bg-green-600'
+                                            : plan.popular
+                                                ? 'bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white'
+                                                : 'bg-gray-900 hover:bg-gray-800 text-white dark:bg-gray-700 dark:hover:bg-gray-600'
                                             }`}
                                     >
                                         {isCurrent ? 'Current Plan' : plan.cta}
