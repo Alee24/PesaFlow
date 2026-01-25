@@ -9,20 +9,27 @@ const prisma = new PrismaClient();
 
 const productSchema = z.object({
     name: z.string().min(1),
-    price: z.string().or(z.number()).transform(val => Number(val)),
-    costPrice: z.string().or(z.number()).transform(val => Number(val)).optional(),
-    stockQuantity: z.string().or(z.number()).transform(val => Number(val)).optional().default(0),
-    minStockLevel: z.string().or(z.number()).transform(val => Number(val)).optional().default(0),
-    maxStockLevel: z.string().or(z.number()).transform(val => Number(val)).optional().nullable(),
-    reorderPoint: z.string().or(z.number()).transform(val => Number(val)).optional().default(10),
-    reorderQuantity: z.string().or(z.number()).transform(val => Number(val)).optional().nullable(),
+    // robust casting for FormData numbers
+    price: z.preprocess((val) => Number(val), z.number().min(0)),
+    costPrice: z.preprocess((val) => val ? Number(val) : undefined, z.number().optional()),
+    stockQuantity: z.preprocess((val) => val ? Number(val) : 0, z.number().default(0)),
+    minStockLevel: z.preprocess((val) => val ? Number(val) : 0, z.number().default(0)),
+    maxStockLevel: z.preprocess((val) => val ? Number(val) : null, z.number().nullable().optional()),
+    reorderPoint: z.preprocess((val) => val ? Number(val) : 10, z.number().default(10)),
+    reorderQuantity: z.preprocess((val) => val ? Number(val) : null, z.number().nullable().optional()),
+
     sku: z.string().optional(),
     barcode: z.string().optional(),
     description: z.string().optional(),
     imageUrl: z.string().optional(),
-    categoryId: z.string().optional().nullable(),
-    isTaxable: z.string().or(z.boolean()).transform(val => val === 'true' || val === true).optional().default(false),
-    taxRate: z.string().or(z.number()).transform(val => Number(val)).optional().default(0),
+
+    // cast empty string to null for optional category
+    categoryId: z.string().optional().nullable().transform(val => val === '' ? null : val),
+
+    // robust casting for boolean
+    isTaxable: z.preprocess((val) => val === 'true' || val === true, z.boolean()).default(false),
+    taxRate: z.preprocess((val) => val ? Number(val) : 0, z.number().default(0)),
+
     unit: z.string().optional().default('pcs'),
     supplierName: z.string().optional(),
     supplierContact: z.string().optional(),
