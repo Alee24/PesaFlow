@@ -417,30 +417,7 @@ export default function DashboardPage() {
             </div>
 
 
-            {/* Floating Refresh Button */}
-            <button
-                onClick={fetchStats}
-                disabled={loading}
-                className="fixed bottom-8 right-8 p-4 bg-indigo-600 text-white rounded-full shadow-2xl hover:bg-indigo-700 transition-all z-50 hover:scale-110 active:scale-95 disabled:opacity-70 disabled:cursor-not-allowed group"
-                title="Refresh Dashboard"
-            >
-                <div className={`relative ${loading ? 'animate-spin' : 'group-hover:rotate-180 transition-transform duration-500'}`}>
-                    <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="24"
-                        height="24"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                    >
-                        <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 12" />
-                        <path d="M3 3v9h9" />
-                    </svg>
-                </div>
-            </button>
+
         </DashboardLayout >
     );
 }
