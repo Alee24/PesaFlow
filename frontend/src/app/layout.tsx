@@ -64,9 +64,9 @@ export default function RootLayout({
           <AuthProvider>
             <SubscriptionProvider>
               <ThemeProvider defaultTheme="system" storageKey="mpesa-connect-theme">
-                <LicenseGuard>
-                  {children}
-                </LicenseGuard>
+                {/* <LicenseGuard> */}
+                {children}
+                {/* </LicenseGuard> */}
               </ThemeProvider>
             </SubscriptionProvider>
           </AuthProvider>
