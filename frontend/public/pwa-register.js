@@ -6,10 +6,6 @@ if ('serviceWorker' in navigator) {
             .then((registration) => {
                 console.log('ServiceWorker registered:', registration);
 
-                // Check for updates periodically
-                setInterval(() => {
-                    registration.update();
-                }, 60000); // Check every minute
             })
             .catch((error) => {
                 console.log('ServiceWorker registration failed:', error);
