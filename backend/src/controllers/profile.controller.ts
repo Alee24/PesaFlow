@@ -31,6 +31,7 @@ const profileSchema = z.object({
     currency: z.string().optional().or(z.literal('')),
     vatEnabled: z.boolean().optional().or(z.string().transform(val => val === 'true')),
     vatRate: z.number().optional().or(z.string().transform(val => parseFloat(val))),
+    useCustomMpesa: z.boolean().optional().or(z.string().transform(val => val === 'true')),
 });
 
 export const getProfile = async (req: Request, res: Response) => {
@@ -61,6 +62,8 @@ export const updateProfile = async (req: Request, res: Response) => {
         // Handle boolean conversion for vatEnabled if it comes as string (multipart/form-data)
         if (rawData.vatEnabled === 'true') rawData.vatEnabled = true;
         if (rawData.vatEnabled === 'false') rawData.vatEnabled = false;
+        if (rawData.useCustomMpesa === 'true') rawData.useCustomMpesa = true;
+        if (rawData.useCustomMpesa === 'false') rawData.useCustomMpesa = false;
 
         // Handle file upload
         if (req.file) {

@@ -100,6 +100,7 @@ model BusinessProfile {
   mpesaInitiatorPass  String? @map("mpesa_initiator_pass")
   mpesaCallbackUrl    String? @map("mpesa_callback_url")
   mpesaEnv            String? @default("sandbox") @map("mpesa_env")
+  useCustomMpesa      Boolean @default(false) @map("use_custom_mpesa")
   currency            String? @default("KES")
   vatEnabled          Boolean @default(false)
   vatRate             Float   @default(16.0)

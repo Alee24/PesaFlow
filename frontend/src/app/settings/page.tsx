@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/Button';
 import Toast from '@/components/ui/Toast';
 import api from '@/lib/api';
 import { getImageUrl } from '@/lib/utils';
+import { CreditCard, ShieldCheck, CheckCircle2, Globe, Lock, Settings as SettingsIcon } from 'lucide-react';
 
 export default function SettingsPage() {
     const [formData, setFormData] = useState({
@@ -35,6 +36,7 @@ export default function SettingsPage() {
         mpesaInitiatorPass: '',
         mpesaCallbackUrl: '',
         mpesaEnv: 'sandbox',
+        useCustomMpesa: false,
         vatEnabled: false,
         vatRate: 16
     });
@@ -43,6 +45,7 @@ export default function SettingsPage() {
     const [saving, setSaving] = useState(false);
     const [logoFile, setLogoFile] = useState<File | null>(null);
     const [user, setUser] = useState<any>(null);
+    const [subscription, setSubscription] = useState<any>(null);
 
     // Toast State
     const [toast, setToast] = useState<{ visible: boolean; message: string; type: 'success' | 'error' | 'info' }>({
@@ -63,7 +66,17 @@ export default function SettingsPage() {
         const storedUser = localStorage.getItem('user');
         if (storedUser) setUser(JSON.parse(storedUser));
         fetchProfile();
+        fetchSubscription();
     }, []);
+
+    const fetchSubscription = async () => {
+        try {
+            const res = await api.get('/subscription');
+            if (res.data) setSubscription(res.data);
+        } catch (e) {
+            console.error("Failed to load subscription status", e);
+        }
+    };
 
     // Check if user is branch manager
     const isBranchManager = user?.role === 'BRANCH_MANAGER';
@@ -202,6 +215,8 @@ export default function SettingsPage() {
         );
     }
 
+    const isPro = subscription?.plan === 'PRO' || subscription?.plan === 'ENTERPRISE' || user?.role === 'ADMIN';
+
     return (
         <DashboardLayout>
             <Toast
@@ -334,51 +349,117 @@ export default function SettingsPage() {
                     </Card>
 
                     {/* M-Pesa Settings */}
-                    {user?.role === 'ADMIN' && (
-                        <Card className="p-6">
-                            <div className="flex justify-between items-center mb-4 border-b pb-2">
-                                <h2 className="text-xl font-semibold text-gray-800 dark:text-white">M-Pesa API Configuration</h2>
-                                <div className="flex items-center gap-4">
-                                    <span className={`text-xs px-2 py-1 rounded font-bold ${formData.mpesaEnv === 'production' ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800'}`}>
-                                        {formData.mpesaEnv === 'production' ? 'PRODUCTION' : 'SANDBOX'}
-                                    </span>
-                                </div>
+                    <Card className="p-6">
+                        <div className="flex justify-between items-center mb-6 border-b pb-4">
+                            <div>
+                                <h2 className="text-xl font-semibold text-gray-800 dark:text-white">M-Pesa Payments Integration</h2>
+                                <p className="text-sm text-gray-500 mt-1">Configure how you receive payments from customers</p>
                             </div>
-
-                            {/* Status Banner */}
-                            <div className={`p-4 rounded-lg border mb-6 flex flex-col gap-2 ${mpesaTestStatus === 'success' ? 'bg-green-50 border-green-200' : mpesaTestStatus === 'error' ? 'bg-red-50 border-red-200' : 'bg-gray-50 border-gray-100'}`}>
-                                <div className="flex items-center justify-between">
-                                    <span className={`text-sm font-medium ${mpesaTestStatus === 'success' ? 'text-green-700' : mpesaTestStatus === 'error' ? 'text-red-700' : 'text-gray-700'}`}>
-                                        API Status: {mpesaTestStatus === 'idle' ? 'Not Checked' : mpesaTestStatus.toUpperCase()}
-                                    </span>
-                                    <Button type="button" onClick={handleTestMpesa} variant="outline" size="sm">Test M-Pesa Connection</Button>
-                                </div>
-                                {mpesaTestMessage && <p className={`text-xs ${mpesaTestStatus === 'error' ? 'text-red-600' : 'text-green-600'}`}>{mpesaTestMessage}</p>}
+                            <div className="flex items-center gap-4">
+                                <span className={`text-xs px-2 py-1 rounded font-bold ${formData.mpesaEnv === 'production' ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800'}`}>
+                                    {formData.mpesaEnv === 'production' ? 'PRODUCTION' : 'SANDBOX'}
+                                </span>
                             </div>
+                        </div>
 
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                <div className="flex flex-col space-y-1">
-                                    <label className="text-sm font-medium text-gray-700">Environment</label>
-                                    <select
-                                        name="mpesaEnv"
-                                        value={formData.mpesaEnv}
-                                        onChange={handleChange}
-                                        className="px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 bg-white"
+                        {/* Payment Choice Section - Only show for Merchants, Admins see everything */}
+                        {user?.role !== 'ADMIN' && (
+                            <div className="bg-gray-50 dark:bg-gray-800/50 p-6 rounded-xl border border-gray-200 dark:border-gray-700 mb-8">
+                                <h3 className="text-md font-bold mb-4 flex items-center gap-2 text-gray-800 dark:text-white">
+                                    <CreditCard className="w-5 h-5 text-indigo-600" />
+                                    Payment Processing Source
+                                </h3>
+
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    {/* Option 1: Mpesa Connect */}
+                                    <div
+                                        className={`cursor-pointer p-4 rounded-xl border-2 transition-all ${!formData.useCustomMpesa ? 'border-indigo-600 bg-indigo-50 dark:bg-indigo-900/10' : 'border-gray-200 hover:border-indigo-300 dark:border-gray-700'}`}
+                                        onClick={() => setFormData(prev => ({ ...prev, useCustomMpesa: false }))}
                                     >
-                                        <option value="sandbox">Sandbox (Dev)</option>
-                                        <option value="production">Production (Live)</option>
-                                    </select>
+                                        <div className="flex items-center justify-between mb-2">
+                                            <span className="font-bold flex items-center gap-2 text-gray-900 dark:text-white">
+                                                <ShieldCheck className="w-4 h-4 text-indigo-600" />
+                                                Mpesa Connect (Platform)
+                                            </span>
+                                            {!formData.useCustomMpesa && <CheckCircle2 className="w-5 h-5 text-indigo-600" />}
+                                        </div>
+                                        <p className="text-xs text-gray-600 dark:text-gray-400">Use our pre-configured infrastructure. Simple, secure, and ready-to-use. Funds settle to your PesaFlow wallet.</p>
+                                    </div>
+
+                                    {/* Option 2: Own API */}
+                                    <div
+                                        className={`relative cursor-pointer p-4 rounded-xl border-2 transition-all ${formData.useCustomMpesa ? 'border-indigo-600 bg-indigo-50 dark:bg-indigo-900/10' : 'border-gray-200 hover:border-indigo-300 dark:border-gray-700'} ${!isPro ? 'opacity-70 cursor-not-allowed grayscale' : ''}`}
+                                        onClick={() => {
+                                            if (!isPro) {
+                                                showToast("Your current plan doesn't support custom APIs. Upgrade to PRO.", 'info');
+                                                return;
+                                            }
+                                            setFormData(prev => ({ ...prev, useCustomMpesa: true }));
+                                        }}
+                                    >
+                                        {!isPro && (
+                                            <div className="absolute top-2 right-2 flex items-center gap-1 bg-amber-100 text-amber-800 text-[10px] px-1.5 py-0.5 rounded-full font-bold">
+                                                <Lock className="w-2 h-2" /> PRO Feature
+                                            </div>
+                                        )}
+                                        <div className="flex items-center justify-between mb-2">
+                                            <span className="font-bold flex items-center gap-2 text-gray-900 dark:text-white">
+                                                <Globe className="w-4 h-4 text-indigo-600" />
+                                                Own API Credentials
+                                            </span>
+                                            {formData.useCustomMpesa && <CheckCircle2 className="w-5 h-5 text-indigo-600" />}
+                                        </div>
+                                        <p className="text-xs text-gray-600 dark:text-gray-400">Integrate your direct Safaricom Daraja credentials. Funds settle directly to your Paybill/Shortcode.</p>
+                                    </div>
                                 </div>
-                                <Input label="Consumer Key" name="mpesaConsumerKey" value={formData.mpesaConsumerKey} onChange={handleChange} type="password" />
-                                <Input label="Consumer Secret" name="mpesaConsumerSecret" value={formData.mpesaConsumerSecret} onChange={handleChange} type="password" />
-                                <Input label="Passkey" name="mpesaPasskey" value={formData.mpesaPasskey} onChange={handleChange} type="password" />
-                                <Input label="Shortcode (Paybill/Till)" name="mpesaShortcode" value={formData.mpesaShortcode} onChange={handleChange} />
-                                <Input label="Initiator Name" name="mpesaInitiatorName" value={formData.mpesaInitiatorName} onChange={handleChange} />
-                                <Input label="Initiator Password" name="mpesaInitiatorPass" value={formData.mpesaInitiatorPass} onChange={handleChange} type="password" />
-                                <Input label="Callback URL" name="mpesaCallbackUrl" value={formData.mpesaCallbackUrl} onChange={handleChange} placeholder="https://yourdomain.com/api/mpesa/callback" />
                             </div>
-                        </Card>
-                    )}
+                        )}
+
+                        {/* API Details - Only if user is ADMIN or chose Own API */}
+                        {(user?.role === 'ADMIN' || formData.useCustomMpesa) && (
+                            <div className="space-y-6 animate-in fade-in slide-in-from-top-4 duration-500">
+                                {/* Status Banner */}
+                                <div className={`p-4 rounded-lg border flex flex-col gap-2 ${mpesaTestStatus === 'success' ? 'bg-green-50 border-green-200' : mpesaTestStatus === 'error' ? 'bg-red-50 border-red-200' : 'bg-gray-50 border-gray-100 dark:bg-gray-800 dark:border-gray-700'}`}>
+                                    <div className="flex items-center justify-between">
+                                        <span className={`text-sm font-medium ${mpesaTestStatus === 'success' ? 'text-green-700 shadow-sm' : mpesaTestStatus === 'error' ? 'text-red-700' : 'text-gray-700 dark:text-gray-300'}`}>
+                                            API Status: {mpesaTestStatus === 'idle' ? 'Not Checked' : mpesaTestStatus.toUpperCase()}
+                                        </span>
+                                        <Button type="button" onClick={handleTestMpesa} variant="outline" size="sm">Test Connection</Button>
+                                    </div>
+                                    {mpesaTestMessage && <p className={`text-xs ${mpesaTestStatus === 'error' ? 'text-red-600' : 'text-green-600'}`}>{mpesaTestMessage}</p>}
+                                </div>
+
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div className="flex flex-col space-y-1">
+                                        <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Environment</label>
+                                        <select
+                                            name="mpesaEnv"
+                                            value={formData.mpesaEnv}
+                                            onChange={handleChange}
+                                            className="px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 bg-white dark:bg-gray-800 dark:text-white dark:border-gray-700"
+                                        >
+                                            <option value="sandbox">Sandbox (Dev)</option>
+                                            <option value="production">Production (Live)</option>
+                                        </select>
+                                    </div>
+                                    <Input label="Consumer Key" name="mpesaConsumerKey" value={formData.mpesaConsumerKey} onChange={handleChange} type="password" />
+                                    <Input label="Consumer Secret" name="mpesaConsumerSecret" value={formData.mpesaConsumerSecret} onChange={handleChange} type="password" />
+                                    <Input label="Passkey" name="mpesaPasskey" value={formData.mpesaPasskey} onChange={handleChange} type="password" />
+                                    <Input label="Shortcode (Paybill/Till)" name="mpesaShortcode" value={formData.mpesaShortcode} onChange={handleChange} />
+                                    <Input label="Initiator Name" name="mpesaInitiatorName" value={formData.mpesaInitiatorName} onChange={handleChange} />
+                                    <Input label="Initiator Password" name="mpesaInitiatorPass" value={formData.mpesaInitiatorPass} onChange={handleChange} type="password" />
+                                    <Input label="Callback URL" name="mpesaCallbackUrl" value={formData.mpesaCallbackUrl} onChange={handleChange} placeholder="https://yourdomain.com/api/mpesa/callback" />
+                                </div>
+                            </div>
+                        )}
+
+                        {!formData.useCustomMpesa && user?.role !== 'ADMIN' && (
+                            <div className="flex items-center gap-3 p-4 bg-indigo-50 dark:bg-indigo-900/10 rounded-lg text-indigo-700 dark:text-indigo-300 text-sm">
+                                <ShieldCheck className="w-5 h-5" />
+                                <span>You are currently using <b>Mpesa Connect</b>. Your customers will pay via our shared treasury, and credits will appear in your PesaFlow wallet.</span>
+                            </div>
+                        )}
+                    </Card>
 
                     {/* SMTP Settings */}
                     {true && (
