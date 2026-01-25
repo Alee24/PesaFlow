@@ -75,31 +75,34 @@ export const createInvoice = async (req: Request, res: Response) => {
         const genericProductId = genericProduct.id;
 
         // Create Sale Record
-        const sale = await prisma.sale.create({
-            data: {
-                merchantId: merchantId,
-                totalAmount: totalAmount,
-                transactionId: transaction.id,
-                paymentMethod: 'INVOICE',
-                paymentStatus: 'PENDING', // Default to PENDING for Invoices
-                amountDue: totalAmount,   // Initially full amount due
-
-                // Link to Customer
-                customerId: targetCustomerId,
-                customerName: clientName,
-                customerEmail: clientEmail,
-                customerPhone: clientPhone,
-
-                items: {
-                    create: items.map((item: any) => ({
-                        productId: item.productId || genericProductId,
-                        quantity: item.quantity,
-                        unitPrice: item.price,
-                        description: item.description,
-                        subtotal: item.price * item.quantity
-                    }))
-                }
+        const saleData: any = {
+            merchantId: merchantId,
+            totalAmount: totalAmount,
+            transactionId: transaction.id,
+            paymentMethod: 'INVOICE',
+            paymentStatus: 'PENDING',
+            amountDue: totalAmount,
+            customerName: clientName,
+            customerEmail: clientEmail,
+            customerPhone: clientPhone,
+            items: {
+                create: items.map((item: any) => ({
+                    productId: item.productId || genericProductId,
+                    quantity: item.quantity,
+                    unitPrice: item.price,
+                    description: item.description,
+                    subtotal: item.price * item.quantity
+                }))
             }
+        };
+
+        // ONLY link customer if we have a real ID
+        if (targetCustomerId && targetCustomerId.length > 5) {
+            saleData.customerId = targetCustomerId;
+        }
+
+        const sale = await prisma.sale.create({
+            data: saleData
         });
 
         // Create Notification

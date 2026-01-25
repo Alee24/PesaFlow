@@ -120,8 +120,13 @@ function CreateInvoiceForm() {
             // No, that floods product DB.
             // Let's just create the invoice for now.
 
+            const cleanInvoiceData = { ...invoiceData };
+            if (!cleanInvoiceData.customerId || cleanInvoiceData.customerId === "") {
+                delete (cleanInvoiceData as any).customerId;
+            }
+
             const res = await api.post('/invoices', {
-                ...invoiceData,
+                ...cleanInvoiceData,
                 items: items.map(i => ({
                     price: Number(i.price),
                     quantity: Number(i.quantity),
