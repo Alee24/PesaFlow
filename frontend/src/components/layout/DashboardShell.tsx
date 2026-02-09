@@ -6,7 +6,8 @@ import { usePathname, useRouter } from 'next/navigation';
 import {
     LayoutDashboard, ShoppingCart, Package, CreditCard, ArrowLeftRight, Settings,
     LogOut, User, Store, FileText, Bell, X, CheckCircle, AlertCircle, Info, Lock,
-    ShieldCheck, TrendingUp, BarChart3, Users, Wallet, MessageSquare, Key, Sun, Moon, Globe
+    ShieldCheck, TrendingUp, BarChart3, Users, Wallet, MessageSquare, Key, Sun, Moon, Globe,
+    ChevronDown, ChevronRight
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useState, useEffect, useRef } from 'react';
@@ -16,9 +17,10 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useTheme } from '@/contexts/ThemeContext';
 // import { ThemeToggle } from '../ui/ThemeToggle'; // Removed due to missing file
 
-const menuGroups = [
+export const menuGroups = [
     {
         title: 'Overview',
+        icon: LayoutDashboard,
         items: [
             { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard, feature: null },
             { name: 'Analytics', href: '/analytics', icon: BarChart3, feature: 'ANALYTICS' },
@@ -26,16 +28,19 @@ const menuGroups = [
     },
     {
         title: 'Business',
+        icon: Store,
         items: [
             { name: 'POS', href: '/pos', icon: ShoppingCart, feature: 'POS' },
             { name: 'Products', href: '/products', icon: Package, feature: null },
             { name: 'Sales', href: '/sales', icon: TrendingUp, feature: null },
             { name: 'Invoices', href: '/invoices', icon: FileText, feature: 'invoices' },
             { name: 'Customers', href: '/customers', icon: Users, feature: 'CRM' },
+            { name: 'Kiosk Mode', href: '/pos/login', icon: Store, feature: 'POS' },
         ]
     },
     {
         title: 'Finance',
+        icon: Wallet,
         items: [
             { name: 'Wallet', href: '/wallet', icon: Wallet, feature: null },
             { name: 'Withdrawals', href: '/withdrawals', icon: CreditCard, feature: null },
@@ -43,6 +48,7 @@ const menuGroups = [
     },
     {
         title: 'Management',
+        icon: Users,
         items: [
             { name: 'Team', href: '/team', icon: Users, feature: 'TEAM_MANAGEMENT' },
             { name: 'Subscription', href: '/subscription', icon: ShieldCheck },
@@ -53,6 +59,7 @@ const menuGroups = [
     {
         title: 'Administration',
         role: 'ADMIN',
+        icon: ShieldCheck,
         items: [
             { name: 'Dashboard', href: '/admin', icon: LayoutDashboard, role: 'ADMIN' },
             { name: 'System Dashboard', href: '/admin/system-dashboard', icon: TrendingUp, role: 'ADMIN' },
@@ -68,34 +75,23 @@ const menuGroups = [
     }
 ];
 
-export function Sidebar({ user, isMobileOpen, setIsMobileOpen }: { user?: any; isMobileOpen?: boolean; setIsMobileOpen?: (open: boolean) => void }) {
+export function Sidebar({ user, isMobileOpen, setIsMobileOpen }: {
+    user?: any;
+    isMobileOpen?: boolean;
+    setIsMobileOpen?: (open: boolean) => void;
+}) {
     const { logout } = useAuth();
     const { theme, setTheme } = useTheme();
     const pathname = usePathname();
+    const router = useRouter();
+    const [openGroups, setOpenGroups] = useState<string[]>(['Overview']);
 
-    const isItemAccessible = (item: any) => {
-        if (item.role === 'ADMIN') return user?.role === 'ADMIN';
-
-        // Shared restrictions
-        if (item.role === 'MERCHANT') {
-            if (['Branch', 'Withdrawals'].includes(item.name)) {
-                return user?.role === 'MERCHANT';
-            }
-            return user?.role === 'MERCHANT' || user?.role === 'SUB_MERCHANT';
-        }
-        return true;
-    };
-
-    const isItemLocked = (item: any) => {
-        if (user?.role === 'ADMIN') return false;
-        if (item.requiresActive && user?.status !== 'ACTIVE') return true;
-        return false;
-    };
-
-    const handleLinkClick = () => {
-        if (setIsMobileOpen) {
-            setIsMobileOpen(false);
-        }
+    const toggleGroup = (groupTitle: string) => {
+        setOpenGroups(prev =>
+            prev.includes(groupTitle)
+                ? [] // Close if already open
+                : [groupTitle] // Open only this group, close all others
+        );
     };
 
     return (
@@ -128,56 +124,54 @@ export function Sidebar({ user, isMobileOpen, setIsMobileOpen }: { user?: any; i
                     </button>
                 </div>
 
-                <nav className="p-4 space-y-6 overflow-y-auto h-[calc(100vh-8rem)] custom-scrollbar">
+                <nav className="p-4 space-y-1 overflow-y-auto h-[calc(100vh-8rem)] custom-scrollbar">
                     {menuGroups.map((group) => {
-                        // Filter items in this group
-                        const visibleItems = group.items.filter(item => isItemAccessible(item));
+                        if (group.role === 'ADMIN' && user?.role !== 'ADMIN') return null;
 
-                        // If group requires ADMIN and user is not, or no visible items, skip
-                        if ((group.role === 'ADMIN' && user?.role !== 'ADMIN') || visibleItems.length === 0) {
-                            return null;
-                        }
+                        const isOpen = openGroups.includes(group.title);
 
                         return (
                             <div key={group.title}>
-                                <p className="px-4 text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">
-                                    {group.title}
-                                </p>
-                                <div className="space-y-1">
-                                    {visibleItems.map(item => {
-                                        const isActive = pathname === item.href || (pathname.startsWith(item.href) && item.href !== '/' && item.href !== '/dashboard' && item.href !== '/admin');
-                                        const locked = isItemLocked(item);
+                                <button
+                                    onClick={() => toggleGroup(group.title)}
+                                    className="w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-50 dark:text-gray-400 dark:hover:bg-gray-800 transition-colors"
+                                >
+                                    <div className="flex items-center gap-2">
+                                        <group.icon className="w-4 h-4" />
+                                        <span>{group.title}</span>
+                                    </div>
+                                    <ChevronDown className={cn(
+                                        "w-4 h-4 transition-transform duration-200",
+                                        isOpen ? "rotate-180" : ""
+                                    )} />
+                                </button>
+                                {isOpen && (
+                                    <div className="ml-6 mt-1 space-y-1">
+                                        {group.items.map((item: any) => {
+                                            if (item.role === 'ADMIN' && user?.role !== 'ADMIN') return null;
 
-                                        if (locked) {
+                                            const isActive = pathname === item.href ||
+                                                (pathname.startsWith(item.href) && item.href !== '/');
+
                                             return (
-                                                <div
-                                                    key={item.href}
-                                                    className="group flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 text-gray-400 cursor-not-allowed opacity-60"
+                                                <Link
+                                                    key={item.name}
+                                                    href={item.href}
+                                                    onClick={() => setIsMobileOpen?.(false)}
+                                                    className={cn(
+                                                        "flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-all duration-200",
+                                                        isActive
+                                                            ? "bg-indigo-600 text-white shadow-md"
+                                                            : "text-gray-600 hover:bg-gray-50 dark:text-gray-400 dark:hover:bg-gray-800"
+                                                    )}
                                                 >
-                                                    <item.icon className="w-5 h-5" />
-                                                    {item.name}
-                                                    <Lock className="w-3 h-3 ml-auto text-amber-500" />
-                                                </div>
+                                                    <item.icon className="w-4 h-4" />
+                                                    <span>{item.name}</span>
+                                                </Link>
                                             );
-                                        }
-
-                                        return (
-                                            <Link
-                                                key={item.href}
-                                                href={item.href}
-                                                onClick={handleLinkClick}
-                                                className={`group flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 ease-out 
-                                                ${isActive
-                                                        ? 'bg-indigo-50 text-indigo-600 dark:bg-indigo-900/20 dark:text-indigo-400 shadow-sm translate-x-1'
-                                                        : 'text-gray-600 hover:bg-gray-50 dark:text-gray-400 dark:hover:bg-gray-800 hover:translate-x-1 hover:shadow-xs'
-                                                    }`}
-                                            >
-                                                <item.icon className={`w-5 h-5 transition-transform duration-200 ${isActive ? 'scale-110' : 'group-hover:scale-110'}`} />
-                                                {item.name}
-                                            </Link>
-                                        );
-                                    })}
-                                </div>
+                                        })}
+                                    </div>
+                                )}
                             </div>
                         );
                     })}
@@ -211,7 +205,10 @@ export function Sidebar({ user, isMobileOpen, setIsMobileOpen }: { user?: any; i
 
 
 
-export function Header({ user, onMenuClick }: { user?: any; onMenuClick?: () => void }) {
+export function Header({ user, onMenuClick }: {
+    user?: any;
+    onMenuClick?: () => void;
+}) {
     const [showNotifications, setShowNotifications] = useState(false);
     const [notifications, setNotifications] = useState<any[]>([]);
     const [showUserMenu, setShowUserMenu] = useState(false);
@@ -307,21 +304,46 @@ export function Header({ user, onMenuClick }: { user?: any; onMenuClick?: () => 
                     </button>
 
                     {/* Breadcrumbs */}
-                    <nav className="hidden md:flex items-center text-sm font-medium text-gray-500">
-                        <span className="text-gray-400 mr-2">/</span>
+                    <div className="flex items-center gap-2 text-sm">
                         {pathSegments.map((segment, index) => (
-                            <span key={index} className="flex items-center">
-                                <span className={`capitalize ${index === pathSegments.length - 1 ? 'text-gray-900 dark:text-white font-bold' : 'text-gray-500'}`}>
-                                    {segment.replace('-', ' ')}
+                            <div key={index} className="flex items-center gap-2">
+                                {index > 0 && <span className="text-gray-400">/</span>}
+                                <span className={index === pathSegments.length - 1 ? "text-gray-900 dark:text-white font-medium" : "text-gray-500 dark:text-gray-400"}>
+                                    {segment.charAt(0).toUpperCase() + segment.slice(1)}
                                 </span>
-                                {index < pathSegments.length - 1 && <span className="mx-2 text-gray-400">/</span>}
-                            </span>
+                            </div>
                         ))}
-                        {pathSegments.length === 0 && <span className="text-gray-900 dark:text-white font-bold">Dashboard</span>}
-                    </nav>
+                    </div>
+
+                    {/* Business Menu - Left aligned */}
+                    <div className="hidden lg:flex items-center gap-1 ml-8">
+                        {menuGroups.find(g => g.title === 'Business')?.items.map(item => {
+                            // Access Check
+                            if ((item as any).role === 'ADMIN' && user?.role !== 'ADMIN') return null;
+
+                            // Active Check
+                            const isActive = pathname === item.href || (pathname.startsWith(item.href) && item.href !== '/dashboard');
+
+                            return (
+                                <Link
+                                    key={item.name}
+                                    href={item.href}
+                                    className={cn(
+                                        "flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200",
+                                        isActive
+                                            ? "bg-gradient-to-r from-green-400 to-emerald-500 text-white shadow-lg shadow-green-500/50 ring-2 ring-green-400/50"
+                                            : "text-gray-600 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-300 dark:hover:bg-gray-800 dark:hover:text-white"
+                                    )}
+                                >
+                                    <item.icon className={cn("w-4 h-4", isActive && "drop-shadow-[0_0_8px_rgba(255,255,255,0.8)]")} />
+                                    <span className={cn(isActive && "font-bold")}>{item.name}</span>
+                                </Link>
+                            );
+                        })}
+                    </div>
                 </div>
 
-                <div className="flex items-center gap-2 md:gap-4">
+                <div className="flex items-center gap-2 md:gap-4 ml-auto">
                     {/* Refresh Button */}
                     <button
                         onClick={() => window.location.reload()}

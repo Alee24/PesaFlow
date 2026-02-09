@@ -1,10 +1,10 @@
-import app from './app';
 import dotenv from 'dotenv';
+dotenv.config();
+
+import app from './app';
 import { scheduleDailySalesSummary } from './services/scheduler.service';
 import walletRoutes from './routes/wallet.routes';
 import teamRoutes from './routes/team.routes';
-
-dotenv.config();
 
 const PORT = process.env.PORT || 3001;
 

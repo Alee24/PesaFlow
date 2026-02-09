@@ -29,6 +29,7 @@ import systemHealthRoutes from './routes/system-health.routes';
 import licenseRoutes from './routes/license.routes';
 import userLicenseRoutes from './routes/user-license.routes';
 import kraRoutes from './routes/kra.routes';
+import loyaltyRoutes from './routes/loyalty.routes';
 import { requireValidLicense } from './middlewares/license.middleware';
 
 
@@ -45,10 +46,21 @@ app.use(morgan('dev'));
 // This works in both dev (src/app.ts) and prod (dist/src/app.js) assuming app is started from backend/
 app.use('/uploads', express.static(path.join(process.cwd(), 'public/uploads')));
 
+import posAuthRoutes from './routes/pos.auth.routes';
+
 app.use('/api/categories', categoryRoutes);
 app.use('/api/auth', authRoutes); // Auth routes are NOT protected by license
+app.use('/api/pos/auth', posAuthRoutes); // POS Auth routes
 app.use('/api/license', licenseRoutes); // License routes are NOT protected by license
 app.use('/api/user-license', userLicenseRoutes); // User activation must be public/accessible
+
+app.use('/api/admin', adminRoutes);
+app.use('/api/admin-dashboard', adminDashboardRoutes);
+app.use('/api/system-health', systemHealthRoutes);
+app.use('/api/team', teamRoutes);
+app.use('/api/subscription', subscriptionRoutes);
+app.use('/api/settings', settingsRoutes);
+app.use('/api/notifications', notificationRoutes);
 
 // Apply license middleware to ALL routes below this point
 app.use(requireValidLicense);
@@ -61,19 +73,14 @@ app.use('/api/wallet', walletRoutes);
 app.use('/api/profile', profileRoutes);
 app.use('/api/invoices', invoiceRoutes);
 app.use('/api/setup', setupRoutes);
-app.use('/api/admin', adminRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/sales', salesRoutes);
-app.use('/api/notifications', notificationRoutes);
-app.use('/api/subscription', subscriptionRoutes);
-app.use('/api/analytics', analyticsRoutes);
-app.use('/api/team', teamRoutes);
 app.use('/api/crm', crmRoutes);
 app.use('/api/support', supportRoutes);
-app.use('/api/settings', settingsRoutes);
-app.use('/api/admin-dashboard', adminDashboardRoutes);
-app.use('/api/system-health', systemHealthRoutes);
 app.use('/api/kra', kraRoutes);
+app.use('/api/loyalty', loyaltyRoutes);
+app.use('/api/analytics', analyticsRoutes);
+app.use('/api/pos/auth', posAuthRoutes);
 
 
 app.get('/', (req, res) => {

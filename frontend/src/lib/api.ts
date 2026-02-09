@@ -7,8 +7,13 @@ const api = axios.create({
 });
 
 api.interceptors.request.use((config) => {
+    const posToken = localStorage.getItem('posToken');
     const token = localStorage.getItem('token');
-    if (token) {
+
+    // Priority: POS Token > Standard Token
+    if (posToken) {
+        config.headers.Authorization = `Bearer ${posToken}`;
+    } else if (token) {
         config.headers.Authorization = `Bearer ${token}`;
     }
     return config;

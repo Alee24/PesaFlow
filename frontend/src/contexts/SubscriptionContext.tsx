@@ -105,18 +105,7 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
     useEffect(() => {
         fetchSubscription();
 
-        // Auto-refresh subscription when user returns to the tab
-        const handleFocus = () => {
-            fetchSubscription();
-        };
-
-        window.addEventListener('focus', handleFocus);
-
-        // Auto-refresh removed - subscription only updates on tab focus or manual refresh
-
-        return () => {
-            window.removeEventListener('focus', handleFocus);
-        };
+        // Auto-refresh removed - subscription only updates on manual refresh
     }, []);
 
     const hasFeature = (feature: string): boolean => {
