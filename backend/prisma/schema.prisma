@@ -109,7 +109,6 @@ model BusinessProfile {
   vatRate             Float   @default(16.0)
 
   // Receipt Configuration
-  sbnNumber         String? @map("sbn_number")
   vatRegNumber      String? @map("vat_reg_number")
   faxNumber         String? @map("fax_number")
   receiptFooter     String? @map("receipt_footer") @db.Text
