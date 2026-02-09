@@ -68,8 +68,7 @@ model User {
   tickets      Ticket[]
   sentMessages TicketMessage[]
 
-  // Loyalty
-  loyaltyCustomers LoyaltyCustomer[]
+
 
   @@map("users")
 }
@@ -116,11 +115,7 @@ model BusinessProfile {
   branchCode        String? @map("branch_code")
   branchName        String? @map("branch_name")
 
-  // Loyalty Configuration
-  loyaltyEnabled    Boolean @default(false) @map("loyalty_enabled")
-  pointsPerKES      Float   @default(1) @map("points_per_kes") // Points earned per KES spent
-  kesPerPoint       Float   @default(1) @map("kes_per_point") // KES value of 1 point
-  minRedeemPoints   Int     @default(100) @map("min_redeem_points") // Minimum points to redeem
+
 
   // KYC Fields
   idNumber            String? @map("id_number")
@@ -256,11 +251,7 @@ model Sale {
   customerPhone String?   @map("customer_phone")
   customerEmail String?   @map("customer_email")
 
-  // Loyalty
-  loyaltyCustomerId String?          @map("loyalty_customer_id")
-  loyaltyCustomer   LoyaltyCustomer? @relation(fields: [loyaltyCustomerId], references: [id])
-  pointsEarned      Int              @default(0) @map("points_earned")
-  pointsRedeemed    Int              @default(0) @map("points_redeemed")
+
 
   // Receipt Details
   receiptNumber String? @map("receipt_number") // Sequential receipt number
@@ -293,7 +284,7 @@ model Sale {
   createdAt DateTime @default(now()) @map("created_at")
 
   items               SaleItem[]
-  loyaltyTransactions LoyaltyTransaction[]
+
 
   @@map("sales")
 }
@@ -622,70 +613,7 @@ model EmailCampaignRecipient {
   @@map("email_campaign_recipients")
 }
 
-// ============================================
-// LOYALTY SYSTEM MODELS
-// ============================================
-
-model LoyaltyCustomer {
-  id              String   @id @default(uuid())
-  merchantId      String   @map("merchant_id")
-  merchant        User     @relation(fields: [merchantId], references: [id], onDelete: Cascade)
-  
-  // Customer Identifiers (at least one required)
-  phoneNumber     String?  @map("phone_number")
-  idNumber        String?  @map("id_number")
-  cardNumber      String?  @map("card_number") // Loyalty card number
-  
-  // Customer Details
-  name            String?
-  email           String?
-  
-  // Loyalty Points
-  totalPoints     Int      @default(0) @map("total_points")
-  availablePoints Int      @default(0) @map("available_points") // Points available for redemption
-  lifetimePoints  Int      @default(0) @map("lifetime_points") // Total points ever earned
-  
-  // Metadata
-  createdAt       DateTime @default(now()) @map("created_at")
-  updatedAt       DateTime @updatedAt @map("updated_at")
-  lastVisit       DateTime @default(now()) @map("last_visit")
-  
-  // Relations
-  transactions    LoyaltyTransaction[]
-  sales           Sale[]
-  
-  @@unique([merchantId, phoneNumber])
-  @@unique([merchantId, idNumber])
-  @@unique([merchantId, cardNumber])
-  @@index([merchantId])
-  @@index([phoneNumber])
-  @@index([idNumber])
-  @@index([cardNumber])
-  @@map("loyalty_customers")
-}
-
-model LoyaltyTransaction {
-  id              String          @id @default(uuid())
-  customerId      String          @map("customer_id")
-  customer        LoyaltyCustomer @relation(fields: [customerId], references: [id], onDelete: Cascade)
-  
-  type            String          // EARN, REDEEM, EXPIRE, ADJUST
-  points          Int             // Positive for earn, negative for redeem
-  description     String
-  
-  // Reference to sale if applicable
-  saleId          String?         @map("sale_id")
-  sale            Sale?           @relation(fields: [saleId], references: [id])
-  
-  balanceBefore   Int             @map("balance_before")
-  balanceAfter    Int             @map("balance_after")
-  
-  createdAt       DateTime        @default(now()) @map("created_at")
-  
-  @@index([customerId])
-  @@index([saleId])
-  @@map("loyalty_transactions")
-}
+// Loyalty models removed to match production DB
 
 // ============================================
 // SUPPORT SYSTEM MODELS

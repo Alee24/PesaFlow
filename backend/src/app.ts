@@ -29,7 +29,7 @@ import systemHealthRoutes from './routes/system-health.routes';
 import licenseRoutes from './routes/license.routes';
 import userLicenseRoutes from './routes/user-license.routes';
 import kraRoutes from './routes/kra.routes';
-import loyaltyRoutes from './routes/loyalty.routes';
+
 import { requireValidLicense } from './middlewares/license.middleware';
 
 
@@ -78,7 +78,7 @@ app.use('/api/sales', salesRoutes);
 app.use('/api/crm', crmRoutes);
 app.use('/api/support', supportRoutes);
 app.use('/api/kra', kraRoutes);
-app.use('/api/loyalty', loyaltyRoutes);
+
 app.use('/api/analytics', analyticsRoutes);
 app.use('/api/pos/auth', posAuthRoutes);
 
