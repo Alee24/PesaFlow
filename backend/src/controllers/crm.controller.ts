@@ -76,7 +76,7 @@ export const getCustomers = async (req: AuthRequest, res: Response) => {
 // Get single customer with stats
 export const getCustomer = async (req: AuthRequest, res: Response) => {
     try {
-        const id = req.params.id as string;
+        const { id } = req.params;
         const merchantId = req.user?.merchantId || req.user?.userId;
 
         const customer = await prisma.customer.findFirst({
@@ -151,10 +151,10 @@ export const getCustomer = async (req: AuthRequest, res: Response) => {
         };
 
         stats.forEach(group => {
-            const amount = Number(group._sum?.totalAmount || 0);
-            const paid = Number(group._sum?.amountPaid || 0);
-            const due = Number(group._sum?.amountDue || 0);
-            const count = group._count?.id || 0;
+            const amount = Number(group._sum.totalAmount || 0);
+            const paid = Number(group._sum.amountPaid || 0);
+            const due = Number(group._sum.amountDue || 0);
+            const count = group._count.id;
 
             if (group.paymentStatus === 'PAID') {
                 billingStats.totalPaid += amount;
@@ -214,7 +214,7 @@ export const createCustomer = async (req: AuthRequest, res: Response) => {
 // Update customer
 export const updateCustomer = async (req: AuthRequest, res: Response) => {
     try {
-        const id = req.params.id as string;
+        const { id } = req.params;
         const merchantId = req.user?.merchantId || req.user?.userId;
         const { name, email, phone, company, address, city, country, status } = req.body;
 
@@ -250,7 +250,7 @@ export const updateCustomer = async (req: AuthRequest, res: Response) => {
 // Delete customer
 export const deleteCustomer = async (req: AuthRequest, res: Response) => {
     try {
-        const id = req.params.id as string;
+        const { id } = req.params;
         const merchantId = req.user?.merchantId || req.user?.userId;
 
         const customer = await prisma.customer.findFirst({
@@ -308,7 +308,7 @@ export const getCustomerStats = async (req: AuthRequest, res: Response) => {
 // Add customer note
 export const addNote = async (req: AuthRequest, res: Response) => {
     try {
-        const id = req.params.id as string;
+        const { id } = req.params;
         const userId = req.user?.userId;
         const merchantId = req.user?.merchantId || req.user?.userId;
         const { content, type } = req.body;
@@ -349,7 +349,7 @@ export const addNote = async (req: AuthRequest, res: Response) => {
 // Add customer interaction
 export const addInteraction = async (req: AuthRequest, res: Response) => {
     try {
-        const id = req.params.id as string;
+        const { id } = req.params;
         const userId = req.user?.userId;
         const merchantId = req.user?.merchantId || req.user?.userId;
         const { type, subject, description, outcome, duration, interactionDate } = req.body;
@@ -394,7 +394,7 @@ export const addInteraction = async (req: AuthRequest, res: Response) => {
 // Upload customer document
 export const uploadDocument = async (req: AuthRequest, res: Response) => {
     try {
-        const id = req.params.id as string;
+        const { id } = req.params;
         const userId = req.user?.userId;
         const merchantId = req.user?.merchantId || req.user?.userId;
         const file = req.file;
@@ -444,7 +444,7 @@ export const uploadDocument = async (req: AuthRequest, res: Response) => {
 // Delete customer document
 export const deleteDocument = async (req: AuthRequest, res: Response) => {
     try {
-        const { id, documentId } = req.params as { id: string; documentId: string };
+        const { id, documentId } = req.params;
         const merchantId = req.user?.merchantId || req.user?.userId;
 
         const customer = await prisma.customer.findFirst({

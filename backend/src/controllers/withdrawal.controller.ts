@@ -99,7 +99,7 @@ export const approveWithdrawal = async (req: AuthRequest, res: Response) => {
     try {
         if (req.user?.role !== 'ADMIN') return res.status(403).json({ error: 'Access denied' });
 
-        const id = req.params.id as string;
+        const { id } = req.params;
         const withdrawal = await prisma.withdrawal.findUnique({
             where: { id },
             include: { wallet: true }
@@ -143,7 +143,7 @@ export const rejectWithdrawal = async (req: AuthRequest, res: Response) => {
     try {
         if (req.user?.role !== 'ADMIN') return res.status(403).json({ error: 'Access denied' });
 
-        const id = req.params.id as string;
+        const { id } = req.params;
         const { reason } = req.body;
 
         const withdrawal = await prisma.withdrawal.findUnique({

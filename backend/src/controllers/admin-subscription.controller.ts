@@ -6,7 +6,7 @@ const prisma = new PrismaClient();
 // Admin endpoint to assign/update subscription for a merchant
 export const assignSubscription = async (req: Request, res: Response) => {
     try {
-        const userId = req.params.userId as string;
+        const { userId } = req.params;
         const { plan } = req.body;
 
         // Validate plan

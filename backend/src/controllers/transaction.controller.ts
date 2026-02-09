@@ -64,7 +64,7 @@ export const getTransactions = async (req: Request, res: Response) => {
 
 export const getTransactionById = async (req: Request, res: Response) => {
     try {
-        const id = req.params.id as string;
+        const { id } = req.params;
         const transaction = await prisma.transaction.findUnique({
             where: { id },
             include: {
@@ -107,7 +107,7 @@ export const getTransactionById = async (req: Request, res: Response) => {
 
 export const updateTransactionStatus = async (req: Request, res: Response) => {
     try {
-        const id = req.params.id as string;
+        const { id } = req.params;
         const { status } = req.body;
 
         const transaction = await prisma.transaction.update({

@@ -309,7 +309,7 @@ export const getRecentSales = async (req: Request, res: Response) => {
 export const getSaleById = async (req: Request, res: Response) => {
     try {
         const merchantId = (req as any).user.merchantId;
-        const id = req.params.id as string;
+        const { id } = req.params;
 
         const sale = await prisma.sale.findFirst({
             where: { id, merchantId },

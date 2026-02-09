@@ -201,7 +201,7 @@ export const getProductById = async (req: AuthRequest, res: Response): Promise<v
             return;
         }
 
-        const id = req.params.id as string;
+        const { id } = req.params;
 
         const product = await prisma.product.findFirst({
             where: {
@@ -236,7 +236,7 @@ export const updateProduct = async (req: AuthRequest, res: Response): Promise<vo
             return;
         }
 
-        const id = req.params.id as string;
+        const { id } = req.params;
 
         // Check ownership
         const existing = await prisma.product.findFirst({
@@ -302,7 +302,7 @@ export const deleteProduct = async (req: AuthRequest, res: Response): Promise<vo
             return;
         }
 
-        const id = req.params.id as string;
+        const { id } = req.params;
 
         const product = await prisma.product.findFirst({
             where: { id, merchantId: req.user.userId }
@@ -334,7 +334,7 @@ export const adjustStock = async (req: AuthRequest, res: Response): Promise<void
             return;
         }
 
-        const id = req.params.id as string;
+        const { id } = req.params;
         const { quantity, type, reason, notes } = req.body;
 
         if (!quantity || !type) {

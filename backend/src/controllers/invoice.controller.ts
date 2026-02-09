@@ -175,7 +175,7 @@ export const getInvoices = async (req: Request, res: Response) => {
 export const sendInvoiceEmail = async (req: Request, res: Response) => {
     try {
         const userId = (req as any).user.userId;
-        const id = req.params.id as string;
+        const { id } = req.params;
         const { email } = req.body;
 
         if (!email) {

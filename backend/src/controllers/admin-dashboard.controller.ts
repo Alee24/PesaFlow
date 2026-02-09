@@ -221,7 +221,7 @@ export const getSystemDashboard = async (req: AuthRequest, res: Response) => {
 // Get detailed merchant performance
 export const getMerchantPerformance = async (req: AuthRequest, res: Response) => {
     try {
-        const merchantId = req.params.merchantId as string;
+        const { merchantId } = req.params;
         const { period = 'month' } = req.query;
 
         const now = new Date();
@@ -296,10 +296,10 @@ export const getMerchantPerformance = async (req: AuthRequest, res: Response) =>
                 subscriptionStatus: merchant.subscription?.status || 'ACTIVE'
             },
             performance: {
-                totalRevenue: Number(stats._sum?.amount || 0),
-                serviceChargesPaid: Number(stats._sum?.feeCharged || 0),
-                netRevenue: Number(stats._sum?.amount || 0) - Number(stats._sum?.feeCharged || 0),
-                transactionCount: stats._count?.id || 0
+                totalRevenue: Number(stats._sum.amount || 0),
+                serviceChargesPaid: Number(stats._sum.feeCharged || 0),
+                netRevenue: Number(stats._sum.amount || 0) - Number(stats._sum.feeCharged || 0),
+                transactionCount: stats._count.id
             },
             recentTransactions: transactions
         });

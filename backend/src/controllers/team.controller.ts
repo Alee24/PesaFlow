@@ -138,7 +138,7 @@ export const updateTeamMember = async (req: Request, res: Response) => {
     try {
         const userId = (req as any).user.userId;
         const merchantId = (req as any).user.merchantId;
-        const id = req.params.id as string;
+        const { id } = req.params;
 
         if (userId !== merchantId) {
             return res.status(403).json({ error: 'Only the account owner can update branch managers' });
@@ -187,7 +187,7 @@ export const deleteTeamMember = async (req: Request, res: Response) => {
     try {
         const userId = (req as any).user.userId;
         const merchantId = (req as any).user.merchantId;
-        const id = req.params.id as string;
+        const { id } = req.params;
 
         if (userId !== merchantId) {
             return res.status(403).json({ error: 'Only the account owner can suspend branch managers' });
