@@ -3,10 +3,18 @@ import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
+interface AuthRequest extends Request {
+    user?: {
+        id: string;
+        userId: string;
+        role: string;
+    };
+}
+
 /**
  * Register a new loyalty customer
  */
-export const registerCustomer = async (req: Request, res: Response) => {
+export const registerCustomer = async (req: AuthRequest, res: Response) => {
     try {
         const { phoneNumber, idNumber, cardNumber, name, email } = req.body;
         const merchantId = req.user?.id;
@@ -63,7 +71,7 @@ export const registerCustomer = async (req: Request, res: Response) => {
 /**
  * Get customer by ID
  */
-export const getCustomer = async (req: Request, res: Response) => {
+export const getCustomer = async (req: AuthRequest, res: Response) => {
     try {
         const { id } = req.params;
         const merchantId = req.user?.id;
@@ -96,7 +104,7 @@ export const getCustomer = async (req: Request, res: Response) => {
 /**
  * Search for customer by phone/ID/card number
  */
-export const searchCustomer = async (req: Request, res: Response) => {
+export const searchCustomer = async (req: AuthRequest, res: Response) => {
     try {
         const { query } = req.query;
         const merchantId = req.user?.id;
@@ -130,7 +138,7 @@ export const searchCustomer = async (req: Request, res: Response) => {
 /**
  * Earn points for a sale
  */
-export const earnPoints = async (req: Request, res: Response) => {
+export const earnPoints = async (req: AuthRequest, res: Response) => {
     try {
         const { customerId, saleId, amount } = req.body;
         const merchantId = req.user?.id;
@@ -180,7 +188,7 @@ export const earnPoints = async (req: Request, res: Response) => {
 /**
  * Redeem points
  */
-export const redeemPoints = async (req: Request, res: Response) => {
+export const redeemPoints = async (req: AuthRequest, res: Response) => {
     try {
         const { customerId, points, saleId } = req.body;
         const merchantId = req.user?.id;
@@ -251,7 +259,7 @@ export const redeemPoints = async (req: Request, res: Response) => {
 /**
  * Get customer transaction history
  */
-export const getCustomerHistory = async (req: Request, res: Response) => {
+export const getCustomerHistory = async (req: AuthRequest, res: Response) => {
     try {
         const { id } = req.params;
         const merchantId = req.user?.id;
@@ -289,7 +297,7 @@ export const getCustomerHistory = async (req: Request, res: Response) => {
 /**
  * Get all loyalty customers
  */
-export const getAllCustomers = async (req: Request, res: Response) => {
+export const getAllCustomers = async (req: AuthRequest, res: Response) => {
     try {
         const merchantId = req.user?.id;
         const { page = 1, limit = 50 } = req.query;
