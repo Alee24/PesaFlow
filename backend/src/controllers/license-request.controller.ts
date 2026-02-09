@@ -127,7 +127,7 @@ export const getAllLicenseRequests = async (req: AuthRequest, res: Response) => 
  */
 export const approveLicenseRequest = async (req: AuthRequest, res: Response) => {
     try {
-        const { requestId } = req.params;
+        const requestId = req.params.requestId as string;
         const { maxUsers, durationDays, features } = req.body;
 
         // Get the request
@@ -192,7 +192,7 @@ export const approveLicenseRequest = async (req: AuthRequest, res: Response) => 
  */
 export const rejectLicenseRequest = async (req: AuthRequest, res: Response) => {
     try {
-        const { requestId } = req.params;
+        const requestId = req.params.requestId as string;
         const { reason } = req.body;
 
         const request = await prisma.licenseRequest.findUnique({
@@ -235,7 +235,7 @@ export const rejectLicenseRequest = async (req: AuthRequest, res: Response) => {
  */
 export const deleteLicenseRequest = async (req: AuthRequest, res: Response) => {
     try {
-        const { requestId } = req.params;
+        const requestId = req.params.requestId as string;
 
         await prisma.licenseRequest.delete({
             where: { id: requestId }

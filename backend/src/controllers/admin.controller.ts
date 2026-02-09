@@ -78,7 +78,7 @@ export const createUser = async (req: AuthRequest, res: Response) => {
 
 export const updateUserStatus = async (req: AuthRequest, res: Response) => {
     try {
-        const { id } = req.params;
+        const id = req.params.id as string;
         const { status, notes } = req.body; // ACTIVE, SUSPENDED, REJECTED
 
         if (!['ACTIVE', 'SUSPENDED', 'REJECTED', 'PENDING_VERIFICATION'].includes(status)) {
@@ -101,7 +101,7 @@ export const updateUserStatus = async (req: AuthRequest, res: Response) => {
 
 export const verifyUser = async (req: AuthRequest, res: Response) => {
     try {
-        const { id } = req.params;
+        const id = req.params.id as string;
 
         const updatedUser = await prisma.user.update({
             where: { id },
@@ -162,7 +162,7 @@ export const getAdminStats = async (req: AuthRequest, res: Response) => {
 
 export const updateUser = async (req: AuthRequest, res: Response) => {
     try {
-        const { id } = req.params;
+        const id = req.params.id as string;
         const { name, email, phoneNumber, role } = req.body;
 
         const updatedUser = await prisma.user.update({
@@ -186,7 +186,7 @@ export const updateUser = async (req: AuthRequest, res: Response) => {
 
 export const deleteUser = async (req: AuthRequest, res: Response) => {
     try {
-        const { id } = req.params;
+        const id = req.params.id as string;
 
         // Prevent deleting self
         if (req.user?.userId === id) {
@@ -269,7 +269,7 @@ export const deleteUser = async (req: AuthRequest, res: Response) => {
 
 export const resetUserPassword = async (req: AuthRequest, res: Response) => {
     try {
-        const { id } = req.params;
+        const id = req.params.id as string;
         const { password } = req.body;
 
         if (!password || password.length < 6) {
@@ -293,7 +293,7 @@ export const resetUserPassword = async (req: AuthRequest, res: Response) => {
 
 export const manageSubscription = async (req: AuthRequest, res: Response) => {
     try {
-        const { id } = req.params;
+        const id = req.params.id as string;
         const { plan, extendDays, action } = req.body;
 
         console.log(`👮 [ADMIN] Managing Subscription for Target User: ${id}`);

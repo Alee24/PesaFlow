@@ -82,7 +82,7 @@ export const getTickets = async (req: AuthRequest, res: Response) => {
 // Get Single Ticket details
 export const getTicket = async (req: AuthRequest, res: Response) => {
     try {
-        const { id } = req.params;
+        const id = req.params.id as string;
         const userId = req.user?.userId;
 
         const ticket = await prisma.ticket.findUnique({
@@ -112,7 +112,7 @@ export const getTicket = async (req: AuthRequest, res: Response) => {
 // Reply to Ticket
 export const replyTicket = async (req: AuthRequest, res: Response) => {
     try {
-        const { id } = req.params;
+        const id = req.params.id as string;
         const { message } = req.body;
         const userId = req.user?.userId;
 

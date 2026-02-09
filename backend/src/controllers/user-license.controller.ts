@@ -344,7 +344,7 @@ export const purchaseEnterprisePlan = async (req: AuthRequest, res: Response) =>
  */
 export const deleteUserLicenseKey = async (req: AuthRequest, res: Response) => {
     try {
-        const { keyId } = req.params;
+        const keyId = req.params.keyId as string;
 
         await prisma.userLicenseKey.delete({
             where: { id: keyId }

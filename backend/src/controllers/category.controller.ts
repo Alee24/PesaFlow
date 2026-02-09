@@ -46,7 +46,7 @@ export const createCategory = async (req: AuthRequest, res: Response) => {
 export const deleteCategory = async (req: AuthRequest, res: Response) => {
     try {
         const userId = req.user?.userId;
-        const { id } = req.params;
+        const id = req.params.id as string;
 
         // Ensure ownership
         const category = await prisma.category.findUnique({ where: { id } });

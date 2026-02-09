@@ -66,7 +66,7 @@ export const getSegments = async (req: AuthRequest, res: Response) => {
 // Get segment customers
 export const getSegmentCustomers = async (req: AuthRequest, res: Response) => {
     try {
-        const { id } = req.params;
+        const id = req.params.id as string;
         const merchantId = req.user?.merchantId || req.user?.userId;
 
         const segment = await prisma.customerSegment.findFirst({
@@ -150,7 +150,7 @@ export const getCampaigns = async (req: AuthRequest, res: Response) => {
 // Send campaign (PRO only)
 export const sendCampaign = async (req: AuthRequest, res: Response) => {
     try {
-        const { id } = req.params;
+        const id = req.params.id as string;
         const merchantId = req.user?.merchantId || req.user?.userId;
 
         const campaign = await prisma.emailCampaign.findFirst({
@@ -210,7 +210,7 @@ export const sendCampaign = async (req: AuthRequest, res: Response) => {
 // Get campaign analytics
 export const getCampaignAnalytics = async (req: AuthRequest, res: Response) => {
     try {
-        const { id } = req.params;
+        const id = req.params.id as string;
         const merchantId = req.user?.merchantId || req.user?.userId;
 
         const campaign = await prisma.emailCampaign.findFirst({
