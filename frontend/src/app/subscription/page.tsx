@@ -11,16 +11,18 @@ import { Toaster, toast } from 'react-hot-toast';
 const PLANS = [
     {
         name: 'FREE',
+        title: 'WELCOME FREE',
         price: 0,
-        period: 'forever',
-        description: 'Perfect for startups',
+        period: '1 year',
+        description: 'One Year Free Full Access',
         features: [
-            'POS System',
-            'Inventory Tracker',
-            'Unlimited Sales',
-            'Basic Support'
+            'All Premium Features',
+            'POS System & Inventory',
+            'Unlimited Transactions',
+            'Priority Support',
+            'Free for 12 Months'
         ],
-        cta: 'Current Plan',
+        cta: 'Active Plan',
         popular: false,
         color: 'bg-slate-800'
     },
@@ -202,7 +204,7 @@ export default function SubscriptionPage() {
                                 )}
 
                                 <div className="p-6 flex-1 flex flex-col">
-                                    <h3 className="text-lg font-bold text-gray-900 dark:text-white uppercase tracking-wider">{plan.name}</h3>
+                                    <h3 className="text-lg font-bold text-gray-900 dark:text-white uppercase tracking-wider">{(plan as any).title || plan.name}</h3>
                                     <p className="text-sm text-gray-500 mt-1 mb-4 h-5">{plan.description}</p>
 
                                     <div className="mb-6">

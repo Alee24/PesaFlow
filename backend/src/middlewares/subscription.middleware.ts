@@ -7,31 +7,31 @@ const prisma = new PrismaClient();
 // Feature access matrix
 const FEATURE_ACCESS: Record<string, Record<string, boolean>> = {
     'invoices': {
-        FREE: false,
+        FREE: true,
         BASIC: true,
         PRO: true,
         ENTERPRISE: true
     },
     'withdrawals': {
-        FREE: false,
+        FREE: true,
         BASIC: false,
         PRO: true,
         ENTERPRISE: true
     },
     'team': {
-        FREE: false,
+        FREE: true,
         BASIC: false,
         PRO: true,
         ENTERPRISE: true
     },
     'analytics': {
-        FREE: false,
+        FREE: true,
         BASIC: false,
         PRO: true,
         ENTERPRISE: true
     },
     'reports': {
-        FREE: false,
+        FREE: true,
         BASIC: true,
         PRO: true,
         ENTERPRISE: true
@@ -43,7 +43,7 @@ const FEATURE_ACCESS: Record<string, Record<string, boolean>> = {
         ENTERPRISE: true
     },
     'ADVANCED_CRM': {
-        FREE: false,
+        FREE: true,
         BASIC: false,
         PRO: true,
         ENTERPRISE: true
@@ -82,14 +82,18 @@ export const requireFeature = (feature: string) => {
                 where: { merchantId }
             });
 
-            // If no subscription, create FREE tier
+            // If no subscription, create FREE tier with 1-year end date
             if (!subscription) {
+                const oneYearFromNow = new Date();
+                oneYearFromNow.setFullYear(oneYearFromNow.getFullYear() + 1);
+
                 await prisma.subscription.create({
                     data: {
                         merchantId,
                         plan: 'FREE',
                         status: 'ACTIVE',
-                        features: '[]'
+                        features: '[]',
+                        endDate: oneYearFromNow
                     }
                 });
 
@@ -110,6 +114,18 @@ export const requireFeature = (feature: string) => {
                         error: 'Active subscription required',
                         currentPlan: subscription.plan,
                         status: subscription.status,
+                        upgrade: true
+                    });
+                    return;
+                }
+
+                // Check for expiry date
+                if (subscription.endDate && new Date(subscription.endDate) < new Date()) {
+                    res.status(403).json({
+                        error: 'Your free access for one year has expired. Please upgrade to continue.',
+                        currentPlan: subscription.plan,
+                        expired: true,
+                        endDate: subscription.endDate,
                         upgrade: true
                     });
                     return;
@@ -153,9 +169,12 @@ export const checkTransactionLimit = async (req: AuthRequest, res: Response, nex
         });
 
         if (!subscription) {
-            // Create FREE subscription
+            // Create FREE subscription with one year expiry
+            const oneYearFromNow = new Date();
+            oneYearFromNow.setFullYear(oneYearFromNow.getFullYear() + 1);
+            
             await prisma.subscription.create({
-                data: { merchantId, plan: 'FREE', status: 'ACTIVE', features: '[]' }
+                data: { merchantId, plan: 'FREE', status: 'ACTIVE', features: '[]', endDate: oneYearFromNow }
             });
             next();
             return;

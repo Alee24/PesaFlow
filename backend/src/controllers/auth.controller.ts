@@ -50,6 +50,9 @@ export const register = async (req: Request, res: Response): Promise<void> => {
         const verificationToken = crypto.randomBytes(32).toString('hex');
 
         const result = await prisma.$transaction(async (tx) => {
+            const oneYearFromNow = new Date();
+            oneYearFromNow.setFullYear(oneYearFromNow.getFullYear() + 1);
+
             // 1. Create User
             const user = await tx.user.create({
                 data: {
@@ -64,7 +67,8 @@ export const register = async (req: Request, res: Response): Promise<void> => {
                         create: {
                             plan: 'FREE',
                             status: 'ACTIVE',
-                            features: '[]'
+                            features: '[]',
+                            endDate: oneYearFromNow
                         }
                     }
                 },

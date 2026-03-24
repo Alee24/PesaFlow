@@ -84,15 +84,16 @@ export default function LandingPage() {
 
   const pricingPlans = [
     {
-      name: 'Free',
+      name: 'WELCOME FREE',
       price: 'Free',
-      period: 'Forever',
-      description: 'Perfect for getting started',
+      period: '1 Year Offer',
+      description: 'One Year Free Full Access',
       features: [
-        'POS System',
-        'Inventory Management',
+        'All Premium Features',
+        'POS System & Inventory',
         'Unlimited Transactions',
-        'Basic Support'
+        'Priority Support',
+        'Free for 12 Months'
       ],
       cta: 'Get Started Free',
       popular: false
