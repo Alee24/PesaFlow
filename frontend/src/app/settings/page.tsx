@@ -215,7 +215,7 @@ export default function SettingsPage() {
         );
     }
 
-    const isPro = subscription?.plan === 'BASIC' || subscription?.plan === 'PRO' || subscription?.plan === 'ENTERPRISE' || user?.role === 'ADMIN';
+    const isPro = true; // All users have 1-year free premium access now
 
     return (
         <DashboardLayout>

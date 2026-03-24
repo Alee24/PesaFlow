@@ -18,6 +18,7 @@ export const getAllUsers = async (req: AuthRequest, res: Response) => {
         const users = await prisma.user.findMany({
             include: {
                 businessProfile: true,
+                subscription: true,
                 _count: {
                     select: {
                         products: true,

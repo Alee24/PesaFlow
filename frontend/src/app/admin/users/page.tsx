@@ -254,6 +254,26 @@ export default function UserManagementPage() {
         }
     };
 
+    const handleRenewOneYear = async (user: any) => {
+        if (!window.confirm(`Are you sure you want to renew 1 Year Free access for ${user.name}? This will set their expiry to one year from now.`)) {
+            return;
+        }
+
+        try {
+            await api.post(`/admin/users/${user.id}/subscription`, {
+                action: 'EXTEND',
+                extendDays: 365,
+                plan: 'FREE'
+            });
+            showToast('Subscription renewed for 1 year successfully', 'success');
+            fetchUsers();
+        } catch (error: any) {
+            const errorMessage = error.response?.data?.error || error.response?.data?.message || 'Failed to renew subscription';
+            showToast(errorMessage, 'error');
+        }
+    };
+
+
     const handleVerifyClick = (user: any) => {
         setVerifyModal({
             isOpen: true,
@@ -336,8 +356,16 @@ export default function UserManagementPage() {
                                                     {user.role}
                                                 </span>
                                             </td>
-                                            <td className="p-4 text-xs text-gray-500">
-                                                <div>Sales: {user._count?.sales || 0}</div>
+                                            <td className="p-4 text-xs">
+                                                <div className="text-gray-900 dark:text-white font-medium mb-1">
+                                                    Plan: <span className="text-indigo-600 dark:text-indigo-400 font-bold">{user.subscription?.plan || 'NONE'}</span>
+                                                </div>
+                                                <div className="text-gray-500 mb-1">Sales: {user._count?.sales || 0}</div>
+                                                {user.subscription?.endDate && (
+                                                    <div className={`font-mono text-[10px] px-1.5 py-0.5 rounded inline-block ${new Date(user.subscription.endDate) < new Date() ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}`}>
+                                                        Exp: {new Date(user.subscription.endDate).toLocaleDateString()}
+                                                    </div>
+                                                )}
                                             </td>
                                             <td className="p-4 text-center">
                                                 <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${user.status === 'ACTIVE' ? 'bg-green-100 text-green-700' :
@@ -389,6 +417,15 @@ export default function UserManagementPage() {
                                                                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
                                                                 </svg>
+                                                            </Button>
+                                                            <Button
+                                                                size="sm"
+                                                                variant="outline"
+                                                                className="text-indigo-600 border-indigo-200 hover:bg-indigo-50 font-bold"
+                                                                title="Renew 1 Year Free"
+                                                                onClick={() => handleRenewOneYear(user)}
+                                                            >
+                                                                1Y
                                                             </Button>
                                                             <Button
                                                                 size="sm"

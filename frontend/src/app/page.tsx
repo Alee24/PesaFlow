@@ -252,6 +252,21 @@ export default function LandingPage() {
           </div>
         )}
       </nav>
+      
+      {/* Promotional Banner */}
+      <div className="pt-20 bg-indigo-600 dark:bg-indigo-700">
+        <div className="max-w-7xl mx-auto px-4 py-3 flex flex-col md:flex-row items-center justify-center gap-2 md:gap-4 text-white text-center">
+          <div className="flex items-center gap-2 font-bold animate-pulse">
+            <Zap className="w-5 h-5 fill-yellow-400 text-yellow-400" />
+            <span>WELCOME SPECIAL RE-LAUNCH OFFER!</span>
+          </div>
+          <span className="hidden md:inline font-medium opacity-90">|</span>
+          <p className="font-semibold text-xs md:text-sm lg:text-base">Get 1 Full Year of Premium POS, CRM & Custom M-Pesa API — <span className="underline decoration-yellow-400 decoration-2 underline-offset-4">Absolutely Free!</span></p>
+          <Link href="/auth/register" className="flex items-center gap-1 bg-white text-indigo-600 px-3 py-1 rounded-full text-[10px] md:text-xs font-bold hover:bg-yellow-400 hover:text-indigo-900 transition-all">
+            CLAIM NOW <ArrowRight className="w-3 h-3" />
+          </Link>
+        </div>
+      </div>
 
       {/* Hero Section */}
       <header className="relative pt-32 pb-20 lg:pt-48 lg:pb-32 overflow-hidden">
@@ -277,13 +292,13 @@ export default function LandingPage() {
           </h1>
 
           <p className="text-xl text-gray-600 dark:text-gray-400 max-w-2xl mx-auto mb-10 leading-relaxed">
-            Manage your entire business from one dashboard. Accept M-Pesa, track inventory, engage customers, and make data-driven decisions.
+            Manage your entire business from one dashboard. Accept M-Pesa payments (use our API or your own), track inventory, and engage customers — <span className="text-indigo-600 dark:text-indigo-400 font-bold">all premium features free for 12 months.</span>
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
             <Link href="/auth/register" className="w-full sm:w-auto">
               <Button size="lg" className="w-full sm:h-14 sm:px-8 text-lg rounded-full bg-indigo-600 hover:bg-indigo-700 text-white shadow-xl shadow-indigo-500/20">
-                Start Free Trial <ArrowRight className="w-5 h-5 ml-2" />
+                Get 1 Year Free <ArrowRight className="w-5 h-5 ml-2" />
               </Button>
             </Link>
             <Link href="#demo" className="w-full sm:w-auto">
