@@ -15,14 +15,11 @@ echo "🚀 STARTING PESAFLOW VPS UPDATE"
 echo "=========================================="
 echo ""
 
-# Navigate to project
-cd $PROJECT_DIR
-
-# 1. Pull changes
+# 1. Navigate and Pull
 echo "📥 Updating code from GitHub..."
+cd $PROJECT_DIR
 git fetch origin
-git branch -D $BRANCH || true
-git checkout $BRANCH 
+git checkout $BRANCH
 git pull origin $BRANCH
 
 # 2. Backend Setup
@@ -34,9 +31,9 @@ cd $PROJECT_DIR/backend
 echo "📦 Installing backend dependencies..."
 npm install
 
-# Build backend (TS -> JS)
-echo "🏗️  Building backend (dist folder)..."
-npm run build 
+# Build backend (Typescript to JS)
+echo "🏗️  Building backend project..."
+npm run build
 
 # Generate Prisma Client
 echo "🔄 Generating Prisma Client..."
@@ -56,18 +53,19 @@ echo "📦 Installing frontend dependencies..."
 npm install
 
 # Build frontend
-echo "🏗️  Building frontend (next build)..."
+echo "🏗️  Building frontend project..."
 npm run build
 
 # 4. Restart Services with PM2
 echo ""
 echo "🔄 Restarting services..."
 
-# Check if processes are already running
+# Check if processes are already running to choose between restart or start
 if pm2 show pesaflow-backend > /dev/null 2>&1; then
     echo "Restarting backend..."
     pm2 restart pesaflow-backend
 else
+    echo "Starting backend for the first time..."
     cd $PROJECT_DIR/backend
     pm2 start dist/server.js --name pesaflow-backend
 fi
@@ -76,6 +74,7 @@ if pm2 show pesaflow-frontend > /dev/null 2>&1; then
     echo "Restarting frontend..."
     pm2 restart pesaflow-frontend
 else
+    echo "Starting frontend for the first time..."
     cd $PROJECT_DIR/frontend
     pm2 start npm --name pesaflow-frontend -- start
 fi
@@ -90,4 +89,3 @@ echo "=========================================="
 echo "Backend:  pm2 logs pesaflow-backend"
 echo "Frontend: pm2 logs pesaflow-frontend"
 echo "=========================================="
-

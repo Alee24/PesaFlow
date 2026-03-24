@@ -87,16 +87,17 @@ export default function LandingPage() {
       name: 'WELCOME FREE',
       price: 'Free',
       period: '1 Year Offer',
-      description: 'One Year Free Full Access',
+      description: 'Full Premium Access for 12 Months',
       features: [
         'All Premium Features',
         'POS System & Inventory',
         'Unlimited Transactions',
+        'Custom M-Pesa API Integration',
         'Priority Support',
-        'Free for 12 Months'
+        'Free for 365 Days'
       ],
-      cta: 'Get Started Free',
-      popular: false
+      cta: 'Get 1 Year Free',
+      popular: true
     },
     {
       name: 'Basic',
@@ -128,7 +129,7 @@ export default function LandingPage() {
         'Priority Suppport'
       ],
       cta: 'Start Trial',
-      popular: true
+      popular: false
     },
     {
       name: 'Enterprise',
@@ -438,8 +439,8 @@ export default function LandingPage() {
                   }`}
               >
                 {plan.popular && (
-                  <div className="self-start px-3 py-1 bg-indigo-100 dark:bg-indigo-900/50 text-indigo-600 dark:text-indigo-300 text-xs font-bold uppercase rounded-full mb-4">
-                    Most Popular
+                  <div className="self-start px-4 py-1.5 bg-gradient-to-r from-indigo-600 to-purple-600 text-white text-[10px] font-black uppercase rounded-full mb-4 shadow-lg animate-pulse">
+                    🔥 MOST PREFERRED - 1 YEAR FREE
                   </div>
                 )}
 
