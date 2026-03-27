@@ -1,0 +1,55 @@
+version: '3.8'
+
+services:
+  db:
+    image: mysql:8.0
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: ""
+      MYSQL_DATABASE: pesaflow_v2
+      MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    networks:
+      - pesaflow_net
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    restart: always
+    env_file:
+      - ./backend/.env
+    environment:
+      - DATABASE_URL=mysql://root:@db:3306/pesaflow_v2
+      - PORT=5454
+    depends_on:
+      - db
+    ports:
+      - "5454:5454"
+    networks:
+      - pesaflow_net
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    restart: always
+    environment:
+      - NEXT_PUBLIC_API_URL=https://mpesaconnect.co.ke/api
+      - PORT=5054
+    depends_on:
+      - backend
+    ports:
+      - "5054:5054"
+    networks:
+      - pesaflow_net
+
+networks:
+  pesaflow_net:
+    driver: bridge
+
+volumes:
+  mysql_data:
