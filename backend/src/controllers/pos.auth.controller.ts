@@ -17,10 +17,17 @@ export const getStaffList = async (req: Request, res: Response): Promise<void> =
     try {
         const merchantId = (req as any).user.userId;
 
-        // Ensure the requester is actually a merchant/admin, not another staff member
-        // (Though technically a manager staff could authorize a device too, let's restrict to Merchant/Admin for now)
-        // Actually, let's just use the merchantId from the token.
+        // 1. Fetch the merchant themselves (Owner)
+        const merchant = await prisma.user.findUnique({
+            where: { id: merchantId },
+            select: {
+                id: true,
+                name: true,
+                role: true
+            }
+        });
 
+        // 2. Fetch team members
         const staff = await prisma.teamMember.findMany({
             where: {
                 merchantId: merchantId,
@@ -30,11 +37,22 @@ export const getStaffList = async (req: Request, res: Response): Promise<void> =
                 id: true,
                 name: true,
                 role: true,
-                // NEVER return the PIN
             }
         });
 
-        res.json(staff);
+        const combinedList = [];
+        if (merchant) {
+            combinedList.push({
+                id: merchant.id,
+                name: `${merchant.name || 'Owner'} (Owner)`,
+                role: 'MERCHANT',
+                isOwner: true
+            });
+        }
+        
+        combinedList.push(...staff);
+
+        res.json(combinedList);
     } catch (error) {
         console.error("Get Staff List Error:", error);
         res.status(500).json({ error: 'Internal Server Error' });
@@ -47,27 +65,46 @@ export const verifyPin = async (req: Request, res: Response): Promise<void> => {
     try {
         const { teamMemberId, pin } = verifyPinSchema.parse(req.body);
 
+        let user: { id: string, name: string | null, role: string, pin: string | null, merchantId: string };
+
         const staff = await prisma.teamMember.findUnique({
-            where: { id: teamMemberId },
-            include: { merchant: true }
+            where: { id: teamMemberId }
         });
 
-        if (!staff) {
-            res.status(404).json({ error: 'Staff member not found' });
+        if (staff) {
+            user = {
+                id: staff.id,
+                name: staff.name,
+                role: staff.role,
+                pin: staff.pin,
+                merchantId: staff.merchantId
+            };
+        } else {
+            // Try looking in User table (Merchant themselves)
+            const merchant = await prisma.user.findUnique({
+                where: { id: teamMemberId }
+            });
+
+            if (merchant) {
+                user = {
+                    id: merchant.id,
+                    name: merchant.name,
+                    role: merchant.role,
+                    pin: (merchant as any).pin, // we added this recently
+                    merchantId: merchant.id
+                };
+            } else {
+                res.status(404).json({ error: 'Person not found' });
+                return;
+            }
+        }
+
+        if (!user.pin) {
+            res.status(400).json({ error: 'PIN not set for this person' });
             return;
         }
 
-        if (staff.status !== 'ACTIVE') {
-            res.status(403).json({ error: 'Account suspended' });
-            return;
-        }
-
-        if (!staff.pin) {
-            res.status(400).json({ error: 'PIN not set for this user' });
-            return;
-        }
-
-        const isValid = await bcrypt.compare(pin, staff.pin);
+        const isValid = await bcrypt.compare(pin, user.pin);
 
         if (!isValid) {
             res.status(401).json({ error: 'Invalid PIN' });
@@ -77,23 +114,24 @@ export const verifyPin = async (req: Request, res: Response): Promise<void> => {
         // Generate Team Member Token
         const token = jwt.sign(
             {
-                teamMemberId: staff.id,
-                merchantId: staff.merchantId,
-                role: staff.role,
+                teamMemberId: user.id,
+                merchantId: user.merchantId,
+                role: user.role,
                 isTeamMember: true
             },
             process.env.JWT_SECRET || 'fallback_secret',
-            { expiresIn: '12h' } // POS shifts are usually < 12h
+            { expiresIn: '12h' }
         );
+
 
         res.json({
             message: 'Login successful',
             token,
             user: {
-                id: staff.id,
-                name: staff.name,
-                role: staff.role,
-                merchantId: staff.merchantId,
+                id: user.id,
+                name: user.name,
+                role: user.role,
+                merchantId: user.merchantId,
                 isTeamMember: true
             }
         });

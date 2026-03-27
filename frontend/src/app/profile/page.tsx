@@ -17,6 +17,7 @@ export default function ProfilePage() {
         name: '',
         email: '',
         phoneNumber: '',
+        posPin: '',
         currentPassword: '',
         newPassword: '',
         confirmPassword: ''
@@ -37,6 +38,7 @@ export default function ProfilePage() {
                 name: parsed.name || '',
                 email: parsed.email || '',
                 phoneNumber: parsed.phoneNumber || '',
+                posPin: '',
                 currentPassword: '',
                 newPassword: '',
                 confirmPassword: ''
@@ -67,13 +69,16 @@ export default function ProfilePage() {
 
             if (formData.newPassword) {
                 payload.password = formData.newPassword;
-                payload.currentPassword = formData.currentPassword;
             }
 
-            // Only send current password if changing sensitive info like email or password
-            if (formData.email !== user?.email || formData.newPassword) {
+            if (formData.posPin) {
+                payload.posPin = formData.posPin;
+            }
+
+            // Only send current password if changing sensitive info like email, password, or PIN
+            if (formData.email !== user?.email || formData.newPassword || formData.posPin) {
                 if (!formData.currentPassword) {
-                    alert("Please enter current password to confirm changes.");
+                    alert("Please enter current password to confirm sensitive changes (Email, Password, or POS PIN).");
                     setLoading(false);
                     return;
                 }
@@ -88,7 +93,7 @@ export default function ProfilePage() {
             setUser(updatedUser);
 
             alert('Profile updated successfully');
-            setFormData(prev => ({ ...prev, currentPassword: '', newPassword: '', confirmPassword: '' }));
+            setFormData(prev => ({ ...prev, currentPassword: '', newPassword: '', posPin: '', confirmPassword: '' }));
         } catch (error: any) {
             console.error(error);
             alert(error.response?.data?.error || 'Failed to update profile');
@@ -162,9 +167,24 @@ export default function ProfilePage() {
                                 </h3>
                                 <div className="space-y-4">
                                     <div className="p-4 bg-yellow-50 text-yellow-800 text-sm rounded-md mb-4 empty:hidden">
-                                        {(formData.email !== user?.email || formData.newPassword) &&
+                                        {(formData.email !== user?.email || formData.newPassword || formData.posPin) &&
                                             "Enter current password to confirm sensitive changes."
                                         }
+                                    </div>
+
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <Input
+                                            label="Set POS PIN (4-6 digits)"
+                                            name="posPin"
+                                            type="password"
+                                            maxLength={6}
+                                            value={formData.posPin}
+                                            onChange={handleChange}
+                                            placeholder="Leave blank to keep current"
+                                        />
+                                        <div className="pt-8 text-xs text-gray-500">
+                                            {user?.hasPin ? "✅ PIN already set. Enter a new one to change it." : "❌ No PIN set. Required for POS Access."}
+                                        </div>
                                     </div>
 
                                     <Input

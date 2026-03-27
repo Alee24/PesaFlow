@@ -253,7 +253,7 @@ export const login = async (req: Request, res: Response): Promise<void> => {
 export const updateUser = async (req: Request, res: Response): Promise<void> => {
     try {
         const userId = (req as any).user.userId;
-        const { email, phoneNumber, password, currentPassword, name } = req.body;
+        const { email, phoneNumber, password, currentPassword, name, posPin } = req.body;
 
         const user = await prisma.user.findUnique({ where: { id: userId } });
         if (!user) {
@@ -263,9 +263,9 @@ export const updateUser = async (req: Request, res: Response): Promise<void> => 
 
         // Verify current password before any sensitive changes if password is being changed
         // Or broadly require it. For now, let's require it only if changing password or email.
-        if (password || email !== user.email) {
+        if (password || email !== user.email || posPin) {
             if (!currentPassword || !(await bcrypt.compare(currentPassword, user.passwordHash))) {
-                res.status(401).json({ error: 'Invalid current password' });
+                res.status(401).json({ error: 'Invalid current password to set PIN or change sensitive info' });
                 return;
             }
         }
@@ -299,6 +299,14 @@ export const updateUser = async (req: Request, res: Response): Promise<void> => 
             updates.passwordHash = await bcrypt.hash(password, 10);
         }
 
+        if (posPin) {
+            if (posPin.length < 4) {
+                res.status(400).json({ error: 'PIN must be at least 4 digits' });
+                return;
+            }
+            updates.pin = await bcrypt.hash(posPin, 10);
+        }
+
         const updatedUser = await prisma.user.update({
             where: { id: userId },
             data: updates,
@@ -313,9 +321,11 @@ export const updateUser = async (req: Request, res: Response): Promise<void> => 
                 name: updatedUser.name,
                 role: updatedUser.role,
                 status: updatedUser.status,
+                hasPin: !!updatedUser.pin,
                 isProfileComplete: !!updatedUser.businessProfile
             }
         });
+
 
     } catch (error) {
         console.error("Update User Error:", error);

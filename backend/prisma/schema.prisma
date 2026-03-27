@@ -20,7 +20,9 @@ model User {
   passwordHash String   @map("password_hash")
   role         String   @default("MERCHANT") // ADMIN, MERCHANT, BRANCH_MANAGER
   status       String   @default("PENDING_VERIFICATION") // ACTIVE, SUSPENDED, PENDING_VERIFICATION, REJECTED
+  pin          String?  @map("pin") // 4-digit PIN for POS access
   appealNotes  String?  @map("appeal_notes")
+
 
   // Authentication & Verification
   emailVerified     Boolean   @default(false) @map("email_verified")
