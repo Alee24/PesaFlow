@@ -1,8 +1,8 @@
 #!/bin/bash
 
-# Combined VPS Update Script for PesaFlow
+# Combined VPS Update Script for PesaFlow (DOCKER VERSION)
 # Branch: WELCOME
-# Description: Pulls latest code, installs deps, syncs database, builds and restarts services.
+# Description: Pulls latest code and restarts services via Docker Compose.
 
 # Exit on error
 set -e
@@ -11,7 +11,7 @@ PROJECT_DIR="/var/www/mpesaconnect.co.ke"
 BRANCH="WELCOME"
 
 echo "=========================================="
-echo "🚀 STARTING PESAFLOW VPS UPDATE"
+echo "🚀 STARTING PESAFLOW DOCKER UPDATE"
 echo "=========================================="
 echo ""
 
@@ -21,73 +21,23 @@ cd $PROJECT_DIR
 # 1. Pull changes
 echo "📥 Updating code from GitHub..."
 git fetch origin
-git branch -D $BRANCH || true
 git checkout $BRANCH 
 git pull origin $BRANCH
 
-# 2. Backend Setup
+# 2. Re-build and restart containers
+echo "🏗️  Rebuilding and restarting Docker containers..."
+docker-compose down || true
+docker-compose up -d --build
+
+# 3. Check status
 echo ""
-echo "⚙️  Setting up Backend..."
-cd $PROJECT_DIR/backend
-
-# Install dependencies
-echo "📦 Installing backend dependencies..."
-npm install
-
-# Build backend (TS -> JS)
-echo "🏗️  Building backend (dist folder)..."
-npm run build 
-
-# Generate Prisma Client
-echo "🔄 Generating Prisma Client..."
-npx prisma generate
-
-# Sync Database Schema
-echo "🗄️  Syncing database schema (prisma db push)..."
-npx prisma db push
-
-# 3. Frontend Setup
-echo ""
-echo "🎨 Setting up Frontend..."
-cd $PROJECT_DIR/frontend
-
-# Install dependencies
-echo "📦 Installing frontend dependencies..."
-npm install
-
-# Build frontend
-echo "🏗️  Building frontend (next build)..."
-npm run build
-
-# 4. Restart Services with PM2
-echo ""
-echo "🔄 Restarting services..."
-
-# Check if processes are already running
-if pm2 show pesaflow-backend > /dev/null 2>&1; then
-    echo "Restarting backend..."
-    pm2 restart pesaflow-backend
-else
-    cd $PROJECT_DIR/backend
-    pm2 start dist/server.js --name pesaflow-backend
-fi
-
-if pm2 show pesaflow-frontend > /dev/null 2>&1; then
-    echo "Restarting frontend..."
-    pm2 restart pesaflow-frontend
-else
-    cd $PROJECT_DIR/frontend
-    pm2 start npm --name pesaflow-frontend -- start
-fi
-
-# Save PM2 state
-pm2 save
+echo "📊 Current Status:"
+docker-compose ps
 
 echo ""
 echo "=========================================="
 echo "✅ UPDATE COMPLETE AND SERVICES RESTARTED"
 echo "=========================================="
-echo "Backend:  pm2 logs pesaflow-backend"
-echo "Frontend: pm2 logs pesaflow-frontend"
+echo "Backend Logs:  docker-compose logs -f backend"
+echo "Frontend Logs: docker-compose logs -f frontend"
 echo "=========================================="
-
