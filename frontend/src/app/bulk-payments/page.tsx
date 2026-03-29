@@ -13,8 +13,47 @@ export default function BulkPaymentsPage() {
     const [file, setFile] = useState<File | null>(null);
     const [previewData, setPreviewData] = useState<any[]>([]);
     const [loading, setLoading] = useState(false);
+    const [testingConnection, setTestingConnection] = useState(false);
+    const [history, setHistory] = useState<any[]>([]);
     const [stats, setStats] = useState({ totalItems: 0, totalAmount: 0 });
+    const [historyStats, setHistoryStats] = useState({ totalDisbursed: 0, successCount: 0, failedCount: 0 });
     const fileInputRef = useRef<HTMLInputElement>(null);
+
+    React.useEffect(() => {
+        fetchHistory();
+    }, []);
+
+    const fetchHistory = async () => {
+        try {
+            const response = await api.get('/transactions?type=WITHDRAWAL');
+            setHistory(response.data);
+            
+            // Calculate history stats
+            const success = response.data.filter((t: any) => t.status === 'COMPLETED');
+            const failed = response.data.filter((t: any) => t.status === 'FAILED');
+            const total = success.reduce((sum: number, t: any) => sum + Number(t.amount), 0);
+            
+            setHistoryStats({
+                totalDisbursed: total,
+                successCount: success.length,
+                failedCount: failed.length
+            });
+        } catch (error) {
+            console.error('Failed to fetch history:', error);
+        }
+    };
+
+    const handleTestConnection = async () => {
+        setTestingConnection(true);
+        try {
+            const response = await api.post('/mpesa/test');
+            showToast(response.data.message || 'M-Pesa API Connection Successful!', 'success');
+        } catch (error: any) {
+            showToast(error.response?.data?.message || 'Connection failed. Check your API credentials.', 'error');
+        } finally {
+            setTestingConnection(false);
+        }
+    };
 
     const handleDownloadTemplate = () => {
         const csvContent = "phoneNumber,amount,reference,description\n254712345678,100,REF123,Payment for services\n254798765432,550,REF456,Monthly allowance";
@@ -78,11 +117,12 @@ export default function BulkPaymentsPage() {
         
         setLoading(true);
         try {
-            const response = await api.post('/mpesa/bulk-process', {
+            await api.post('/mpesa/bulk-process', {
                 payments: previewData
             });
             showToast(`Successfully queued ${stats.totalItems} payments!`, 'success');
             handleRemoveFile();
+            fetchHistory(); // Refresh history
         } catch (error: any) {
             showToast(error.response?.data?.error || 'Failed to process bulk payments', 'error');
         } finally {
@@ -92,31 +132,57 @@ export default function BulkPaymentsPage() {
 
     return (
         <DashboardLayout>
-            <div className="max-w-6xl mx-auto pb-12">
-                <div className="flex justify-between items-end mb-8">
+            <div className="max-w-7xl mx-auto pb-12">
+                <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4 mb-8">
                     <div>
                         <h1 className="text-3xl font-extrabold text-gray-900 dark:text-white">M-Pesa Bulk Payments</h1>
-                        <p className="text-gray-500 mt-2">Upload CSV to process batch B2C/C2B transactions effortlessly.</p>
+                        <p className="text-gray-500 mt-2">Manage outflows and process high-volume B2C transactions.</p>
                     </div>
-                    <Button 
-                        variant="outline" 
-                        onClick={handleDownloadTemplate}
-                        className="flex items-center gap-2 border-indigo-200 text-indigo-600 hover:bg-indigo-50"
-                    >
-                        <Download className="w-4 h-4" /> Download Template
-                    </Button>
+                    <div className="flex flex-wrap gap-3">
+                        <Button 
+                            variant="outline"
+                            onClick={handleTestConnection}
+                            disabled={testingConnection}
+                            className="bg-white dark:bg-gray-800 border-indigo-200"
+                        >
+                            {testingConnection ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Test connection'}
+                        </Button>
+                        <Button 
+                            variant="outline" 
+                            onClick={handleDownloadTemplate}
+                            className="flex items-center gap-2 border-indigo-200 text-indigo-600 hover:bg-indigo-50"
+                        >
+                            <Download className="w-4 h-4" /> Template
+                        </Button>
+                    </div>
                 </div>
 
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                {/* Performance Stats */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                    <Card className="p-6 border-l-4 border-l-indigo-600">
+                        <p className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-1">Total Disbursed</p>
+                        <h4 className="text-2xl font-black text-gray-900 dark:text-white font-mono">KES {historyStats.totalDisbursed.toLocaleString()}</h4>
+                    </Card>
+                    <Card className="p-6 border-l-4 border-l-green-500">
+                        <p className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-1">Successful Batch Items</p>
+                        <h4 className="text-2xl font-black text-gray-900 dark:text-white font-mono">{historyStats.successCount}</h4>
+                    </Card>
+                    <Card className="p-6 border-l-4 border-l-red-500">
+                        <p className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-1">Failed Attempts</p>
+                        <h4 className="text-2xl font-black text-gray-900 dark:text-white font-mono">{historyStats.failedCount}</h4>
+                    </Card>
+                </div>
+
+                <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
                     {/* Left Column: Upload */}
                     <div className="lg:col-span-1 space-y-6">
                         <Card className="p-6 border-dashed border-2 border-indigo-100 dark:border-indigo-900/30 bg-indigo-50/10">
                             <div className="text-center py-8">
-                                <div className="bg-indigo-100 dark:bg-indigo-900/40 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 text-indigo-600">
+                                <div className="bg-indigo-100 dark:bg-indigo-900/40 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 text-indigo-600 shadow-inner">
                                     <Upload className="w-8 h-8" />
                                 </div>
-                                <h3 className="text-lg font-bold mb-1">Upload CSV File</h3>
-                                <p className="text-xs text-gray-500 mb-6 px-4">Ensure your file follows the official template for accurate processing.</p>
+                                <h3 className="text-lg font-bold mb-1">Upload CSV</h3>
+                                <p className="text-[10px] text-gray-500 mb-6 uppercase tracking-wider">B2C/C2B Batch File</p>
                                 
                                 <input 
                                     type="file" 
@@ -128,23 +194,24 @@ export default function BulkPaymentsPage() {
                                 
                                 <Button 
                                     onClick={() => fileInputRef.current?.click()}
-                                    className="w-full bg-indigo-600 hover:bg-indigo-700 text-white"
+                                    className="w-full bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg shadow-indigo-200 dark:shadow-none"
                                 >
-                                    Select File
+                                    Select CSV
                                 </Button>
                             </div>
                         </Card>
 
                         {stats.totalItems > 0 && (
-                            <Card className="p-6 bg-gradient-to-br from-indigo-600 to-purple-700 text-white border-none shadow-xl">
-                                <h3 className="font-bold opacity-80 text-sm uppercase tracking-wider mb-4">Batch Summary</h3>
-                                <div className="space-y-4">
+                            <Card className="p-6 bg-indigo-600 text-white border-none shadow-2xl relative overflow-hidden group">
+                                <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16 transition-transform group-hover:scale-110" />
+                                <h3 className="font-bold opacity-80 text-xs uppercase tracking-widest mb-4">Pending Batch</h3>
+                                <div className="space-y-4 relative z-10">
                                     <div className="flex justify-between items-center">
-                                        <span className="opacity-70 text-sm">Total Recipients</span>
+                                        <span className="opacity-70 text-sm italic">Count</span>
                                         <span className="text-xl font-bold">{stats.totalItems}</span>
                                     </div>
                                     <div className="flex justify-between items-center">
-                                        <span className="opacity-70 text-sm">Total Amount</span>
+                                        <span className="opacity-70 text-sm italic">Amount</span>
                                         <span className="text-xl font-bold font-mono">KES {stats.totalAmount.toLocaleString()}</span>
                                     </div>
                                     <div className="pt-4 border-t border-white/20">
@@ -153,7 +220,7 @@ export default function BulkPaymentsPage() {
                                             disabled={loading}
                                             className="w-full bg-white text-indigo-600 hover:bg-gray-100 font-bold py-6 text-lg"
                                         >
-                                            {loading ? <Loader2 className="w-6 h-6 animate-spin" /> : <><Send className="w-5 h-5 mr-2" /> Disburse Now</>}
+                                            {loading ? <Loader2 className="w-6 h-6 animate-spin" /> : <><Send className="w-5 h-5 mr-1" /> Disburse</>}
                                         </Button>
                                     </div>
                                 </div>
@@ -161,54 +228,68 @@ export default function BulkPaymentsPage() {
                         )}
                     </div>
 
-                    {/* Right Column: Preview */}
-                    <div className="lg:col-span-2">
-                        <Card className="overflow-hidden min-h-[400px] flex flex-col">
-                            <div className="p-4 border-b border-gray-100 dark:border-gray-800 flex justify-between items-center bg-gray-50/50 dark:bg-gray-800/50">
+                    {/* Right Column: Preview/History */}
+                    <div className="lg:col-span-3">
+                        <Card className="overflow-hidden min-h-[500px] flex flex-col border-none shadow-xl">
+                            <div className="p-5 border-b border-gray-100 dark:border-gray-800 flex justify-between items-center bg-white dark:bg-gray-900">
                                 <div className="flex items-center gap-2">
-                                    <FileText className="w-5 h-5 text-indigo-500" />
-                                    <h3 className="font-bold">Data Preview</h3>
+                                    <div className="w-2 h-8 bg-indigo-600 rounded-full" />
+                                    <h3 className="font-black text-gray-800 dark:text-white tracking-tight">
+                                        {file ? 'File Preview' : 'Recent Disbursements'}
+                                    </h3>
                                 </div>
                                 {file && (
                                     <button 
                                         onClick={handleRemoveFile}
-                                        className="text-red-500 hover:text-red-600 flex items-center gap-1 text-sm font-medium"
+                                        className="text-red-500 hover:text-red-600 flex items-center gap-1 text-xs font-bold uppercase tracking-tighter"
                                     >
-                                        <Trash2 className="w-4 h-4" /> Clear
+                                        <Trash2 className="w-3 h-3" /> Dismiss
                                     </button>
                                 )}
                             </div>
                             
-                            <div className="flex-1 overflow-auto">
-                                {!file ? (
-                                    <div className="flex flex-col items-center justify-center h-full text-gray-400 py-12">
-                                        <div className="bg-gray-50 dark:bg-gray-800/50 p-6 rounded-full mb-4">
-                                            <AlertCircle className="w-12 h-12 opacity-20" />
-                                        </div>
-                                        <p>No file selected for preview</p>
+                            <div className="flex-1 overflow-auto bg-gray-50/30 dark:bg-black/20">
+                                {(!file && history.length === 0) ? (
+                                    <div className="flex flex-col items-center justify-center h-full text-gray-400 py-20 px-4 text-center">
+                                        <AlertCircle className="w-16 h-16 opacity-10 mb-4" />
+                                        <p className="font-bold text-gray-600 dark:text-gray-400">No activity yet</p>
+                                        <p className="text-xs">Upload your first CSV to start disbursing funds.</p>
                                     </div>
                                 ) : (
                                     <table className="w-full text-left">
-                                        <thead className="bg-gray-50 dark:bg-gray-800 sticky top-0">
+                                        <thead className="bg-white dark:bg-gray-900 sticky top-0 border-b border-gray-100 dark:border-gray-800 z-10">
                                             <tr>
-                                                <th className="p-4 text-xs font-bold uppercase text-gray-500">#</th>
-                                                <th className="p-4 text-xs font-bold uppercase text-gray-500">Phone</th>
-                                                <th className="p-4 text-xs font-bold uppercase text-gray-500 text-right">Amount</th>
-                                                <th className="p-4 text-xs font-bold uppercase text-gray-500">Reference</th>
-                                                <th className="p-4 text-xs font-bold uppercase text-gray-500">Status</th>
+                                                <th className="p-4 text-[10px] font-black uppercase text-gray-400">Recipient</th>
+                                                <th className="p-4 text-[10px] font-black uppercase text-gray-400">Reference</th>
+                                                <th className="p-4 text-[10px] font-black uppercase text-gray-400">Amount</th>
+                                                <th className="p-4 text-[10px] font-black uppercase text-gray-400 text-center">Status</th>
+                                                <th className="p-4 text-[10px] font-black uppercase text-gray-400 text-right">Date</th>
                                             </tr>
                                         </thead>
                                         <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
-                                            {previewData.map((item, idx) => (
-                                                <tr key={idx} className="hover:bg-gray-50 dark:hover:bg-gray-800/30 transition-colors">
-                                                    <td className="p-4 text-sm text-gray-500">{idx + 1}</td>
-                                                    <td className="p-4 text-sm font-mono">{item.phoneNumber}</td>
-                                                    <td className="p-4 text-sm font-bold text-right font-mono text-indigo-600">
-                                                        {parseFloat(item.amount).toLocaleString()}
-                                                    </td>
-                                                    <td className="p-4 text-sm text-gray-600 dark:text-gray-400">{item.reference}</td>
+                                            {(file ? previewData : history).map((item, idx) => (
+                                                <tr key={idx} className="hover:bg-white dark:hover:bg-gray-800/50 transition-all">
                                                     <td className="p-4">
-                                                        <span className="px-2 py-0.5 bg-yellow-100 text-yellow-700 rounded-full text-[10px] font-bold uppercase">Pending</span>
+                                                        <p className="text-sm font-bold text-gray-900 dark:text-white">{item.phoneNumber || item.reference || 'N/A'}</p>
+                                                        <p className="text-[10px] text-gray-500 font-mono">{item.merchantRequestId || 'Bulk Entry'}</p>
+                                                    </td>
+                                                    <td className="p-4 text-xs font-medium text-gray-600 dark:text-gray-400">
+                                                        {item.reference || item.reference || '-'}
+                                                    </td>
+                                                    <td className="p-4 text-sm font-black text-indigo-600 dark:text-indigo-400 font-mono">
+                                                        KES {(parseFloat(item.amount) || 0).toLocaleString()}
+                                                    </td>
+                                                    <td className="p-4 text-center">
+                                                        <span className={`px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest ${
+                                                            (item.status === 'COMPLETED' || item.status === 'PAID') ? 'bg-green-100 text-green-700' :
+                                                            item.status === 'FAILED' ? 'bg-red-100 text-red-700' :
+                                                            'bg-yellow-100 text-yellow-700'
+                                                        }`}>
+                                                            {item.status || 'Pending'}
+                                                        </span>
+                                                    </td>
+                                                    <td className="p-4 text-right text-[10px] text-gray-400 font-medium">
+                                                        {item.createdAt ? new Date(item.createdAt).toLocaleDateString() : 'Preview'}
                                                     </td>
                                                 </tr>
                                             ))}
@@ -220,32 +301,32 @@ export default function BulkPaymentsPage() {
                     </div>
                 </div>
 
-                {/* Info Card */}
-                <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <Card className="p-6 bg-blue-50/50 dark:bg-blue-900/10 border-blue-200 dark:border-blue-800">
-                        <div className="flex gap-4">
-                            <div className="bg-blue-100 dark:bg-blue-900/40 p-3 rounded-xl h-fit">
-                                <Info className="w-6 h-6 text-blue-600" />
+                {/* Verification Grid */}
+                <div className="mt-12 grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <Card className="p-8 border-none shadow-lg bg-gradient-to-br from-gray-50 to-white dark:from-gray-900 dark:to-gray-800">
+                        <div className="flex gap-6">
+                            <div className="bg-indigo-600 p-4 rounded-2xl h-fit shadow-lg shadow-indigo-100 dark:shadow-none">
+                                <Info className="w-8 h-8 text-white" />
                             </div>
                             <div>
-                                <h4 className="font-bold text-blue-900 dark:text-blue-100 mb-2">B2C Verification</h4>
-                                <p className="text-sm text-blue-700 dark:text-blue-300 leading-relaxed">
-                                    All B2C payments require your M-Pesa Business Wallet to have sufficient balance. 
-                                    Transactions are processed securely through the official Safaricom API.
+                                <h4 className="font-black text-gray-900 dark:text-white uppercase tracking-tighter mb-3">API Credential check</h4>
+                                <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed font-medium">
+                                    Our system automatically validates your **Consumer Key** and **Secret** before executing disbursements. Use the 
+                                    "Test Connection" button above to verify your M-Pesa B2C status instantly.
                                 </p>
                             </div>
                         </div>
                     </Card>
-                    <Card className="p-6 bg-green-50/50 dark:bg-green-900/10 border-green-200 dark:border-green-800">
-                        <div className="flex gap-4">
-                            <div className="bg-green-100 dark:bg-green-900/40 p-3 rounded-xl h-fit">
-                                <CheckCircle className="w-6 h-6 text-green-600" />
+                    <Card className="p-8 border-none shadow-lg bg-gradient-to-br from-gray-50 to-white dark:from-gray-900 dark:to-gray-800">
+                        <div className="flex gap-6">
+                            <div className="bg-amber-500 p-4 rounded-2xl h-fit shadow-lg shadow-amber-100 dark:shadow-none">
+                                <AlertCircle className="w-8 h-8 text-white" />
                             </div>
                             <div>
-                                <h4 className="font-bold text-green-900 dark:text-green-100 mb-2">Security First</h4>
-                                <p className="text-sm text-green-700 dark:text-green-300 leading-relaxed">
-                                    Before disbursement, our system validates each phone number format. 
-                                    Failures are logged immediately with clear error reasons.
+                                <h4 className="font-black text-gray-900 dark:text-white uppercase tracking-tighter mb-3">Balance Guard</h4>
+                                <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed font-medium">
+                                    B2C payments draw directly from your **M-Pesa Business Utility Wallet**. Ensure you have sufficient float before 
+                                    initiating large batches to avoid Safaricom "Insufficient Funds" errors.
                                 </p>
                             </div>
                         </div>

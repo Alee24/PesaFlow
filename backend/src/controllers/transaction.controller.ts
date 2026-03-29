@@ -8,7 +8,7 @@ export const getTransactions = async (req: Request, res: Response) => {
     try {
         const userId = (req as any).user.userId;
         const userRole = (req as any).user.role;
-        const { startDate, endDate, status } = req.query;
+        const { startDate, endDate, status, type } = req.query;
 
         const where: any = {};
 
@@ -35,6 +35,10 @@ export const getTransactions = async (req: Request, res: Response) => {
 
         if (status && status !== 'ALL') {
             where.status = status;
+        }
+
+        if (type && type !== 'ALL') {
+            where.type = type;
         }
 
         const transactions = await prisma.transaction.findMany({

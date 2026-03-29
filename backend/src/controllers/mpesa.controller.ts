@@ -41,112 +41,89 @@ export const mpesaCallback = async (req: Request, res: Response): Promise<void> 
     console.log('M-Pesa Callback Received:', JSON.stringify(req.body, null, 2));
 
     try {
-        const { Body } = req.body;
-        const { stkCallback } = Body;
+        // Handle STK Push Callbacks
+        if (req.body.Body?.stkCallback) {
+            const { stkCallback } = req.body.Body;
+            const merchantRequestID = stkCallback.MerchantRequestID;
+            const resultCode = stkCallback.ResultCode;
 
-        const merchantRequestID = stkCallback.MerchantRequestID;
-        const resultCode = stkCallback.ResultCode;
-        const checkoutRequestID = stkCallback.CheckoutRequestID;
-
-        if (resultCode === 0) {
-            // Payment Success
-            const metaItems = stkCallback.CallbackMetadata.Item;
-            const amountItem = metaItems.find((i: any) => i.Name === 'Amount');
-            const receiptItem = metaItems.find((i: any) => i.Name === 'MpesaReceiptNumber');
-            const phoneNumberItem = metaItems.find((i: any) => i.Name === 'PhoneNumber');
-
-            const amount = amountItem?.Value;
-            const mpesaReceipt = receiptItem?.Value;
-            const phone = phoneNumberItem?.Value;
-
-            console.log(`✅ Payment Success - MerchantRequestID: ${merchantRequestID}`);
-            console.log(`   Receipt: ${mpesaReceipt}`);
-            console.log(`   Amount: KES ${amount}`);
-            console.log(`   Phone: ${phone}`);
-
-            // Update transaction
             const transaction = await prisma.transaction.findFirst({
                 where: { merchantRequestId: merchantRequestID }
             });
 
-            if (transaction) {
-                // Fetch service charge settings
-                let fee = 2.5; 
-                try {
-                    const settings = await prisma.systemSettings.findFirst();
-                    if (settings) {
-                        fee = settings.serviceChargeEnabled ? Number(settings.serviceChargeAmount) : 0;
-                    }
-                } catch (settingsError) {
-                    console.warn('   ⚠️ Could not fetch settings, using default fee');
-                }
+            if (transaction && resultCode === 0) {
+                // Success logic for STK
+                const metaItems = stkCallback.CallbackMetadata.Item;
+                const receipt = metaItems.find((i: any) => i.Name === 'MpesaReceiptNumber')?.Value;
+                const amount = metaItems.find((i: any) => i.Name === 'Amount')?.Value;
 
-                const creditAmount = Number(amount) - fee;
-
-                // Update transaction status & record fee
                 await prisma.transaction.update({
                     where: { id: transaction.id },
-                    data: {
-                        status: 'COMPLETED',
-                        reference: mpesaReceipt,
-                        feeCharged: fee
-                    }
+                    data: { status: 'COMPLETED', reference: receipt }
                 });
 
                 await prisma.wallet.update({
                     where: { id: transaction.recipientWalletId },
-                    data: {
-                        balance: { increment: creditAmount }
-                    }
+                    data: { balance: { increment: Number(amount) - Number(transaction.feeCharged) } }
                 });
-
-                console.log(`   Credited wallet ${transaction.recipientWalletId} with KES ${creditAmount}`);
-
-                // Update associated sale to PAID
-                const sale = await prisma.sale.findFirst({
-                    where: { transactionId: transaction.id }
+            } else if (transaction) {
+                await prisma.transaction.update({
+                    where: { id: transaction.id },
+                    data: { status: 'FAILED' }
                 });
-
-                if (sale) {
-                    await prisma.sale.update({
-                        where: { id: sale.id },
-                        data: {
-                            paymentStatus: 'PAID',
-                            amountPaid: amount.toString()
-                        }
-                    });
-                    console.log(`   Updated Sale ${sale.id} status to PAID`);
-
-                    if (sale.customerId) {
-                        await prisma.customer.update({
-                            where: { id: sale.customerId },
-                            data: {
-                                totalPurchases: { increment: 1 },
-                                lifetimeValue: { increment: Number(amount) },
-                                lastPurchaseDate: new Date()
-                            }
-                        });
-                    }
-                }
-
-                // Send Notification
-                if (transaction.initiatorUserId) {
-                    await prisma.notification.create({
-                        data: {
-                            userId: transaction.initiatorUserId,
-                            title: 'Payment Received',
-                            message: `Received KES ${amount} from ${phone}. Ref: ${mpesaReceipt}`,
-                            type: 'success'
-                        }
-                    });
-                }
-
-                console.log(`   Transaction ${transaction.id} marked as COMPLETED`);
             }
-        } else {
-            // Payment Failed logic can go here (simplified)
-            console.log(`❌ Payment Failed - ResultCode: ${resultCode}`);
+        } 
+        
+        // Handle B2C (Bulk/Disbursement) Callbacks
+        else if (req.body.Result) {
+            const { Result } = req.body;
+            const conversationID = Result.ConversationID;
+            const originatorConversationID = Result.OriginatorConversationID;
+            const resultCode = Result.ResultCode;
+
+            console.log(`[M-Pesa B2C] Callback for ConversationID: ${conversationID}, ResultCode: ${resultCode}`);
+
+            // Find by ConversationID or OriginatorConversationID
+            const transaction = await prisma.transaction.findFirst({
+                where: {
+                    OR: [
+                        { merchantRequestId: conversationID },
+                        { merchantRequestId: originatorConversationID }
+                    ]
+                }
+            });
+
+            if (transaction) {
+                if (resultCode === 0) {
+                    const receipt = Result.ResultParameters?.ResultParameter?.find((p: any) => p.Key === 'TransactionID')?.Value;
+                    await prisma.transaction.update({
+                        where: { id: transaction.id },
+                        data: { 
+                            status: 'COMPLETED',
+                            reference: receipt || transaction.reference
+                        }
+                    });
+
+                    // Decrement balance on completion
+                    await prisma.wallet.update({
+                        where: { id: transaction.recipientWalletId },
+                        data: { balance: { decrement: Number(transaction.amount) } }
+                    });
+                    
+                    console.log(`✅ B2C Disbursement Successful: ${transaction.id}`);
+                } else {
+                    await prisma.transaction.update({
+                        where: { id: transaction.id },
+                        data: { 
+                            status: 'FAILED',
+                            metadata: JSON.stringify({ ...JSON.parse(transaction.metadata || '{}'), callbackError: Result.ResultDesc })
+                        }
+                    });
+                    console.log(`❌ B2C Disbursement Failed: ${transaction.id} - ${Result.ResultDesc}`);
+                }
+            }
         }
+
         res.json({ result: 'ok' });
     } catch (error) {
         console.error('Callback Error', error);
