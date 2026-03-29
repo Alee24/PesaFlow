@@ -11,20 +11,20 @@ import { Toaster, toast } from 'react-hot-toast';
 const PLANS = [
     {
         name: 'FREE',
-        title: 'WELCOME FREE',
+        title: 'WELCOME PROMOTION',
         price: 0,
         period: '1 year',
-        description: 'One Year Free Full Access',
+        description: 'Special 1-Year Free Full Access Offer',
         features: [
-            'All Premium Features',
-            'POS System & Inventory',
+            'All Premium Features Included',
+            'Full POS System & Analytics',
             'Unlimited Transactions',
-            'Priority Support',
-            'Free for 12 Months'
+            'Priority Support for 12 Months',
+            'Auto-renews to Basic'
         ],
         cta: 'Active Plan',
-        popular: false,
-        color: 'bg-slate-800'
+        popular: true, // Make it very visible
+        color: 'bg-green-600'
     },
     {
         name: 'BASIC',
