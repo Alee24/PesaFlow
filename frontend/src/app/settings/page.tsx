@@ -290,13 +290,13 @@ export default function SettingsPage() {
 
                             <div>
                                 <Input
-                                    label="KRA PIN Number"
+                                    label="KRA PIN Number (Optional)"
                                     name="kraPinNumber"
                                     value={formData.kraPinNumber}
                                     onChange={handleChange}
                                     placeholder="P05..."
-                                    disabled={!!formData.kraPinNumber}
-                                    className={formData.kraPinNumber ? "bg-gray-100 dark:bg-gray-800 cursor-not-allowed opacity-75" : ""}
+                                    className={isBranchManager ? "bg-gray-100 dark:bg-gray-800 cursor-not-allowed opacity-75" : ""}
+                                    disabled={isBranchManager}
                                 />
                                 {formData.kraPinNumber && (
                                     <p className="text-xs text-green-600 mt-1 flex items-center gap-1">

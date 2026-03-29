@@ -48,15 +48,17 @@ export default function OnboardingPage() {
 
     const nextStep = () => {
         if (step === 1) {
-            if (!formData.companyName || !formData.idNumber || !formData.kraPinNumber || !formData.location) {
-                setError('Please fill in all business details');
+            if (!formData.companyName || !formData.idNumber || !formData.location) {
+                setError('Please fill in mandatory business details');
                 return;
             }
-            // Strict KRA PIN Format Check
-            const kraRegex = /^[A-Z][0-9]{9}[A-Z]$/i;
-            if (!kraRegex.test(formData.kraPinNumber)) {
-                setError('Invalid KRA PIN format. Example: P051234567Z');
-                return;
+            // Optional KRA PIN Format Check (only if provided)
+            if (formData.kraPinNumber) {
+                const kraRegex = /^[A-Z][0-9]{9}[A-Z]$/i;
+                if (!kraRegex.test(formData.kraPinNumber)) {
+                    setError('Invalid KRA PIN format. Example: A012345678Z');
+                    return;
+                }
             }
         }
         setError('');
@@ -129,13 +131,12 @@ export default function OnboardingPage() {
 
                                 {/* KRA PIN (First) */}
                                 <div className="flex flex-col space-y-1">
-                                    <label className="text-sm font-medium text-gray-700 dark:text-gray-300">KRA PIN Number</label>
+                                    <label className="text-sm font-medium text-gray-700 dark:text-gray-300">KRA PIN Number <span className="text-gray-400 font-normal">(Optional)</span></label>
                                     <div className="flex gap-2">
                                         <input
                                             className="flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-700 dark:bg-gray-800 dark:text-white dark:focus:ring-indigo-400"
                                             value={formData.kraPinNumber}
                                             onChange={(e) => setFormData({ ...formData, kraPinNumber: e.target.value })}
-                                            required
                                             placeholder="A012345678Z"
                                         />
                                         <Button
@@ -223,7 +224,7 @@ export default function OnboardingPage() {
                                     </div>
                                     <div className="border-2 border-dashed border-gray-200 dark:border-gray-700 rounded-xl p-4 text-center hover:border-indigo-400 transition-colors">
                                         <label className="cursor-pointer block">
-                                            <span className="text-xs font-semibold text-gray-500 uppercase block mb-2">KRA PIN Certificate</span>
+                                            <span className="text-xs font-semibold text-gray-500 uppercase block mb-2">KRA PIN Certificate (Optional)</span>
                                             <input type="file" onChange={(e) => handleFileChange(e, 'kraCert')} className="hidden" accept="image/*,application/pdf" />
                                             {files.kraCert ? <div className="text-sm text-green-600 font-medium flex items-center justify-center gap-1"><CheckCircle2 className="w-4 h-4" /> {files.kraCert.name}</div> : <div className="text-sm text-gray-400">Click to upload PIN Cert</div>}
                                         </label>
