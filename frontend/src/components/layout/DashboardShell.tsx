@@ -44,6 +44,7 @@ export const menuGroups = [
         items: [
             { name: 'Wallet', href: '/wallet', icon: Wallet, feature: null },
             { name: 'Withdrawals', href: '/withdrawals', icon: CreditCard, feature: null },
+            { name: 'Bulk Payments', href: '/bulk-payments', icon: ArrowLeftRight, feature: 'MPESA_BULK' },
         ]
     },
     {
