@@ -6,7 +6,31 @@ const prisma = new PrismaClient();
 
 async function createAdmin() {
     try {
-        console.log('🌱 Creating/Updating admin accounts...');
+        console.log('🔍 Checking database schema for missing columns...');
+
+        // 1. Check and add 'pin' column if missing (Safety Fix for VPS)
+        try {
+            await prisma.$executeRawUnsafe(`
+                ALTER TABLE users ADD COLUMN IF NOT EXISTS pin VARCHAR(255) AFTER status;
+            `);
+            console.log('✅ Database schema verified/updated.');
+        } catch (dbError: any) {
+            // IF NOT EXISTS might not be supported in older MySQL, so we catch the "column already exists" error
+            if (dbError.message.includes('Duplicate column name')) {
+                console.log('ℹ️ Pin column already exists, skipping schema update.');
+            } else {
+                console.warn('⚠️ Non-critical schema error:', dbError.message);
+                // Try without IF NOT EXISTS if that was the error
+                 try {
+                    await prisma.$executeRawUnsafe(`ALTER TABLE users ADD COLUMN pin VARCHAR(255) AFTER status;`);
+                    console.log('✅ Pin column added successfully.');
+                } catch (e) {
+                    console.log('ℹ️ Pin column handled or already exists.');
+                }
+            }
+        }
+
+        console.log('🌱 Updating admin accounts...');
 
         const password = 'Digital2025';
         const hashedPassword = await bcrypt.hash(password, 10);
