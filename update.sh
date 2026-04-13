@@ -20,16 +20,24 @@ git reset --hard origin/BANKS
 echo "✅ Code updated!"
 echo ""
 
-# 2. Stop ONLY Mpesa Connect containers (leave others running)
-echo "🛑 Stopping Mpesa Connect containers..."
-docker-compose stop mpesaconnect-api mpesaconnect-web
-echo "✅ Stopped!"
+# 2. Force-free ports 5454 and 5054 by stopping any container using them
+echo "🛑 Freeing ports 5454 and 5054..."
+for port in 5454 5054; do
+    CONTAINER=$(docker ps --filter "publish=$port" -q)
+    if [ -n "$CONTAINER" ]; then
+        echo "   Stopping container on port $port..."
+        docker stop $CONTAINER 2>/dev/null || true
+        docker rm -f $CONTAINER 2>/dev/null || true
+    fi
+done
+docker-compose stop mpesaconnect-api mpesaconnect-web 2>/dev/null || true
+docker-compose rm -f mpesaconnect-api mpesaconnect-web 2>/dev/null || true
+echo "✅ Ports freed!"
 echo ""
 
 # 3. Remove old images to force a truly FRESH build
 echo "🗑️  Removing old Mpesa Connect images..."
-docker-compose rm -f mpesaconnect-api mpesaconnect-web
-docker images | grep mpesaconnect | awk '{print $3}' | xargs docker rmi -f 2>/dev/null || true
+docker images | grep -i mpesaconnect | awk '{print $3}' | xargs docker rmi -f 2>/dev/null || true
 echo "✅ Old images cleared!"
 echo ""
 
