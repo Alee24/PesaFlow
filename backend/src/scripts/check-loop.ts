@@ -1,0 +1,3 @@
+
+setInterval(() => console.log('alive'), 1000);
+console.log('Started');

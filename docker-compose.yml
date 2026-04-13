@@ -1,0 +1,60 @@
+version: '3.8'
+
+services:
+  # ==========================================
+  # 🗄️ SHARED DATABASE
+  # ==========================================
+  db:
+    image: mysql:8.0
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: ""
+      MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    networks:
+      - app_net
+
+  # ==========================================
+  # 🚀 Mpesa Connect SERVICES (MPesa Connect)
+  # ==========================================
+  Mpesa Connect-api:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    restart: always
+    env_file:
+      - ./backend/.env
+    environment:
+      - DATABASE_URL=mysql://root:@db:3306/Mpesa Connect_v2
+      - PORT=5454
+    depends_on:
+      - db
+    ports:
+      - "5454:5454"
+    networks:
+      - app_net
+
+  Mpesa Connect-web:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    restart: always
+    environment:
+      - NEXT_PUBLIC_API_URL=https://mpesaconnect.co.ke/api
+      - PORT=5054
+    depends_on:
+      - Mpesa Connect-api
+    ports:
+      - "5054:5054"
+    networks:
+      - app_net
+
+networks:
+  app_net:
+    driver: bridge
+
+volumes:
+  mysql_data:

@@ -1,0 +1,748 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  // SQLite Configuration (Development)
+  // provider = "sqlite"
+  // url      = "file:./dev.db"
+
+  // MySQL Configuration (Production)
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String   @id @default(uuid())
+  name         String?
+  email        String   @unique
+  phoneNumber  String   @unique @map("phone_number")
+  passwordHash String   @map("password_hash")
+  role         String   @default("MERCHANT") // ADMIN, MERCHANT, BRANCH_MANAGER
+  status       String   @default("PENDING_VERIFICATION") // ACTIVE, SUSPENDED, PENDING_VERIFICATION, REJECTED
+  pin          String?  @map("pin") // 4-digit PIN for POS access
+  appealNotes  String?  @map("appeal_notes")
+
+
+  // Authentication & Verification
+  emailVerified     Boolean   @default(false) @map("email_verified")
+  verificationToken String?   @unique @map("verification_token")
+  tokenExpiresAt    DateTime? @map("token_expires_at")
+
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  // License Activation
+  licenseActivated Boolean   @default(false) @map("license_activated")
+  licenseKey       String?   @map("license_key")
+  licenseType      String?   @map("license_type") // PURCHASED, ACTIVATED
+  licenseActivatedAt DateTime? @map("license_activated_at")
+
+  wallet              Wallet?
+  notifications       Notification[]
+  products            Product[]
+  sales               Sale[]
+  initiatedTx         Transaction[]  @relation("Initiator")
+  approvedWithdrawals Withdrawal[]   @relation("Approver")
+
+  categories      Category[]
+  businessProfile BusinessProfile?
+  subscription    Subscription?
+
+  // Branch Management (parentId links branch managers to main merchant)
+  parentId String? @map("parent_id")
+  parent   User?   @relation("BranchHierarchy", fields: [parentId], references: [id])
+  branches User[]  @relation("BranchHierarchy")
+
+  // Team Members (staff within a branch)
+  teamMembers TeamMember[]
+
+  // CRM Relations
+  customers            Customer[]
+  customerNotes        CustomerNote[]
+  customerInteractions CustomerInteraction[]
+  uploadedDocuments    CustomerDocument[]
+  customerTags         CustomerTag[]
+  customerSegments     CustomerSegment[]
+  emailCampaigns       EmailCampaign[]
+
+  // Support
+  tickets      Ticket[]
+  sentMessages TicketMessage[]
+
+
+
+  @@map("users")
+}
+
+model BusinessProfile {
+  id           String  @id @default(uuid())
+  userId       String  @unique @map("user_id")
+  user         User    @relation(fields: [userId], references: [id])
+  companyName  String  @map("company_name")
+  logoUrl      String? @map("logo_url")
+  contactPhone String? @map("contact_phone")
+  email        String?
+  location     String?
+  website      String?
+  kraPinNumber String? @map("kra_pin_number")
+  bankDetails  String? @map("bank_details")
+  mpesaDetails String? @map("mpesa_details")
+
+  // SMTP Settings
+  smtpHost String? @map("smtp_host")
+  smtpPort Int?    @map("smtp_port")
+  smtpUser String? @map("smtp_user")
+  smtpPass String? @map("smtp_pass")
+
+  // M-Pesa API Credentials
+  mpesaConsumerKey    String? @map("mpesa_consumer_key")
+  mpesaConsumerSecret String? @map("mpesa_consumer_secret")
+  mpesaPasskey        String? @map("mpesa_passkey")
+  mpesaShortcode      String? @map("mpesa_shortcode")
+  mpesaInitiatorName  String? @map("mpesa_initiator_name")
+  mpesaInitiatorPass  String? @map("mpesa_initiator_pass")
+  mpesaCallbackUrl    String? @map("mpesa_callback_url")
+  mpesaEnv            String? @default("sandbox") @map("mpesa_env")
+  useCustomMpesa      Boolean @default(false) @map("use_custom_mpesa")
+  currency            String? @default("KES")
+  vatEnabled          Boolean @default(false)
+  vatRate             Float   @default(16.0)
+
+  // Receipt Configuration
+  vatRegNumber      String? @map("vat_reg_number")
+  faxNumber         String? @map("fax_number")
+  receiptFooter     String? @map("receipt_footer") @db.Text
+  tillNumber        String? @map("till_number")
+  branchCode        String? @map("branch_code")
+  branchName        String? @map("branch_name")
+
+
+
+  // KYC Fields
+  idNumber            String? @map("id_number")
+  idFrontUrl          String? @map("id_front_url")
+  idBackUrl           String? @map("id_back_url")
+  businessPermitUrl   String? @map("business_permit_url")
+  registrationCertUrl String? @map("registration_cert_url")
+  kraCertUrl          String? @map("kra_cert_url")
+  dataPolicyAccepted  Boolean @default(false) @map("data_policy_accepted")
+  verificationNotes   String? @map("verification_notes")
+
+  // Bank Integration (Tier 1)
+  jengaMerchantId   String? @map("jenga_merchant_id")
+  jengaApiKey       String? @map("jenga_api_key")
+  jengaApiSecret    String? @map("jenga_api_secret")
+  jengaEnv          String? @default("sandbox") @map("jenga_env")
+  
+  kcbConsumerKey    String? @map("kcb_consumer_key")
+  kcbConsumerSecret String? @map("kcb_consumer_secret")
+  kcbEnv            String? @default("sandbox") @map("kcb_env")
+  
+  coopClientId      String? @map("coop_client_id")
+  coopClientSecret  String? @map("coop_client_secret")
+  coopEnv           String? @default("sandbox") @map("coop_env")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("business_profiles")
+}
+
+model Wallet {
+  id            String   @id @default(uuid())
+  userId        String   @unique @map("user_id")
+  user          User     @relation(fields: [userId], references: [id])
+  balance       Decimal  @default(0)
+  currency      String   @default("KES")
+  lastUpdatedAt DateTime @updatedAt @map("last_updated_at")
+
+  transactions Transaction[]
+  withdrawals  Withdrawal[]
+
+  @@map("wallets")
+}
+
+model Category {
+  id         String    @id @default(uuid())
+  merchantId String    @map("merchant_id")
+  merchant   User      @relation(fields: [merchantId], references: [id])
+  name       String
+  products   Product[]
+  createdAt  DateTime  @default(now()) @map("created_at")
+
+  @@map("categories")
+}
+
+model Product {
+  id              String   @id @default(uuid())
+  merchantId      String   @map("merchant_id")
+  merchant        User     @relation(fields: [merchantId], references: [id])
+  name            String
+  description     String?
+  imageUrl        String?  @map("image_url")
+  sku             String?
+  barcode         String?
+  price           Decimal
+  costPrice       Decimal? @map("cost_price")
+  stockQuantity   Int      @default(0) @map("stock_quantity")
+  minStockLevel   Int      @default(0) @map("min_stock_level")
+  maxStockLevel   Int?     @map("max_stock_level")
+  reorderPoint    Int      @default(10) @map("reorder_point")
+  reorderQuantity Int?     @map("reorder_quantity")
+  isTaxable       Boolean  @default(false) @map("is_taxable")
+  taxRate         Decimal? @default(0) @map("tax_rate")
+  status          String   @default("ACTIVE") // ACTIVE, ARCHIVED, OUT_OF_STOCK
+  unit            String?  @default("pcs") // pcs, kg, liters, etc
+
+  // Supplier Information
+  supplierName    String? @map("supplier_name")
+  supplierContact String? @map("supplier_contact")
+
+  // Batch/Lot Tracking
+  batchNumber String?   @map("batch_number")
+  expiryDate  DateTime? @map("expiry_date")
+
+  categoryId String?   @map("category_id")
+  category   Category? @relation(fields: [categoryId], references: [id])
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  saleItems      SaleItem[]
+  stockMovements StockMovement[]
+
+  @@map("products")
+}
+
+model StockMovement {
+  id            String   @id @default(uuid())
+  productId     String   @map("product_id")
+  product       Product  @relation(fields: [productId], references: [id])
+  merchantId    String   @map("merchant_id")
+  type          String // IN, OUT, ADJUSTMENT, RETURN, DAMAGED
+  quantity      Int
+  previousStock Int      @map("previous_stock")
+  newStock      Int      @map("new_stock")
+  reason        String?
+  reference     String? // Sale ID, Purchase Order, etc
+  notes         String?
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  @@map("stock_movements")
+}
+
+model Transaction {
+  id                    String      @id @default(uuid())
+  type                  String // DEPOSIT_STK, WITHDRAWAL, FEE, SALE_CREDIT
+  reference             String? // M-Pesa Receipt or internal ref
+  merchantRequestId     String?     @map("merchant_request_id")
+  checkoutRequestId     String?     @map("checkout_request_id")
+  amount                Decimal
+  feeCharged            Decimal     @default(0) @map("fee_charged")
+  status                String      @default("PENDING") // PENDING, COMPLETED, FAILED
+  initiatorUserId       String?     @map("initiator_user_id")
+  initiator             User?       @relation("Initiator", fields: [initiatorUserId], references: [id])
+  initiatorTeamMemberId String?     @map("initiator_team_member_id")
+  initiatorTeamMember   TeamMember? @relation("TeamMemberInitiator", fields: [initiatorTeamMemberId], references: [id])
+  recipientWalletId     String      @map("recipient_wallet_id")
+  recipientWallet       Wallet      @relation(fields: [recipientWalletId], references: [id])
+  channel               String?     @default("MPESA") // MPESA, BANK, CARDS
+  bankName              String?     @map("bank_name")
+  metadata              String?     @db.Text // JSON stringified
+  createdAt             DateTime    @default(now()) @map("created_at")
+
+  sale Sale?
+
+  @@map("transactions")
+}
+
+model Sale {
+  id         String @id @default(uuid())
+  merchantId String @map("merchant_id")
+  merchant   User   @relation(fields: [merchantId], references: [id])
+
+  // Customer Information
+  customerId    String?   @map("customer_id")
+  customer      Customer? @relation("CustomerSales", fields: [customerId], references: [id])
+  customerName  String?   @map("customer_name")
+  customerPhone String?   @map("customer_phone")
+  customerEmail String?   @map("customer_email")
+
+
+
+  // Receipt Details
+  receiptNumber String? @map("receipt_number") // Sequential receipt number
+  tillNumber    String? @map("till_number") // Till/POS terminal number
+  branchCode    String? @map("branch_code") // Branch identifier
+  cashierName   String? @map("cashier_name") // Staff member who processed sale
+
+  // Pricing
+  subtotal       Decimal  @default(0)
+  discountType   String?  @map("discount_type") // PERCENTAGE, FIXED
+  discountValue  Decimal? @default(0) @map("discount_value")
+  discountAmount Decimal  @default(0) @map("discount_amount")
+  taxAmount      Decimal  @default(0) @map("tax_amount")
+  totalAmount    Decimal  @map("total_amount")
+
+  // Payment
+  paymentMethod String   @default("CASH") @map("payment_method") // CASH, MPESA_STK, SPLIT
+  paymentStatus String   @default("PAID") @map("payment_status") // PAID, PARTIAL, PENDING
+  amountPaid    Decimal  @default(0) @map("amount_paid")
+  amountDue     Decimal  @default(0) @map("amount_due")
+  changeGiven   Decimal? @default(0) @map("change_given")
+
+  // Split Payment Details (JSON)
+  splitPayments String? @map("split_payments") // JSON: [{method: 'CASH', amount: 100}, {method: 'MPESA', amount: 200}]
+
+  transactionId String?      @unique @map("transaction_id")
+  transaction   Transaction? @relation(fields: [transactionId], references: [id])
+
+  notes     String?
+  createdAt DateTime @default(now()) @map("created_at")
+
+  items               SaleItem[]
+
+
+  @@map("sales")
+}
+
+model SaleItem {
+  id        String  @id @default(uuid())
+  saleId    String  @map("sale_id")
+  sale      Sale    @relation(fields: [saleId], references: [id])
+  productId String  @map("product_id")
+  product   Product @relation(fields: [productId], references: [id])
+  quantity  Int
+  unitPrice   Decimal @map("unit_price")
+  description String?
+  discount    Decimal @default(0)
+  tax         Decimal @default(0)
+  subtotal    Decimal
+
+  @@map("sale_items")
+}
+
+model Withdrawal {
+  id          String   @id @default(uuid())
+  walletId    String   @map("wallet_id")
+  wallet      Wallet   @relation(fields: [walletId], references: [id])
+  amount      Decimal
+  fee         Decimal  @default(0)
+  mpesaNumber String   @map("mpesa_number")
+  status      String   @default("PENDING") // PENDING, APPROVED, PROCESSING, COMPLETED, REJECTED
+  approvedBy  String?  @map("approved_by")
+  approver    User?    @relation("Approver", fields: [approvedBy], references: [id])
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@map("withdrawals")
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+  userId    String
+  title     String
+  message   String
+  type      String   @default("info") // info, success, warning, error
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Subscription {
+  id         String @id @default(uuid())
+  merchantId String @unique @map("merchant_id")
+  merchant   User   @relation(fields: [merchantId], references: [id])
+
+  // Features (JSON array of enabled features)
+  // Example: ["POS", "ANALYTICS", "TEAM_MANAGEMENT", "CRM", "ADVANCED_CRM"]
+  features     String   @map("features") // JSON string of enabled features
+  plan         String   @default("FREE") // FREE, BASIC, PRO, ENTERPRISE
+  status       String   @default("ACTIVE") // ACTIVE, EXPIRED, CANCELLED
+
+  // Transaction tracking for BASIC tier (100/month limit)
+  monthlyTxCount   Int      @default(0) @map("monthly_tx_count")
+  txCountResetDate DateTime @default(now()) @map("tx_count_reset_date")
+
+  // Enterprise-specific fields
+  isEnterprise     Boolean   @default(false) @map("is_enterprise")
+  licenseKey       String?   @unique @map("license_key")
+  supportExpiresAt DateTime? @map("support_expires_at")
+
+  startDate     DateTime  @default(now()) @map("start_date")
+  endDate       DateTime? @map("end_date")
+  autoRenew     Boolean   @default(true) @map("auto_renew")
+  lastPaymentId String?   @map("last_payment_id")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("subscriptions")
+}
+
+// Team Member Table - Separate from User accounts
+model TeamMember {
+  id         String @id @default(uuid())
+  merchantId String @map("merchant_id")
+  merchant   User   @relation(fields: [merchantId], references: [id], onDelete: Cascade)
+
+  name        String
+  email       String  @unique
+  phoneNumber String? @map("phone_number")
+  pin         String? // 4-digit PIN for POS access (hashed)
+
+  role   String @default("STAFF") // STAFF, MANAGER, CASHIER
+  status String @default("ACTIVE") // ACTIVE, SUSPENDED
+
+  // Permissions (JSON)
+  permissions String? @db.Text // {"canMakeSales": true, "canViewReports": false}
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Audit trail
+  salesInitiated Transaction[] @relation("TeamMemberInitiator")
+
+  @@index([merchantId])
+  @@index([email])
+  @@map("team_members")
+}
+
+// ============================================
+// CRM MODELS
+// ============================================
+
+model Customer {
+  id         String @id @default(uuid())
+  merchantId String @map("merchant_id")
+  merchant   User   @relation(fields: [merchantId], references: [id])
+
+  // Basic Information
+  name    String
+  email   String?
+  phone   String?
+  company String?
+  address String?
+  city    String?
+  country String? @default("Kenya")
+
+  // Metadata
+  source String? @default("MANUAL") // MANUAL, IMPORT, POS, WEBSITE
+  status String  @default("ACTIVE") // ACTIVE, INACTIVE, LEAD, CUSTOMER
+
+  // Financial
+  lifetimeValue    Decimal   @default(0) @map("lifetime_value")
+  totalPurchases   Int       @default(0) @map("total_purchases")
+  lastPurchaseDate DateTime? @map("last_purchase_date")
+
+  // Timestamps
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  notes        CustomerNote[]
+  interactions CustomerInteraction[]
+  documents    CustomerDocument[]
+  tags         CustomerTagRelation[]
+  segments     CustomerSegmentRelation[]
+  sales        Sale[]                    @relation("CustomerSales")
+  emailCampaignRecipients EmailCampaignRecipient[]
+
+  @@index([merchantId])
+  @@index([email])
+  @@index([phone])
+  @@map("customers")
+}
+
+model CustomerNote {
+  id         String   @id @default(uuid())
+  customerId String   @map("customer_id")
+  customer   Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+
+  userId String @map("user_id")
+  user   User   @relation(fields: [userId], references: [id])
+
+  content String @db.Text
+  type    String @default("NOTE") // NOTE, CALL, MEETING, EMAIL
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([customerId])
+  @@map("customer_notes")
+}
+
+model CustomerInteraction {
+  id         String   @id @default(uuid())
+  customerId String   @map("customer_id")
+  customer   Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+
+  userId String @map("user_id")
+  user   User   @relation(fields: [userId], references: [id])
+
+  type        String // CALL, EMAIL, MEETING, PURCHASE, SUPPORT, OTHER
+  subject     String?
+  description String? @db.Text
+  outcome     String? // SUCCESS, FOLLOW_UP, NO_ANSWER, etc.
+  duration    Int? // Duration in minutes
+
+  interactionDate DateTime @default(now()) @map("interaction_date")
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  @@index([customerId])
+  @@index([type])
+  @@map("customer_interactions")
+}
+
+model CustomerDocument {
+  id         String   @id @default(uuid())
+  customerId String   @map("customer_id")
+  customer   Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+
+  userId String @map("user_id")
+  user   User   @relation(fields: [userId], references: [id])
+
+  title       String
+  fileUrl     String   @map("file_url")
+  fileType    String   @map("file_type")
+  fileSize    Int      @map("file_size") // In bytes
+  description String?  @db.Text
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([customerId])
+  @@map("customer_documents")
+}
+
+model CustomerTag {
+  id         String @id @default(uuid())
+  merchantId String @map("merchant_id")
+  merchant   User   @relation(fields: [merchantId], references: [id])
+
+  name  String
+  color String @default("#3B82F6") // Hex color
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  customers CustomerTagRelation[]
+
+  @@unique([merchantId, name])
+  @@map("customer_tags")
+}
+
+model CustomerTagRelation {
+  customerId String   @map("customer_id")
+  customer   Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+
+  tagId String      @map("tag_id")
+  tag   CustomerTag @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  assignedAt DateTime @default(now()) @map("assigned_at")
+
+  @@id([customerId, tagId])
+  @@map("customer_tag_relations")
+}
+
+model CustomerSegment {
+  id         String @id @default(uuid())
+  merchantId String @map("merchant_id")
+  merchant   User   @relation(fields: [merchantId], references: [id])
+
+  name        String
+  description String? @db.Text
+  criteria    String  @db.Text // JSON string with segment criteria
+  autoUpdate  Boolean @default(true) @map("auto_update")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  customers CustomerSegmentRelation[]
+  campaigns EmailCampaign[]
+
+  @@index([merchantId])
+  @@map("customer_segments")
+}
+
+model CustomerSegmentRelation {
+  customerId String   @map("customer_id")
+  customer   Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+
+  segmentId String          @map("segment_id")
+  segment   CustomerSegment @relation(fields: [segmentId], references: [id], onDelete: Cascade)
+
+  addedAt DateTime @default(now()) @map("added_at")
+
+  @@id([customerId, segmentId])
+  @@map("customer_segment_relations")
+}
+
+model EmailCampaign {
+  id         String @id @default(uuid())
+  merchantId String @map("merchant_id")
+  merchant   User   @relation(fields: [merchantId], references: [id])
+
+  name    String
+  subject String
+  content String @db.Text // HTML email content
+
+  segmentId String?          @map("segment_id")
+  segment   CustomerSegment? @relation(fields: [segmentId], references: [id])
+
+  status      String    @default("DRAFT") // DRAFT, SCHEDULED, SENDING, SENT, FAILED
+  scheduledAt DateTime? @map("scheduled_at")
+  sentAt      DateTime? @map("sent_at")
+
+  // Analytics
+  totalRecipients Int @default(0) @map("total_recipients")
+  sentCount       Int @default(0) @map("sent_count")
+  openedCount     Int @default(0) @map("opened_count")
+  clickedCount    Int @default(0) @map("clicked_count")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  recipients EmailCampaignRecipient[]
+
+  @@index([merchantId])
+  @@index([status])
+  @@map("email_campaigns")
+}
+
+model EmailCampaignRecipient {
+  id         String        @id @default(uuid())
+  campaignId String        @map("campaign_id")
+  campaign   EmailCampaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  customerId String        @map("customer_id")
+  customer   Customer      @relation(fields: [customerId], references: [id], onDelete: Cascade)
+
+  status      String    @default("PENDING") // PENDING, SENT, FAILED, OPENED, CLICKED
+  sentAt      DateTime? @map("sent_at")
+  openedAt    DateTime? @map("opened_at")
+  clickedAt   DateTime? @map("clicked_at")
+  errorReason String?   @map("error_reason")
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([campaignId])
+  @@index([customerId])
+  @@map("email_campaign_recipients")
+}
+
+// Loyalty models removed to match production DB
+
+// ============================================
+// SUPPORT SYSTEM MODELS
+// ============================================
+
+model Ticket {
+  id         String @id @default(uuid())
+  merchantId String @map("merchant_id")
+  merchant   User   @relation(fields: [merchantId], references: [id])
+
+  subject  String
+  status   String @default("OPEN") // OPEN, IN_PROGRESS, CLOSED
+  priority String @default("MEDIUM") // LOW, MEDIUM, HIGH
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  messages TicketMessage[]
+
+  @@index([merchantId])
+  @@index([status])
+  @@map("tickets")
+}
+
+model TicketMessage {
+  id       String @id @default(uuid())
+  ticketId String @map("ticket_id")
+  ticket   Ticket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+
+  senderId String @map("sender_id")
+  sender   User   @relation(fields: [senderId], references: [id])
+
+  message      String  @db.Text
+  attachmentUrl String? @map("attachment_url")
+  isAdmin      Boolean @default(false) @map("is_admin")
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([ticketId])
+  @@map("ticket_messages")
+}
+
+model SystemSettings {
+  id                    String   @id @default(uuid())
+  serviceChargeEnabled  Boolean  @default(true) @map("service_charge_enabled")
+  serviceChargeAmount   Float    @default(2.5) @map("service_charge_amount")
+  
+  // Global SMTP Settings
+  smtpHost      String? @map("smtp_host")
+  smtpPort      Int?    @map("smtp_port")
+  smtpUser      String? @map("smtp_user")
+  smtpPass      String? @map("smtp_pass")
+  smtpFromName  String? @map("smtp_from_name")
+  smtpFromEmail String? @map("smtp_from_email")
+  
+  // Google Analytics
+  googleAnalyticsId String? @map("google_analytics_id")
+  
+  updatedAt             DateTime @updatedAt @map("updated_at")
+  createdAt             DateTime @default(now()) @map("created_at")
+
+  @@map("system_settings")
+}
+
+model SystemLicense {
+  id              String   @id @default(uuid())
+  domain          String   @unique
+  licenseKey      String   @map("license_key") @db.Text
+  fingerprint     String
+  status          String   @default("ACTIVE") // ACTIVE, SUSPENDED, EXPIRED
+  expiresAt       DateTime @map("expires_at")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  @@map("system_licenses")
+}
+
+model LicenseRequest {
+  id              String   @id @default(uuid())
+  companyName     String   @map("company_name")
+  contactEmail    String   @map("contact_email")
+  contactPhone    String   @map("contact_phone")
+  domain          String
+  fingerprint     String
+  hostname        String
+  requestedUsers  Int      @default(100) @map("requested_users")
+  requestedDays   Int      @default(365) @map("requested_days")
+  purpose         String?  @db.Text
+  status          String   @default("PENDING") // PENDING, APPROVED, REJECTED
+  rejectionReason String?  @map("rejection_reason") @db.Text
+  approvedBy      String?  @map("approved_by")
+  approvedAt      DateTime? @map("approved_at")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  @@map("license_requests")
+}
+
+model UserLicenseKey {
+  id              String    @id @default(uuid())
+  licenseKey      String    @unique @map("license_key")
+  planType        String    @default("ENTERPRISE") @map("plan_type") // ENTERPRISE, PREMIUM, etc
+  generatedBy     String    @map("generated_by") // Admin email who generated it
+  isUsed          Boolean   @default(false) @map("is_used")
+  usedBy          String?   @map("used_by") // User ID who used it
+  usedByEmail     String?   @map("used_by_email")
+  usedAt          DateTime? @map("used_at")
+  serverFingerprint String? @map("server_fingerprint") // Hardware ID it was used on
+  domain          String?   @map("domain")           // Domain it was used on
+  expiresAt       DateTime? @map("expires_at") // Optional expiration
+  createdAt       DateTime  @default(now()) @map("created_at")
+  
+  @@map("user_license_keys")
+}

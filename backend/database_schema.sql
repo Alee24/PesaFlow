@@ -1,0 +1,173 @@
+-- CreateTable
+CREATE TABLE `users` (
+    `id` VARCHAR(191) NOT NULL,
+    `name` VARCHAR(191) NULL,
+    `email` VARCHAR(191) NOT NULL,
+    `phone_number` VARCHAR(191) NOT NULL,
+    `password_hash` VARCHAR(191) NOT NULL,
+    `role` VARCHAR(191) NOT NULL DEFAULT 'MERCHANT',
+    `status` VARCHAR(191) NOT NULL DEFAULT 'ACTIVE',
+    `created_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+    `updated_at` DATETIME(3) NOT NULL,
+
+    UNIQUE INDEX `users_email_key`(`email`),
+    UNIQUE INDEX `users_phone_number_key`(`phone_number`),
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `business_profiles` (
+    `id` VARCHAR(191) NOT NULL,
+    `user_id` VARCHAR(191) NOT NULL,
+    `company_name` VARCHAR(191) NOT NULL,
+    `logo_url` VARCHAR(191) NULL,
+    `contact_phone` VARCHAR(191) NULL,
+    `email` VARCHAR(191) NULL,
+    `location` VARCHAR(191) NULL,
+    `website` VARCHAR(191) NULL,
+    `vat_number` VARCHAR(191) NULL,
+    `bank_details` VARCHAR(191) NULL,
+    `mpesa_details` VARCHAR(191) NULL,
+    `created_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+    `updated_at` DATETIME(3) NOT NULL,
+
+    UNIQUE INDEX `business_profiles_user_id_key`(`user_id`),
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `wallets` (
+    `id` VARCHAR(191) NOT NULL,
+    `user_id` VARCHAR(191) NOT NULL,
+    `balance` DECIMAL(65, 30) NOT NULL DEFAULT 0,
+    `currency` VARCHAR(191) NOT NULL DEFAULT 'KES',
+    `last_updated_at` DATETIME(3) NOT NULL,
+
+    UNIQUE INDEX `wallets_user_id_key`(`user_id`),
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `categories` (
+    `id` VARCHAR(191) NOT NULL,
+    `merchant_id` VARCHAR(191) NOT NULL,
+    `name` VARCHAR(191) NOT NULL,
+    `created_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `products` (
+    `id` VARCHAR(191) NOT NULL,
+    `merchant_id` VARCHAR(191) NOT NULL,
+    `name` VARCHAR(191) NOT NULL,
+    `description` VARCHAR(191) NULL,
+    `image_url` VARCHAR(191) NULL,
+    `sku` VARCHAR(191) NULL,
+    `price` DECIMAL(65, 30) NOT NULL,
+    `stock_quantity` INTEGER NOT NULL DEFAULT 0,
+    `is_taxable` BOOLEAN NOT NULL DEFAULT false,
+    `status` VARCHAR(191) NOT NULL DEFAULT 'ACTIVE',
+    `category_id` VARCHAR(191) NULL,
+    `created_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `transactions` (
+    `id` VARCHAR(191) NOT NULL,
+    `type` VARCHAR(191) NOT NULL,
+    `reference` VARCHAR(191) NULL,
+    `merchant_request_id` VARCHAR(191) NULL,
+    `checkout_request_id` VARCHAR(191) NULL,
+    `amount` DECIMAL(65, 30) NOT NULL,
+    `fee_charged` DECIMAL(65, 30) NOT NULL DEFAULT 0,
+    `status` VARCHAR(191) NOT NULL DEFAULT 'PENDING',
+    `initiator_user_id` VARCHAR(191) NULL,
+    `recipient_wallet_id` VARCHAR(191) NOT NULL,
+    `metadata` VARCHAR(191) NULL,
+    `created_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `sales` (
+    `id` VARCHAR(191) NOT NULL,
+    `merchant_id` VARCHAR(191) NOT NULL,
+    `total_amount` DECIMAL(65, 30) NOT NULL,
+    `payment_method` VARCHAR(191) NOT NULL DEFAULT 'MPESA_STK',
+    `transaction_id` VARCHAR(191) NULL,
+    `created_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+
+    UNIQUE INDEX `sales_transaction_id_key`(`transaction_id`),
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `sale_items` (
+    `id` VARCHAR(191) NOT NULL,
+    `sale_id` VARCHAR(191) NOT NULL,
+    `product_id` VARCHAR(191) NOT NULL,
+    `quantity` INTEGER NOT NULL,
+    `unit_price` DECIMAL(65, 30) NOT NULL,
+    `subtotal` DECIMAL(65, 30) NOT NULL,
+
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `withdrawals` (
+    `id` VARCHAR(191) NOT NULL,
+    `wallet_id` VARCHAR(191) NOT NULL,
+    `amount` DECIMAL(65, 30) NOT NULL,
+    `mpesa_number` VARCHAR(191) NOT NULL,
+    `status` VARCHAR(191) NOT NULL DEFAULT 'PENDING',
+    `approved_by` VARCHAR(191) NULL,
+    `created_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+    `updated_at` DATETIME(3) NOT NULL,
+
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- AddForeignKey
+ALTER TABLE `business_profiles` ADD CONSTRAINT `business_profiles_user_id_fkey` FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `wallets` ADD CONSTRAINT `wallets_user_id_fkey` FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `categories` ADD CONSTRAINT `categories_merchant_id_fkey` FOREIGN KEY (`merchant_id`) REFERENCES `users`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `products` ADD CONSTRAINT `products_merchant_id_fkey` FOREIGN KEY (`merchant_id`) REFERENCES `users`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `products` ADD CONSTRAINT `products_category_id_fkey` FOREIGN KEY (`category_id`) REFERENCES `categories`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `transactions` ADD CONSTRAINT `transactions_initiator_user_id_fkey` FOREIGN KEY (`initiator_user_id`) REFERENCES `users`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `transactions` ADD CONSTRAINT `transactions_recipient_wallet_id_fkey` FOREIGN KEY (`recipient_wallet_id`) REFERENCES `wallets`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `sales` ADD CONSTRAINT `sales_merchant_id_fkey` FOREIGN KEY (`merchant_id`) REFERENCES `users`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `sales` ADD CONSTRAINT `sales_transaction_id_fkey` FOREIGN KEY (`transaction_id`) REFERENCES `transactions`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `sale_items` ADD CONSTRAINT `sale_items_sale_id_fkey` FOREIGN KEY (`sale_id`) REFERENCES `sales`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `sale_items` ADD CONSTRAINT `sale_items_product_id_fkey` FOREIGN KEY (`product_id`) REFERENCES `products`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `withdrawals` ADD CONSTRAINT `withdrawals_wallet_id_fkey` FOREIGN KEY (`wallet_id`) REFERENCES `wallets`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `withdrawals` ADD CONSTRAINT `withdrawals_approved_by_fkey` FOREIGN KEY (`approved_by`) REFERENCES `users`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+

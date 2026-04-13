@@ -1,0 +1,3 @@
+name,price,stock,category,description,sku,barcode,costPrice,unit
+Sample Product,1000,50,Electronics,This is a sample product description,SKU123,123456789,800,pcs
+Another Product,500,20,Stationery,Another sample item,SKU456,,350,box

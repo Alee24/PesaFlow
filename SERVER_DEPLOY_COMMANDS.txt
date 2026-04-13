@@ -1,0 +1,32 @@
+# CORRECTED SERVER DEPLOYMENT COMMANDS
+# Run these commands on your VPS server
+
+# Navigate to your project directory
+cd /var/www/mpesaconnect.co.ke
+
+# Pull latest changes (including the TypeScript fix)
+git pull origin main
+
+# Deploy Backend
+cd backend
+npm install
+npx prisma generate
+npm run build
+
+# Restart backend with CORRECT PM2 name
+pm2 restart Mpesa Connect-api
+
+# Deploy Frontend  
+cd ../frontend
+npm install
+npm run build
+
+# Restart frontend with CORRECT PM2 name
+pm2 restart Mpesa Connect-web
+
+# Check status
+pm2 status
+
+# View logs to confirm everything is working
+pm2 logs Mpesa Connect-api --lines 20
+pm2 logs Mpesa Connect-web --lines 20
