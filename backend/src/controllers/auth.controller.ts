@@ -95,7 +95,7 @@ export const register = async (req: Request, res: Response): Promise<void> => {
             { expiresIn: '30d' } // Extended for better UX
         );
 
-        return res.status(201).json({
+        res.status(201).json({
             message: 'Account created successfully',
             token,
             user: {
