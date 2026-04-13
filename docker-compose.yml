@@ -18,9 +18,9 @@ services:
       - app_net
 
   # ==========================================
-  # 🚀 Mpesa Connect SERVICES (MPesa Connect)
+  # 🚀 Mpesa Connect SERVICES
   # ==========================================
-  Mpesa Connect-api:
+  mpesaconnect-api:
     build:
       context: ./backend
       dockerfile: Dockerfile
@@ -28,7 +28,7 @@ services:
     env_file:
       - ./backend/.env
     environment:
-      - DATABASE_URL=mysql://root:@db:3306/Mpesa Connect_v2
+      - DATABASE_URL=mysql://root:@db:3306/mpesaconnect_v2
       - PORT=5454
     depends_on:
       - db
@@ -37,7 +37,7 @@ services:
     networks:
       - app_net
 
-  Mpesa Connect-web:
+  mpesaconnect-web:
     build:
       context: ./frontend
       dockerfile: Dockerfile
@@ -46,7 +46,7 @@ services:
       - NEXT_PUBLIC_API_URL=https://mpesaconnect.co.ke/api
       - PORT=5054
     depends_on:
-      - Mpesa Connect-api
+      - mpesaconnect-api
     ports:
       - "5054:5054"
     networks:
