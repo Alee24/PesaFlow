@@ -82,24 +82,26 @@ export const register = async (req: Request, res: Response): Promise<void> => {
             return user;
         });
 
-        // Send Email in background (non-blocking)
-        sendVerificationEmail(email, verificationToken).catch(err => {
-            console.error('Failed to send verification email during registration:', err);
+        // Truly backgrounded email send (non-blocking)
+        setImmediate(() => {
+            sendVerificationEmail(email, verificationToken).catch(err => {
+                console.error('Background Email Error:', err);
+            });
         });
 
         const token = jwt.sign(
             { userId: result.id, role: result.role, status: result.status },
             process.env.JWT_SECRET || 'fallback_secret',
-            { expiresIn: '7d' }
+            { expiresIn: '30d' } // Extended for better UX
         );
 
-        res.status(201).json({
+        return res.status(201).json({
             message: 'Account created successfully',
             token,
             user: {
                 id: result.id,
                 email: result.email,
-                name: result.name,
+                phoneNumber: result.phoneNumber,
                 role: result.role,
                 status: result.status,
                 isProfileComplete: false

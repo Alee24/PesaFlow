@@ -39,6 +39,12 @@ export default function RegisterPage() {
 
         setLoading(true);
 
+        // Safety timeout to reset spinner if something hangs
+        const safetyCounter = setTimeout(() => {
+            setLoading(false);
+            setError('Registration is taking longer than expected. Please check your dashboard or try signing in.');
+        }, 12000);
+
         try {
             const normalizedPhone = normalizePhoneNumber(formData.phoneNumber);
             const res = await api.post('/auth/register', {
@@ -47,11 +53,19 @@ export default function RegisterPage() {
                 password: formData.password
             });
 
+            clearTimeout(safetyCounter);
             // LOG IN INSTANTLY
             login(res.data.token, res.data.user);
+            
+            // Absolute fallback for navigation
+            setTimeout(() => {
+                window.location.href = '/dashboard';
+            }, 100);
 
         } catch (err: any) {
-            setError(err.response?.data?.error || 'Failed to create account');
+            clearTimeout(safetyCounter);
+            console.error("REGISTRATION ERROR:", err);
+            setError(err.response?.data?.error || 'Failed to create account. Connection issue.');
         } finally {
             setLoading(false);
         }
