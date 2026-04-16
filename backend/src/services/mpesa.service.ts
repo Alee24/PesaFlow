@@ -59,6 +59,16 @@ const getCredentials = async (userId?: string) => {
         }
     }
 
+    // Trim all credential values to remove accidental whitespace/newlines from copy-paste
+    creds.consumerKey = creds.consumerKey?.trim();
+    creds.consumerSecret = creds.consumerSecret?.trim();
+    creds.passkey = creds.passkey?.trim();
+    creds.shortCode = creds.shortCode?.trim();
+    creds.initiatorName = creds.initiatorName?.trim();
+    creds.password = creds.password?.trim();
+    creds.callbackUrl = creds.callbackUrl?.trim();
+    creds.env = creds.env?.trim().toLowerCase();
+
     console.log(`[M-Pesa Config] Key: ${creds.consumerKey?.substring(0, 5)}... ShortCode: ${creds.shortCode} Env: ${creds.env}`);
     return creds;
 }
@@ -68,21 +78,33 @@ const getAccessToken = async (creds: any) => {
         throw new Error('Missing Consumer Key or Secret');
     }
 
-    const url = creds.env === 'production'
+    // Normalize env to lowercase
+    const env = (creds.env || 'sandbox').trim().toLowerCase();
+
+    const url = env === 'production'
         ? 'https://api.safaricom.co.ke/oauth/v1/generate?grant_type=client_credentials'
         : 'https://sandbox.safaricom.co.ke/oauth/v1/generate?grant_type=client_credentials';
 
     const auth = Buffer.from(`${creds.consumerKey}:${creds.consumerSecret}`).toString('base64');
 
+    console.log(`[M-Pesa Token] Environment: ${env}, URL: ${url}`);
+
     try {
         const response = await axios.get(url, {
             headers: { Authorization: `Basic ${auth}` },
+            timeout: 10000 // 10 second timeout
         });
         return response.data.access_token;
     } catch (error: any) {
-        console.error('M-Pesa Access Token Error:', error.response?.data || error.message);
-        const detailedError = error.response?.data?.errorMessage || error.response?.data?.error || error.message;
-        throw new Error(`Token Error: ${detailedError}`);
+        const statusCode = error.response?.status;
+        const safaricomMsg = error.response?.data?.errorMessage || error.response?.data?.error_description || error.response?.data?.error || error.message;
+        console.error(`[M-Pesa Token ERROR] Status: ${statusCode}, Env: ${env}, Msg: ${safaricomMsg}`);
+        
+        // Helpful hint for 400 errors
+        if (statusCode === 400) {
+            throw new Error(`Token Error: Invalid credentials for ${env} environment. Please verify your Consumer Key and Secret are correct for ${env === 'production' ? 'Production (Live)' : 'Sandbox'} and have no extra spaces.`);
+        }
+        throw new Error(`Token Error: ${safaricomMsg}`);
     }
 };
 

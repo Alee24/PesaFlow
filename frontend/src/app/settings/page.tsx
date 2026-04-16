@@ -188,21 +188,30 @@ export default function SettingsPage() {
 
     const handleTestMpesa = async () => {
         setMpesaTestStatus('idle');
-        setMpesaTestMessage('');
+        setMpesaTestMessage('Saving credentials then testing...');
         try {
-            // We should ideally save first, but for now assuming user might want to test saved creds
-            // Or we could send current form data to test endpoint? 
-            // The backend test endpoint currently reads from DB. So user MUST save first.
-            // Let's remind them or auto-save? Auto-saving might be too aggressive.
-            // We'll warn if dirty? No, simpler: Read from DB.
+            // Auto-save current M-Pesa credentials first so the test uses latest form values
+            const payload = new FormData();
+            Object.entries(formData).forEach(([key, value]) => {
+                if (value === null || value === undefined) return;
+                if (typeof value === 'boolean') payload.append(key, value.toString());
+                else if (typeof value === 'number') payload.append(key, value.toString());
+                else payload.append(key, value as string);
+            });
+            await api.put('/profile', payload, { headers: { 'Content-Type': 'multipart/form-data' } });
+
+            // Now test with the freshly saved credentials
             const res = await api.post('/mpesa/test');
             setMpesaTestStatus('success');
-            setMpesaTestMessage(`Success: ${res.data.message}`);
+            setMpesaTestMessage(`✅ ${res.data.message}`);
+            showToast('M-Pesa connection successful!', 'success');
         } catch (e: any) {
             setMpesaTestStatus('error');
-            setMpesaTestMessage(`Connection Failed: ${e.response?.data?.message || e.message}`);
+            const errMsg = e.response?.data?.message || e.response?.data?.error || e.message;
+            setMpesaTestMessage(`Connection Failed: ${errMsg}`);
         }
     };
+
 
     const handleTestSMTP = async () => {
         setSmtpTestStatus('idle');

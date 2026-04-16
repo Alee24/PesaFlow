@@ -46,7 +46,7 @@ const profileSchema = z.object({
     coopEnv: z.string().optional().or(z.literal('')),
 
     // User settings
-    pin: z.string().length(4).optional().or(z.literal('')),
+    pin: z.string().refine(val => val === '' || val.length === 4, { message: 'PIN must be exactly 4 digits' }).optional(),
 });
 
 export const getProfile = async (req: Request, res: Response) => {
@@ -113,8 +113,8 @@ export const updateProfile = async (req: Request, res: Response) => {
             create: { ...data, userId },
         });
 
-        // Update User PIN if provided
-        if (data.pin) {
+        // Update User PIN if provided and non-empty
+        if (data.pin && data.pin.length === 4) {
             const bcrypt = require('bcryptjs');
             const hashedPin = await bcrypt.hash(data.pin, 10);
             await prisma.user.update({
@@ -127,9 +127,10 @@ export const updateProfile = async (req: Request, res: Response) => {
     } catch (error: any) {
         console.error("Update Profile Error:", error);
         if (error instanceof z.ZodError) {
-            return res.status(400).json({ error: (error as any).errors[0].message });
+            const messages = (error as any).errors.map((e: any) => `${e.path.join('.')}: ${e.message}`).join(', ');
+            return res.status(400).json({ error: messages });
         }
-        res.status(500).json({ error: 'Failed to update profile' });
+        res.status(500).json({ error: error.message || 'Failed to update profile' });
     }
 };
 
