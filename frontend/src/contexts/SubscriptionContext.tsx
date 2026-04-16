@@ -11,6 +11,7 @@ interface Subscription {
     txCountResetDate: string;
     isEnterprise: boolean;
     endDate?: string;
+    features?: string; // JSON array of enabled feature names
 }
 
 interface SubscriptionContextType {
@@ -110,7 +111,22 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
     const hasFeature = (feature: string): boolean => {
         if (!subscription) return false;
-        return FEATURE_ACCESS[feature]?.[subscription.plan] || false;
+
+        // If subscription has explicit features JSON, use it first
+        if (subscription.features) {
+            try {
+                const enabledFeatures: string[] = JSON.parse(subscription.features);
+                if (Array.isArray(enabledFeatures) && enabledFeatures.length > 0) {
+                    return enabledFeatures.includes(feature);
+                }
+            } catch {
+                // Fall through to plan-based check
+            }
+        }
+
+        // Fall back to plan-based matrix
+        const plan = subscription.plan;
+        return FEATURE_ACCESS[feature]?.[plan] || false;
     };
 
     const getRemainingTransactions = (): number => {

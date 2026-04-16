@@ -48,10 +48,6 @@ export default function OnboardingPage() {
 
     const nextStep = () => {
         if (step === 1) {
-            if (!formData.companyName || !formData.idNumber || !formData.location) {
-                setError('Please fill in mandatory business details');
-                return;
-            }
             // Optional KRA PIN Format Check (only if provided)
             if (formData.kraPinNumber) {
                 const kraRegex = /^[A-Z][0-9]{9}[A-Z]$/i;
@@ -63,6 +59,12 @@ export default function OnboardingPage() {
         }
         setError('');
         setStep(step + 1);
+    };
+
+    const skipOnboarding = () => {
+        const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
+        localStorage.setItem('user', JSON.stringify({ ...currentUser, isProfileComplete: true }));
+        window.location.href = '/dashboard';
     };
 
     const prevStep = () => {
@@ -177,21 +179,18 @@ export default function OnboardingPage() {
                                     label="Registered Business Name"
                                     value={formData.companyName}
                                     onChange={(e) => setFormData({ ...formData, companyName: e.target.value })}
-                                    required
                                     placeholder="Safiri Solutions Ltd"
                                 />
                                 <Input
                                     label="Physical Location / Address"
                                     value={formData.location}
                                     onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-                                    required
                                     placeholder="Nairobi, CBD - Bihi Towers 4th Floor"
                                 />
                                 <Input
                                     label="ID/Passport Number"
                                     value={formData.idNumber}
                                     onChange={(e) => setFormData({ ...formData, idNumber: e.target.value })}
-                                    required
                                     placeholder="12345678"
                                 />
 
@@ -199,19 +198,13 @@ export default function OnboardingPage() {
                                     <Button type="button" onClick={nextStep} className="w-full">
                                         Next: Upload Documents
                                     </Button>
-                                    <Button 
-                                        type="button" 
-                                        variant="outline" 
-                                        onClick={() => {
-                                            // Update local storage to prevent redirect loop
-                                            const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
-                                            localStorage.setItem('user', JSON.stringify({ ...currentUser, isProfileComplete: true }));
-                                            window.location.href = '/dashboard';
-                                        }} 
-                                        className="w-full text-indigo-600 border-indigo-200 hover:bg-indigo-50"
+                                    <button
+                                        type="button"
+                                        onClick={skipOnboarding}
+                                        className="w-full text-sm text-gray-500 hover:text-indigo-600 transition-colors py-2 underline underline-offset-2"
                                     >
-                                        Skip this step
-                                    </Button>
+                                        Skip for now — I'll complete this later
+                                    </button>
                                 </div>
                             </div>
                         )}
@@ -270,18 +263,13 @@ export default function OnboardingPage() {
                                             <ShieldCheck className="w-4 h-4 mr-2" /> Submit Profile
                                         </Button>
                                     </div>
-                                    <Button 
-                                        type="button" 
-                                        variant="outline" 
-                                        onClick={() => {
-                                            const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
-                                            localStorage.setItem('user', JSON.stringify({ ...currentUser, isProfileComplete: true }));
-                                            window.location.href = '/dashboard';
-                                        }} 
-                                        className="w-full text-indigo-600 border-indigo-200 hover:bg-indigo-50"
+                                    <button
+                                        type="button"
+                                        onClick={skipOnboarding}
+                                        className="w-full text-sm text-gray-500 hover:text-indigo-600 transition-colors py-2 underline underline-offset-2"
                                     >
-                                        Skip this step
-                                    </Button>
+                                        Skip for now — I'll complete this later
+                                    </button>
                                 </div>
                             </div>
                         )}

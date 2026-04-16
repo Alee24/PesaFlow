@@ -61,6 +61,10 @@ echo "🗄️  Running database migrations..."
 docker-compose exec mpesaconnect-api npx prisma migrate deploy 2>/dev/null || echo "⚠️  Migration skipped or already up to date"
 echo ""
 
+echo "🎁  Fixing 1-Year Promotion subscriptions (upgrading FREE→PRO for promo accounts)..."
+docker-compose exec mpesaconnect-api npx ts-node --transpile-only -r dotenv/config src/scripts/fix-promo-subscriptions.ts 2>/dev/null || echo "⚠️  Promo fix skipped (check logs if accounts still show FREE)"
+echo ""
+
 # 7. Show running status
 echo "📊 Service Status:"
 docker-compose ps mpesaconnect-api mpesaconnect-web

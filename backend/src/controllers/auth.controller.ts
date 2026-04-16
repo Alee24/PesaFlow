@@ -53,7 +53,20 @@ export const register = async (req: Request, res: Response): Promise<void> => {
             const oneYearFromNow = new Date();
             oneYearFromNow.setFullYear(oneYearFromNow.getFullYear() + 1);
 
-            // 1. Create User
+            // All features included in the 1-Year Promotion
+            const promoFeatures = JSON.stringify([
+                'invoices',
+                'withdrawals',
+                'team',
+                'analytics',
+                'reports',
+                'CRM',
+                'ADVANCED_CRM',
+                'POS',
+                'BANK_INTEGRATION'
+            ]);
+
+            // 1. Create User with 1-Year Promotion = PRO plan for 1 year
             const user = await tx.user.create({
                 data: {
                     email,
@@ -65,10 +78,10 @@ export const register = async (req: Request, res: Response): Promise<void> => {
                     verificationToken,
                     subscription: {
                         create: {
-                            plan: 'FREE',
+                            plan: 'PRO',          // Full access during 1-year promo
                             status: 'ACTIVE',
-                            features: '[]',
-                            endDate: oneYearFromNow
+                            features: promoFeatures,
+                            endDate: oneYearFromNow  // Expires in 1 year
                         }
                     }
                 },
