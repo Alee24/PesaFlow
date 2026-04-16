@@ -15,7 +15,15 @@ echo ""
 
 # 1. Pull latest code from BANKS branch
 echo "📥 Pulling latest code from BANKS..."
-git fetch origin BANKS
+git fetch --all
+
+# Stash any local changes so they don't block checkout
+git stash 2>/dev/null || true
+
+# Force switch to BANKS branch, discarding all local modifications
+git checkout -f BANKS 2>/dev/null || git checkout -f -b BANKS origin/BANKS 2>/dev/null || true
+
+# Hard reset to latest origin/BANKS
 git reset --hard origin/BANKS
 echo "✅ Code updated!"
 echo ""
