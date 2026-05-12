@@ -49,53 +49,60 @@ export const register = async (req: Request, res: Response): Promise<void> => {
         const passwordHash = await bcrypt.hash(password, 10);
         const verificationToken = crypto.randomBytes(32).toString('hex');
 
+        // Email verification deadline: 24 hours from now
+        const verificationDeadline = new Date();
+        verificationDeadline.setHours(verificationDeadline.getHours() + 24);
+
         const result = await prisma.$transaction(async (tx) => {
             const oneYearFromNow = new Date();
             oneYearFromNow.setFullYear(oneYearFromNow.getFullYear() + 1);
 
-            // All features included in the 1-Year Promotion
             const promoFeatures = JSON.stringify([
-                'invoices',
-                'withdrawals',
-                'team',
-                'analytics',
-                'reports',
-                'CRM',
-                'ADVANCED_CRM',
-                'POS',
-                'BANK_INTEGRATION'
+                'invoices', 'withdrawals', 'team', 'analytics',
+                'reports', 'CRM', 'ADVANCED_CRM', 'POS', 'BANK_INTEGRATION'
             ]);
 
-            // 1. Create User with 1-Year Promotion = PRO plan for 1 year
+            // Create User — ACTIVE immediately so they can login right away
             const user = await tx.user.create({
                 data: {
                     email,
                     phoneNumber,
                     passwordHash,
                     role,
-                    status: 'PENDING_VERIFICATION',
+                    status: 'ACTIVE',           // ✅ Immediate access
                     emailVerified: false,
                     verificationToken,
+                    tokenExpiresAt: verificationDeadline, // ⏰ 24h deadline
                     subscription: {
                         create: {
-                            plan: 'PRO',          // Full access during 1-year promo
+                            plan: 'PRO',
                             status: 'ACTIVE',
                             features: promoFeatures,
-                            endDate: oneYearFromNow  // Expires in 1 year
+                            endDate: oneYearFromNow
                         }
                     }
                 },
             });
 
-            // 2. Create Wallet
+            // Create Wallet
             await tx.wallet.create({
                 data: { userId: user.id },
+            });
+
+            // Create immediate verify-email notification
+            await tx.notification.create({
+                data: {
+                    userId: user.id,
+                    title: '📧 Verify Your Email Address',
+                    message: `Please verify your email (${email}) within 24 hours. Your account will be suspended if not verified by ${verificationDeadline.toLocaleString()}.`,
+                    type: 'warning'
+                }
             });
 
             return user;
         });
 
-        // Truly backgrounded email send (non-blocking)
+        // Non-blocking background email send
         setImmediate(() => {
             sendVerificationEmail(email, verificationToken).catch(err => {
                 console.error('Background Email Error:', err);
@@ -105,11 +112,11 @@ export const register = async (req: Request, res: Response): Promise<void> => {
         const token = jwt.sign(
             { userId: result.id, role: result.role, status: result.status },
             process.env.JWT_SECRET || 'fallback_secret',
-            { expiresIn: '30d' } // Extended for better UX
+            { expiresIn: '30d' }
         );
 
         res.status(201).json({
-            message: 'Account created successfully',
+            message: 'Account created successfully. Please verify your email within 24 hours.',
             token,
             user: {
                 id: result.id,
@@ -117,6 +124,7 @@ export const register = async (req: Request, res: Response): Promise<void> => {
                 phoneNumber: result.phoneNumber,
                 role: result.role,
                 status: result.status,
+                emailVerified: false,
                 isProfileComplete: false,
                 onboardingSkipped: false
             }
@@ -260,8 +268,29 @@ export const login = async (req: Request, res: Response): Promise<void> => {
             return;
         }
 
+        // ─── 24-Hour Email Verification Enforcement ───────────────────────
+        if (!user.emailVerified && user.role === 'MERCHANT') {
+            const deadline = user.tokenExpiresAt ? new Date(user.tokenExpiresAt) : null;
+            const now = new Date();
+
+            if (deadline && now > deadline) {
+                // Deadline passed — suspend the account
+                if (user.status !== 'SUSPENDED') {
+                    await prisma.user.update({
+                        where: { id: user.id },
+                        data: { status: 'SUSPENDED' }
+                    });
+                }
+                res.status(403).json({
+                    error: 'Your account has been suspended because your email was not verified within 24 hours. Please contact support at 0724454757 or verify your email to reactivate.'
+                });
+                return;
+            }
+        }
+        // ──────────────────────────────────────────────────────────────────
+
         if (user.status === 'SUSPENDED') {
-            res.status(403).json({ error: 'Your account has been suspended. Please call 0724454757 for activation.' });
+            res.status(403).json({ error: 'Your account has been suspended. Please contact support at 0724454757 for reactivation.' });
             return;
         }
 
@@ -271,30 +300,57 @@ export const login = async (req: Request, res: Response): Promise<void> => {
             { expiresIn: '7d' }
         );
 
-        // Check if merchant needs M-Pesa credential notification
-        if (user.role === 'MERCHANT' && (!user.businessProfile || !user.businessProfile.mpesaConsumerKey)) {
-            try {
-                const existingNotif = await prisma.notification.findFirst({
-                    where: {
-                        userId: user.id,
-                        title: 'Set up M-Pesa Credentials'
-                    }
-                });
+        // ─── Persistent Notifications on Login ────────────────────────────
+        try {
+            const notifPromises: Promise<any>[] = [];
 
-                if (!existingNotif) {
-                    await prisma.notification.create({
+            // 1. Email verification reminder (shown every login until verified)
+            if (!user.emailVerified && user.role === 'MERCHANT') {
+                const deadline = user.tokenExpiresAt ? new Date(user.tokenExpiresAt) : null;
+                const hoursLeft = deadline ? Math.max(0, Math.round((deadline.getTime() - Date.now()) / 3600000)) : null;
+
+                // Remove any old verify notification, then create fresh one with updated countdown
+                await prisma.notification.deleteMany({
+                    where: { userId: user.id, title: '📧 Verify Your Email Address' }
+                });
+                notifPromises.push(
+                    prisma.notification.create({
                         data: {
                             userId: user.id,
-                            title: 'Set up M-Pesa Credentials',
-                            message: 'To use STK push payments, please configure your own M-Pesa API Consumer Key & Secret in Settings.',
+                            title: '📧 Verify Your Email Address',
+                            message: hoursLeft !== null
+                                ? `Your account will be suspended in ${hoursLeft} hour(s) if you don't verify your email (${user.email}). Check your inbox for the verification link.`
+                                : `Please verify your email (${user.email}) to keep your account active. Check your inbox for the verification link.`,
                             type: 'warning'
                         }
-                    });
-                }
-            } catch (notifErr) {
-                console.error('[Notification Error] Failed to create login alert:', notifErr);
+                    })
+                );
             }
+
+            // 2. M-Pesa credentials reminder
+            if (user.role === 'MERCHANT' && (!user.businessProfile || !user.businessProfile.mpesaConsumerKey)) {
+                const existingMpesaNotif = await prisma.notification.findFirst({
+                    where: { userId: user.id, title: 'Set up M-Pesa Credentials' }
+                });
+                if (!existingMpesaNotif) {
+                    notifPromises.push(
+                        prisma.notification.create({
+                            data: {
+                                userId: user.id,
+                                title: 'Set up M-Pesa Credentials',
+                                message: 'To use STK push payments, please configure your own M-Pesa API Consumer Key & Secret in Settings.',
+                                type: 'warning'
+                            }
+                        })
+                    );
+                }
+            }
+
+            await Promise.all(notifPromises);
+        } catch (notifErr) {
+            console.error('[Notification Error] Failed to create login alerts:', notifErr);
         }
+        // ──────────────────────────────────────────────────────────────────
 
         res.json({
             message: 'Login successful',
@@ -305,6 +361,7 @@ export const login = async (req: Request, res: Response): Promise<void> => {
                 name: user.name,
                 role: user.role,
                 status: user.status,
+                emailVerified: user.emailVerified,
                 isProfileComplete: !!user.businessProfile,
                 onboardingSkipped: user.onboardingSkipped
             }
@@ -314,7 +371,7 @@ export const login = async (req: Request, res: Response): Promise<void> => {
             const errorMessage = (error as any).errors.map((e: any) => `${e.path.join('.')}: ${e.message}`).join(', ');
             res.status(400).json({ error: errorMessage });
         } else {
-            console.error("LOGIN ERROR FULL DETAILS:", error);
+            console.error('LOGIN ERROR FULL DETAILS:', error);
             res.status(500).json({ error: 'Internal Server Error' });
         }
     }
