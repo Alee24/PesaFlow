@@ -1,6 +1,6 @@
 
 import { Router } from 'express';
-import { register, login, updateUser, getCurrentUser, completeProfile, verifyEmail } from '../controllers/auth.controller';
+import { register, login, updateUser, getCurrentUser, completeProfile, verifyEmail, skipOnboarding } from '../controllers/auth.controller';
 import { authenticateToken } from '../middlewares/auth.middleware';
 import { upload } from '../middlewares/upload.middleware';
 
@@ -16,6 +16,7 @@ router.post('/complete-profile', authenticateToken, upload.fields([
     { name: 'kraCert', maxCount: 1 }
 ]), completeProfile);
 router.post('/login', login);
+router.post('/skip-onboarding', authenticateToken, skipOnboarding);
 router.get('/me', authenticateToken, getCurrentUser);
 router.put('/me', authenticateToken, updateUser);
 

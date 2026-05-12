@@ -22,6 +22,7 @@ model User {
   status       String   @default("PENDING_VERIFICATION") // ACTIVE, SUSPENDED, PENDING_VERIFICATION, REJECTED
   pin          String?  @map("pin") // 4-digit PIN for POS access
   appealNotes  String?  @map("appeal_notes")
+  onboardingSkipped Boolean @default(false) @map("onboarding_skipped")
 
 
   // Authentication & Verification

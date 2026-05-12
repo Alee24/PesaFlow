@@ -34,4 +34,4 @@ RUN chmod +x startup.sh
 EXPOSE 5454
 
 # Start the application via startup script
-CMD ["./startup.sh"]
+CMD ["sh", "./startup.sh"]

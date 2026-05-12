@@ -117,7 +117,8 @@ export const register = async (req: Request, res: Response): Promise<void> => {
                 phoneNumber: result.phoneNumber,
                 role: result.role,
                 status: result.status,
-                isProfileComplete: false
+                isProfileComplete: false,
+                onboardingSkipped: false
             }
         });
     } catch (error) {
@@ -230,6 +231,21 @@ export const completeProfile = async (req: Request, res: Response): Promise<void
     }
 };
 
+export const skipOnboarding = async (req: Request, res: Response): Promise<void> => {
+    try {
+        const userId = (req as any).user.userId;
+        const user = await prisma.user.update({
+            where: { id: userId },
+            data: { onboardingSkipped: true }
+        });
+
+        res.json({ message: 'Onboarding skipped', onboardingSkipped: true });
+    } catch (error) {
+        console.error("Skip Onboarding Error:", error);
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+};
+
 export const login = async (req: Request, res: Response): Promise<void> => {
     try {
         const { email, password } = loginSchema.parse(req.body);
@@ -255,6 +271,31 @@ export const login = async (req: Request, res: Response): Promise<void> => {
             { expiresIn: '7d' }
         );
 
+        // Check if merchant needs M-Pesa credential notification
+        if (user.role === 'MERCHANT' && (!user.businessProfile || !user.businessProfile.mpesaConsumerKey)) {
+            try {
+                const existingNotif = await prisma.notification.findFirst({
+                    where: {
+                        userId: user.id,
+                        title: 'Set up M-Pesa Credentials'
+                    }
+                });
+
+                if (!existingNotif) {
+                    await prisma.notification.create({
+                        data: {
+                            userId: user.id,
+                            title: 'Set up M-Pesa Credentials',
+                            message: 'To use STK push payments, please configure your own M-Pesa API Consumer Key & Secret in Settings.',
+                            type: 'warning'
+                        }
+                    });
+                }
+            } catch (notifErr) {
+                console.error('[Notification Error] Failed to create login alert:', notifErr);
+            }
+        }
+
         res.json({
             message: 'Login successful',
             token,
@@ -264,7 +305,8 @@ export const login = async (req: Request, res: Response): Promise<void> => {
                 name: user.name,
                 role: user.role,
                 status: user.status,
-                isProfileComplete: !!user.businessProfile
+                isProfileComplete: !!user.businessProfile,
+                onboardingSkipped: user.onboardingSkipped
             }
         });
     } catch (error) {
@@ -350,7 +392,8 @@ export const updateUser = async (req: Request, res: Response): Promise<void> => 
                 role: updatedUser.role,
                 status: updatedUser.status,
                 hasPin: !!updatedUser.pin,
-                isProfileComplete: !!updatedUser.businessProfile
+                isProfileComplete: !!updatedUser.businessProfile,
+                onboardingSkipped: updatedUser.onboardingSkipped
             }
         });
 
@@ -381,7 +424,8 @@ export const getCurrentUser = async (req: Request, res: Response): Promise<void>
                 name: user.name,
                 role: user.role,
                 status: user.status,
-                isProfileComplete: !!user.businessProfile
+                isProfileComplete: !!user.businessProfile,
+                onboardingSkipped: user.onboardingSkipped
             }
         });
     } catch (error) {

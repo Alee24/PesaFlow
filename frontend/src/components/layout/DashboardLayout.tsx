@@ -3,11 +3,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
-import { Sidebar, Header, menuGroups } from './DashboardShell';
-import { AlertCircle, XCircle } from 'lucide-react';
-import Link from 'next/link';
-import { Button } from '../ui/Button';
-import { SubscriptionBadge } from '../subscription/SubscriptionBadge';
+import { Sidebar, Header } from './DashboardShell';
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
     const router = useRouter();
@@ -24,11 +20,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             return;
         }
 
-        // Load initial data from storage
         const parsedUser = JSON.parse(userData);
         setUser(parsedUser);
 
-        // Fetch fresh data from API to ensure status/name are up to date
         import('@/lib/api').then(({ default: api }) => {
             api.get('/auth/me')
                 .then(res => {
@@ -36,10 +30,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                     setUser(freshUser);
                     localStorage.setItem('user', JSON.stringify(freshUser));
                 })
-                .catch(() => {
-                    // If fetch fails (e.g. token expired), user might need to login again ideally
-                    // But we'll let existing api interceptors handle 401s if they exist
-                });
+                .catch(() => {});
         });
     }, [router]);
 
@@ -48,23 +39,15 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         if (!user || !isClient) return;
         if (user.role !== 'MERCHANT') return;
 
-        // 1. If profile is NOT complete (strictly false), redirect to onboarding
-        // We check strictly false to avoid redirecting old cached users who might have undefined
-        if (user.isProfileComplete === false && pathname !== '/onboarding') {
+        if (user.isProfileComplete === false && user.onboardingSkipped === false && pathname !== '/onboarding') {
             router.push('/onboarding');
         }
-
-        // 2. If profile IS complete, prevent access to onboarding
         if (user.isProfileComplete === true && pathname === '/onboarding') {
             router.push('/dashboard');
         }
     }, [user, pathname, router, isClient]);
 
-    if (!isClient) return null; // Prevent hydration mismatch
-
-    // Allow rendering sidebar even if user state isn't fully set to avoid flicker, 
-    // but header needs user. If critical, return null until user is set.
-    // For now, we return null if no user to ensure auth protection.
+    if (!isClient) return null;
     if (!user) return null;
 
     return (
@@ -84,43 +67,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                     />
                 </div>
 
-                {/* Restriction Banner for Merchants */}
-                {user.role === 'MERCHANT' && user.status === 'PENDING_VERIFICATION' && (
-                    <div className="bg-amber-50 border-b border-amber-200 px-8 py-3 flex items-center justify-between animate-in slide-in-from-top duration-500">
-                        <div className="flex items-center gap-3">
-                            <div className="p-1.5 bg-amber-100 rounded-lg">
-                                <AlertCircle className="w-5 h-5 text-amber-600" />
-                            </div>
-                            <div>
-                                <p className="text-sm font-bold text-amber-900">Account Pending Verification</p>
-                                <p className="text-xs text-amber-700">Digital payments (M-Pesa, Invoices) and Withdrawals are restricted until admin approval. You can still use POS for Cash Sales.</p>
-                            </div>
-                        </div>
-                    </div>
-                )}
-
-                {user.role === 'MERCHANT' && user.status === 'REJECTED' && (
-                    <div className="bg-red-50 border-b border-red-200 px-8 py-3 flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                            <div className="p-1.5 bg-red-100 rounded-lg">
-                                <XCircle className="w-5 h-5 text-red-600" />
-                            </div>
-                            <div>
-                                <p className="text-sm font-bold text-red-900">Account Application Denied</p>
-                                <p className="text-xs text-red-700">Reason: {user.appealNotes || 'Documentation issues.'}. Please submit an appeal to use the app.</p>
-                            </div>
-                        </div>
-                        <Link href="/profile">
-                            <Button size="sm" variant="danger">Submit Appeal</Button>
-                        </Link>
-                    </div>
-                )}
-
-                <main className={`flex-1 p-4 overflow-y-auto overflow-x-hidden print:p-0 print:overflow-visible w-full ${(user.status === 'REJECTED' || user.status === 'SUSPENDED') ? 'pointer-events-none grayscale opacity-50 blur-[2px]' : ''}`}>
+                <main className="flex-1 p-4 overflow-y-auto overflow-x-hidden print:p-0 print:overflow-visible w-full">
                     <div className="w-full h-full">
-                        {/* <LicenseGuard> */}
                         {children}
-                        {/* </LicenseGuard> */}
                     </div>
                 </main>
 
@@ -129,8 +78,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                         Powered by <a href="https://kkdes.co.ke/" target="_blank" rel="noopener noreferrer" className="font-semibold text-gray-500 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400">KK Dynamic Enterprise Solutions LTD</a>
                     </p>
                 </footer>
-
-                <SubscriptionBadge />
             </div>
         </div>
     );

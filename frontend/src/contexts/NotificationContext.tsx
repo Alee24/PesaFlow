@@ -209,41 +209,14 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
         showNotification('info', { title, message, details });
     }, [showNotification]);
 
-    const showUpgradePrompt = useCallback((currentPlan: string, requiredPlan: string, feature: string) => {
-        showNotification('upgrade', {
-            title: '🚀 Upgrade Required',
-            message: `Unlock ${feature} by upgrading to ${requiredPlan} plan`,
-            details: [
-                `Current Plan: ${currentPlan}`,
-                `Required Plan: ${requiredPlan}`,
-                `Feature: ${feature}`,
-                'Upgrade now to access this feature'
-            ],
-            action: {
-                label: `Upgrade to ${requiredPlan}`,
-                onClick: () => window.location.href = '/subscription'
-            },
-            duration: 0 // Don't auto-dismiss
-        });
-    }, [showNotification]);
+    // App is 100% free — upgrade/limit prompts are no-ops
+    const showUpgradePrompt = useCallback((_currentPlan: string, _requiredPlan: string, _feature: string) => {
+        // No-op: all features are free
+    }, []);
 
-    const showLimitReached = useCallback((limit: number, used: number, plan: string) => {
-        showNotification('limit', {
-            title: '⚠️ Transaction Limit Reached',
-            message: `You've reached your monthly transaction limit`,
-            details: [
-                `Transactions Used: ${used}/${limit}`,
-                `Current Plan: ${plan}`,
-                'Upgrade to PRO for unlimited transactions',
-                'Limit resets on the 1st of next month'
-            ],
-            action: {
-                label: 'Upgrade to PRO Plan',
-                onClick: () => window.location.href = '/subscription'
-            },
-            duration: 0
-        });
-    }, [showNotification]);
+    const showLimitReached = useCallback((_limit: number, _used: number, _plan: string) => {
+        // No-op: no transaction limits
+    }, []);
 
     return (
         <NotificationContext.Provider

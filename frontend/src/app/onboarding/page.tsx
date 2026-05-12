@@ -61,10 +61,19 @@ export default function OnboardingPage() {
         setStep(step + 1);
     };
 
-    const skipOnboarding = () => {
-        const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
-        localStorage.setItem('user', JSON.stringify({ ...currentUser, isProfileComplete: true }));
-        window.location.href = '/dashboard';
+    const skipOnboarding = async () => {
+        try {
+            await api.post('/auth/skip-onboarding');
+            const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
+            localStorage.setItem('user', JSON.stringify({ ...currentUser, isProfileComplete: false, onboardingSkipped: true }));
+            window.location.href = '/dashboard';
+        } catch (err) {
+            console.error('Failed to skip onboarding:', err);
+            // Fallback to local skip if API fails
+            const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
+            localStorage.setItem('user', JSON.stringify({ ...currentUser, onboardingSkipped: true }));
+            window.location.href = '/dashboard';
+        }
     };
 
     const prevStep = () => {

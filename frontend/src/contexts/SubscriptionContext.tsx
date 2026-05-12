@@ -1,159 +1,41 @@
 'use client';
 
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import api from '@/lib/api';
+import React, { createContext, useContext } from 'react';
 
-interface Subscription {
-    id: string;
-    plan: 'FREE' | 'BASIC' | 'PRO' | 'ENTERPRISE';
-    status: 'ACTIVE' | 'EXPIRED' | 'CANCELLED';
-    monthlyTxCount: number;
-    txCountResetDate: string;
-    isEnterprise: boolean;
-    endDate?: string;
-    features?: string; // JSON array of enabled feature names
-}
+// ============================================================
+// ALL SUBSCRIPTION LOGIC REMOVED — APP IS 100% FREE
+// ============================================================
 
 interface SubscriptionContextType {
-    subscription: Subscription | null;
-    loading: boolean;
+    subscription: null;
+    loading: false;
     hasFeature: (feature: string) => boolean;
     getRemainingTransactions: () => number;
     canCreateBranch: () => boolean;
     refreshSubscription: () => Promise<void>;
 }
 
-const SubscriptionContext = createContext<SubscriptionContextType | undefined>(undefined);
+const SubscriptionContext = createContext<SubscriptionContextType>({
+    subscription: null,
+    loading: false,
+    hasFeature: () => true,
+    getRemainingTransactions: () => Infinity,
+    canCreateBranch: () => true,
+    refreshSubscription: async () => {},
+});
 
-export const useSubscription = () => {
-    const context = useContext(SubscriptionContext);
-    if (!context) {
-        throw new Error('useSubscription must be used within SubscriptionProvider');
-    }
-    return context;
-};
-
-// Feature access matrix (matches backend)
-const FEATURE_ACCESS: Record<string, Record<string, boolean>> = {
-    'invoices': {
-        FREE: false,
-        BASIC: true,
-        PRO: true,
-        ENTERPRISE: true
-    },
-    'withdrawals': {
-        FREE: false,
-        BASIC: false,
-        PRO: true,
-        ENTERPRISE: true
-    },
-    'team': {
-        FREE: false,
-        BASIC: false,
-        PRO: true,
-        ENTERPRISE: true
-    },
-    'analytics': {
-        FREE: false,
-        BASIC: false,
-        PRO: true,
-        ENTERPRISE: true
-    },
-    'reports': {
-        FREE: false,
-        BASIC: true,
-        PRO: true,
-        ENTERPRISE: true
-    },
-    'CRM': {
-        FREE: true,
-        BASIC: true,
-        PRO: true,
-        ENTERPRISE: true
-    },
-    'POS': {
-        FREE: true,
-        BASIC: true,
-        PRO: true,
-        ENTERPRISE: true
-    }
-};
+export const useSubscription = () => useContext(SubscriptionContext);
 
 export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-    const [subscription, setSubscription] = useState<Subscription | null>(null);
-    const [loading, setLoading] = useState(true);
-
-    const fetchSubscription = async () => {
-        try {
-            const response = await api.get('/subscription/status');
-            setSubscription(response.data);
-        } catch (error) {
-            console.error('Failed to fetch subscription:', error);
-            // Default to FREE if fetch fails
-            setSubscription({
-                id: 'default',
-                plan: 'FREE',
-                status: 'ACTIVE',
-                monthlyTxCount: 0,
-                txCountResetDate: new Date().toISOString(),
-                isEnterprise: false
-            });
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    useEffect(() => {
-        fetchSubscription();
-
-        // Auto-refresh removed - subscription only updates on manual refresh
-    }, []);
-
-    const hasFeature = (feature: string): boolean => {
-        if (!subscription) return false;
-
-        // If subscription has explicit features JSON, use it first
-        if (subscription.features) {
-            try {
-                const enabledFeatures: string[] = JSON.parse(subscription.features);
-                if (Array.isArray(enabledFeatures) && enabledFeatures.length > 0) {
-                    return enabledFeatures.includes(feature);
-                }
-            } catch {
-                // Fall through to plan-based check
-            }
-        }
-
-        // Fall back to plan-based matrix
-        const plan = subscription.plan;
-        return FEATURE_ACCESS[feature]?.[plan] || false;
-    };
-
-    const getRemainingTransactions = (): number => {
-        if (!subscription || subscription.plan !== 'BASIC') return Infinity;
-        return Math.max(0, 100 - subscription.monthlyTxCount);
-    };
-
-    const canCreateBranch = (): boolean => {
-        if (!subscription) return false;
-        return subscription.plan === 'PRO' || subscription.plan === 'ENTERPRISE';
-    };
-
-    const refreshSubscription = async () => {
-        await fetchSubscription();
-    };
-
     return (
-        <SubscriptionContext.Provider
-            value={{
-                subscription,
-                loading,
-                hasFeature,
-                getRemainingTransactions,
-                canCreateBranch,
-                refreshSubscription
-            }}
-        >
+        <SubscriptionContext.Provider value={{
+            subscription: null,
+            loading: false,
+            hasFeature: () => true,
+            getRemainingTransactions: () => Infinity,
+            canCreateBranch: () => true,
+            refreshSubscription: async () => {},
+        }}>
             {children}
         </SubscriptionContext.Provider>
     );

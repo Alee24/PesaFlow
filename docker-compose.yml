@@ -2,19 +2,35 @@ services:
   # ==========================================
   # 🚀 Mpesa Connect SERVICES
   # ==========================================
+  db:
+    image: mysql:8.0
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: mpesaconnect
+    ports:
+      - "3309:3306"
+    volumes:
+      - db_data:/var/lib/mysql
+    networks:
+      - app_net
+
   mpesaconnect-api:
     build:
       context: ./backend
       dockerfile: Dockerfile
     restart: always
+    depends_on:
+      - db
     env_file:
       - ./backend/.env
     environment:
-      - PORT=5454
+      - PORT=4577
+      - DATABASE_URL=mysql://root:root@db:3306/mpesaconnect
     extra_hosts:
       - "host.docker.internal:host-gateway"
     ports:
-      - "5454:5454"
+      - "4577:4577"
     networks:
       - app_net
 
@@ -24,15 +40,18 @@ services:
       dockerfile: Dockerfile
     restart: always
     environment:
-      - NEXT_PUBLIC_API_URL=https://mpesaconnect.co.ke/api
-      - PORT=5054
+      - NEXT_PUBLIC_API_URL=http://127.0.0.1:4577/api
+      - PORT=6877
     depends_on:
       - mpesaconnect-api
     ports:
-      - "5054:5054"
+      - "6877:6877"
     networks:
       - app_net
 
 networks:
   app_net:
     driver: bridge
+
+volumes:
+  db_data:

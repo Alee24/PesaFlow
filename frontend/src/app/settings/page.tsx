@@ -57,7 +57,6 @@ export default function SettingsPage() {
     const [saving, setSaving] = useState(false);
     const [logoFile, setLogoFile] = useState<File | null>(null);
     const [user, setUser] = useState<any>(null);
-    const [subscription, setSubscription] = useState<any>(null);
 
     // Toast State
     const [toast, setToast] = useState<{ visible: boolean; message: string; type: 'success' | 'error' | 'info' }>({
@@ -78,17 +77,7 @@ export default function SettingsPage() {
         const storedUser = localStorage.getItem('user');
         if (storedUser) setUser(JSON.parse(storedUser));
         fetchProfile();
-        fetchSubscription();
     }, []);
-
-    const fetchSubscription = async () => {
-        try {
-            const res = await api.get('/subscription');
-            if (res.data) setSubscription(res.data);
-        } catch (e) {
-            console.error("Failed to load subscription status", e);
-        }
-    };
 
     // Check if user is branch manager
     const isBranchManager = user?.role === 'BRANCH_MANAGER';
