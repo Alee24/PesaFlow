@@ -7,7 +7,7 @@ import { useRouter } from 'next/navigation';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import { Card } from '@/components/ui/Card';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { ShoppingCart, DollarSign, TrendingUp, Calendar, ArrowRight, Download } from 'lucide-react';
+import { ShoppingCart, DollarSign, TrendingUp, Calendar, ArrowRight, Download, AlertTriangle } from 'lucide-react';
 import axios from 'axios';
 
 // Mock Data for Charts
@@ -95,6 +95,22 @@ export default function DashboardPage() {
                         ))}
                     </div>
                 </div>
+
+                {/* Email Verification Alert */}
+                {user.role === 'MERCHANT' && !user.emailVerified && (
+                    <div className="bg-amber-50 dark:bg-amber-900/20 border-l-4 border-amber-500 p-4 rounded-r-lg shadow-sm">
+                        <div className="flex items-center">
+                            <div className="flex-shrink-0">
+                                <AlertTriangle className="h-5 w-5 text-amber-500" />
+                            </div>
+                            <div className="ml-3">
+                                <p className="text-sm text-amber-700 dark:text-amber-300">
+                                    <span className="font-bold">Email Not Verified:</span> Please verify your email address to keep your account active. Unverified accounts are suspended 24 hours after registration.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                )}
 
                 {/* Stat Cards */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">

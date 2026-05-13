@@ -54,13 +54,25 @@ export default function RegisterPage() {
             });
 
             clearTimeout(safetyCounter);
-            // LOG IN INSTANTLY
-            login(res.data.token, res.data.user);
             
-            // Absolute fallback for navigation
+            const userData = res.data?.user || res.data;
+            const token = res.data?.token;
+
+            if (token && userData) {
+                // LOG IN INSTANTLY
+                login(token, userData);
+            } else {
+                // Fallback for unexpected response structure
+                setError('Registration successful but failed to log in automatically. Please sign in.');
+                return;
+            }
+            
+            // Absolute fallback for navigation if router.push fails
             setTimeout(() => {
-                window.location.href = '/dashboard';
-            }, 100);
+                if (window.location.pathname !== '/dashboard') {
+                    window.location.href = '/dashboard';
+                }
+            }, 1500);
 
         } catch (err: any) {
             clearTimeout(safetyCounter);
