@@ -62,15 +62,22 @@ export default function OnboardingPage() {
     };
 
     const skipOnboarding = async () => {
+        const getCurrentUserFromStorage = () => {
+            const str = localStorage.getItem('user');
+            if (str && str !== 'undefined') {
+                try { return JSON.parse(str); } catch (e) {}
+            }
+            return {};
+        };
         try {
             await api.post('/auth/skip-onboarding');
-            const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
+            const currentUser = getCurrentUserFromStorage();
             localStorage.setItem('user', JSON.stringify({ ...currentUser, isProfileComplete: false, onboardingSkipped: true }));
             window.location.href = '/dashboard';
         } catch (err) {
             console.error('Failed to skip onboarding:', err);
             // Fallback to local skip if API fails
-            const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
+            const currentUser = getCurrentUserFromStorage();
             localStorage.setItem('user', JSON.stringify({ ...currentUser, onboardingSkipped: true }));
             window.location.href = '/dashboard';
         }
@@ -102,7 +109,11 @@ export default function OnboardingPage() {
             });
 
             // Update local storage to prevent redirect loop
-            const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
+            let currentUser = {};
+            const userStr = localStorage.getItem('user');
+            if (userStr && userStr !== 'undefined') {
+                try { currentUser = JSON.parse(userStr); } catch (e) {}
+            }
             localStorage.setItem('user', JSON.stringify({ ...currentUser, isProfileComplete: true }));
 
             // Redirect to dashboard

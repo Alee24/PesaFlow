@@ -19,11 +19,17 @@ export default function AccessGuard({ children, requiresActive = false, requires
 
     useEffect(() => {
         const userData = localStorage.getItem('user');
-        if (!userData) {
+        if (!userData || userData === 'undefined') {
             router.push('/auth/login');
             return;
         }
-        setUser(JSON.parse(userData));
+        try {
+            setUser(JSON.parse(userData));
+        } catch (e) {
+            console.error("Failed to parse user data in AccessGuard", e);
+            router.push('/auth/login');
+            return;
+        }
         setLoading(false);
     }, [router]);
 

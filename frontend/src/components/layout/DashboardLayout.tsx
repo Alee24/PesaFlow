@@ -20,15 +20,23 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             return;
         }
 
-        const parsedUser = JSON.parse(userData);
-        setUser(parsedUser);
+        try {
+            const parsedUser = JSON.parse(userData);
+            setUser(parsedUser);
+        } catch (e) {
+            console.error("Failed to parse user data", e);
+            router.push('/auth/login');
+            return;
+        }
 
         import('@/lib/api').then(({ default: api }) => {
             api.get('/auth/me')
                 .then(res => {
-                    const freshUser = res.data.user;
-                    setUser(freshUser);
-                    localStorage.setItem('user', JSON.stringify(freshUser));
+                    const freshUser = res.data?.user || res.data;
+                    if (freshUser) {
+                        setUser(freshUser);
+                        localStorage.setItem('user', JSON.stringify(freshUser));
+                    }
                 })
                 .catch(() => {});
         });

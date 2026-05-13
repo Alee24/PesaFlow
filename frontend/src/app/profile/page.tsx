@@ -27,13 +27,14 @@ export default function ProfilePage() {
 
     useEffect(() => {
         const userData = localStorage.getItem('user');
-        if (!userData) {
+        if (!userData || userData === 'undefined') {
             router.push('/auth/login');
             return;
         }
-        const parsed = JSON.parse(userData);
-        setUser(parsed);
-        if (parsed) {
+        try {
+            const parsed = JSON.parse(userData);
+            setUser(parsed);
+            if (parsed) {
             setFormData({
                 name: parsed.name || '',
                 email: parsed.email || '',
@@ -43,6 +44,10 @@ export default function ProfilePage() {
                 newPassword: '',
                 confirmPassword: ''
             });
+        }
+        } catch (e) {
+            console.error(e);
+            router.push('/auth/login');
         }
     }, [router]);
 

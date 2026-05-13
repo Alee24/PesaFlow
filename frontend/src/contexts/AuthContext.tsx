@@ -35,8 +35,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const token = localStorage.getItem('token');
         const storedUser = localStorage.getItem('user');
 
-        if (token && storedUser) {
-            setUser(JSON.parse(storedUser));
+        if (token && storedUser && storedUser !== 'undefined') {
+            try {
+                setUser(JSON.parse(storedUser));
+            } catch (e) {
+                console.error("Failed to parse user from localStorage", e);
+            }
         }
 
         // Optional: Validate token with backend
@@ -44,6 +48,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
 
     const login = (token: string, userData: User) => {
+        if (!userData) {
+            console.error('Login attempted without user data');
+            return;
+        }
         localStorage.setItem('token', token);
         localStorage.setItem('user', JSON.stringify(userData));
         setUser(userData);
@@ -60,9 +68,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const refreshUser = async () => {
         try {
             const res = await api.get('/auth/me');
-            if (res.data) {
-                localStorage.setItem('user', JSON.stringify(res.data));
-                setUser(res.data);
+            const freshUser = res.data?.user || res.data;
+            if (freshUser) {
+                localStorage.setItem('user', JSON.stringify(freshUser));
+                setUser(freshUser);
             }
         } catch (error) {
             console.error('Failed to refresh user', error);

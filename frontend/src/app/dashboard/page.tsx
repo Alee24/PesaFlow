@@ -35,11 +35,16 @@ export default function DashboardPage() {
 
     useEffect(() => {
         const userData = localStorage.getItem('user');
-        if (!userData) {
+        if (!userData || userData === 'undefined') {
             router.push('/auth/login');
             return;
         }
-        setUser(JSON.parse(userData));
+        try {
+            setUser(JSON.parse(userData));
+        } catch (e) {
+            console.error("Failed to parse user from localStorage", e);
+            router.push('/auth/login');
+        }
     }, [router]);
 
     useEffect(() => {

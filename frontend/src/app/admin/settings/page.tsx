@@ -37,8 +37,18 @@ export default function AdminSettingsPage() {
                 return;
             }
 
-            const user = JSON.parse(userDataStr);
-            if (user.role !== 'ADMIN') {
+            let user: any = {};
+            try {
+                if (userDataStr && userDataStr !== 'undefined') {
+                    user = JSON.parse(userDataStr);
+                }
+            } catch (e) {
+                console.error("Failed to parse user data", e);
+                router.push('/auth/login');
+                return;
+            }
+
+            if (!user || user.role !== 'ADMIN') {
                 router.push('/dashboard');
                 return;
             }
