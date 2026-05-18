@@ -5,7 +5,7 @@ echo "🚀 Mpesa Connect Starting Deployment..."
 # 1. Update Backend
 echo "📦 Updating Backend..."
 cd backend || exit
-git pull origin main
+git pull origin BANKS
 npm install
 # Force schema push and client generation
 npx prisma db push --accept-data-loss
@@ -19,7 +19,7 @@ cd ..
 # 2. Update Frontend
 echo "Im now updating Frontend..."
 cd frontend || exit
-git pull origin main
+git pull origin BANKS
 npm install
 npm run build
 # Restart Frontend (assuming pm2 manages it too, or just next start)

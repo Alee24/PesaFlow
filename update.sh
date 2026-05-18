@@ -14,8 +14,8 @@ echo "📥 Pulling latest code..."
 git fetch --all
 git stash 2>/dev/null || true
 # Assuming the main branch is used for live, replace BANKS with main if needed
-git reset --hard origin/main
-git pull origin main
+git reset --hard origin/BANKS
+git pull origin BANKS
 echo "✅ Code updated!"
 echo ""
 

@@ -2,8 +2,8 @@
 
 # Configuration
 DOMAIN="mpesaconnect.co.ke"
-API_PORT=5454
-WEB_PORT=5054
+API_PORT=4577
+WEB_PORT=6877
 APACHE_CONF="/etc/apache2/sites-available/mpesaconnect.conf"
 
 echo "🌐 Updating Apache Configuration for ${DOMAIN}..."
