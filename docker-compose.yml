@@ -9,7 +9,7 @@ services:
       MYSQL_DATABASE: pesaflow_v2
       MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
     ports:
-      - "3306:3306"
+      - "3329:3306"
     volumes:
       - mysql_data:/var/lib/mysql
     networks:
@@ -24,11 +24,11 @@ services:
       - ./backend/.env
     environment:
       - DATABASE_URL=mysql://root:@db:3306/pesaflow_v2
-      - PORT=5454
+      - PORT=2365
     depends_on:
       - db
     ports:
-      - "5454:5454"
+      - "2365:2365"
     networks:
       - pesaflow_net
 
@@ -39,11 +39,11 @@ services:
     restart: always
     environment:
       - NEXT_PUBLIC_API_URL=https://mpesaconnect.co.ke/api
-      - PORT=5054
+      - PORT=3652
     depends_on:
       - backend
     ports:
-      - "5054:5054"
+      - "3652:3652"
     networks:
       - pesaflow_net
 

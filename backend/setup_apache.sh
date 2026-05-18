@@ -2,8 +2,8 @@
 
 # Configuration
 DOMAIN="mpesaconnect.co.ke"
-API_PORT=5454
-WEB_PORT=5054
+API_PORT=2365
+WEB_PORT=3652
 APACHE_CONF="/etc/apache2/sites-available/mpesaconnect.conf"
 
 echo "🌐 Updating Apache Configuration for ${DOMAIN}..."
@@ -34,17 +34,17 @@ cat > mpesaconnect.conf <<EOL
     ProxyRequests Off
 
     # Proxy API requests to Backend
-    ProxyPass /api/ http://localhost:${API_PORT}/
-    ProxyPassReverse /api/ http://localhost:${API_PORT}/
+    ProxyPass /api/ http://127.0.0.1:${API_PORT}/
+    ProxyPassReverse /api/ http://127.0.0.1:${API_PORT}/
 
     # Proxy all other requests to Frontend
-    ProxyPass / http://localhost:${WEB_PORT}/
-    ProxyPassReverse / http://localhost:${WEB_PORT}/
+    ProxyPass / http://127.0.0.1:${WEB_PORT}/
+    ProxyPassReverse / http://127.0.0.1:${WEB_PORT}/
     
     # WebSocket Support for Next.js (if needed)
     RewriteEngine On
     RewriteCond %{HTTP:Upgrade} =websocket [NC]
-    RewriteRule /(.*)           ws://localhost:${WEB_PORT}/\$1 [P,L]
+    RewriteRule /(.*)           ws://127.0.0.1:${WEB_PORT}/\$1 [P,L]
 
     ErrorLog \${APACHE_LOG_DIR}/${DOMAIN}-error.log
     CustomLog \${APACHE_LOG_DIR}/${DOMAIN}-access.log combined

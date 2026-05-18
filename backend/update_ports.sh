@@ -1,8 +1,8 @@
 #!/bin/bash
 
 # Configuration
-API_PORT=5454
-WEB_PORT=5054
+API_PORT=2365
+WEB_PORT=3652
 DOMAIN="portal.mclinic.co.ke"
 API_URL="https://${DOMAIN}/api"
 PROJECT_ROOT="/var/www/mpesaconnect.co.ke"
@@ -65,17 +65,17 @@ cat > /tmp/portal_apache.conf <<EOL
     SSLCertificateKeyFile /etc/letsencrypt/live/${DOMAIN}/privkey.pem
 
     ProxyPreserveHost On
-    ProxyPass / http://localhost:${WEB_PORT}/
-    ProxyPassReverse / http://localhost:${WEB_PORT}/
+    ProxyPass / http://127.0.0.1:${WEB_PORT}/
+    ProxyPassReverse / http://127.0.0.1:${WEB_PORT}/
 
-    ProxyPass /api/ http://localhost:${API_PORT}/
-    ProxyPassReverse /api/ http://localhost:${API_PORT}/
+    ProxyPass /api/ http://127.0.0.1:${API_PORT}/
+    ProxyPassReverse /api/ http://127.0.0.1:${API_PORT}/
     
     RewriteEngine On
     RewriteCond %{HTTP:Upgrade} =websocket [NC]
-    RewriteRule /(.*)           ws://localhost:${WEB_PORT}/\$1 [P,L]
+    RewriteRule /(.*)           ws://127.0.0.1:${WEB_PORT}/\$1 [P,L]
     RewriteCond %{HTTP:Upgrade} !=websocket [NC]
-    RewriteRule /(.*)           http://localhost:${WEB_PORT}/\$1 [P,L]
+    RewriteRule /(.*)           http://127.0.0.1:${WEB_PORT}/\$1 [P,L]
 
     ErrorLog \${APACHE_LOG_DIR}/portal-error.log
     CustomLog \${APACHE_LOG_DIR}/portal-access.log combined
