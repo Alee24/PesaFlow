@@ -1,296 +1,112 @@
 'use client';
 
-import React, { useState } from 'react';
+import React from 'react';
 import DashboardLayout from '@/components/layout/DashboardLayout';
-import { Button } from '@/components/ui/Button';
-import { Check, Star, Shield, Zap, Info } from 'lucide-react';
-import { useRouter } from 'next/navigation';
+import { Check, Shield, Heart, Zap, Sparkles, Activity } from 'lucide-react';
 import { useSubscription } from '@/contexts/SubscriptionContext';
-import { Toaster, toast } from 'react-hot-toast';
-
-const PLANS = [
-    {
-        name: 'FREE',
-        title: 'WELCOME FREE',
-        price: 0,
-        period: '1 year',
-        description: 'One Year Free Full Access',
-        features: [
-            'All Premium Features',
-            'POS System & Inventory',
-            'Unlimited Transactions',
-            'Priority Support',
-            'Free for 12 Months'
-        ],
-        cta: 'Active Plan',
-        popular: false,
-        color: 'bg-slate-800'
-    },
-    {
-        name: 'BASIC',
-        price: 1500,
-        period: 'month',
-        description: 'For small businesses',
-        features: [
-            'Everything in Free',
-            'Invoicing',
-            'Basic Reports',
-            'Custom M-Pesa API',
-            '100 Transactions/mo',
-            'Email Support'
-        ],
-        cta: 'Start Basic',
-        popular: false,
-        color: 'bg-blue-600'
-    },
-    {
-        name: 'PRO',
-        price: 2500,
-        period: 'month',
-        description: 'For detailed analytics',
-        features: [
-            'Everything in Basic',
-            'Unlimited Transactions',
-            '10 Branches',
-            'Withdrawals',
-            'Advanced Analytics',
-            'Priority Support'
-        ],
-        cta: 'Go Pro',
-        popular: true,
-        color: 'bg-gradient-to-br from-purple-600 to-pink-600'
-    },
-    {
-        name: 'ENTERPRISE',
-        price: 75000,
-        period: 'one-time',
-        description: 'Full system ownership',
-        features: [
-            'Source Code',
-            'Self-Hosted',
-            'Custom Brand',
-            'Custom M-Pesa API',
-            'Lifetime Updates',
-            'Dedicated Manager'
-        ],
-        cta: 'Contact Sales',
-        popular: false,
-        color: 'bg-indigo-900'
-    }
-];
 
 export default function SubscriptionPage() {
-    const router = useRouter();
-    const { subscription, refreshSubscription } = useSubscription();
-    const [processingPlan, setProcessingPlan] = useState<string | null>(null);
-    const [showPaymentModal, setShowPaymentModal] = useState(false);
-    const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
-    const [phoneNumber, setPhoneNumber] = useState('');
+    const { subscription } = useSubscription();
 
-    const validateKenyanPhone = (phone: string): boolean => {
-        const cleaned = phone.replace(/[\s-]/g, '');
-        return /^(?:254|\+254|0)([17]\d{8})$/.test(cleaned);
-    };
-
-    const formatPhoneNumber = (phone: string): string => {
-        const cleaned = phone.replace(/[\s-]/g, '');
-        if (cleaned.startsWith('+254')) return cleaned.substring(1);
-        if (cleaned.startsWith('0')) return '254' + cleaned.substring(1);
-        return cleaned;
-    };
-
-    const handleUpgrade = (planName: string) => {
-        if (planName === 'ENTERPRISE') {
-            window.location.href = 'mailto:sales@mpesaconnect.co.ke?subject=Enterprise Plan Inquiry';
-            return;
+    const unlockedFeatures = [
+        {
+            title: 'Unlimited POS & Branch Billing',
+            description: 'Operate unlimited POS checkouts and branches. Split bills, apply discounts, and manage cashier registers with zero restrictions.'
+        },
+        {
+            title: 'Full Analytics & Growth Diagnostics',
+            description: 'Access the complete diagnostics panel. Real-time profit reports, transaction trends, and payment tracking are fully enabled.'
+        },
+        {
+            title: 'Empathetic Invoicing & Records',
+            description: 'Generate, send, and download unlimited professional digital invoices and transaction receipts with no count caps.'
+        },
+        {
+            title: 'Dedicated Safaricom API Integrations',
+            description: 'Directly plug in your private M-Pesa client credentials or shortcodes for absolute control over daily settlements.'
+        },
+        {
+            title: 'Granular Cashier Roles & Permissions',
+            description: 'Secure your operations with multiple employee logins, branch managers, cashiers, and customized roles.'
+        },
+        {
+            title: 'Enterprise Uptime & Security Shields',
+            description: 'Military-grade end-to-end encryption (AES-256) and daily redundant backups to ensure total business continuity.'
         }
-        if (planName === 'FREE') return;
-        setSelectedPlan(planName);
-        setShowPaymentModal(true);
-    };
-
-    const handlePayment = async () => {
-        if (!selectedPlan || !phoneNumber) {
-            toast.error('Please enter your phone number');
-            return;
-        }
-
-        if (!validateKenyanPhone(phoneNumber)) {
-            toast.error('Invalid Phone Number');
-            return;
-        }
-
-        setProcessingPlan(selectedPlan);
-        const loadingToast = toast.loading('Sending STK Push...');
-
-        try {
-            const { initiateSubscriptionPayment } = await import('@/services/subscription.service');
-            const formattedPhone = formatPhoneNumber(phoneNumber);
-
-            await initiateSubscriptionPayment({
-                plan: selectedPlan as any,
-                phoneNumber: formattedPhone
-            });
-
-            toast.dismiss(loadingToast);
-            toast.success('Check your phone for M-Pesa prompt!');
-            setShowPaymentModal(false);
-            setPhoneNumber('');
-
-            setTimeout(() => refreshSubscription(), 5000);
-
-        } catch (error: any) {
-            console.error('Payment error:', error);
-            toast.dismiss(loadingToast);
-            toast.error(error.response?.data?.error || 'Payment Failed');
-        } finally {
-            setProcessingPlan(null);
-        }
-    };
-
-    const currentPlan = subscription?.plan || 'FREE';
+    ];
 
     return (
         <DashboardLayout>
-            <div className="max-w-[1400px] mx-auto px-4 py-8">
-
+            <div className="max-w-[1200px] mx-auto px-4 py-8">
                 {/* Header Section */}
-                <div className="text-center mb-10">
-                    <h1 className="text-3xl font-extrabold text-gray-900 dark:text-white sm:text-4xl">
-                        Upgrade Your Business
+                <div className="text-center mb-12">
+                    <div className="inline-flex items-center justify-center p-3 bg-emerald-50 dark:bg-emerald-950/40 rounded-2xl text-[#087c46] mb-4">
+                        <Sparkles className="w-8 h-8 animate-pulse" />
+                    </div>
+                    <h1 className="text-3xl font-extrabold text-neutral-900 dark:text-white sm:text-4xl">
+                        Operational Status & Billing
                     </h1>
-                    <p className="mt-3 max-w-2xl mx-auto text-xl text-gray-500 dark:text-gray-400">
-                        Choose the plan that fits your growth.
+                    <p className="mt-3 max-w-2xl mx-auto text-lg text-neutral-500 dark:text-neutral-400">
+                        Enjoy the reassurance of an all-inclusive enterprise system with absolutely zero fees.
                     </p>
-                    {subscription && (
-                        <div className="mt-4 inline-flex items-center px-4 py-1.5 rounded-full bg-green-100 text-green-800 font-medium text-sm">
-                            <Check className="w-4 h-4 mr-2" />
-                            Active Plan: {currentPlan}
+                </div>
+
+                {/* Status Hero Card */}
+                <div className="relative overflow-hidden bg-gradient-to-br from-[#087c46] to-emerald-800 text-white rounded-3xl p-8 sm:p-12 shadow-xl shadow-[#087c46]/10 mb-12">
+                    <div className="absolute inset-0 bg-[radial-gradient(#fff_1px,transparent_1px)] [background-size:24px_24px] opacity-10"></div>
+                    
+                    <div className="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-8">
+                        <div>
+                            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-950/60 border border-emerald-800 mb-6">
+                                <Shield className="w-4 h-4 text-emerald-400" />
+                                <span className="text-[11px] font-bold text-emerald-300 uppercase tracking-wider">Verified Operating License</span>
+                            </div>
+                            
+                            <h2 className="text-3xl font-bold mb-4">Unlimited Enterprise Access</h2>
+                            <p className="text-emerald-100/90 max-w-2xl text-base leading-relaxed">
+                                Your account is registered on our **Lifetime Free Plan**. All premium features, data limits, and branch slots are 100% unlocked for your operations.
+                            </p>
                         </div>
-                    )}
-                </div>
-
-                {/* Pricing Grid - STRICT 4 COLUMNS on Desktop */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 items-stretch">
-                    {PLANS.map((plan) => {
-                        const isCurrent = plan.name === currentPlan;
-
-                        return (
-                            <div
-                                key={plan.name}
-                                className={`relative flex flex-col rounded-2xl overflow-hidden transition-all duration-200 
-                                    ${plan.popular ? 'ring-2 ring-purple-500 shadow-xl scale-100 md:-mt-4 md:mb-4 bg-white dark:bg-gray-800 z-10' : 'bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-sm hover:shadow-md'}
-                                    ${isCurrent ? 'ring-2 ring-green-500 bg-green-50/50 dark:bg-green-900/10' : ''}
-                                `}
-                            >
-                                {/* Popular Badge */}
-                                {plan.popular && !isCurrent && (
-                                    <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-purple-500 to-pink-500" />
-                                )}
-                                {plan.popular && !isCurrent && (
-                                    <div className="absolute top-4 right-4 bg-purple-100 text-purple-700 text-[10px] font-bold px-2 py-1 rounded-full uppercase tracking-wide">
-                                        Most Popular
-                                    </div>
-                                )}
-
-                                {/* Active Plan Badge */}
-                                {isCurrent && (
-                                    <div className="absolute top-0 inset-x-0 h-1 bg-green-500" />
-                                )}
-                                {isCurrent && (
-                                    <div className="absolute top-4 right-4 bg-green-100 text-green-700 text-[10px] font-bold px-2 py-1 rounded-full uppercase tracking-wide flex items-center gap-1">
-                                        <Check className="w-3 h-3" /> Active
-                                    </div>
-                                )}
-
-                                <div className="p-6 flex-1 flex flex-col">
-                                    <h3 className="text-lg font-bold text-gray-900 dark:text-white uppercase tracking-wider">{(plan as any).title || plan.name}</h3>
-                                    <p className="text-sm text-gray-500 mt-1 mb-4 h-5">{plan.description}</p>
-
-                                    <div className="mb-6">
-                                        <span className="text-3xl font-extrabold text-gray-900 dark:text-white">
-                                            {plan.price === 0 ? 'Free' : `KES ${plan.price.toLocaleString()}`}
-                                        </span>
-                                        {plan.price > 0 && <span className="text-gray-500 text-sm font-medium">/{plan.period === 'one-time' ? 'lifetime' : 'mo'}</span>}
-                                    </div>
-
-                                    <div className="flex-1 space-y-3 mb-6">
-                                        {plan.features.map((feat, i) => (
-                                            <div key={i} className="flex items-start text-sm text-gray-600 dark:text-gray-300">
-                                                <Check className={`w-4 h-4 mr-2 mt-0.5 flex-shrink-0 ${isCurrent ? 'text-green-600' : plan.popular ? 'text-purple-500' : 'text-green-500'}`} />
-                                                <span className="leading-tight">{feat}</span>
-                                            </div>
-                                        ))}
-                                    </div>
-
-                                    <Button
-                                        onClick={() => handleUpgrade(plan.name)}
-                                        disabled={isCurrent}
-                                        className={`w-full py-2 font-semibold shadow-none ${isCurrent
-                                            ? 'bg-green-600 text-white cursor-default hover:bg-green-600'
-                                            : plan.popular
-                                                ? 'bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white'
-                                                : 'bg-gray-900 hover:bg-gray-800 text-white dark:bg-gray-700 dark:hover:bg-gray-600'
-                                            }`}
-                                    >
-                                        {isCurrent ? 'Current Plan' : plan.cta}
-                                    </Button>
-                                </div>
-                            </div>
-                        );
-                    })}
-                </div>
-
-                {/* FAQ / Info */}
-                <div className="mt-16 text-center max-w-3xl mx-auto">
-                    <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4">Enterprise?</h3>
-                    <p className="text-gray-600 dark:text-gray-400 text-sm">
-                        Get the full source code and host it yourself. A one-time payment of 75,000 KES grants you full ownership, verified locally.
-                    </p>
-                </div>
-
-                {/* Payment Modal */}
-                {showPaymentModal && (
-                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-                        <div className="bg-white dark:bg-gray-800 rounded-2xl w-full max-w-sm p-6 shadow-2xl scale-100">
-                            <div className="text-center mb-6">
-                                <div className="w-12 h-12 bg-purple-100 dark:bg-purple-900/30 rounded-full flex items-center justify-center mx-auto mb-4 text-purple-600">
-                                    <Zap className="w-6 h-6" />
-                                </div>
-                                <h3 className="text-xl font-bold">Upgrade to {selectedPlan}</h3>
-                                <p className="text-sm text-gray-500">M-Pesa Safe Payment</p>
-                            </div>
-
-                            <div className="space-y-4">
-                                <div>
-                                    <label className="text-xs font-semibold text-gray-500 uppercase">M-Pesa Phone Number</label>
-                                    <input
-                                        type="tel"
-                                        placeholder="07..."
-                                        className="w-full mt-1 px-4 py-3 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-purple-500 outline-none transition-all font-mono text-lg"
-                                        value={phoneNumber}
-                                        onChange={e => setPhoneNumber(e.target.value)}
-                                    />
-                                </div>
-
-                                <Button
-                                    onClick={handlePayment}
-                                    isLoading={!!processingPlan}
-                                    className="w-full py-4 text-lg bg-green-600 hover:bg-green-700 text-white rounded-xl"
-                                >
-                                    Pay Now
-                                </Button>
-
-                                <button
-                                    onClick={() => setShowPaymentModal(false)}
-                                    className="w-full py-3 text-sm text-gray-400 hover:text-gray-600"
-                                >
-                                    Cancel
-                                </button>
-                            </div>
+                        
+                        <div className="flex-shrink-0 bg-white/10 backdrop-blur-md rounded-2xl p-6 border border-white/20 text-center w-full md:w-auto min-w-[200px]">
+                            <span className="text-xs uppercase tracking-wider font-semibold text-emerald-200">Account Tier</span>
+                            <div className="text-3xl font-black mt-1 mb-2 tracking-tight text-white">ENTERPRISE</div>
+                            <span className="inline-flex items-center gap-1.5 text-xs text-green-300 bg-emerald-950/40 px-3 py-1 rounded-full font-bold">
+                                <Activity className="w-3.5 h-3.5 animate-pulse" /> Lifetime Free
+                            </span>
                         </div>
                     </div>
-                )}
+                </div>
+
+                {/* Features Checklist Grid */}
+                <div className="bg-white dark:bg-zinc-900 rounded-3xl p-8 sm:p-10 border border-neutral-200/50 dark:border-zinc-800/50 shadow-sm">
+                    <h3 className="text-xl font-bold text-neutral-900 dark:text-white mb-8 flex items-center gap-2">
+                        <Heart className="w-5 h-5 text-[#087c46]" /> Unlocked Capabilities
+                    </h3>
+                    
+                    <div className="grid md:grid-cols-2 gap-8">
+                        {unlockedFeatures.map((feat, i) => (
+                            <div key={i} className="flex gap-4">
+                                <div className="mt-1 flex-shrink-0">
+                                    <div className="p-2 bg-emerald-50 dark:bg-emerald-950/40 rounded-xl text-[#087c46]">
+                                        <Check className="w-5 h-5 font-bold" />
+                                    </div>
+                                </div>
+                                <div>
+                                    <h4 className="font-bold text-neutral-900 dark:text-white text-base mb-1.5">{feat.title}</h4>
+                                    <p className="text-neutral-500 dark:text-neutral-400 text-sm leading-relaxed">{feat.description}</p>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+
+                {/* Reassurance Footer */}
+                <div className="mt-12 text-center max-w-2xl mx-auto">
+                    <p className="text-neutral-400 dark:text-neutral-500 text-xs leading-relaxed">
+                        Need local hosting or private self-hosted source code setup? Contact our support channels at <span className="font-semibold text-neutral-500">support@mpesaconnect.co.ke</span> for enterprise consulting and customized deployments.
+                    </p>
+                </div>
             </div>
         </DashboardLayout>
     );
