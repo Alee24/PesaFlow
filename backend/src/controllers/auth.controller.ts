@@ -19,7 +19,7 @@ const registerSchema = z.object({
 const completeProfileSchema = z.object({
     companyName: z.string().min(1),
     idNumber: z.string().min(1),
-    kraPinNumber: z.string().optional().or(z.literal('')),
+    kraPinNumber: z.string().regex(/^[A-P][0-9]{9}[A-Z]$/i, "Invalid KRA PIN format. Example: P051234567Z").optional().nullable().or(z.literal('')),
     location: z.string().min(1),
     dataPolicyAccepted: z.any().transform(v => v === 'true' || v === true || v === 'on'),
 });
@@ -85,9 +85,23 @@ export const register = async (req: Request, res: Response): Promise<void> => {
         // Send Email (async, don't block response too much, but good to await to ensure it works)
         await sendVerificationEmail(email, verificationToken);
 
+        const token = jwt.sign(
+            { userId: result.id, role: result.role, status: result.status, parentId: result.parentId },
+            process.env.JWT_SECRET || 'fallback_secret',
+            { expiresIn: '7d' }
+        );
+
         res.status(201).json({
             message: 'Account created successfully. Please check your email to verify your account.',
-            // No token returned, forcing login after verification
+            token,
+            user: {
+                id: result.id,
+                email: result.email,
+                name: result.name,
+                role: result.role,
+                status: result.status,
+                isProfileComplete: false
+            }
         });
     } catch (error) {
         if (error instanceof z.ZodError) {
@@ -153,8 +167,8 @@ export const completeProfile = async (req: Request, res: Response): Promise<void
             return;
         }
 
-        // Verify KRA PIN with KRA Service (if provided)
-        if (kraPinNumber) {
+        // Verify KRA PIN with KRA Service if provided
+        if (kraPinNumber && kraPinNumber.trim() !== '') {
             const kraCheck = await verifyKRAPin(kraPinNumber);
             if (!kraCheck.isValid) {
                 res.status(400).json({ error: kraCheck.message || 'Invalid KRA PIN provided' });
@@ -214,8 +228,14 @@ export const login = async (req: Request, res: Response): Promise<void> => {
         }
 
         if (!user.emailVerified && user.role !== 'ADMIN') {
-            res.status(403).json({ error: 'Please verify your email address before logging in.' });
-            return;
+            const now = new Date();
+            const gracePeriodEnd = new Date(user.createdAt);
+            gracePeriodEnd.setHours(gracePeriodEnd.getHours() + 24);
+
+            if (now > gracePeriodEnd) {
+                res.status(403).json({ error: 'Please verify your email address before logging in. The 24-hour grace period has expired.' });
+                return;
+            }
         }
 
         if (user.status === 'SUSPENDED') {
@@ -334,7 +354,6 @@ export const updateUser = async (req: Request, res: Response): Promise<void> => 
         res.status(500).json({ error: 'Internal Server Error' });
     }
 };
-
 export const getCurrentUser = async (req: Request, res: Response): Promise<void> => {
     try {
         const userId = (req as any).user.userId;
@@ -355,11 +374,39 @@ export const getCurrentUser = async (req: Request, res: Response): Promise<void>
                 name: user.name,
                 role: user.role,
                 status: user.status,
+                emailVerified: user.emailVerified,
                 isProfileComplete: !!user.businessProfile
             }
         });
     } catch (error) {
         console.error("Get User Error:", error);
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+};
+
+export const resendVerification = async (req: Request, res: Response): Promise<void> => {
+    try {
+        const userId = (req as any).user.userId;
+        const user = await prisma.user.findUnique({ where: { id: userId } });
+        if (!user) {
+            res.status(404).json({ error: 'User not found' });
+            return;
+        }
+        if (user.emailVerified) {
+            res.status(400).json({ error: 'Email already verified' });
+            return;
+        }
+
+        const verificationToken = crypto.randomBytes(32).toString('hex');
+        await prisma.user.update({
+            where: { id: userId },
+            data: { verificationToken }
+        });
+
+        await sendVerificationEmail(user.email, verificationToken);
+        res.json({ message: 'Verification email resent successfully.' });
+    } catch (error) {
+        console.error("Resend Verification Error:", error);
         res.status(500).json({ error: 'Internal Server Error' });
     }
 };

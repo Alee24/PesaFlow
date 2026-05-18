@@ -82,73 +82,6 @@ export default function LandingPage() {
     { value: '24/7', label: 'Support' }
   ];
 
-  const pricingPlans = [
-    {
-      name: 'WELCOME FREE',
-      price: 'Free',
-      period: '1 Year Offer',
-      description: 'Full Premium Access for 12 Months',
-      features: [
-        'All Premium Features',
-        'POS System & Inventory',
-        'Unlimited Transactions',
-        'Custom M-Pesa API Integration',
-        'Priority Support',
-        'Free for 365 Days'
-      ],
-      cta: 'Get 1 Year Free',
-      popular: true
-    },
-    {
-      name: 'Basic',
-      price: '1,500 KES',
-      period: '/month',
-      description: 'For small businesses',
-      features: [
-        'Everything in Free',
-        'Invoice Management',
-        'Basic Reports',
-        'Custom M-Pesa API Integration',
-        '100 Transactions/mo',
-        'Email Support'
-      ],
-      cta: 'Start Trial',
-      popular: false
-    },
-    {
-      name: 'Pro',
-      price: '2,500 KES',
-      period: '/month',
-      description: 'For growing businesses',
-      features: [
-        'Everything in Basic',
-        'Unlimited Transactions',
-        'Up to 10 Branches',
-        'Withdrawal Management',
-        'Advanced Analytics',
-        'Priority Suppport'
-      ],
-      cta: 'Start Trial',
-      popular: false
-    },
-    {
-      name: 'Enterprise',
-      price: 'Custom',
-      period: '/year',
-      description: 'Full system ownership',
-      features: [
-        'Full Source Code / Self-Hosted',
-        'Unlimited Branches',
-        'Custom Branding',
-        'Custom M-Pesa API integration',
-        'Lifetime Updates',
-        'Dedicated Account Manager'
-      ],
-      cta: 'Contact Sales',
-      popular: false
-    }
-  ];
-
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 font-sans selection:bg-indigo-500 selection:text-white transition-colors duration-300">
       {/* Navigation */}
@@ -168,9 +101,6 @@ export default function LandingPage() {
             <div className="hidden md:flex items-center gap-8">
               <Link href="#features" className="text-sm font-medium text-gray-600 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">Features</Link>
               <Link href="#security" className="text-sm font-medium text-gray-600 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">Security</Link>
-              <Link href="#pricing" className="text-sm font-medium text-gray-600 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">Pricing</Link>
-
-              <div className="w-px h-4 bg-gray-200 dark:bg-gray-700"></div>
 
               <Button
                 variant="ghost"
@@ -225,7 +155,6 @@ export default function LandingPage() {
             <div className="px-4 py-6 space-y-4 flex flex-col">
               <Link href="#features" onClick={() => setIsMobileMenuOpen(false)} className="text-base font-medium text-gray-600 dark:text-gray-300 hover:text-indigo-600 p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800">Features</Link>
               <Link href="#security" onClick={() => setIsMobileMenuOpen(false)} className="text-base font-medium text-gray-600 dark:text-gray-300 hover:text-indigo-600 p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800">Security</Link>
-              <Link href="#pricing" onClick={() => setIsMobileMenuOpen(false)} className="text-base font-medium text-gray-600 dark:text-gray-300 hover:text-indigo-600 p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800">Pricing</Link>
 
               <div className="h-px bg-gray-100 dark:bg-gray-800 my-4"></div>
 
@@ -253,21 +182,6 @@ export default function LandingPage() {
           </div>
         )}
       </nav>
-      
-      {/* Promotional Banner */}
-      <div className="pt-20 bg-indigo-600 dark:bg-indigo-700">
-        <div className="max-w-7xl mx-auto px-4 py-3 flex flex-col md:flex-row items-center justify-center gap-2 md:gap-4 text-white text-center">
-          <div className="flex items-center gap-2 font-bold animate-pulse">
-            <Zap className="w-5 h-5 fill-yellow-400 text-yellow-400" />
-            <span>WELCOME SPECIAL RE-LAUNCH OFFER!</span>
-          </div>
-          <span className="hidden md:inline font-medium opacity-90">|</span>
-          <p className="font-semibold text-xs md:text-sm lg:text-base">Get 1 Full Year of Premium POS, CRM & Custom M-Pesa API — <span className="underline decoration-yellow-400 decoration-2 underline-offset-4">Absolutely Free!</span></p>
-          <Link href="/auth/register" className="flex items-center gap-1 bg-white text-indigo-600 px-3 py-1 rounded-full text-[10px] md:text-xs font-bold hover:bg-yellow-400 hover:text-indigo-900 transition-all">
-            CLAIM NOW <ArrowRight className="w-3 h-3" />
-          </Link>
-        </div>
-      </div>
 
       {/* Hero Section */}
       <header className="relative pt-32 pb-20 lg:pt-48 lg:pb-32 overflow-hidden">
@@ -282,7 +196,7 @@ export default function LandingPage() {
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
               <span className="relative inline-flex rounded-full h-2 w-2 bg-indigo-500"></span>
             </span>
-            <span className="text-xs font-semibold text-indigo-700 dark:text-indigo-300 uppercase tracking-wide">Trusted by 5,000+ Businesses</span>
+            <span className="text-xs font-semibold text-indigo-700 dark:text-indigo-300 uppercase tracking-wide">100% Free Lifetime Access</span>
           </div>
 
           <h1 className="text-5xl md:text-7xl font-extrabold text-gray-900 dark:text-white tracking-tight mb-8 leading-tight">
@@ -293,7 +207,7 @@ export default function LandingPage() {
           </h1>
 
           <p className="text-xl text-gray-600 dark:text-gray-400 max-w-2xl mx-auto mb-10 leading-relaxed">
-            Manage your entire business from one dashboard. Accept M-Pesa payments (use our API or your own), track inventory, and engage customers — <span className="text-indigo-600 dark:text-indigo-400 font-bold">all premium features free for 12 months.</span>
+            Manage your entire business from one dashboard. Accept M-Pesa payments, track inventory, manage branches, and engage customers. <span className="text-indigo-600 dark:text-indigo-400 font-bold">All premium features are 100% free with no monthly subscription charges ever.</span>
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
@@ -421,60 +335,6 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Pricing Section */}
-      <section id="pricing" className="py-24 bg-gray-50 dark:bg-gray-900">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-5xl font-bold text-gray-900 dark:text-white mb-4">Simple Pricing</h2>
-            <p className="text-xl text-gray-600 dark:text-gray-400">Start free. Upgrade as you scale.</p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-            {pricingPlans.map((plan, index) => (
-              <div
-                key={index}
-                className={`flex flex-col p-8 rounded-3xl transition-all duration-300 ${plan.popular
-                  ? 'bg-white dark:bg-gray-800 shadow-2xl scale-105 z-10 border-2 border-indigo-500'
-                  : 'bg-white dark:bg-gray-800 shadow-lg border border-gray-100 dark:border-gray-700 bg-opacity-60'
-                  }`}
-              >
-                {plan.popular && (
-                  <div className="self-start px-4 py-1.5 bg-gradient-to-r from-indigo-600 to-purple-600 text-white text-[10px] font-black uppercase rounded-full mb-4 shadow-lg animate-pulse">
-                    🔥 MOST PREFERRED - 1 YEAR FREE
-                  </div>
-                )}
-
-                <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2">{plan.name}</h3>
-                <div className="flex items-baseline mb-4">
-                  <span className="text-3xl font-bold text-gray-900 dark:text-white">{plan.price}</span>
-                  <span className="text-sm text-gray-500 ml-1">{plan.period}</span>
-                </div>
-                <p className="text-sm text-gray-500 mb-6 min-h-[40px]">{plan.description}</p>
-
-                <ul className="space-y-3 mb-8 flex-1">
-                  {plan.features.map((feature, i) => (
-                    <li key={i} className="flex items-start gap-2 text-sm text-gray-600 dark:text-gray-300">
-                      <CheckCircle className="w-4 h-4 text-green-500 shrink-0 mt-0.5" />
-                      <span>{feature}</span>
-                    </li>
-                  ))}
-                </ul>
-
-                <Link href="/auth/register" className="w-full">
-                  <Button
-                    className={`w-full rounded-xl ${plan.popular
-                      ? 'bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg'
-                      : 'bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-900 dark:text-white'
-                      }`}
-                  >
-                    {plan.cta}
-                  </Button>
-                </Link>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
 
       {/* CTA Section */}
       <section className="py-24 bg-white dark:bg-gray-900 border-t border-gray-100 dark:border-gray-800">
@@ -488,10 +348,10 @@ export default function LandingPage() {
               </p>
               <Link href="/auth/register">
                 <Button size="lg" className="h-14 px-10 rounded-full bg-white text-indigo-900 hover:bg-gray-100 hover:scale-105 transition-all text-lg font-bold shadow-xl">
-                  Get Started for Free
+                  Get Started Free
                 </Button>
               </Link>
-              <p className="mt-6 text-sm text-indigo-200 opacity-80">No credit card required • Cancel anytime</p>
+              <p className="mt-6 text-sm text-indigo-200 opacity-80">100% Free Lifetime Platform • No Credit Card Required</p>
             </div>
           </div>
         </div>
@@ -517,7 +377,6 @@ export default function LandingPage() {
               <h4 className="font-bold text-gray-900 dark:text-white mb-4">Product</h4>
               <ul className="space-y-2 text-sm text-gray-600 dark:text-gray-400">
                 <li><Link href="#features" className="hover:text-indigo-600">Features</Link></li>
-                <li><Link href="#pricing" className="hover:text-indigo-600">Pricing</Link></li>
                 <li><Link href="#security" className="hover:text-indigo-600">Security</Link></li>
                 <li><Link href="#" className="hover:text-indigo-600">API Documentation</Link></li>
               </ul>

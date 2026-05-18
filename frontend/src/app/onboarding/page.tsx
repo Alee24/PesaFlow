@@ -49,14 +49,14 @@ export default function OnboardingPage() {
     const nextStep = () => {
         if (step === 1) {
             if (!formData.companyName || !formData.idNumber || !formData.location) {
-                setError('Please fill in mandatory business details');
+                setError('Please fill in all business details');
                 return;
             }
-            // Optional KRA PIN Format Check (only if provided)
+            // Optional KRA PIN Format Check
             if (formData.kraPinNumber) {
                 const kraRegex = /^[A-Z][0-9]{9}[A-Z]$/i;
                 if (!kraRegex.test(formData.kraPinNumber)) {
-                    setError('Invalid KRA PIN format. Example: A012345678Z');
+                    setError('Invalid KRA PIN format. Example: P051234567Z');
                     return;
                 }
             }
@@ -103,6 +103,14 @@ export default function OnboardingPage() {
         }
     };
 
+    const handleSkip = () => {
+        localStorage.setItem('onboarding_skipped', 'true');
+        // Update local user object's isProfileComplete status to avoid immediate dashboard redirects
+        const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
+        localStorage.setItem('user', JSON.stringify({ ...currentUser, isProfileComplete: true }));
+        window.location.href = '/dashboard';
+    };
+
     return (
         <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 p-4 py-12">
             <Toast visible={toast.visible} message={toast.message} type={toast.type} onClose={() => setToast({ ...toast, visible: false })} />
@@ -129,49 +137,12 @@ export default function OnboardingPage() {
                                     <h3 className="font-semibold">Business Identity</h3>
                                 </div>
 
-                                {/* KRA PIN (First) */}
-                                <div className="flex flex-col space-y-1">
-                                    <label className="text-sm font-medium text-gray-700 dark:text-gray-300">KRA PIN Number <span className="text-gray-400 font-normal">(Optional)</span></label>
-                                    <div className="flex gap-2">
-                                        <input
-                                            className="flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-700 dark:bg-gray-800 dark:text-white dark:focus:ring-indigo-400"
-                                            value={formData.kraPinNumber}
-                                            onChange={(e) => setFormData({ ...formData, kraPinNumber: e.target.value })}
-                                            placeholder="A012345678Z"
-                                        />
-                                        <Button
-                                            type="button"
-                                            onClick={async () => {
-                                                if (!formData.kraPinNumber) return;
-                                                setLoading(true);
-                                                try {
-                                                    const res = await api.post('/kra/verify-pin', { pin: formData.kraPinNumber });
-                                                    if (res.data.valid) {
-                                                        setToast({ visible: true, message: `Detailed Validation Successful. Taxpayer: ${res.data.taxpayerName}`, type: 'success' });
-                                                        // Auto-fill all available fields including ID
-                                                        setFormData(prev => ({
-                                                            ...prev,
-                                                            companyName: res.data.taxpayerName,
-                                                            email: res.data.email || prev.email,
-                                                            location: res.data.city || prev.location,
-                                                            contactPhone: res.data.mobileNumber || prev.contactPhone,
-                                                            idNumber: res.data.identityNumber || prev.idNumber
-                                                        }));
-                                                    }
-                                                } catch (e: any) {
-                                                    setToast({ visible: true, message: e.response?.data?.error || 'Validation Failed', type: 'error' });
-                                                } finally {
-                                                    setLoading(false);
-                                                }
-                                            }}
-                                            variant="outline"
-                                            className="whitespace-nowrap"
-                                        >
-                                            Check Validity
-                                        </Button>
-                                    </div>
-                                    <p className="text-xs text-gray-500">Enter PIN and verify to auto-populate details.</p>
-                                </div>
+                                <Input
+                                    label="KRA PIN Number (Optional)"
+                                    value={formData.kraPinNumber}
+                                    onChange={(e) => setFormData({ ...formData, kraPinNumber: e.target.value })}
+                                    placeholder="A012345678Z"
+                                />
 
                                 <Input
                                     label="Registered Business Name"
@@ -224,7 +195,7 @@ export default function OnboardingPage() {
                                     </div>
                                     <div className="border-2 border-dashed border-gray-200 dark:border-gray-700 rounded-xl p-4 text-center hover:border-indigo-400 transition-colors">
                                         <label className="cursor-pointer block">
-                                            <span className="text-xs font-semibold text-gray-500 uppercase block mb-2">KRA PIN Certificate (Optional)</span>
+                                            <span className="text-xs font-semibold text-gray-500 uppercase block mb-2">KRA PIN Certificate</span>
                                             <input type="file" onChange={(e) => handleFileChange(e, 'kraCert')} className="hidden" accept="image/*,application/pdf" />
                                             {files.kraCert ? <div className="text-sm text-green-600 font-medium flex items-center justify-center gap-1"><CheckCircle2 className="w-4 h-4" /> {files.kraCert.name}</div> : <div className="text-sm text-gray-400">Click to upload PIN Cert</div>}
                                         </label>
@@ -258,8 +229,8 @@ export default function OnboardingPage() {
                         )}
 
                         <div className="mt-8 text-center">
-                            <button type="button" onClick={logout} className="text-sm text-gray-500 hover:text-red-500 flex items-center justify-center gap-1 mx-auto">
-                                <LogOut className="w-3 h-3" /> Log out and continue later
+                            <button type="button" onClick={handleSkip} className="text-sm text-gray-500 hover:text-indigo-600 flex items-center justify-center gap-1 mx-auto transition-colors">
+                                [→ Skip Setup]
                             </button>
                         </div>
                     </form>

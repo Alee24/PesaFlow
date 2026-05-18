@@ -85,17 +85,22 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
     const fetchSubscription = async () => {
         try {
             const response = await api.get('/subscription/status');
-            setSubscription(response.data);
+            setSubscription({
+                ...response.data,
+                plan: 'ENTERPRISE',
+                status: 'ACTIVE',
+                isEnterprise: true
+            });
         } catch (error) {
             console.error('Failed to fetch subscription:', error);
-            // Default to FREE if fetch fails
+            // Default to ENTERPRISE if fetch fails
             setSubscription({
                 id: 'default',
-                plan: 'FREE',
+                plan: 'ENTERPRISE',
                 status: 'ACTIVE',
                 monthlyTxCount: 0,
                 txCountResetDate: new Date().toISOString(),
-                isEnterprise: false
+                isEnterprise: true
             });
         } finally {
             setLoading(false);
@@ -104,23 +109,18 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
     useEffect(() => {
         fetchSubscription();
-
-        // Auto-refresh removed - subscription only updates on manual refresh
     }, []);
 
     const hasFeature = (feature: string): boolean => {
-        if (!subscription) return false;
-        return FEATURE_ACCESS[feature]?.[subscription.plan] || false;
+        return true;
     };
 
     const getRemainingTransactions = (): number => {
-        if (!subscription || subscription.plan !== 'BASIC') return Infinity;
-        return Math.max(0, 100 - subscription.monthlyTxCount);
+        return Infinity;
     };
 
     const canCreateBranch = (): boolean => {
-        if (!subscription) return false;
-        return subscription.plan === 'PRO' || subscription.plan === 'ENTERPRISE';
+        return true;
     };
 
     const refreshSubscription = async () => {
