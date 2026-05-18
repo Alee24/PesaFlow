@@ -1,8 +1,8 @@
 #!/bin/bash
 
 # Configuration
-API_PORT=5454
-WEB_PORT=5054
+API_PORT=2365
+WEB_PORT=3652
 DOMAIN="portal.mclinic.co.ke"
 API_URL="https://${DOMAIN}/api"
 PROJECT_ROOT="/var/www/mpesaconnect.co.ke"

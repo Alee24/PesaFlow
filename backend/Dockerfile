@@ -31,7 +31,7 @@ RUN npm run build
 RUN chmod +x startup.sh
 
 # Expose the API port
-EXPOSE 5454
+EXPOSE 2365
 
 # Start the application via startup script
 CMD ["./startup.sh"]

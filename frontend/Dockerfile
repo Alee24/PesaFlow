@@ -38,7 +38,7 @@ COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/next.config.* ./
 
 # Expose the frontend port
-EXPOSE 5054
+EXPOSE 3652
 
 # Start the application
 CMD ["npm", "start"]
