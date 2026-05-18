@@ -16,6 +16,8 @@ router.post('/complete-profile', auth_middleware_1.authenticateToken, upload_mid
 ]), auth_controller_1.completeProfile);
 router.post('/login', auth_controller_1.login);
 router.get('/me', auth_middleware_1.authenticateToken, auth_controller_1.getCurrentUser);
+router.get('/current-user', auth_middleware_1.authenticateToken, auth_controller_1.getCurrentUser);
 router.put('/me', auth_middleware_1.authenticateToken, auth_controller_1.updateUser);
+router.post('/resend-verification', auth_middleware_1.authenticateToken, auth_controller_1.resendVerification);
 exports.default = router;
 //# sourceMappingURL=auth.routes.js.map

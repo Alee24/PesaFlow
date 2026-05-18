@@ -16,6 +16,33 @@ const authenticateToken = async (req, res, next) => {
     }
     try {
         const payload = jsonwebtoken_1.default.verify(token, process.env.JWT_SECRET || 'fallback_secret');
+        if (payload.isTeamMember) {
+            const teamMember = await prisma.teamMember.findUnique({
+                where: { id: payload.teamMemberId },
+                include: { merchant: true }
+            });
+            if (!teamMember) {
+                res.status(401).json({ error: 'Staff member does not exist' });
+                return;
+            }
+            if (teamMember.status !== 'ACTIVE') {
+                res.status(403).json({ error: 'Staff account is inactive' });
+                return;
+            }
+            if (teamMember.merchant.status === 'SUSPENDED' || teamMember.merchant.status === 'REJECTED') {
+                res.status(403).json({ error: 'Merchant account is suspended' });
+                return;
+            }
+            req.user = {
+                userId: teamMember.id,
+                merchantId: teamMember.merchantId,
+                role: teamMember.role,
+                status: teamMember.status,
+                isTeamMember: true
+            };
+            next();
+            return;
+        }
         const user = await prisma.user.findUnique({
             where: { id: payload.userId },
             select: {

@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getCurrentUser = exports.updateUser = exports.login = exports.completeProfile = exports.verifyEmail = exports.register = void 0;
+exports.resendVerification = exports.getCurrentUser = exports.updateUser = exports.login = exports.completeProfile = exports.verifyEmail = exports.register = void 0;
 const client_1 = require("@prisma/client");
 const bcryptjs_1 = __importDefault(require("bcryptjs"));
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
@@ -19,7 +19,7 @@ const registerSchema = zod_1.z.object({
 const completeProfileSchema = zod_1.z.object({
     companyName: zod_1.z.string().min(1),
     idNumber: zod_1.z.string().min(1),
-    kraPinNumber: zod_1.z.string().regex(/^[A-P][0-9]{9}[A-Z]$/i, "Invalid KRA PIN format. Example: P051234567Z"),
+    kraPinNumber: zod_1.z.string().regex(/^[A-P][0-9]{9}[A-Z]$/i, "Invalid KRA PIN format. Example: P051234567Z").optional().nullable().or(zod_1.z.literal('')),
     location: zod_1.z.string().min(1),
     dataPolicyAccepted: zod_1.z.any().transform(v => v === 'true' || v === true || v === 'on'),
 });
@@ -43,6 +43,8 @@ const register = async (req, res) => {
         const passwordHash = await bcryptjs_1.default.hash(password, 10);
         const verificationToken = crypto_1.default.randomBytes(32).toString('hex');
         const result = await prisma.$transaction(async (tx) => {
+            const oneYearFromNow = new Date();
+            oneYearFromNow.setFullYear(oneYearFromNow.getFullYear() + 1);
             const user = await tx.user.create({
                 data: {
                     email,
@@ -56,7 +58,8 @@ const register = async (req, res) => {
                         create: {
                             plan: 'FREE',
                             status: 'ACTIVE',
-                            features: '[]'
+                            features: '[]',
+                            endDate: oneYearFromNow
                         }
                     }
                 },
@@ -67,8 +70,18 @@ const register = async (req, res) => {
             return user;
         });
         await (0, email_service_1.sendVerificationEmail)(email, verificationToken);
+        const token = jsonwebtoken_1.default.sign({ userId: result.id, role: result.role, status: result.status, parentId: result.parentId }, process.env.JWT_SECRET || 'fallback_secret', { expiresIn: '7d' });
         res.status(201).json({
             message: 'Account created successfully. Please check your email to verify your account.',
+            token,
+            user: {
+                id: result.id,
+                email: result.email,
+                name: result.name,
+                role: result.role,
+                status: result.status,
+                isProfileComplete: false
+            }
         });
     }
     catch (error) {
@@ -123,10 +136,12 @@ const completeProfile = async (req, res) => {
             res.status(400).json({ error: 'Business profile already exists' });
             return;
         }
-        const kraCheck = await (0, kra_verification_service_1.verifyKRAPin)(kraPinNumber);
-        if (!kraCheck.isValid) {
-            res.status(400).json({ error: kraCheck.message || 'Invalid KRA PIN provided' });
-            return;
+        if (kraPinNumber && kraPinNumber.trim() !== '') {
+            const kraCheck = await (0, kra_verification_service_1.verifyKRAPin)(kraPinNumber);
+            if (!kraCheck.isValid) {
+                res.status(400).json({ error: kraCheck.message || 'Invalid KRA PIN provided' });
+                return;
+            }
         }
         const files = req.files;
         const getFileUrl = (fieldName) => {
@@ -176,8 +191,13 @@ const login = async (req, res) => {
             return;
         }
         if (!user.emailVerified && user.role !== 'ADMIN') {
-            res.status(403).json({ error: 'Please verify your email address before logging in.' });
-            return;
+            const now = new Date();
+            const gracePeriodEnd = new Date(user.createdAt);
+            gracePeriodEnd.setHours(gracePeriodEnd.getHours() + 24);
+            if (now > gracePeriodEnd) {
+                res.status(403).json({ error: 'Please verify your email address before logging in. The 24-hour grace period has expired.' });
+                return;
+            }
         }
         if (user.status === 'SUSPENDED') {
             res.status(403).json({ error: 'Your account has been suspended. Please call 0724454757 for activation.' });
@@ -212,15 +232,15 @@ exports.login = login;
 const updateUser = async (req, res) => {
     try {
         const userId = req.user.userId;
-        const { email, phoneNumber, password, currentPassword, name } = req.body;
+        const { email, phoneNumber, password, currentPassword, name, posPin } = req.body;
         const user = await prisma.user.findUnique({ where: { id: userId } });
         if (!user) {
             res.status(404).json({ error: 'User not found' });
             return;
         }
-        if (password || email !== user.email) {
+        if (password || email !== user.email || posPin) {
             if (!currentPassword || !(await bcryptjs_1.default.compare(currentPassword, user.passwordHash))) {
-                res.status(401).json({ error: 'Invalid current password' });
+                res.status(401).json({ error: 'Invalid current password to set PIN or change sensitive info' });
                 return;
             }
         }
@@ -250,6 +270,13 @@ const updateUser = async (req, res) => {
         if (password) {
             updates.passwordHash = await bcryptjs_1.default.hash(password, 10);
         }
+        if (posPin) {
+            if (posPin.length < 4) {
+                res.status(400).json({ error: 'PIN must be at least 4 digits' });
+                return;
+            }
+            updates.pin = await bcryptjs_1.default.hash(posPin, 10);
+        }
         const updatedUser = await prisma.user.update({
             where: { id: userId },
             data: updates,
@@ -263,6 +290,7 @@ const updateUser = async (req, res) => {
                 name: updatedUser.name,
                 role: updatedUser.role,
                 status: updatedUser.status,
+                hasPin: !!updatedUser.pin,
                 isProfileComplete: !!updatedUser.businessProfile
             }
         });
@@ -291,6 +319,7 @@ const getCurrentUser = async (req, res) => {
                 name: user.name,
                 role: user.role,
                 status: user.status,
+                emailVerified: user.emailVerified,
                 isProfileComplete: !!user.businessProfile
             }
         });
@@ -301,4 +330,30 @@ const getCurrentUser = async (req, res) => {
     }
 };
 exports.getCurrentUser = getCurrentUser;
+const resendVerification = async (req, res) => {
+    try {
+        const userId = req.user.userId;
+        const user = await prisma.user.findUnique({ where: { id: userId } });
+        if (!user) {
+            res.status(404).json({ error: 'User not found' });
+            return;
+        }
+        if (user.emailVerified) {
+            res.status(400).json({ error: 'Email already verified' });
+            return;
+        }
+        const verificationToken = crypto_1.default.randomBytes(32).toString('hex');
+        await prisma.user.update({
+            where: { id: userId },
+            data: { verificationToken }
+        });
+        await (0, email_service_1.sendVerificationEmail)(user.email, verificationToken);
+        res.json({ message: 'Verification email resent successfully.' });
+    }
+    catch (error) {
+        console.error("Resend Verification Error:", error);
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+};
+exports.resendVerification = resendVerification;
 //# sourceMappingURL=auth.controller.js.map

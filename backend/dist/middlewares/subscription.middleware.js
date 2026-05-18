@@ -6,31 +6,31 @@ const client_1 = require("@prisma/client");
 const prisma = new client_1.PrismaClient();
 const FEATURE_ACCESS = {
     'invoices': {
-        FREE: false,
+        FREE: true,
         BASIC: true,
         PRO: true,
         ENTERPRISE: true
     },
     'withdrawals': {
-        FREE: false,
+        FREE: true,
         BASIC: false,
         PRO: true,
         ENTERPRISE: true
     },
     'team': {
-        FREE: false,
+        FREE: true,
         BASIC: false,
         PRO: true,
         ENTERPRISE: true
     },
     'analytics': {
-        FREE: false,
+        FREE: true,
         BASIC: false,
         PRO: true,
         ENTERPRISE: true
     },
     'reports': {
-        FREE: false,
+        FREE: true,
         BASIC: true,
         PRO: true,
         ENTERPRISE: true
@@ -42,7 +42,7 @@ const FEATURE_ACCESS = {
         ENTERPRISE: true
     },
     'ADVANCED_CRM': {
-        FREE: false,
+        FREE: true,
         BASIC: false,
         PRO: true,
         ENTERPRISE: true
@@ -76,12 +76,15 @@ const requireFeature = (feature) => {
                 where: { merchantId }
             });
             if (!subscription) {
+                const oneYearFromNow = new Date();
+                oneYearFromNow.setFullYear(oneYearFromNow.getFullYear() + 1);
                 await prisma.subscription.create({
                     data: {
                         merchantId,
                         plan: 'FREE',
                         status: 'ACTIVE',
-                        features: '[]'
+                        features: '[]',
+                        endDate: oneYearFromNow
                     }
                 });
                 if (!FEATURE_ACCESS[feature]?.FREE) {
@@ -100,6 +103,16 @@ const requireFeature = (feature) => {
                         error: 'Active subscription required',
                         currentPlan: subscription.plan,
                         status: subscription.status,
+                        upgrade: true
+                    });
+                    return;
+                }
+                if (subscription.endDate && new Date(subscription.endDate) < new Date()) {
+                    res.status(403).json({
+                        error: 'Your free access for one year has expired. Please upgrade to continue.',
+                        currentPlan: subscription.plan,
+                        expired: true,
+                        endDate: subscription.endDate,
                         upgrade: true
                     });
                     return;
@@ -136,8 +149,10 @@ const checkTransactionLimit = async (req, res, next) => {
             where: { merchantId }
         });
         if (!subscription) {
+            const oneYearFromNow = new Date();
+            oneYearFromNow.setFullYear(oneYearFromNow.getFullYear() + 1);
             await prisma.subscription.create({
-                data: { merchantId, plan: 'FREE', status: 'ACTIVE', features: '[]' }
+                data: { merchantId, plan: 'FREE', status: 'ACTIVE', features: '[]', endDate: oneYearFromNow }
             });
             next();
             return;

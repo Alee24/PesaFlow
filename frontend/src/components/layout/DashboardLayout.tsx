@@ -45,20 +45,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
     // Handle Profile Completion Redirects
     useEffect(() => {
-        if (!user || !isClient) return;
-        if (user.role !== 'MERCHANT') return;
-
-        const hasSkipped = localStorage.getItem('onboarding_skipped') === 'true';
-
-        // 1. If profile is NOT complete (strictly false) and onboarding has not been skipped, redirect to onboarding
-        if (user.isProfileComplete === false && !hasSkipped && pathname !== '/onboarding') {
-            router.push('/onboarding');
-        }
-
-        // 2. If profile IS complete or they skipped onboarding, prevent access to onboarding
-        if ((user.isProfileComplete === true || hasSkipped) && pathname === '/onboarding') {
-            router.push('/dashboard');
-        }
+        // Business onboarding is not mandatory and should not pop up automatically.
+        // Merchant users are allowed direct dashboard access.
     }, [user, pathname, router, isClient]);
 
     if (!isClient) return null; // Prevent hydration mismatch
