@@ -36,42 +36,24 @@ const getAccessToken = async (creds: any) => {
 export const getSubscription = async (req: Request, res: Response) => {
     try {
         const userId = (req as any).user.userId;
-        console.log(`🔍 [GET /subscriptions] Fetching for userId: ${userId}`);
+        console.log(`🔍 [GET /subscriptions] Fetching for userId: ${userId} - OVERRIDDEN TO ENTERPRISE`);
 
-        let sub = await prisma.subscription.findUnique({
-            where: { merchantId: userId }
+        // Return a premium, lifetime ENTERPRISE plan
+        return res.json({
+            id: 'default_enterprise_unlocked',
+            merchantId: userId,
+            plan: 'ENTERPRISE',
+            status: 'ACTIVE',
+            startDate: new Date().toISOString(),
+            endDate: new Date(new Date().getFullYear() + 10, 0, 1).toISOString(),
+            monthlyTxCount: 0,
+            txCountResetDate: new Date().toISOString(),
+            isEnterprise: true,
+            daysRemaining: 3650,
+            isExpired: false,
+            isInGracePeriod: false,
+            canAccess: true
         });
-
-        console.log(`   > Found Subscription:`, sub ? `ID: ${sub.id} | Plan: ${sub.plan} | Status: ${sub.status}` : 'Not Found');
-
-        if (!sub) {
-            // Create a default trial or inactive subscription
-            // For now, return a virtual "No Plan" state
-            return res.json({
-                plan: 'NONE',
-                status: 'INACTIVE',
-                daysRemaining: 0,
-                canAccess: false // OR true if there's a free tier
-            });
-        }
-
-        const now = new Date();
-        const endDate = sub.endDate ? new Date(sub.endDate) : new Date();
-        const diffTime = endDate.getTime() - now.getTime();
-        const daysRemaining = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-
-        // Grace period logic (e.g., 3 days)
-        const isExpired = daysRemaining < 0;
-        const isInGracePeriod = isExpired && daysRemaining > -3;
-
-        res.json({
-            ...sub,
-            daysRemaining,
-            isExpired,
-            isInGracePeriod,
-            canAccess: !isExpired || isInGracePeriod
-        });
-
     } catch (error) {
         console.error(error);
         res.status(500).json({ error: 'Failed to fetch subscription' });

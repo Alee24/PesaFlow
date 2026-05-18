@@ -87,30 +87,9 @@ export const authenticateToken = async (req: AuthRequest, res: Response, next: N
         // Branch Manager: merchantId is the parent (main merchant)
         const merchantId = user.parentId || user.id;
 
-        // Check parent subscription for branch managers
+        // Parent subscription checks for branch managers bypassed to allow 100% unlocked unlimited access
         if (user.parentId) {
-            const parentSubscription = await prisma.subscription.findUnique({
-                where: { merchantId: merchantId }
-            });
-
-            if (!parentSubscription || parentSubscription.status !== 'ACTIVE') {
-                res.status(403).json({
-                    error: 'Main merchant subscription required. Please contact your account owner.',
-                    requiresUpgrade: true
-                });
-                return;
-            }
-
-            // Branch managers require PRO or ENTERPRISE plan
-            if (parentSubscription.plan !== 'PRO' && parentSubscription.plan !== 'ENTERPRISE') {
-                res.status(403).json({
-                    error: 'Branch manager access requires PRO or ENTERPRISE plan. Please contact your account owner.',
-                    currentPlan: parentSubscription.plan,
-                    requiredPlan: 'PRO',
-                    requiresUpgrade: true
-                });
-                return;
-            }
+            // Unlocked: Bypassed plan limits on login
         }
 
         req.user = {
