@@ -9,7 +9,7 @@ services:
       MYSQL_DATABASE: pesaflow_v2
       MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
     ports:
-      - "3306:3306"
+      - "3329:3306"
     volumes:
       - mysql_data:/var/lib/mysql
     networks:
