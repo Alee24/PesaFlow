@@ -34,7 +34,7 @@ fi
 echo -e "${YELLOW}📥 Fetching latest code changes from GitHub (${BRANCH})...${NC}"
 git fetch origin
 git checkout $BRANCH || git checkout -b $BRANCH origin/$BRANCH
-git pull origin $BRANCH
+git reset --hard origin/$BRANCH
 
 # 2. Re-build and restart containers
 echo -e "${YELLOW}🏗️  Rebuilding and restarting Docker containers (clean rebuild)...${NC}"
