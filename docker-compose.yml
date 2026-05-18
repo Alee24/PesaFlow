@@ -43,7 +43,7 @@ services:
     depends_on:
       - backend
     ports:
-      - "3652:3652"
+      - "3652:5054"
     networks:
       - pesaflow_net
 
