@@ -12,30 +12,7 @@ interface FeatureGateProps {
 }
 
 export const FeatureGate: React.FC<FeatureGateProps> = ({ feature, children, fallback }) => {
-    const { hasFeature, subscription } = useSubscription();
-    const [user, setUser] = React.useState<any>(null);
-
-    React.useEffect(() => {
-        const userData = localStorage.getItem('user');
-        if (userData) {
-            setUser(JSON.parse(userData));
-        }
-    }, []);
-
-    // ADMIN users have access to all features
-    if (user?.role === 'ADMIN') {
-        return <>{children}</>;
-    }
-
-    if (hasFeature(feature)) {
-        return <>{children}</>;
-    }
-
-    if (fallback) {
-        return <>{fallback}</>;
-    }
-
-    return <UpgradePrompt feature={feature} currentPlan={subscription?.plan || 'FREE'} />;
+    return <>{children}</>;
 };
 
 interface UpgradePromptProps {
@@ -112,42 +89,7 @@ export const UpgradePrompt: React.FC<UpgradePromptProps> = ({ feature, currentPl
     );
 };
 
-// Transaction Limit Warning Component
+// Transaction Limit Warning Component (Bypassed)
 export const TransactionLimitWarning: React.FC = () => {
-    const { subscription, getRemainingTransactions } = useSubscription();
-    const router = useRouter();
-    const remaining = getRemainingTransactions();
-
-    if (subscription?.plan !== 'BASIC' || remaining > 20) {
-        return null;
-    }
-
-    const percentage = (remaining / 100) * 100;
-    const isLow = percentage < 20;
-
-    return (
-        <div className={`rounded-lg p-4 mb-6 ${isLow ? 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800' : 'bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-800'} border`}>
-            <div className="flex items-start gap-3">
-                <div className={`p-2 rounded-lg ${isLow ? 'bg-red-100 dark:bg-red-900/40' : 'bg-yellow-100 dark:bg-yellow-900/40'}`}>
-                    <svg className={`w-5 h-5 ${isLow ? 'text-red-600' : 'text-yellow-600'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                    </svg>
-                </div>
-                <div className="flex-1">
-                    <h4 className={`font-semibold ${isLow ? 'text-red-900 dark:text-red-100' : 'text-yellow-900 dark:text-yellow-100'} mb-1`}>
-                        {isLow ? 'Transaction Limit Almost Reached' : 'Transaction Limit Warning'}
-                    </h4>
-                    <p className={`text-sm ${isLow ? 'text-red-700 dark:text-red-300' : 'text-yellow-700 dark:text-yellow-300'} mb-3`}>
-                        You have <strong>{remaining}</strong> transactions remaining this month ({percentage.toFixed(0)}% left)
-                    </p>
-                    <button
-                        onClick={() => router.push('/subscription')}
-                        className={`text-sm font-semibold ${isLow ? 'text-red-600 hover:text-red-700' : 'text-yellow-600 hover:text-yellow-700'} underline`}
-                    >
-                        Upgrade to PRO for unlimited transactions →
-                    </button>
-                </div>
-            </div>
-        </div>
-    );
+    return null;
 };
