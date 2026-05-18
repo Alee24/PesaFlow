@@ -24,10 +24,11 @@ git fetch origin
 git checkout $BRANCH 
 git pull origin $BRANCH
 
-# 2. Re-build and restart containers
-echo "🏗️  Rebuilding and restarting Docker containers..."
+# 2. Re-build and restart containers without cache
+echo "🏗️  Rebuilding and restarting Docker containers (Clean Build)..."
 docker-compose down || true
-docker-compose up -d --build
+docker-compose build --no-cache
+docker-compose up -d
 
 # 3. Check status
 echo ""
