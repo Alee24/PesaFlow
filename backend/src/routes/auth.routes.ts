@@ -1,6 +1,6 @@
 
 import { Router } from 'express';
-import { register, login, updateUser, getCurrentUser, completeProfile, verifyEmail } from '../controllers/auth.controller';
+import { register, login, updateUser, getCurrentUser, completeProfile, verifyEmail, resendVerification } from '../controllers/auth.controller';
 import { authenticateToken } from '../middlewares/auth.middleware';
 import { upload } from '../middlewares/upload.middleware';
 
@@ -17,6 +17,8 @@ router.post('/complete-profile', authenticateToken, upload.fields([
 ]), completeProfile);
 router.post('/login', login);
 router.get('/me', authenticateToken, getCurrentUser);
+router.get('/current-user', authenticateToken, getCurrentUser);
 router.put('/me', authenticateToken, updateUser);
+router.post('/resend-verification', authenticateToken, resendVerification);
 
 export default router;

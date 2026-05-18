@@ -32,6 +32,8 @@ export default function DashboardPage() {
     const [invoiceStats, setInvoiceStats] = useState<any>(null);
     const [period, setPeriod] = useState('month');
     const [loading, setLoading] = useState(true);
+    const [resendStatus, setResendStatus] = useState<{ type: 'success' | 'error' | null; message: string }>({ type: null, message: '' });
+    const [isResending, setIsResending] = useState(false);
 
     useEffect(() => {
         const userData = localStorage.getItem('user');
@@ -39,7 +41,20 @@ export default function DashboardPage() {
             router.push('/auth/login');
             return;
         }
-        setUser(JSON.parse(userData));
+        const parsed = JSON.parse(userData);
+        setUser(parsed);
+
+        // Fetch fresh user data to verify email status
+        api.get('/auth/me')
+            .then(res => {
+                if (res.data?.user) {
+                    setUser(res.data.user);
+                    localStorage.setItem('user', JSON.stringify(res.data.user));
+                }
+            })
+            .catch(err => {
+                console.error("Failed to load fresh user data:", err);
+            });
     }, [router]);
 
     useEffect(() => {
@@ -69,6 +84,49 @@ export default function DashboardPage() {
     return (
         <DashboardLayout>
             <div className="space-y-8">
+                {/* Email Verification Banner */}
+                {!user.emailVerified && (
+                    <div className="bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-950/20 dark:to-orange-950/20 border border-amber-200 dark:border-amber-900/50 rounded-2xl p-6 shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-6 transition-all duration-300">
+                        <div className="flex gap-4">
+                            <div className="w-12 h-12 bg-amber-100 dark:bg-amber-900/40 text-amber-600 dark:text-amber-400 rounded-full flex items-center justify-center shrink-0 shadow-inner">
+                                <span className="text-xl">⚠️</span>
+                            </div>
+                            <div>
+                                <h4 className="text-base font-bold text-amber-800 dark:text-amber-300">Action Required: Verify Your Email</h4>
+                                <p className="text-sm text-amber-700 dark:text-amber-400 mt-1">
+                                    Your email address is not verified. Please verify it within <strong>24 hours</strong> of registration to prevent your account from being locked.
+                                </p>
+                                {resendStatus.message && (
+                                    <div className={`mt-3 text-xs font-semibold px-3 py-1.5 rounded-lg inline-block ${
+                                        resendStatus.type === 'success' 
+                                            ? 'bg-green-50 dark:bg-green-950/30 text-green-700 dark:text-green-400 border border-green-200 dark:border-green-900/30' 
+                                            : 'bg-red-50 dark:bg-red-950/30 text-red-700 dark:text-red-400 border border-red-200 dark:border-red-900/30'
+                                    }`}>
+                                        {resendStatus.message}
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                        <button
+                            disabled={isResending}
+                            onClick={async () => {
+                                setIsResending(true);
+                                setResendStatus({ type: null, message: '' });
+                                try {
+                                    const response = await api.post('/auth/resend-verification');
+                                    setResendStatus({ type: 'success', message: response.data.message || 'Verification link sent successfully to your email!' });
+                                } catch (err: any) {
+                                    setResendStatus({ type: 'error', message: err.response?.data?.error || 'Failed to resend verification link. Please try again.' });
+                                } finally {
+                                    setIsResending(false);
+                                }
+                            }}
+                            className="w-full md:w-auto px-6 py-3 bg-amber-600 hover:bg-amber-700 disabled:bg-amber-400 text-white font-bold text-sm rounded-xl transition-all duration-200 shrink-0 shadow-md hover:shadow-lg active:scale-95"
+                        >
+                            {isResending ? 'Sending...' : 'Resend Verification Link'}
+                        </button>
+                    </div>
+                )}
                 {/* Welcome Section */}
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                     <div>

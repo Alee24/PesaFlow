@@ -40,15 +40,20 @@ export default function RegisterPage() {
 
         try {
             const normalizedPhone = normalizePhoneNumber(formData.phoneNumber);
-            await api.post('/auth/register', {
+            const res = await api.post('/auth/register', {
                 email: formData.email,
                 phoneNumber: normalizedPhone,
                 password: formData.password
             });
 
-            setSuccess(true);
-            setFormData({ email: '', phoneNumber: '', password: '', confirmPassword: '' });
-
+            // Save credentials and redirect directly to dashboard
+            localStorage.setItem('token', res.data.token);
+            localStorage.setItem('user', JSON.stringify(res.data.user));
+            
+            router.push('/dashboard');
+            setTimeout(() => {
+                window.location.reload();
+            }, 100);
         } catch (err: any) {
             setError(err.response?.data?.error || 'Failed to create account');
         } finally {
