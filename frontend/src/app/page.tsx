@@ -49,30 +49,6 @@ export default function LandingPage() {
       title: 'Real-Time Analytics',
       description: 'Make data-driven decisions. Visual dashboards for sales trends, profit margins, and inventory performance.',
       color: 'bg-teal-500'
-    },
-    {
-      icon: FileText,
-      title: 'Digital Invoicing',
-      description: 'Generate, send, and track professional tax-compliant invoices and print thermal receipts seamlessly.',
-      color: 'bg-orange-500'
-    },
-    {
-      icon: Database,
-      title: 'Multi-Branch Sync',
-      description: 'Manage multiple branches, synchronize stock levels, and assign managers to specific business locations.',
-      color: 'bg-sky-500'
-    },
-    {
-      icon: CreditCard,
-      title: 'Withdrawals & Payouts',
-      description: 'Process instant Safaricom B2C payouts and transfer wallet funds securely with dual-authorization safety.',
-      color: 'bg-pink-500'
-    },
-    {
-      icon: Shield,
-      title: 'Role-Based Staff Access',
-      description: 'Restrict sensitive financial data. Control cashier and manager permissions with customized role configurations.',
-      color: 'bg-indigo-500'
     }
   ];
 
@@ -105,8 +81,6 @@ export default function LandingPage() {
     { value: '5,000+', label: 'Merchants' },
     { value: '24/7', label: 'Support' }
   ];
-
-
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 font-sans selection:bg-indigo-500 selection:text-white transition-colors duration-300">
@@ -239,7 +213,7 @@ export default function LandingPage() {
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
             <Link href="/auth/register" className="w-full sm:w-auto">
               <Button size="lg" className="w-full sm:h-14 sm:px-8 text-lg rounded-full bg-indigo-600 hover:bg-indigo-700 text-white shadow-xl shadow-indigo-500/20">
-                Get Started Free <ArrowRight className="w-5 h-5 ml-2" />
+                Get 1 Year Free <ArrowRight className="w-5 h-5 ml-2" />
               </Button>
             </Link>
             <Link href="#demo" className="w-full sm:w-auto">
@@ -360,6 +334,8 @@ export default function LandingPage() {
           </div>
         </div>
       </section>
+
+
       {/* CTA Section */}
       <section className="py-24 bg-white dark:bg-gray-900 border-t border-gray-100 dark:border-gray-800">
         <div className="max-w-4xl mx-auto px-4 text-center">
