@@ -48,14 +48,15 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         if (!user || !isClient) return;
         if (user.role !== 'MERCHANT') return;
 
-        // 1. If profile is NOT complete (strictly false), redirect to onboarding
-        // We check strictly false to avoid redirecting old cached users who might have undefined
-        if (user.isProfileComplete === false && pathname !== '/onboarding') {
+        const hasSkipped = localStorage.getItem('onboarding_skipped') === 'true';
+
+        // 1. If profile is NOT complete (strictly false) and onboarding has not been skipped, redirect to onboarding
+        if (user.isProfileComplete === false && !hasSkipped && pathname !== '/onboarding') {
             router.push('/onboarding');
         }
 
-        // 2. If profile IS complete, prevent access to onboarding
-        if (user.isProfileComplete === true && pathname === '/onboarding') {
+        // 2. If profile IS complete or they skipped onboarding, prevent access to onboarding
+        if ((user.isProfileComplete === true || hasSkipped) && pathname === '/onboarding') {
             router.push('/dashboard');
         }
     }, [user, pathname, router, isClient]);

@@ -11,9 +11,13 @@ import api from '@/lib/api';
 import { normalizePhoneNumber } from '@/lib/phoneUtils';
 import { User, ShieldCheck } from 'lucide-react';
 
+import { useAuth } from '@/contexts/AuthContext';
+
 export default function RegisterPage() {
     const router = useRouter();
+    const { login } = useAuth();
     const [success, setSuccess] = useState(false);
+    const [regData, setRegData] = useState<{ token: string; user: any } | null>(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const [formData, setFormData] = useState({
@@ -46,18 +50,25 @@ export default function RegisterPage() {
                 password: formData.password
             });
 
-            // Save credentials and redirect directly to dashboard
-            localStorage.setItem('token', res.data.token);
-            localStorage.setItem('user', JSON.stringify(res.data.user));
-            
-            router.push('/dashboard');
-            setTimeout(() => {
-                window.location.reload();
-            }, 100);
+            // Save the registration response so we can login the user when they click OK
+            setRegData({
+                token: res.data.token,
+                user: res.data.user
+            });
+
+            setSuccess(true);
         } catch (err: any) {
             setError(err.response?.data?.error || 'Failed to create account');
         } finally {
             setLoading(false);
+        }
+    };
+
+    const handleOkClick = () => {
+        if (regData) {
+            login(regData.token, regData.user);
+        } else {
+            router.push('/auth/login');
         }
     };
 
@@ -78,9 +89,7 @@ export default function RegisterPage() {
                         <p className="text-gray-600 mb-8">
                             We've sent a verification link to your email address. Please click the link to verify your account and log in.
                         </p>
-                        <Link href="/auth/login">
-                            <Button className="w-full">Return to Login</Button>
-                        </Link>
+                        <Button className="w-full" onClick={handleOkClick}>OK</Button>
                     </Card>
                 </div>
             </div>

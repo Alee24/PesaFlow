@@ -101,6 +101,14 @@ export default function OnboardingPage() {
         }
     };
 
+    const handleSkip = () => {
+        localStorage.setItem('onboarding_skipped', 'true');
+        // Update local user object's isProfileComplete status to avoid immediate dashboard redirects
+        const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
+        localStorage.setItem('user', JSON.stringify({ ...currentUser, isProfileComplete: true }));
+        window.location.href = '/dashboard';
+    };
+
     return (
         <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 p-4 py-12">
             <Toast visible={toast.visible} message={toast.message} type={toast.type} onClose={() => setToast({ ...toast, visible: false })} />
@@ -129,13 +137,12 @@ export default function OnboardingPage() {
 
                                 {/* KRA PIN (First) */}
                                 <div className="flex flex-col space-y-1">
-                                    <label className="text-sm font-medium text-gray-700 dark:text-gray-300">KRA PIN Number</label>
+                                    <label className="text-sm font-medium text-gray-700 dark:text-gray-300">KRA PIN Number (Optional)</label>
                                     <div className="flex gap-2">
                                         <input
                                             className="flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-700 dark:bg-gray-800 dark:text-white dark:focus:ring-indigo-400"
                                             value={formData.kraPinNumber}
                                             onChange={(e) => setFormData({ ...formData, kraPinNumber: e.target.value })}
-                                            required
                                             placeholder="A012345678Z"
                                         />
                                         <Button
@@ -256,7 +263,10 @@ export default function OnboardingPage() {
                             </div>
                         )}
 
-                        <div className="mt-8 text-center">
+                        <div className="mt-8 text-center space-y-3">
+                            <button type="button" onClick={handleSkip} className="text-sm text-indigo-600 hover:text-indigo-500 font-semibold flex items-center justify-center gap-1 mx-auto transition-colors">
+                                Skip for now (this is not compulsory)
+                            </button>
                             <button type="button" onClick={logout} className="text-sm text-gray-500 hover:text-red-500 flex items-center justify-center gap-1 mx-auto">
                                 <LogOut className="w-3 h-3" /> Log out and continue later
                             </button>
