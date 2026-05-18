@@ -65,11 +65,11 @@ cat > /tmp/portal_apache.conf <<EOL
     SSLCertificateKeyFile /etc/letsencrypt/live/${DOMAIN}/privkey.pem
 
     ProxyPreserveHost On
+    ProxyPass /api http://127.0.0.1:${API_PORT}/api
+    ProxyPassReverse /api http://127.0.0.1:${API_PORT}/api
+
     ProxyPass / http://127.0.0.1:${WEB_PORT}/
     ProxyPassReverse / http://127.0.0.1:${WEB_PORT}/
-
-    ProxyPass /api/ http://127.0.0.1:${API_PORT}/
-    ProxyPassReverse /api/ http://127.0.0.1:${API_PORT}/
     
     RewriteEngine On
     RewriteCond %{HTTP:Upgrade} =websocket [NC]
