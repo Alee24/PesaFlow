@@ -332,7 +332,7 @@ export function Header({ user, onMenuClick }: {
                                     className={cn(
                                         "flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200",
                                         isActive
-                                            ? "bg-gradient-to-r from-green-400 to-emerald-500 text-white shadow-lg shadow-green-500/50 ring-2 ring-green-400/50"
+                                            ? "bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow-lg shadow-blue-500/50 ring-2 ring-blue-400/50"
                                             : "text-gray-600 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-300 dark:hover:bg-gray-800 dark:hover:text-white"
                                     )}
                                 >

@@ -383,7 +383,7 @@ export default function SettingsPage() {
                                             </span>
                                             {!formData.useCustomMpesa && <CheckCircle2 className="w-5 h-5 text-indigo-600" />}
                                         </div>
-                                        <p className="text-xs text-gray-600 dark:text-gray-400">Use our pre-configured infrastructure. Simple, secure, and ready-to-use. Funds settle to your PesaFlow wallet.</p>
+                                        <p className="text-xs text-gray-600 dark:text-gray-400">Use our pre-configured infrastructure. Simple, secure, and ready-to-use. Funds settle to your Mpesa Connect wallet.</p>
                                     </div>
 
                                     {/* Option 2: Own API */}
@@ -456,7 +456,7 @@ export default function SettingsPage() {
                         {!formData.useCustomMpesa && user?.role !== 'ADMIN' && (
                             <div className="flex items-center gap-3 p-4 bg-indigo-50 dark:bg-indigo-900/10 rounded-lg text-indigo-700 dark:text-indigo-300 text-sm">
                                 <ShieldCheck className="w-5 h-5" />
-                                <span>You are currently using <b>Mpesa Connect</b>. Your customers will pay via our shared treasury, and credits will appear in your PesaFlow wallet.</span>
+                                <span>You are currently using <b>Mpesa Connect</b>. Your customers will pay via our shared treasury, and credits will appear in your Mpesa Connect wallet.</span>
                             </div>
                         )}
                     </Card>
