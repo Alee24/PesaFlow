@@ -11,6 +11,10 @@ RUN apt-get update && apt-get install -y \
     g++ \
     && rm -rf /var/lib/apt/lists/*
 
+# Accept build argument for API URL (baked into the Next.js bundle)
+ARG NEXT_PUBLIC_API_URL
+ENV NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
+
 # Copy package files and install dependencies
 COPY package*.json ./
 RUN npm install
@@ -19,9 +23,6 @@ RUN npm install
 COPY . .
 
 # Build the Next.js application
-# Note: Ensure NEXT_PUBLIC_API_URL is available at build time if needed
-# ARG NEXT_PUBLIC_API_URL
-# ENV NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
 RUN npm run build
 
 # Production Stage

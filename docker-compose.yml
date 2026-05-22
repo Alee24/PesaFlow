@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   db:
     image: mysql:8.0
@@ -36,9 +34,13 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
+      args:
+        # Baked at build time into the Next.js bundle
+        # For local: http://localhost:2365/api
+        # For production: https://mpesaconnect.co.ke/api
+        NEXT_PUBLIC_API_URL: http://localhost:2365/api
     restart: always
     environment:
-      - NEXT_PUBLIC_API_URL=https://mpesaconnect.co.ke/api
       - PORT=3652
     depends_on:
       - backend
