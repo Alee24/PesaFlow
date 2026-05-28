@@ -5,7 +5,7 @@ import Link from 'next/link';
 import {
   Shield, Zap, CheckCircle2, Smartphone, FileText, ArrowRight,
   Sun, Moon, Lock, Server, Database, Menu, X, LayoutDashboard,
-  Heart, Activity, Sparkles, Users, BarChart3, HelpCircle
+  Heart, Activity, Sparkles, Users, BarChart3, HelpCircle, PhoneCall
 } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { useTheme } from '@/contexts/ThemeContext';
@@ -30,13 +30,13 @@ export default function LandingPage() {
       icon: Heart,
       title: 'Care-Centered Point of Sale',
       description: 'Facilitate swift, empathetic transactions with a modern, high-contrast POS. Seamlessly process service records, track daily checkouts, and manage inventory in real-time.',
-      color: 'bg-blue-50 dark:bg-blue-950/30 text-blue-600 dark:text-blue-400'
+      color: 'bg-emerald-50 dark:bg-emerald-950/30 text-emerald-600 dark:text-emerald-400'
     },
     {
       icon: BarChart3,
       title: 'Operational Health Analytics',
       description: 'Diagnose your growth with powerful real-time reports. Access visual trends of revenue flow, product diagnostics, and team performance from a single secure view.',
-      color: 'bg-indigo-50 dark:bg-indigo-950/30 text-indigo-600 dark:text-indigo-400'
+      color: 'bg-blue-50 dark:bg-blue-950/30 text-blue-600 dark:text-blue-400'
     },
     {
       icon: FileText,
@@ -48,7 +48,7 @@ export default function LandingPage() {
       icon: Smartphone,
       title: 'Direct M-Pesa Integration',
       description: 'Enjoy seamless, safe payments via M-Pesa. Connect directly using secure Safaricom channels or input your own API credentials for complete control over settlements.',
-      color: 'bg-violet-50 dark:bg-violet-950/30 text-violet-600 dark:text-violet-400'
+      color: 'bg-indigo-50 dark:bg-indigo-950/30 text-indigo-600 dark:text-indigo-400'
     }
   ];
 
@@ -56,7 +56,7 @@ export default function LandingPage() {
     {
       icon: Lock,
       title: 'End-to-End Encryption',
-      description: 'All sensitive patient and payment data is shielded using military-grade AES-256 standards both in transit and at rest.'
+      description: 'All sensitive customer and payment data is shielded using military-grade AES-256 standards both in transit and at rest.'
     },
     {
       icon: Server,
@@ -99,7 +99,7 @@ export default function LandingPage() {
               <div className="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center shadow-lg shadow-blue-600/20">
                 <Heart className="w-5 h-5 text-white animate-pulse" />
               </div>
-              <span className="text-2xl font-bold text-neutral-900 dark:text-white tracking-tight">
+              <span className="text-2xl font-black text-neutral-900 dark:text-white tracking-tight">
                 Mpesa Connect
               </span>
             </div>
@@ -193,29 +193,29 @@ export default function LandingPage() {
       {/* Hero Section */}
       <header className="relative pt-36 pb-20 lg:pt-48 lg:pb-32 overflow-hidden">
         <div className="absolute top-0 left-0 w-full h-full overflow-hidden z-0 pointer-events-none">
-          <div className="absolute top-[-10%] right-[-5%] w-[600px] h-[600px] rounded-full bg-blue-500/5 dark:bg-blue-500/10 blur-[120px]" />
-          <div className="absolute bottom-[-10%] left-[-10%] w-[500px] h-[500px] rounded-full bg-indigo-600/5 dark:bg-indigo-600/10 blur-[120px]" />
+          <div className="absolute top-[-10%] right-[-5%] w-[600px] h-[600px] rounded-full bg-emerald-500/5 dark:bg-emerald-500/10 blur-[120px]" />
+          <div className="absolute bottom-[-10%] left-[-10%] w-[500px] h-[500px] rounded-full bg-blue-600/5 dark:bg-blue-600/10 blur-[120px]" />
         </div>
 
         <div className="relative z-10 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-50 dark:bg-blue-950/30 border border-blue-200/50 dark:border-blue-900/30 mb-8 animate-fade-in-up">
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200/50 dark:border-emerald-900/30 mb-8 animate-fade-in-up">
             <span className="relative flex h-2.5 w-2.5">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-600 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-blue-600"></span>
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-600 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-600"></span>
             </span>
-            <span className="text-xs font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wider">Premium Access Unlocked</span>
+            <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">Premium Access Unlocked</span>
           </div>
 
           <h1 className="text-4xl sm:text-6xl font-extrabold text-neutral-900 dark:text-white tracking-tight mb-8 leading-tight">
             Empowering Your Business Operations <br className="hidden sm:inline" />
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600">
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-emerald-600">
               With Soothing, Care-Centered Design
             </span>
           </h1>
 
           <p className="text-lg sm:text-xl text-neutral-600 dark:text-neutral-400 max-w-3xl mx-auto mb-12 leading-relaxed">
             Discover a reliable, beautifully optimized payment and point-of-sale workflow designed to keep your business running smoothly. Manage sales, track real-time analytics, and connect with your clients seamlessly. 
-            <span className="block mt-4 text-blue-600 dark:text-blue-400 font-bold text-lg">
+            <span className="block mt-4 text-emerald-600 dark:text-emerald-400 font-bold text-lg">
               100% Free Lifetime Platform Access • All Premium Features Unlocked
             </span>
           </p>
@@ -239,7 +239,7 @@ export default function LandingPage() {
       <section id="services" className="py-28 bg-white dark:bg-zinc-900/50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-20">
-            <div className="inline-flex items-center justify-center p-3 bg-blue-50 dark:bg-blue-950/50 rounded-2xl text-blue-600 mb-4">
+            <div className="inline-flex items-center justify-center p-3 bg-emerald-50 dark:bg-emerald-950/50 rounded-2xl text-emerald-600 mb-4">
               <Sparkles className="w-6 h-6" />
             </div>
             <h2 className="text-3xl sm:text-5xl font-bold text-neutral-900 dark:text-white mb-6">
@@ -381,7 +381,7 @@ export default function LandingPage() {
       {/* CTA Section */}
       <section className="py-28 bg-white dark:bg-zinc-900 border-t border-neutral-200/50 dark:border-zinc-800/50">
         <div className="max-w-4xl mx-auto px-4 text-center">
-          <div className="bg-gradient-to-br from-blue-600 to-indigo-700 rounded-[3rem] p-12 sm:p-16 relative overflow-hidden shadow-2xl shadow-blue-600/20">
+          <div className="bg-gradient-to-br from-blue-600 to-emerald-700 rounded-[3rem] p-12 sm:p-16 relative overflow-hidden shadow-2xl shadow-blue-600/20">
             <div className="absolute inset-0 bg-[radial-gradient(#fff_1px,transparent_1px)] [background-size:32px_32px] opacity-10"></div>
             <div className="relative z-10 text-white">
               <h2 className="text-3xl sm:text-5xl font-extrabold mb-6 leading-tight">Ready to Align Your Business?</h2>

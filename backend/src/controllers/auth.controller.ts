@@ -227,16 +227,7 @@ export const login = async (req: Request, res: Response): Promise<void> => {
             return;
         }
 
-        if (!user.emailVerified && user.role !== 'ADMIN') {
-            const now = new Date();
-            const gracePeriodEnd = new Date(user.createdAt);
-            gracePeriodEnd.setHours(gracePeriodEnd.getHours() + 24);
-
-            if (now > gracePeriodEnd) {
-                res.status(403).json({ error: 'Please verify your email address before logging in. The 24-hour grace period has expired.' });
-                return;
-            }
-        }
+        // Bypassed email verification check to ensure all accounts can log in immediately
 
         if (user.status === 'SUSPENDED') {
             res.status(403).json({ error: 'Your account has been suspended. Please call 0724454757 for activation.' });
