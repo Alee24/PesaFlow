@@ -421,8 +421,8 @@ export default function UserManagementPage() {
                                                             <Button
                                                                 size="sm"
                                                                 variant="outline"
-                                                                className="text-indigo-600 border-indigo-200 hover:bg-indigo-50 font-bold"
-                                                                title="Renew 1 Year Free"
+                                                                className="text-indigo-600 border-indigo-300 hover:bg-indigo-50 font-bold bg-indigo-50/30"
+                                                                title="Allocate 1 Year Free Access"
                                                                 onClick={() => handleRenewOneYear(user)}
                                                             >
                                                                 1Y
@@ -626,9 +626,10 @@ export default function UserManagementPage() {
                                             onChange={e => setSubModal(prev => ({ ...prev, plan: e.target.value }))}
                                             required
                                         >
-                                            <option value="FREE">FREE - POS + Inventory Only</option>
+                                            <option value="FREE">FREE - POS + Inventory Only (No Expiry)</option>
+                                            <option value="FREE_1Y">🎁 FREE - Full Access (365 Days Extension)</option>
                                             <option value="BASIC">BASIC - + Invoices (KES 1,500/month)</option>
-                                            <option value="PRO">PRO - All Features (KES 2,500/month)</option>
+                                            <option value="PRO">PRO - All Features (KES 2,500/month)</option>{" "}
                                             <option value="ENTERPRISE">ENTERPRISE - Standalone (KES 75,000)</option>
                                         </select>
                                         <p className="text-xs text-gray-500 mt-1">

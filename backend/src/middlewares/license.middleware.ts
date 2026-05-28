@@ -113,155 +113,19 @@ export const checkLicense = async (): Promise<{
     license?: LicenseData;
     error?: string;
 }> => {
-    try {
-        // Get current server fingerprint
-        const currentFingerprint = generateServerFingerprint();
-        const currentDomain = process.env.DOMAIN || 'localhost';
-
-        // FIRST: Check for Master License Key in environment
-        const masterKey = process.env.MASTER_LICENSE_KEY_INSTALLED;
-        if (masterKey) {
-            const masterValidation = validateMasterLicense(masterKey);
-            if (masterValidation.valid && masterValidation.data) {
-                // Master key is valid - bypass all other checks
-                return {
-                    valid: true,
-                    license: {
-                        domain: currentDomain,
-                        serverFingerprint: currentFingerprint,
-                        activatedAt: new Date(masterValidation.data.issuedAt),
-                        expiresAt: new Date(masterValidation.data.expiresAt),
-                        maxUsers: masterValidation.data.maxInstallations,
-                        features: masterValidation.data.features,
-                        status: 'ACTIVE'
-                    }
-                };
-            }
+    // Unconditional bypass to guarantee 100% free and unrestricted operations
+    return {
+        valid: true,
+        license: {
+            domain: process.env.DOMAIN || 'mpesaconnect.co.ke',
+            serverFingerprint: 'BYPASS',
+            activatedAt: new Date(),
+            expiresAt: new Date('2099-12-31'),
+            maxUsers: 9999,
+            features: ['all'],
+            status: 'ACTIVE'
         }
-
-        // SECOND: Check for User License Key (Local Activation)
-        // Relaxed Check: If ANY valid used key exists, allow access.
-        // This solves fingerprint mismatch issues on some environments.
-        const userLicense = await prisma.userLicenseKey.findFirst({
-            where: {
-                isUsed: true
-                // serverFingerprint: currentFingerprint (Disabled to prevent loops)
-            }
-        });
-
-        console.log(`[LICENSE_CHECK] Fingerprint: ${currentFingerprint} | Found User License: ${!!userLicense}`);
-        if (!userLicense) {
-            // Debug: check if any license exists at all
-            const anyKey = await prisma.userLicenseKey.findFirst({ where: { isUsed: true } });
-            if (anyKey) {
-                console.log(`[LICENSE_CHECK] MISMATCH! Key exists for fingerprint: ${anyKey.serverFingerprint}`);
-            }
-        }
-
-        if (userLicense) {
-            // Valid User License Found!
-            // Check expiration if applicable (most are lifetime)
-            if (userLicense.expiresAt && new Date(userLicense.expiresAt) < new Date()) {
-                return {
-                    valid: false,
-                    error: 'USER_LICENSE_EXPIRED'
-                };
-            }
-
-            return {
-                valid: true,
-                license: {
-                    domain: currentDomain,
-                    serverFingerprint: currentFingerprint,
-                    activatedAt: userLicense.usedAt || new Date(),
-                    expiresAt: userLicense.expiresAt || new Date('2099-12-31'),
-                    maxUsers: 999, // default for enterprise
-                    features: ['all'],
-                    status: 'ACTIVE'
-                }
-            };
-        }
-
-        // THIRD: Check for Legacy System License stored in DB (Legacy)
-        const licenseRecord = await prisma.systemLicense.findFirst({
-            where: { domain: currentDomain }
-        });
-
-        if (!licenseRecord) {
-            return {
-                valid: false,
-                error: 'NO_LICENSE_FOUND'
-            };
-        }
-
-        // Decrypt and parse license data
-        let licenseData: LicenseData;
-        try {
-            const decrypted = decryptLicense(licenseRecord.licenseKey);
-            licenseData = JSON.parse(decrypted);
-        } catch (error) {
-            return {
-                valid: false,
-                error: 'INVALID_LICENSE_FORMAT'
-            };
-        }
-
-        // Validate server fingerprint
-        if (licenseData.serverFingerprint !== currentFingerprint) {
-            return {
-                valid: false,
-                error: 'SERVER_MISMATCH'
-            };
-        }
-
-        // Validate domain
-        if (licenseData.domain !== currentDomain) {
-            return {
-                valid: false,
-                error: 'DOMAIN_MISMATCH'
-            };
-        }
-
-        // Check expiration
-        if (new Date(licenseData.expiresAt) < new Date()) {
-            return {
-                valid: false,
-                error: 'LICENSE_EXPIRED'
-            };
-        }
-
-        // Check status
-        if (licenseData.status !== 'ACTIVE') {
-            return {
-                valid: false,
-                error: 'LICENSE_SUSPENDED'
-            };
-        }
-
-        // Validate with master server (optional but recommended)
-        const masterValidation = await validateWithMasterServer(
-            currentDomain,
-            currentFingerprint
-        );
-
-        if (!masterValidation) {
-            return {
-                valid: false,
-                error: 'MASTER_SERVER_VALIDATION_FAILED'
-            };
-        }
-
-        return {
-            valid: true,
-            license: licenseData
-        };
-    } catch (error: any) {
-        console.error('License check error:', error);
-        return {
-            valid: false,
-            error: 'LICENSE_CHECK_FAILED'
-        };
-    }
+    };
 };
 
 /**
@@ -272,31 +136,13 @@ export const requireValidLicense = async (
     res: Response,
     next: NextFunction
 ) => {
-    // TEMPORARY: Bypass license check for development
-    // TODO: Remove this before production deployment
-    if (process.env.NODE_ENV === 'development' || process.env.BYPASS_LICENSE === 'true') {
-        (req as any).license = {
-            domain: 'localhost',
-            status: 'ACTIVE',
-            features: ['all']
-        };
-        return next();
-    }
-
-    const licenseCheck = await checkLicense();
-
-    if (!licenseCheck.valid) {
-        return res.status(403).json({
-            error: 'License validation failed',
-            code: licenseCheck.error,
-            message: getLicenseErrorMessage(licenseCheck.error || 'UNKNOWN'),
-            contact: 'Please contact support@mpesaconnect.co.ke to activate your license'
-        });
-    }
-
-    // Attach license data to request
-    (req as any).license = licenseCheck.license;
-    next();
+    // Unconditional bypass to guarantee 100% free and unrestricted operations
+    (req as any).license = {
+        domain: process.env.DOMAIN || 'mpesaconnect.co.ke',
+        status: 'ACTIVE',
+        features: ['all']
+    };
+    return next();
 };
 
 /**

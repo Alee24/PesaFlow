@@ -10,7 +10,7 @@ export const assignSubscription = async (req: Request, res: Response) => {
         const { plan } = req.body;
 
         // Validate plan
-        const validPlans = ['FREE', 'BASIC', 'PRO', 'ENTERPRISE'];
+        const validPlans = ['FREE', 'FREE_1Y', 'BASIC', 'PRO', 'ENTERPRISE'];
         if (!validPlans.includes(plan)) {
             return res.status(400).json({ error: 'Invalid subscription plan' });
         }
@@ -30,7 +30,13 @@ export const assignSubscription = async (req: Request, res: Response) => {
 
         // Calculate end date
         let endDate: Date | null = null;
-        if (plan !== 'FREE' && plan !== 'ENTERPRISE') {
+        let dbPlan = plan;
+
+        if (plan === 'FREE_1Y') {
+            endDate = new Date();
+            endDate.setDate(endDate.getDate() + 365);
+            dbPlan = 'FREE'; // Store as FREE plan in DB but with 1 year end date
+        } else if (plan !== 'FREE' && plan !== 'ENTERPRISE') {
             endDate = new Date();
             endDate.setMonth(endDate.getMonth() + 1);
         }
@@ -39,13 +45,13 @@ export const assignSubscription = async (req: Request, res: Response) => {
         const subscription = await prisma.subscription.upsert({
             where: { merchantId: userId },
             update: {
-                plan,
+                plan: dbPlan,
                 status: 'ACTIVE',
                 endDate
             },
             create: {
                 merchantId: userId,
-                plan,
+                plan: dbPlan,
                 status: 'ACTIVE',
                 endDate,
                 features: '[]'

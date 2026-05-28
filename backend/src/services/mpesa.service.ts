@@ -243,3 +243,67 @@ export const testMpesaConnectionService = async (userId?: string) => {
         return { success: false, message: error.message };
     }
 };
+
+export const initiateB2CPayment = async (
+    phoneNumber: string,
+    amount: number,
+    reference: string,
+    userId: string,
+    description: string = 'Bulk Payment'
+) => {
+    const creds = await getCredentials(userId);
+    const token = await getAccessToken(creds);
+
+    const url = creds.env === 'production'
+        ? 'https://api.safaricom.co.ke/mpesa/b2c/v1/paymentrequest'
+        : 'https://sandbox.safaricom.co.ke/mpesa/b2c/v1/paymentrequest';
+
+    const formattedPhone = phoneNumber.startsWith('0')
+        ? `254${phoneNumber.slice(1)}`
+        : phoneNumber;
+
+    const requestBody = {
+        InitiatorName: creds.initiatorName,
+        SecurityCredential: creds.password, // M-Pesa Initiator Password (Security Credential)
+        CommandID: 'BusinessPayment',
+        Amount: amount,
+        PartyA: creds.shortCode,
+        PartyB: formattedPhone,
+        Remarks: description,
+        QueueTimeOutURL: creds.callbackUrl,
+        ResultURL: creds.callbackUrl,
+        Occasion: reference
+    };
+
+    try {
+        const response = await axios.post(url, requestBody, {
+            headers: {
+                Authorization: `Bearer ${token}`,
+            },
+        });
+
+        // Record the disbursement in Transactions
+        const wallet = await prisma.wallet.findFirst({ where: { userId } });
+        if (!wallet) throw new Error("Wallet not found for user");
+
+        await prisma.transaction.create({
+            data: {
+                type: 'WITHDRAWAL', // Using WITHDRAWAL as type for sent money
+                amount: amount,
+                reference: reference,
+                merchantRequestId: response.data.ConversationID || response.data.OriginatorConversationID,
+                checkoutRequestId: response.data.ResponseCode,
+                initiatorUserId: userId,
+                recipientWalletId: wallet.id,
+                status: 'PENDING',
+                metadata: JSON.stringify(response.data)
+            }
+        });
+
+        return response.data;
+    } catch (error: any) {
+        console.error('B2C Payment Error:', error.response?.data || error.message);
+        const safaricomError = error.response?.data?.errorMessage || error.message;
+        throw new Error(safaricomError || 'Failed to initiate B2C Payment');
+    }
+};

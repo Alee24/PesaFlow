@@ -36,7 +36,7 @@ export function getImageUrl(path?: string) {
         return cleanPath;
     }
 
-    let apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://api.mpesaconnect.co.ke/api';
+    let apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://mpesaconnect.co.ke/api';
 
     // CRITICAL: Force Production URL if we are in a browser and NOT on localhost
     // This overrides any build-time "localhost" default that might be lingering
@@ -44,7 +44,7 @@ export function getImageUrl(path?: string) {
         !window.location.hostname.includes('localhost') &&
         !window.location.hostname.includes('127.0.0.1') &&
         apiUrl.includes('localhost')) {
-        apiUrl = 'https://api.mpesaconnect.co.ke/api';
+        apiUrl = 'https://mpesaconnect.co.ke/api';
     }
 
     // Remove /api suffix for static files and ensure clean URL construction
