@@ -9,7 +9,7 @@ async function testSetup() {
             dbPort: '3306',
             dbUser: 'root',
             dbPassword: '', // Assuming no password for local dev or update as needed
-            dbName: 'pesaflow_test_install',
+            dbName: 'mpesaconnect_test_install',
             mpesaKey: 'test_key',
             mpesaSecret: 'test_secret',
             mpesaPasskey: 'test_passkey',

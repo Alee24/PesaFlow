@@ -192,7 +192,7 @@ export const bulkProcess = async (req: AuthRequest, res: Response): Promise<void
                     Number(payment.amount),
                     payment.reference || `Bulk-${Date.now()}`,
                     userId,
-                    payment.description || 'PesaFlow Bulk Payment'
+                    payment.description || 'Mpesa Connect Bulk Payment'
                 );
                 results.push({ phone: payment.phoneNumber, status: 'SUCCESS' });
             } catch (err: any) {
