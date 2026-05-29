@@ -25,7 +25,6 @@ echo "🛑 STEP 2: TEARING DOWN EXISTING DOCKER CONTAINER STACK"
 echo "=========================================================="
 cd $PROJECT_DIR
 docker-compose down --remove-orphans || true
-docker system prune -f || true
 echo "✅ Docker clean completes."
 
 echo "=========================================================="
