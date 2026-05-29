@@ -3,9 +3,8 @@ services:
     image: mysql:8.0
     restart: always
     environment:
-      MYSQL_ROOT_PASSWORD: ""
-      MYSQL_DATABASE: pesaflow_v2
-      MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
+      MYSQL_ROOT_PASSWORD: "root"
+      MYSQL_DATABASE: mpesaconnect
     ports:
       - "3329:3306"
     volumes:
@@ -44,7 +43,7 @@ services:
     depends_on:
       - backend
     ports:
-      - "3652:5054"
+      - "3652:3652"
     networks:
       - pesaflow_net
 
