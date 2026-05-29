@@ -4,12 +4,7 @@ FROM node:20-slim AS builder
 # Set the working directory
 WORKDIR /app
 
-# Install system dependencies
-RUN apt-get update && apt-get install -y \
-    python3 \
-    make \
-    g++ \
-    && rm -rf /var/lib/apt/lists/*
+# No heavy native compilation system dependencies are required for Next.js
 
 # Accept build argument for API URL (baked into the Next.js bundle)
 ARG NEXT_PUBLIC_API_URL
