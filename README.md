@@ -1,319 +1,67 @@
-# 💼 Mpesa Connect - Complete Business Management Platform
+# Mpesa Connect - Care-Centered Business Management Platform
 
-**Mpesa Connect** is a comprehensive, production-ready business management platform built for Kenyan businesses. It combines advanced POS capabilities, inventory management, M-Pesa payment integration, and merchant verification into one powerful solution.
+Welcome to **Mpesa Connect**, the beautifully designed, all-in-one business management and payment workflow built to keep your daily operations running smoothly. Designed with a warm, modern, and professional aesthetic, Mpesa Connect replaces complex and fragmented billing tools with a cohesive dashboard focused on clarity, performance, and trust.
 
----
-
-## ✨ **Key Features**
-
-### 🏪 **Advanced Point of Sale (POS)**
-- Real-time inventory updates
-- Barcode scanning support
-- Flexible discounts (percentage & fixed)
-- Split payment methods (Cash + M-Pesa)
-- Automatic change calculation
-- Customer information capture
-- Item-level discounts and taxes
-- Receipt generation and printing
-
-### 📦 **Comprehensive Inventory Management**
-- Stock level tracking with alerts
-- Low stock notifications
-- Reorder point automation
-- Supplier management
-- Batch/lot tracking with expiry dates
-- Cost price & profit margin analysis
-- Multiple units of measure
-- Complete stock movement audit trail
-- Barcode support
-- Inventory valuation reports
-
-### 💳 **M-Pesa Integration**
-- STK Push payments
-- Automatic wallet crediting
-- Transaction reconciliation
-- 2.5 KES service fee
-- Real-time payment notifications
-- Withdrawal management (2% fee)
-- Payment history and tracking
-
-### 📄 **Smart Invoicing**
-- Professional invoice creation
-- Email notifications
-- PDF generation with "Paid" stamps
-- Payment tracking (Paid, Pending, Overdue)
-- Invoice statistics and filtering
-- Customer management
-
-### 🛡️ **Merchant Verification System**
-- KYC document upload (ID, Business Permit, KRA Certificate)
-- Admin review and approval workflow
-- Account status management (PENDING, ACTIVE, REJECTED, SUSPENDED)
-- Appeal mechanism for rejected applications
-- Role-based access control
-- Feature restrictions until activation
-
-### 📊 **Analytics & Reporting**
-- Sales statistics and trends
-- Inventory valuation
-- Profit margin analysis
-- Stock movement reports
-- Top-selling products
-- Payment method breakdown
-- Comprehensive dashboards
-
-### 👥 **Multi-User Management**
-- Role-based permissions (Admin, Merchant)
-- Status-based access control
-- User activity tracking
-- Secure authentication (JWT)
-- Password encryption (bcrypt)
+Whether you run a wellness clinic, a healthcare service, or a retail establishment, Mpesa Connect gives you the tools to manage sales, track inventory, process local mobile payments, and access real-time growth diagnostics—**100% free with no monthly subscription paywalls ever**.
 
 ---
 
-## 🛠 Prerequisites
+## 🌟 Core Business Capabilities
 
-- **Node.js** (v18 or higher)
-- **npm** (Node Package Manager)
-- **Database**: MySQL (Production) or SQLite (Development)
+### 🏪 1. Care-Centered Point of Sale (POS)
+Streamline your checkout experience with an interface designed to be exceptionally clear, accessible, and fast.
+- **Empathic Checkout Flow:** A high-contrast, large-touch-target interface that ensures cashiers can process checkouts quickly with zero visual fatigue.
+- **Flexible Payments:** Accept cash, digital payments, or seamlessly split a bill between both cash and M-Pesa in a single transaction.
+- **Accurate calculations:** Automatic change calculations and transparent receipt breakdowns preserve merchant-client trust.
+- **Empathetic Receipts:** Instant receipt generation and browser printing allow you to provide reassuring, professional documentation.
 
----
+### 📦 2. Comprehensive Inventory Management
+Diagnose the health of your stock levels and supply chains from a single secure view.
+- **Stock Level Safeguards:** Automatic tracking of stock levels with intuitive, visual "low-stock" alerts so you never run out of critical items.
+- **Expiry Date Diagnostics:** Keep track of stock batch/lot records and expiration dates to ensure absolute safety and quality control.
+- **Supplier & Purchase Tracking:** Manage supplier files, track incoming purchase costs, and understand your profit margins instantly.
+- **Inventory Valuation:** Access real-time reports of total stock value to make informed financial decisions.
 
-## 📦 Installation & Setup
+### 💳 3. Frictionless M-Pesa Integration
+Enjoy the speed and safety of direct Safaricom mobile payments with zero billing locks.
+- **Instant STK Push:** Initiate payment prompts directly to your client’s phone, removing the friction of manual paybill or till input.
+- **Automatic Wallet Crediting:** Successful payments are instantly reconciled and credited to your merchant wallet.
+- **Self-Service Credentials:** Plug in your private Safaricom API credentials or till configurations for complete control over your daily settlements.
+- **Withdrawal Management:** Request settlements and withdraw funds safely to your merchant bank or business line.
 
-### 1. Clone the Repository
-```bash
-git clone https://github.com/yourusername/mpesa-connect.git
-cd mpesa-connect
-```
+### 📄 4. Professional Smart Invoicing
+Maintain clear, reassuring, and organized documentation for your accounts and clients.
+- **Intuitive Invoice Builder:** Create and distribute beautiful, professional digital invoices in seconds.
+- **Visual Status Tracking:** Keep track of what is Paid, Pending, or Overdue with simple, color-coded status badges.
+- **Automated PDFs:** Generate high-resolution PDF invoices and statements with automatic "Paid" stamps to inspire trust.
+- **Direct Mail Alerts:** Send digital invoices and receipt notices directly to your clients' mailboxes instantly.
 
-### 2. Backend Setup
-```bash
-cd backend
-npm install
-```
-
-Create a `.env` file in the `backend` directory:
-```env
-DATABASE_URL="mysql://root:password@localhost:3306/mpesaconnect"
-JWT_SECRET="your-secret-key-here"
-
-# M-Pesa Configuration
-MPESA_CONSUMER_KEY="your-consumer-key"
-MPESA_CONSUMER_SECRET="your-consumer-secret"
-MPESA_PASSKEY="your-passkey"
-MPESA_SHORTCODE="your-shortcode"
-MPESA_CALLBACK_URL="https://yourdomain.com/api/mpesa/callback"
-MPESA_ENV="sandbox"
-
-# SMTP Configuration
-SMTP_HOST="smtp.gmail.com"
-SMTP_PORT="587"
-SMTP_USER="your-email@gmail.com"
-SMTP_PASS="your-app-password"
-```
-
-### 3. Database Initialization
-Synchronize the schema and generate the client:
-```bash
-cd backend
-npx prisma db push
-npx prisma generate
-```
+### 📊 5. Real-Time Operational Health Analytics
+Diagnose your growth and operational trends with powerful visual reports.
+- **Executive Dashboards:** Clean, interactive graphs that show sales trends, transaction volumes, and product performance at a glance.
+- **Profit Margin Valuations:** Access automatic cost-of-goods and revenue flow calculations so you always know your exact growth margins.
+- **Breakdown Diagnostics:** Visualize your payment methods (Cash vs. M-Pesa) and top-performing products to make strategic decisions.
 
 ---
 
-## ⚡ Running the Application
+## 🛡️ Trust, Privacy & Access Security
 
-**Terminal 1: Backend (Port 3001)**
-```bash
-cd backend
-npm run dev
-```
+We believe that your business records are strictly yours. Mpesa Connect is built with uncompromising standards of data protection and operational privacy.
 
-**Terminal 2: Frontend (Port 2424)**
-```bash
-cd frontend
-npm run dev
-```
-
-Access the application at: **http://localhost:2424**
+* **Military-Grade Data Shields:** All sensitive customer and financial records are protected using advanced industry-standard encryption protocols.
+* **Redundant Daily Backups:** Automated data backups ensure your operational records are safely preserved under all circumstances.
+* **Granular Cashier Controls:** Secure employee logins allow you to delegate POS registers to cashiers while keeping executive settings and withdrawals locked to administrators.
+* **Unrestricted Platform Integrity:** 100% of the software features are free, self-hosted, and fully unlocked. No features are gated behind subscription upgrades or licensing plans.
 
 ---
 
-## 🛡️ Merchant Verification & Access Control
+## 🆘 Executive Support & Consultation
 
-### User Status Lifecycle
+Need specialized local hosting, private cloud deployments, or custom Safaricom B2C/B2B Daraja API consulting? Our support channels are permanently open:
 
-Mpesa Connect implements a comprehensive verification system to ensure platform security:
+* **Email:** support@mpesaconnect.co.ke
+* **Address:** Nairobi, Kenya
+* **Inquiries:** Contact our corporate consulting desks at **info@kkdes.co.ke** or **+254 724 454 757** for enterprise self-hosted deployments.
 
-**1. PENDING_VERIFICATION** (Default for new merchants)
-- Status assigned immediately after registration
-- **Allowed Actions:**
-  - ✅ POS System (Cash Sales only)
-  - ✅ Product Management (Add/Edit/Delete)
-  - ✅ View Dashboard & Transactions
-  - ✅ Profile Settings
-- **Restricted Actions:**
-  - ❌ M-Pesa STK Push
-  - ❌ Invoice Creation
-  - ❌ Withdrawal Requests
-- **User Experience:** Yellow banner notification explaining restrictions
-
-**2. ACTIVE** (After Admin Approval)
-- Full platform access granted
-- All features unlocked including digital payments and withdrawals
-
-**3. REJECTED** (If KYC Verification Fails)
-- Account application denied by admin
-- Red banner displays rejection reason
-- User can submit an appeal through profile page
-- All features disabled except viewing rejection details
-
-**4. SUSPENDED** (Admin Action)
-- Temporary account suspension
-- All features disabled
-
-### Admin Verification Workflow
-
-Admins access the **Merchant Verification** page to:
-
-1. **Review Applications:** View pending registrations with complete business profiles
-2. **Review KYC Documents:** National ID, Business Permit, Registration Certificate, KRA PIN Certificate
-3. **Approve:** One-click activation changes status to `ACTIVE`
-4. **Reject:** Provide detailed reason stored in `appealNotes` for user feedback
-
-### KYC Document Requirements
-
-During registration, merchants must upload:
-- National ID (Front & Back)
-- Business Permit
-- Certificate of Registration
-- KRA PIN Certificate
-- Data Policy Acceptance
-
-Documents stored in `backend/public/uploads/` for admin verification.
-
----
-
-## 🔐 Admin Roles & Permissions
-
-- **Admin**: Merchant verification, withdrawal approvals, global statistics, user management
-- **Merchant**: POS, invoices, products, withdrawal requests (after activation)
-- **Security**: Strict data isolation ensures merchants only see their own financial data
-
----
-
-## 📄 Financial Reporting & Compliance
-
-- **Statements**: Generate professional PDF reports with color-coded transaction statuses.
-- **VAT/KRA PIN**: Configurable via settings; automatically reflected on billing documents.
-- **Fee Structure**: Automated deduction of **2.5 KES** service fee on payments and **2%** on withdrawals.
-
----
-
-## 🆘 Troubleshooting
-
-- **Prisma Engine Locked**: If `npx prisma generate` fails, ensure the backend process is stopped before running.
-- **Audio Feedback**: Audio cues (beeps) are browser-dependent; users must interact with the page once for audio to be enabled.
-- **PDF Styling**: Reports are optimized for A4 printing; ensure your browser's print settings utilize a "1:1" scale.
-- **File Uploads**: KYC docs are stored in `backend/public/uploads`. Ensure the folder is writable and the backend has permission to save files.
-- **MySQL Connection**: Ensure your MySQL server is running and the database specified in `.env` exists before running `npx prisma db push`.
-
----
-
-## 🚀 Technology Stack
-
-### Backend
-- **Node.js** with **Express.js**
-- **Prisma ORM** with MySQL
-- **JWT** for authentication
-- **bcrypt** for password hashing
-- **Zod** for validation
-- **Multer** for file uploads
-- **Nodemailer** for email notifications
-
-### Frontend
-- **Next.js 16** (App Router)
-- **React 19**
-- **TypeScript**
-- **Tailwind CSS**
-- **@react-pdf/renderer** for PDF generation
-- **date-fns** for date formatting
-- **Lucide React** for icons
-
----
-
-## 📊 API Endpoints
-
-### Inventory Management
-```
-GET    /api/products                    - List with filters
-GET    /api/products/stats              - Inventory analytics
-GET    /api/products/stock-movements    - Movement history
-GET    /api/products/:id                - Product details
-POST   /api/products                    - Create product
-PUT    /api/products/:id                - Update product
-DELETE /api/products/:id                - Archive product
-POST   /api/products/:id/adjust-stock   - Manual adjustment
-```
-
-### Sales/POS
-```
-POST   /api/sales/cash                  - Create sale
-GET    /api/sales/recent                - Recent sales
-GET    /api/sales/stats                 - Sales analytics
-GET    /api/sales/:id                   - Sale details
-```
-
-### M-Pesa
-```
-POST   /api/mpesa/stk-push              - Initiate payment
-POST   /api/mpesa/callback              - M-Pesa callback
-POST   /api/mpesa/test                  - Test connection
-```
-
-### Invoices
-```
-POST   /api/invoices                    - Create invoice
-GET    /api/invoices                    - List invoices
-```
-
-### Withdrawals
-```
-POST   /api/withdrawals                 - Request withdrawal
-GET    /api/withdrawals                 - List withdrawals
-GET    /api/withdrawals/all             - All withdrawals (Admin)
-POST   /api/withdrawals/:id/approve     - Approve (Admin)
-POST   /api/withdrawals/:id/reject      - Reject (Admin)
-```
-
-### Admin
-```
-GET    /api/admin/users                 - List all users
-POST   /api/admin/users                 - Create user
-PATCH  /api/admin/users/:id/status      - Update status
-GET    /api/admin/stats                 - Platform statistics
-```
-
----
-
-## 📝 License
-
-This project is licensed under the MIT License.
-
----
-
-## 🤝 Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request.
-
----
-
-## 📧 Support
-
-For support, email support@mpesaconnect.com or join our Slack channel.
-
----
-
-**Built with ❤️ in Kenya** 🇰🇪
+***
+**Mpesa Connect: Empowering modern commerce with soothing, care-centered design.** 🇰🇪
