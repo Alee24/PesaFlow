@@ -61,7 +61,13 @@ fi
 # 5. Restart services
 echo ""
 echo "🔄 Restarting services..."
+
+# Start Backend
+cd /var/www/mpesaconnect.co.ke/backend
 pm2 restart pesaflow-backend || pm2 start dist/server.js --name pesaflow-backend
+
+# Start Frontend
+cd /var/www/mpesaconnect.co.ke/frontend
 pm2 restart pesaflow-frontend || pm2 start npm --name pesaflow-frontend -- start
 
 # Wait for services to start
