@@ -36,7 +36,7 @@ services:
         # Baked at build time into the Next.js bundle
         # For local: http://localhost:2365/api
         # For production: https://mpesaconnect.co.ke/api
-        NEXT_PUBLIC_API_URL: http://localhost:2365/api
+        NEXT_PUBLIC_API_URL: https://mpesaconnect.co.ke/api
     restart: always
     environment:
       - PORT=3652
