@@ -61,7 +61,8 @@ fi
 # 5. Restart services
 echo ""
 echo "🔄 Restarting services..."
-pm2 restart all
+pm2 restart pesaflow-backend || pm2 start dist/server.js --name pesaflow-backend
+pm2 restart pesaflow-frontend || pm2 start npm --name pesaflow-frontend -- start
 
 # Wait for services to start
 sleep 3

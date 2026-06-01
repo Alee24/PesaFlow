@@ -58,8 +58,8 @@ pm2 save
 pm2 list                    # List all services
 pm2 logs pesaflow-backend   # View backend logs
 pm2 logs pesaflow-frontend  # View frontend logs
-pm2 restart all             # Restart all services
-pm2 stop all                # Stop all services
+pm2 restart pesaflow-backend pesaflow-frontend  # Restart services
+pm2 stop pesaflow-backend pesaflow-frontend     # Stop services
 ```
 
 ### 4. Deployment
@@ -130,9 +130,8 @@ sudo tail -50 /var/log/apache2/mpesaconnect_ssl_error.log
 
 ### PM2 issues
 ```bash
-# Delete all processes and start fresh
-pm2 delete all
-pm2 kill
+# Delete specific processes and start fresh
+pm2 delete pesaflow-backend pesaflow-frontend
 
 # Start services again
 cd /var/www/mpesaconnect.co.ke/backend
@@ -157,7 +156,7 @@ pm2 save
 
 ```bash
 # Restart everything
-pm2 restart all && sudo systemctl restart apache2
+pm2 restart pesaflow-backend pesaflow-frontend && sudo systemctl restart apache2
 
 # View all logs
 pm2 logs
