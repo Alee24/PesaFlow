@@ -28,20 +28,20 @@ export default function LandingPage() {
   const services = [
     {
       icon: Heart,
-      title: 'Care-Centered Point of Sale',
-      description: 'Facilitate swift, empathetic transactions with a modern, high-contrast POS. Seamlessly process service records, track daily checkouts, and manage inventory in real-time.',
+      title: 'Powerful Point of Sale',
+      description: 'Facilitate swift, secure transactions with a modern, high-contrast POS. Seamlessly process sales, track daily checkouts, and manage inventory in real-time.',
       color: 'bg-emerald-50 dark:bg-emerald-950/30 text-emerald-600 dark:text-emerald-400'
     },
     {
       icon: BarChart3,
-      title: 'Operational Health Analytics',
-      description: 'Diagnose your growth with powerful real-time reports. Access visual trends of revenue flow, product diagnostics, and team performance from a single secure view.',
+      title: 'Real-time Business Analytics',
+      description: 'Monitor your business growth with powerful real-time reports. Access visual trends of revenue flow, product performance, and team activity from a single secure view.',
       color: 'bg-blue-50 dark:bg-blue-950/30 text-blue-600 dark:text-blue-400'
     },
     {
       icon: FileText,
-      title: 'Empathetic Invoicing',
-      description: 'Generate professional digital invoices, receipts, and service breakdowns instantly. Keep documentation clear, organized, and reassuring for your patients and clients.',
+      title: 'Professional Invoicing',
+      description: 'Generate professional digital invoices, receipts, and sales breakdowns instantly. Keep documentation clear, organized, and professional for your customers.',
       color: 'bg-sky-50 dark:bg-sky-950/30 text-sky-600 dark:text-sky-400'
     },
     {
@@ -77,14 +77,14 @@ export default function LandingPage() {
 
   const testimonials = [
     {
-      quote: "Mpesa Connect transformed how we manage our physical wellness practice's daily billing. The layout is clean, fast, and the complete lack of paywalls gives our staff absolute peace of mind.",
-      author: "Dr. Sarah Vance",
-      role: "Clinical Director, Vance Wellness Group"
+      quote: "Mpesa Connect transformed how we manage our retail store's daily billing. The layout is clean, fast, and gives our staff absolute peace of mind.",
+      author: "Sarah Vance",
+      role: "Store Manager, Retail Solutions"
     },
     {
-      quote: "The direct M-Pesa payment flow is incredibly reassuring for our patients. There are no limits, no hidden transaction fees, and the design looks beautifully tailored for care-based operations.",
+      quote: "The direct M-Pesa payment flow is incredibly seamless for our customers. There are no limits, no hidden transaction fees, and the design looks beautifully tailored for modern business operations.",
       author: "Marcus Gikuyu",
-      role: "Lead Administrator, CarePath Services"
+      role: "Operations Lead, TechHaven"
     }
   ];
 
@@ -209,7 +209,7 @@ export default function LandingPage() {
           <h1 className="text-4xl sm:text-6xl font-extrabold text-neutral-900 dark:text-white tracking-tight mb-8 leading-tight">
             Empowering Your Business Operations <br className="hidden sm:inline" />
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-emerald-600">
-              With Soothing, Care-Centered Design
+              With Streamlined, Modern Design
             </span>
           </h1>
 
@@ -243,10 +243,10 @@ export default function LandingPage() {
               <Sparkles className="w-6 h-6" />
             </div>
             <h2 className="text-3xl sm:text-5xl font-bold text-neutral-900 dark:text-white mb-6">
-              Tailored for Reassuring Service
+              Tailored for Efficient Operations
             </h2>
             <p className="text-lg text-neutral-500 dark:text-neutral-400 max-w-2xl mx-auto leading-relaxed">
-              We replace complex, fragmented billing structures with one cohesive dashboard focused on performance, clarity, and trust.
+              We replace complex, fragmented billing structures with one cohesive dashboard focused on performance, clarity, and reliability.
             </p>
           </div>
 
