@@ -3,34 +3,48 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import {
-  Shield, Zap, CheckCircle2, Smartphone, FileText, ArrowRight,
-  Sun, Moon, Lock, Server, Database, Menu, X, LayoutDashboard,
-  Heart, Activity, Sparkles, Users, BarChart3, HelpCircle, PhoneCall,
-  Gift, Box, Store, Banknote, Briefcase, FileSignature, Receipt
+  Shield, Smartphone, ArrowRight, Lock, Server, Database, Menu, X, LayoutDashboard,
+  Heart, Activity, Sparkles, BarChart3, Gift, Box, Store, FileSignature, Receipt
 } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
-import { useTheme } from '@/contexts/ThemeContext';
 
 export default function LandingPage() {
-  const { theme, setTheme } = useTheme();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [logoUrl, setLogoUrl] = useState<string | null>(null);
 
   useEffect(() => {
     // Check if user is logged in
     const token = localStorage.getItem('token');
     setIsLoggedIn(!!token);
-  }, []);
 
-  const toggleTheme = () => {
-    setTheme(theme === 'dark' ? 'light' : 'dark');
-  };
+    // Fetch public settings for logo
+    const fetchSettings = async () => {
+      try {
+        const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+        const response = await fetch(`${baseUrl}/api/settings/public`);
+        if (response.ok) {
+          const data = await response.json();
+          if (data.logoUrl) {
+            if (data.logoUrl.startsWith('http')) {
+              setLogoUrl(data.logoUrl);
+            } else {
+              setLogoUrl(`${baseUrl}${data.logoUrl}`);
+            }
+          }
+        }
+      } catch (error) {
+        console.error('Failed to fetch public settings', error);
+      }
+    };
+    fetchSettings();
+  }, []);
 
   const services = [
     {
       icon: Heart,
       title: 'Smart Point of Sale (POS)',
-      description: 'Facilitate swift, secure transactions with a modern, patient-friendly POS. Manage daily checkouts effortlessly.',
+      description: 'Facilitate swift, secure transactions with a modern, customer-friendly POS. Manage daily checkouts effortlessly.',
       color: 'bg-emerald-50 dark:bg-emerald-950/30 text-emerald-600 dark:text-emerald-400'
     },
     {
@@ -100,19 +114,6 @@ export default function LandingPage() {
     }
   ];
 
-  const testimonials = [
-    {
-      quote: "Mpesa Connect completely transformed how we manage our clinic's daily billing. The layout is clean, reassuringly fast, and completely free. Our staff absolutely love it.",
-      author: "Dr. Sarah Vance",
-      role: "Lead Physician, Care Solutions"
-    },
-    {
-      quote: "The direct M-Pesa payment flow and integrated loyalty program made a huge difference. There are no hidden fees, and the modern design makes the patient experience incredibly smooth.",
-      author: "Marcus Gikuyu",
-      role: "Operations Manager, HealthHaven"
-    }
-  ];
-
   return (
     <div className="min-h-screen bg-neutral-50 dark:bg-zinc-950 font-sans selection:bg-blue-600 selection:text-white transition-colors duration-300">
       
@@ -120,28 +121,25 @@ export default function LandingPage() {
       <nav className="fixed w-full z-50 bg-white/80 dark:bg-zinc-950/80 backdrop-blur-md border-b border-neutral-200/50 dark:border-zinc-800/50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-20">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center shadow-lg shadow-blue-600/20">
-                <Heart className="w-5 h-5 text-white animate-pulse" />
-              </div>
-              <span className="text-2xl font-black text-neutral-900 dark:text-white tracking-tight">
-                Mpesa Connect
-              </span>
-            </div>
+            <Link href="/" className="flex items-center gap-3">
+              {logoUrl ? (
+                <img src={logoUrl} alt="Company Logo" className="h-10 object-contain" />
+              ) : (
+                <>
+                  <div className="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center shadow-lg shadow-blue-600/20">
+                    <Heart className="w-5 h-5 text-white animate-pulse" />
+                  </div>
+                  <span className="text-2xl font-black text-neutral-900 dark:text-white tracking-tight">
+                    Mpesa Connect
+                  </span>
+                </>
+              )}
+            </Link>
 
             {/* Desktop Navigation Links */}
             <div className="hidden md:flex items-center gap-8">
               <Link href="#services" className="text-sm font-semibold text-neutral-600 dark:text-neutral-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors py-2">Features</Link>
-              <Link href="#why-free" className="text-sm font-semibold text-neutral-600 dark:text-neutral-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors py-2">Pricing</Link>
               <Link href="#security" className="text-sm font-semibold text-neutral-600 dark:text-neutral-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors py-2">Security</Link>
-
-              <button
-                onClick={toggleTheme}
-                className="p-2.5 rounded-full bg-neutral-100 dark:bg-zinc-900 text-neutral-600 dark:text-neutral-400 hover:text-blue-600 hover:scale-105 transition-all outline-none"
-                aria-label="Toggle Theme"
-              >
-                {theme === 'dark' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
-              </button>
 
               {isLoggedIn ? (
                 <Link href="/dashboard">
@@ -164,12 +162,6 @@ export default function LandingPage() {
             {/* Mobile Menu Toggle */}
             <div className="md:hidden flex items-center gap-3">
               <button
-                onClick={toggleTheme}
-                className="p-2.5 rounded-full bg-neutral-100 dark:bg-zinc-900 text-neutral-600 dark:text-neutral-400"
-              >
-                {theme === 'dark' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
-              </button>
-              <button
                 onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
                 className="p-2.5 text-neutral-700 dark:text-neutral-200"
                 aria-label="Toggle Menu"
@@ -185,7 +177,6 @@ export default function LandingPage() {
           <div className="md:hidden absolute top-20 left-0 w-full bg-white dark:bg-zinc-950 border-b border-neutral-200 dark:border-zinc-800 shadow-2xl animate-in slide-in-from-top-5 duration-200">
             <div className="px-4 py-8 space-y-4 flex flex-col">
               <Link href="#services" onClick={() => setIsMobileMenuOpen(false)} className="text-base font-semibold text-neutral-700 dark:text-neutral-200 hover:text-blue-600 p-3 rounded-xl hover:bg-neutral-50 dark:hover:bg-zinc-900">Features</Link>
-              <Link href="#why-free" onClick={() => setIsMobileMenuOpen(false)} className="text-base font-semibold text-neutral-700 dark:text-neutral-200 hover:text-blue-600 p-3 rounded-xl hover:bg-neutral-50 dark:hover:bg-zinc-900">Pricing</Link>
               <Link href="#security" onClick={() => setIsMobileMenuOpen(false)} className="text-base font-semibold text-neutral-700 dark:text-neutral-200 hover:text-blue-600 p-3 rounded-xl hover:bg-neutral-50 dark:hover:bg-zinc-900">Security</Link>
 
               <div className="h-px bg-neutral-200 dark:bg-zinc-800 my-4"></div>
@@ -216,39 +207,43 @@ export default function LandingPage() {
       </nav>
 
       {/* Hero Section */}
-      <header className="relative pt-36 pb-20 lg:pt-48 lg:pb-32 overflow-hidden">
-        <div className="absolute top-0 left-0 w-full h-full overflow-hidden z-0 pointer-events-none">
-          <div className="absolute top-[-10%] right-[-5%] w-[600px] h-[600px] rounded-full bg-emerald-500/5 dark:bg-emerald-500/10 blur-[120px]" />
-          <div className="absolute bottom-[-10%] left-[-10%] w-[500px] h-[500px] rounded-full bg-blue-600/5 dark:bg-blue-600/10 blur-[120px]" />
-        </div>
+      <header className="relative pt-36 pb-20 lg:pt-48 lg:pb-32 overflow-hidden min-h-[90vh] flex items-center justify-center">
+        {/* Animated Backgrounds */}
+        <div className="absolute inset-0 z-0 bg-gradient-to-br from-blue-50 via-white to-emerald-50 dark:from-zinc-950 dark:via-zinc-900 dark:to-zinc-950"></div>
+        <div className="absolute top-[-20%] left-[-10%] w-[600px] h-[600px] rounded-full bg-emerald-500/10 dark:bg-emerald-500/20 blur-[120px] animate-[pulse_4s_ease-in-out_infinite]" />
+        <div className="absolute bottom-[-10%] right-[-10%] w-[600px] h-[600px] rounded-full bg-blue-600/10 dark:bg-blue-600/20 blur-[120px] animate-[pulse_6s_ease-in-out_infinite]" />
+        
+        {/* Floating elements */}
+        <div className="absolute top-1/4 left-10 w-32 h-32 bg-gradient-to-r from-blue-400 to-indigo-500 rounded-full blur-2xl opacity-30 animate-[bounce_5s_infinite]"></div>
+        <div className="absolute bottom-1/4 right-10 w-40 h-40 bg-gradient-to-r from-emerald-400 to-teal-500 rounded-full blur-2xl opacity-30 animate-[bounce_7s_infinite]"></div>
 
-        <div className="relative z-10 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <div className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-emerald-50 dark:bg-emerald-950/40 border-2 border-emerald-200 dark:border-emerald-800/50 mb-8 animate-fade-in-up">
+        <div className="relative z-10 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 text-center mt-[-5%]">
+          <div className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-white dark:bg-zinc-900 border border-emerald-200 dark:border-emerald-800/50 mb-8 shadow-xl shadow-emerald-500/10 animate-fade-in-up">
             <Sparkles className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
             <span className="text-sm font-black text-emerald-700 dark:text-emerald-300 uppercase tracking-widest">
               100% Free Lifetime Access
             </span>
           </div>
 
-          <h1 className="text-5xl sm:text-7xl font-extrabold text-neutral-900 dark:text-white tracking-tight mb-8 leading-tight">
-            The Patient-Centered <br className="hidden sm:inline" />
+          <h1 className="text-5xl sm:text-7xl font-extrabold text-neutral-900 dark:text-white tracking-tight mb-8 leading-tight animate-fade-in-up" style={{ animationDelay: '0.1s' }}>
+            The Next-Generation <br className="hidden sm:inline" />
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-emerald-600">
               Point of Sale & Billing Platform
             </span>
           </h1>
 
-          <p className="text-xl text-neutral-600 dark:text-neutral-400 max-w-3xl mx-auto mb-12 leading-relaxed">
+          <p className="text-xl text-neutral-600 dark:text-neutral-400 max-w-3xl mx-auto mb-12 leading-relaxed animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
             A comprehensive, beautifully designed ecosystem to manage your inventory, staff, customer loyalty, and M-Pesa payments—all natively integrated and entirely free to use.
           </p>
 
-          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center animate-fade-in-up" style={{ animationDelay: '0.3s' }}>
             <Link href="/auth/register" className="w-full sm:w-auto">
-              <Button size="lg" className="w-full sm:h-16 sm:px-10 text-lg rounded-full bg-blue-600 hover:bg-blue-700 text-white shadow-xl shadow-blue-600/20 font-bold transition-all transform hover:scale-[1.03]">
+              <Button size="lg" className="w-full sm:h-16 sm:px-10 text-lg rounded-full bg-blue-600 hover:bg-blue-700 text-white shadow-2xl shadow-blue-600/30 font-bold transition-all transform hover:scale-[1.03]">
                 Start Using It for Free <ArrowRight className="w-5 h-5 ml-2" />
               </Button>
             </Link>
             <Link href="#services" className="w-full sm:w-auto">
-              <Button size="lg" variant="outline" className="w-full sm:h-16 sm:px-10 text-lg rounded-full border-neutral-300 dark:border-zinc-700 hover:bg-neutral-100 dark:hover:bg-zinc-900 text-neutral-700 dark:text-neutral-300 font-bold transition-all">
+              <Button size="lg" variant="outline" className="w-full sm:h-16 sm:px-10 text-lg rounded-full border-neutral-300 dark:border-zinc-700 hover:bg-white dark:hover:bg-zinc-800 text-neutral-700 dark:text-neutral-300 font-bold transition-all shadow-xl shadow-neutral-200/50 dark:shadow-zinc-900/50">
                 Explore All Features
               </Button>
             </Link>
@@ -288,33 +283,6 @@ export default function LandingPage() {
               </div>
             ))}
           </div>
-        </div>
-      </section>
-
-      {/* Why It's Free Section */}
-      <section id="why-free" className="py-28 bg-emerald-600 text-white relative overflow-hidden">
-        <div className="absolute inset-0 bg-[radial-gradient(#ffffff_1px,transparent_1px)] [background-size:24px_24px] opacity-10"></div>
-        <div className="absolute bottom-[-20%] left-[-10%] w-[500px] h-[500px] rounded-full bg-emerald-500/50 blur-[100px]"></div>
-        
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-800/50 border border-emerald-500 mb-6">
-            <Shield className="w-5 h-5 text-emerald-200" />
-            <span className="text-sm font-bold text-emerald-100 tracking-wider">No Subscriptions. No Hidden Fees.</span>
-          </div>
-          
-          <h2 className="text-4xl sm:text-6xl font-extrabold mb-8 leading-tight">
-            Built to Serve.<br /> Completely Free to Use.
-          </h2>
-          
-          <p className="text-xl text-emerald-50 mb-12 leading-relaxed max-w-2xl mx-auto">
-            We believe that robust operational tools should be accessible to all businesses. You get unlimited users, unlimited transactions, and unlimited branches—forever free. Our mission is to streamline your workflows, not drain your margins.
-          </p>
-
-          <Link href="/auth/register">
-            <Button size="lg" className="h-16 px-12 rounded-full bg-white text-emerald-700 hover:bg-emerald-50 hover:scale-[1.03] transition-all text-lg font-bold shadow-2xl">
-              Create Your Free Account Now
-            </Button>
-          </Link>
         </div>
       </section>
 
@@ -398,13 +366,19 @@ export default function LandingPage() {
           <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-16">
             <div className="col-span-1 md:col-span-1">
               <div className="flex items-center gap-3 mb-6">
-                <div className="w-9 h-9 rounded-lg bg-blue-600 flex items-center justify-center">
-                  <Heart className="w-5 h-5 text-white" />
-                </div>
-                <span className="text-xl font-bold text-neutral-900 dark:text-white">Mpesa Connect</span>
+                {logoUrl ? (
+                  <img src={logoUrl} alt="Company Logo" className="h-8 object-contain" />
+                ) : (
+                  <>
+                    <div className="w-9 h-9 rounded-lg bg-blue-600 flex items-center justify-center">
+                      <Heart className="w-5 h-5 text-white" />
+                    </div>
+                    <span className="text-xl font-bold text-neutral-900 dark:text-white">Mpesa Connect</span>
+                  </>
+                )}
               </div>
               <p className="text-sm text-neutral-500 dark:text-neutral-400 leading-relaxed">
-                The care-centered all-in-one payment workflow for modern commerce. Streamlining transactions, invoices, and diagnostics with pure integrity.
+                The modern all-in-one payment workflow for commerce. Streamlining transactions, invoices, and analytics with pure integrity.
               </p>
             </div>
 

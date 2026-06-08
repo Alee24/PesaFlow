@@ -25,10 +25,15 @@ export const getPublicSettings = async (req: Request, res: Response) => {
             });
         }
 
+        const profile = await prisma.businessProfile.findFirst({
+            where: { logoUrl: { not: null } }
+        });
+
         res.json({
             serviceChargeEnabled: settings.serviceChargeEnabled,
             serviceChargeAmount: settings.serviceChargeAmount,
-            googleAnalyticsId: settings.googleAnalyticsId
+            googleAnalyticsId: settings.googleAnalyticsId,
+            logoUrl: profile?.logoUrl || null
         });
     } catch (error: any) {
         res.status(500).json({ error: error.message });
