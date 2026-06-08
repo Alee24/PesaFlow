@@ -8,7 +8,7 @@ const router = Router();
 
 router.use(authenticateToken);
 router.get('/', getProfile);
-router.put('/', upload.single('logo'), updateProfile);
+router.put('/', upload.fields([{ name: 'logo', maxCount: 1 }, { name: 'favicon', maxCount: 1 }]), updateProfile);
 router.post('/test-smtp', testSmtpConnection);
 
 export default router;

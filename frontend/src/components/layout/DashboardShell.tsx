@@ -19,29 +19,21 @@ import { useTheme } from '@/contexts/ThemeContext';
 
 export const menuGroups = [
     {
-        title: 'Overview',
-        icon: LayoutDashboard,
-        items: [
-            { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard, feature: null },
-            { name: 'Analytics', href: '/analytics', icon: BarChart3, feature: 'ANALYTICS' },
-        ]
-    },
-    {
-        title: 'Business',
+        title: 'Core Operations',
         icon: Store,
         items: [
             { name: 'POS', href: '/pos', icon: ShoppingCart, feature: 'POS' },
             { name: 'Products', href: '/products', icon: Package, feature: null },
             { name: 'Sales', href: '/sales', icon: TrendingUp, feature: null },
-            { name: 'Invoices', href: '/invoices', icon: FileText, feature: 'invoices' },
             { name: 'Customers', href: '/customers', icon: Users, feature: 'CRM' },
             { name: 'Kiosk Mode', href: '/pos/login', icon: Store, feature: 'POS' },
         ]
     },
     {
-        title: 'Finance',
+        title: 'Finance & Billing',
         icon: Wallet,
         items: [
+            { name: 'Invoices', href: '/invoices', icon: FileText, feature: 'invoices' },
             { name: 'Wallet', href: '/wallet', icon: Wallet, feature: null },
             { name: 'Withdrawals', href: '/withdrawals', icon: CreditCard, feature: null },
             { name: 'Bulk Payments', href: '/bulk-payments', icon: ArrowLeftRight, feature: 'MPESA_BULK' },
@@ -49,27 +41,28 @@ export const menuGroups = [
     },
     {
         title: 'Management',
-        icon: Users,
+        icon: Settings,
         items: [
-            { name: 'Team', href: '/team', icon: Users, feature: 'TEAM_MANAGEMENT' },
-            { name: 'Subscription', href: '/subscription', icon: ShieldCheck },
             { name: 'Settings', href: '/settings', icon: Settings, feature: null },
+            { name: 'Team', href: '/team', icon: Users, feature: 'TEAM_MANAGEMENT' },
+            { name: 'Subscription', href: '/subscription', icon: ShieldCheck, feature: null },
             { name: 'Support', href: '/support', icon: MessageSquare, feature: null },
         ]
     },
     {
-        title: 'Administration',
-        role: 'ADMIN',
-        icon: ShieldCheck,
+        title: 'Overview & Admin',
+        icon: LayoutDashboard,
         items: [
-            { name: 'Dashboard', href: '/admin', icon: LayoutDashboard, role: 'ADMIN' },
+            { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard, feature: null },
+            { name: 'Analytics', href: '/analytics', icon: BarChart3, feature: 'ANALYTICS' },
+            { name: 'Admin Dashboard', href: '/admin', icon: LayoutDashboard, role: 'ADMIN' },
             { name: 'System Dashboard', href: '/admin/system-dashboard', icon: TrendingUp, role: 'ADMIN' },
             { name: 'System Health', href: '/admin/system-health', icon: ShieldCheck, role: 'ADMIN' },
             { name: 'License', href: '/admin/license', icon: Key, role: 'ADMIN' },
             { name: 'Verification', href: '/admin/verification', icon: CheckCircle, role: 'ADMIN' },
             { name: 'Users', href: '/admin/users', icon: User, role: 'ADMIN' },
             { name: 'Withdrawals', href: '/admin/withdrawals', icon: CreditCard, role: 'ADMIN' },
-            { name: 'Settings', href: '/admin/settings', icon: Settings, role: 'ADMIN' },
+            { name: 'Admin Settings', href: '/admin/settings', icon: Settings, role: 'ADMIN' },
             { name: 'KRA Integration', href: '/admin/kra-integration', icon: Globe, role: 'ADMIN' },
             { name: 'Google Analytics', href: '/admin/analytics', icon: BarChart3, role: 'ADMIN' },
         ]
@@ -85,14 +78,17 @@ export function Sidebar({ user, isMobileOpen, setIsMobileOpen }: {
     const { theme, setTheme } = useTheme();
     const pathname = usePathname();
     const router = useRouter();
-    const [openGroups, setOpenGroups] = useState<string[]>(['Overview']);
+    const [openGroups, setOpenGroups] = useState<string[]>(['Core Operations']);
 
     const toggleGroup = (groupTitle: string) => {
-        setOpenGroups(prev =>
-            prev.includes(groupTitle)
-                ? [] // Close if already open
-                : [groupTitle] // Open only this group, close all others
-        );
+        if (groupTitle === 'Core Operations') return; // Permanently open
+        setOpenGroups(prev => {
+            if (prev.includes(groupTitle)) {
+                return ['Core Operations']; // Close it, back to Core only
+            } else {
+                return ['Core Operations', groupTitle]; // Open it along with Core
+            }
+        });
     };
 
     return (
@@ -143,7 +139,8 @@ export function Sidebar({ user, isMobileOpen, setIsMobileOpen }: {
                                     </div>
                                     <ChevronDown className={cn(
                                         "w-4 h-4 transition-transform duration-200",
-                                        isOpen ? "rotate-180" : ""
+                                        isOpen ? "rotate-180" : "",
+                                        group.title === 'Core Operations' ? "hidden" : ""
                                     )} />
                                 </button>
                                 {isOpen && (

@@ -14,6 +14,7 @@ export default function SettingsPage() {
     const [formData, setFormData] = useState({
         companyName: '',
         logoUrl: '',
+        faviconUrl: '',
         contactPhone: '',
         email: '',
         location: '',
@@ -44,6 +45,7 @@ export default function SettingsPage() {
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [logoFile, setLogoFile] = useState<File | null>(null);
+    const [faviconFile, setFaviconFile] = useState<File | null>(null);
     const [user, setUser] = useState<any>(null);
     const [subscription, setSubscription] = useState<any>(null);
 
@@ -136,6 +138,22 @@ export default function SettingsPage() {
         }
     };
 
+    const handleFaviconChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (file) {
+            if (file.size > 2 * 1024 * 1024) {
+                showToast("File size too large. Max 2MB.", 'error');
+                return;
+            }
+            setFaviconFile(file);
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                setFormData(prev => ({ ...prev, faviconUrl: reader.result as string }));
+            };
+            reader.readAsDataURL(file);
+        }
+    };
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setSaving(true);
@@ -159,13 +177,21 @@ export default function SettingsPage() {
             if (logoFile) {
                 payload.append('logo', logoFile);
             }
+            if (faviconFile) {
+                payload.append('favicon', faviconFile);
+            }
 
-            await api.put('/profile', payload, {
+            const res = await api.put('/profile', payload, {
                 headers: {
                     'Content-Type': 'multipart/form-data'
                 }
             });
             showToast('Settings saved successfully!', 'success');
+            
+            // Reload window to apply favicon changes instantly
+            if (faviconFile || (res.data.faviconUrl && formData.faviconUrl !== res.data.faviconUrl)) {
+                setTimeout(() => window.location.reload(), 1000);
+            }
         } catch (error: any) {
             console.error(error);
             showToast(error.response?.data?.error || "Failed to save settings", 'error');
@@ -281,6 +307,25 @@ export default function SettingsPage() {
                                             <img
                                                 src={getImageUrl(formData.logoUrl) || ''}
                                                 alt="Logo"
+                                                className="max-h-full max-w-full object-contain"
+                                            />
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+
+                            <div className="flex flex-col space-y-2">
+                                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Favicon (Browser Icon)</label>
+                                <div className="flex items-center gap-4">
+                                    <label className="cursor-pointer bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold py-2 px-4 rounded-lg border border-gray-300 transition">
+                                        Upload Favicon
+                                        <input type="file" accept="image/x-icon,image/png,image/jpeg" onChange={handleFaviconChange} className="hidden" />
+                                    </label>
+                                    {formData.faviconUrl && (
+                                        <div className="h-8 w-8 rounded-md overflow-hidden border bg-white flex items-center justify-center">
+                                            <img
+                                                src={getImageUrl(formData.faviconUrl) || ''}
+                                                alt="Favicon"
                                                 className="max-h-full max-w-full object-contain"
                                             />
                                         </div>

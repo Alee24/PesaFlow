@@ -8,6 +8,7 @@ const prisma = new PrismaClient();
 const profileSchema = z.object({
     companyName: z.string().min(1, "Company Name is required"),
     logoUrl: z.string().optional().or(z.literal('')),
+    faviconUrl: z.string().optional().or(z.literal('')),
     contactPhone: z.string().optional().or(z.literal('')),
     email: z.string().email().optional().or(z.literal('')),
     location: z.string().optional().or(z.literal('')),
@@ -66,10 +67,21 @@ export const updateProfile = async (req: Request, res: Response) => {
         if (rawData.useCustomMpesa === 'false') rawData.useCustomMpesa = false;
 
         // Handle file upload
-        if (req.file) {
-            // Store relative path. The frontend or API url-handling will resolve it.
-            // This prevents "http://localhost" issues in production.
-            rawData.logoUrl = `/uploads/${req.file.filename}`;
+        if (req.files) {
+            const files = req.files as { [fieldname: string]: Express.Multer.File[] };
+            if (files['logo'] && files['logo'][0]) {
+                rawData.logoUrl = `/uploads/${files['logo'][0].filename}`;
+            }
+            if (files['favicon'] && files['favicon'][0]) {
+                rawData.faviconUrl = `/uploads/${files['favicon'][0].filename}`;
+            }
+        } else if (req.file) {
+            // Fallback for single file upload
+            if (req.file.fieldname === 'logo') {
+                rawData.logoUrl = `/uploads/${req.file.filename}`;
+            } else if (req.file.fieldname === 'favicon') {
+                rawData.faviconUrl = `/uploads/${req.file.filename}`;
+            }
         }
 
         // Convert SMTP Port to number if string

@@ -8,6 +8,7 @@ import { AlertCircle, XCircle } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '../ui/Button';
 import { SubscriptionBadge } from '../subscription/SubscriptionBadge';
+import { getImageUrl } from '@/lib/utils';
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
     const router = useRouter();
@@ -40,6 +41,24 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                     // If fetch fails (e.g. token expired), user might need to login again ideally
                     // But we'll let existing api interceptors handle 401s if they exist
                 });
+
+            // Fetch profile to set custom favicon dynamically
+            api.get('/profile')
+                .then(res => {
+                    if (res.data && res.data.faviconUrl) {
+                        const fullUrl = getImageUrl(res.data.faviconUrl);
+                        if (fullUrl) {
+                            let link = document.querySelector("link[rel~='icon']") as HTMLLinkElement;
+                            if (!link) {
+                                link = document.createElement('link');
+                                link.rel = 'icon';
+                                document.getElementsByTagName('head')[0].appendChild(link);
+                            }
+                            link.href = fullUrl;
+                        }
+                    }
+                })
+                .catch(() => {});
         });
     }, [router]);
 
