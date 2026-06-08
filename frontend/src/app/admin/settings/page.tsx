@@ -92,7 +92,7 @@ export default function AdminSettingsPage() {
             showToast('Test email sent successfully! Check your inbox.', 'success');
             setTestEmail('');
         } catch (error: any) {
-            const errorMessage = error.response?.data?.error || error.response?.data?.details || 'Failed to send test email';
+            const errorMessage = error.response?.data?.details || error.response?.data?.error || 'Failed to send test email';
             showToast(errorMessage, 'error');
         } finally {
             setSendingTest(false);
