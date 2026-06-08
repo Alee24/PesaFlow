@@ -7,8 +7,8 @@ count=0
 success=0
 
 while [ $count -lt $max_retries ]; do
-  if npx prisma db push --accept-data-loss; then
-    echo "Database is ready!"
+  if npx prisma migrate deploy; then
+    echo "Database migrations applied successfully!"
     success=1
     break
   else
