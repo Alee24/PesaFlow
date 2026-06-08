@@ -24,7 +24,7 @@ services:
     depends_on:
       - db
     ports:
-      - "2365:2365"
+      - "11399:2365"
     networks:
       - pesaflow_net
 
@@ -43,7 +43,7 @@ services:
     depends_on:
       - backend
     ports:
-      - "3652:3652"
+      - "11398:3652"
     networks:
       - pesaflow_net
 
