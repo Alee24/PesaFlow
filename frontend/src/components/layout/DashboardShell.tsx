@@ -25,7 +25,7 @@ export const menuGroups = [
             { name: 'POS', href: '/pos', icon: ShoppingCart, feature: 'POS' },
             { name: 'Products', href: '/products', icon: Package, feature: null },
             { name: 'Sales', href: '/sales', icon: TrendingUp, feature: null },
-            { name: 'Customers', href: '/customers', icon: Users, feature: 'CRM' },
+            { name: 'CRM', href: '/customers', icon: Users, feature: 'CRM' },
             { name: 'Kiosk Mode', href: '/pos/login', icon: Store, feature: 'POS' },
         ]
     },

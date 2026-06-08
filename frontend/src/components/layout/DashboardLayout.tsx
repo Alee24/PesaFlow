@@ -9,6 +9,7 @@ import Link from 'next/link';
 import { Button } from '../ui/Button';
 import { SubscriptionBadge } from '../subscription/SubscriptionBadge';
 import { getImageUrl } from '@/lib/utils';
+import { GettingStartedModal } from '../dashboard/GettingStartedModal';
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
     const router = useRouter();
@@ -138,6 +139,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                     </p>
                 </footer>
 
+                <GettingStartedModal />
                 <SubscriptionBadge />
             </div>
         </div>
