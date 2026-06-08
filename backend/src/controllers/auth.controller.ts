@@ -109,7 +109,8 @@ export const register = async (req: Request, res: Response): Promise<void> => {
             res.status(400).json({ error: errorMessage });
         } else {
             console.error(error);
-            res.status(500).json({ error: 'Internal Server Error' });
+            console.error("Error details:", error);
+            res.status(500).json({ error: error instanceof Error ? error.message : String(error) });
         }
     }
 };
@@ -208,7 +209,8 @@ export const completeProfile = async (req: Request, res: Response): Promise<void
             res.status(400).json({ error: errorMessage });
         } else {
             console.error("Complete Profile Error:", error);
-            res.status(500).json({ error: 'Internal Server Error' });
+            console.error("Error details:", error);
+            res.status(500).json({ error: error instanceof Error ? error.message : String(error) });
         }
     }
 };
@@ -258,7 +260,8 @@ export const login = async (req: Request, res: Response): Promise<void> => {
             res.status(400).json({ error: errorMessage });
         } else {
             console.error("LOGIN ERROR FULL DETAILS:", error);
-            res.status(500).json({ error: 'Internal Server Error' });
+            console.error("Error details:", error);
+            res.status(500).json({ error: error instanceof Error ? error.message : String(error) });
         }
     }
 };
