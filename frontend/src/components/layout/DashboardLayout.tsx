@@ -7,7 +7,6 @@ import { Sidebar, Header, menuGroups } from './DashboardShell';
 import { AlertCircle, XCircle } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '../ui/Button';
-import { SubscriptionBadge } from '../subscription/SubscriptionBadge';
 import { getImageUrl } from '@/lib/utils';
 import { GettingStartedModal } from '../dashboard/GettingStartedModal';
 
@@ -140,7 +139,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 </footer>
 
                 <GettingStartedModal />
-                <SubscriptionBadge />
             </div>
         </div>
     );

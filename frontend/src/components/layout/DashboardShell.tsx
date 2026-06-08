@@ -177,22 +177,13 @@ export function Sidebar({ user, isMobileOpen, setIsMobileOpen }: {
 
                 <div className="absolute bottom-0 w-full p-4 border-t border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900">
                     <button
-                        onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-                        className="flex items-center gap-3 w-full px-4 py-3 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-xl text-sm font-medium transition-all duration-200 hover:translate-x-1 mb-2"
-                    >
-                        {theme === 'dark' ? (
-                            <Moon className="w-5 h-5 text-indigo-400" />
-                        ) : (
-                            <Sun className="w-5 h-5 text-yellow-500" />
-                        )}
-                        <span>{theme === 'dark' ? 'Dark Mode' : 'Light Mode'}</span>
-                    </button>
-                    <button
                         onClick={logout}
-                        className="flex items-center gap-3 w-full px-4 py-3 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-xl text-sm font-medium transition-all duration-200 hover:translate-x-1"
+                        className="flex items-center justify-between w-full px-4 py-3 mt-auto text-red-600 bg-red-50 dark:bg-red-900/10 hover:bg-red-100 dark:hover:bg-red-900/30 rounded-xl text-sm font-bold shadow-sm transition-all duration-200 border border-red-100 dark:border-red-900/30"
                     >
-                        <LogOut className="w-5 h-5" />
-                        Logout
+                        <div className="flex items-center gap-3">
+                            <LogOut className="w-5 h-5" />
+                            <span>Sign Out</span>
+                        </div>
                     </button>
                 </div>
             </aside>
@@ -252,7 +243,8 @@ export function Header({ user, onMenuClick }: {
     useEffect(() => {
         if (user) {
             fetchNotifications();
-            // Auto-refresh removed - notifications only update on manual page refresh
+            const interval = setInterval(fetchNotifications, 30000);
+            return () => clearInterval(interval);
         }
     }, [user]);
 
@@ -372,7 +364,7 @@ export function Header({ user, onMenuClick }: {
                         >
                             <div className="flex flex-col text-right hidden sm:block">
                                 <span className="text-sm font-medium text-gray-900 dark:text-white group-hover:text-indigo-600 transition-colors">
-                                    {user?.name || user?.email || 'User'}
+                                    {user?.name || 'User'}
                                 </span>
                                 <span className="text-xs text-gray-500 capitalize">{user?.role?.toLowerCase() || 'Merchant'}</span>
                             </div>
@@ -383,15 +375,15 @@ export function Header({ user, onMenuClick }: {
 
                         {/* Dropdown */}
                         {showUserMenu && (
-                            <div className="absolute right-0 top-12 w-48 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 py-1 z-50 animate-in zoom-in-95 duration-100">
-                                <Link href="/profile" className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700">
+                            <div className="absolute right-0 top-12 w-48 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 py-1 z-50 animate-in zoom-in-95 duration-100" onMouseDown={(e) => e.preventDefault()}>
+                                <Link href="/profile" onClick={() => setShowUserMenu(false)} className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700">
                                     Profile
                                 </Link>
-                                <Link href="/settings" className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700">
+                                <Link href="/settings" onClick={() => setShowUserMenu(false)} className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700">
                                     Settings
                                 </Link>
                                 <div className="border-t border-gray-100 dark:border-gray-700 my-1"></div>
-                                <button onClick={handleLogout} className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20">
+                                <button onClick={() => { setShowUserMenu(false); handleLogout(); }} className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20">
                                     Sign out
                                 </button>
                             </div>
