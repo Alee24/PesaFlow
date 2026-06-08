@@ -156,9 +156,10 @@ const PaymentModal: React.FC<PaymentModalProps> = ({ totalAmount, items, discoun
             }
 
             onSuccess(res.data.sale);
-        } catch (error) {
+        } catch (error: any) {
             console.error("Sale Failed", error);
-            toast.error("Failed to process sale");
+            const errorMessage = error.response?.data?.error || "Failed to process sale";
+            toast.error(errorMessage);
         } finally {
             setLoading(false);
         }
@@ -210,7 +211,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({ totalAmount, items, discoun
         } catch (error: any) {
             console.error(error);
             setMpesaStatus('failed');
-            const errorMessage = error.response?.data?.error || "Payment Failed. Please try again.";
+            const errorMessage = error?.response?.data?.error || "Payment Failed. Please try again.";
             toast.error(errorMessage);
         } finally {
             setLoading(false);
