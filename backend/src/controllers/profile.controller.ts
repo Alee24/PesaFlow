@@ -29,6 +29,7 @@ const profileSchema = z.object({
     mpesaInitiatorName: z.string().optional().or(z.literal('')),
     mpesaInitiatorPass: z.string().optional().or(z.literal('')),
     mpesaCallbackUrl: z.string().optional().or(z.literal('')),
+    mpesaEnv: z.string().optional().or(z.literal('')),
     currency: z.string().optional().or(z.literal('')),
     vatEnabled: z.boolean().optional().or(z.string().transform(val => val === 'true')),
     vatRate: z.number().optional().or(z.string().transform(val => parseFloat(val))),

@@ -493,7 +493,33 @@ export default function SettingsPage() {
                                     <Input label="Shortcode (Paybill/Till)" name="mpesaShortcode" value={formData.mpesaShortcode} onChange={handleChange} />
                                     <Input label="Initiator Name" name="mpesaInitiatorName" value={formData.mpesaInitiatorName} onChange={handleChange} />
                                     <Input label="Initiator Password" name="mpesaInitiatorPass" value={formData.mpesaInitiatorPass} onChange={handleChange} type="password" />
-                                    <Input label="Callback URL" name="mpesaCallbackUrl" value={formData.mpesaCallbackUrl} onChange={handleChange} placeholder="https://yourdomain.com/api/mpesa/callback" />
+                                    <div className="flex flex-col space-y-1 md:col-span-2">
+                                        <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Callback URL</label>
+                                        <div className="flex gap-2">
+                                            <input
+                                                name="mpesaCallbackUrl"
+                                                value={formData.mpesaCallbackUrl}
+                                                onChange={handleChange}
+                                                placeholder="https://yourdomain.com/api/mpesa/callback"
+                                                className="flex-1 px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 bg-white dark:bg-gray-800 dark:text-white dark:border-gray-700"
+                                            />
+                                            <Button
+                                                type="button"
+                                                variant="outline"
+                                                size="sm"
+                                                onClick={() => {
+                                                    const apiUrl = process.env.NEXT_PUBLIC_API_URL || window.location.origin.replace(/:\d+$/, ':5000');
+                                                    const callbackUrl = `${apiUrl}/api/mpesa/callback`;
+                                                    setFormData(prev => ({ ...prev, mpesaCallbackUrl: callbackUrl }));
+                                                    showToast('Callback URL generated successfully', 'success');
+                                                }}
+                                                className="whitespace-nowrap"
+                                            >
+                                                Generate URL
+                                            </Button>
+                                        </div>
+                                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">This URL must be publicly accessible. Safaricom will send payment confirmations here.</p>
+                                    </div>
                                 </div>
                             </div>
                         )}

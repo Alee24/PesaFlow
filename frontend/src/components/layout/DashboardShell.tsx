@@ -123,7 +123,13 @@ export function Sidebar({ user, isMobileOpen, setIsMobileOpen }: {
 
                 <nav className="p-4 space-y-1 overflow-y-auto h-[calc(100vh-8rem)] custom-scrollbar">
                     {menuGroups.map((group) => {
-                        // if ((group as any).role === 'ADMIN' && user?.role !== 'ADMIN') return null;
+                        // Filter items visible to the current user
+                        const visibleItems = group.items.filter((item: any) => {
+                            if (item.role === 'ADMIN' && user?.role !== 'ADMIN') return false;
+                            return true;
+                        });
+                        // Skip entire group if no visible items
+                        if (visibleItems.length === 0) return null;
 
                         const isOpen = openGroups.includes(group.title);
 
@@ -145,8 +151,7 @@ export function Sidebar({ user, isMobileOpen, setIsMobileOpen }: {
                                 </button>
                                 {isOpen && (
                                     <div className="ml-6 mt-1 space-y-1">
-                                        {group.items.map((item: any) => {
-                                            if (item.role === 'ADMIN' && user?.role !== 'ADMIN') return null;
+                                        {visibleItems.map((item: any) => {
 
                                             const isActive = pathname === item.href ||
                                                 (pathname.startsWith(item.href) && item.href !== '/');
