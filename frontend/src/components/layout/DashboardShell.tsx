@@ -123,7 +123,7 @@ export function Sidebar({ user, isMobileOpen, setIsMobileOpen }: {
 
                 <nav className="p-4 space-y-1 overflow-y-auto h-[calc(100vh-8rem)] custom-scrollbar">
                     {menuGroups.map((group) => {
-                        if (group.role === 'ADMIN' && user?.role !== 'ADMIN') return null;
+                        // if ((group as any).role === 'ADMIN' && user?.role !== 'ADMIN') return null;
 
                         const isOpen = openGroups.includes(group.title);
 
