@@ -33,7 +33,7 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.updateTransactionStatus = exports.getTransactionById = exports.getTransactions = void 0;
+exports.sendReceiptEmail = exports.updateTransactionStatus = exports.getTransactionById = exports.getTransactions = void 0;
 const client_1 = require("@prisma/client");
 const prisma = new client_1.PrismaClient();
 const getTransactions = async (req, res) => {
@@ -183,4 +183,38 @@ const updateTransactionStatus = async (req, res) => {
     }
 };
 exports.updateTransactionStatus = updateTransactionStatus;
+const sendReceiptEmail = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { to } = req.body;
+        const file = req.file;
+        if (!to || !file) {
+            return res.status(400).json({ error: 'Email destination and PDF file are required' });
+        }
+        const transaction = await prisma.transaction.findUnique({ where: { id } });
+        if (!transaction)
+            return res.status(404).json({ error: 'Transaction not found' });
+        const { sendEmail } = await Promise.resolve().then(() => __importStar(require('../services/email.service')));
+        await sendEmail(transaction.recipientWalletId || '', to, `Receipt for your payment (${transaction.reference || id.slice(0, 8)})`, `
+                <div style="font-family: sans-serif; padding: 20px;">
+                    <h2>Payment Receipt</h2>
+                    <p>Thank you for your payment.</p>
+                    <p>Please find attached the official receipt for your transaction <strong>${transaction.reference || id.slice(0, 8)}</strong>.</p>
+                    <br/>
+                    <p>Best regards,<br/>The Team</p>
+                </div>
+            `, [
+            {
+                filename: `Receipt_${transaction.reference || id.slice(0, 8)}.pdf`,
+                content: file.buffer
+            }
+        ]);
+        res.json({ message: 'Receipt sent successfully' });
+    }
+    catch (error) {
+        console.error('Send receipt email error:', error);
+        res.status(500).json({ error: 'Failed to send receipt email' });
+    }
+};
+exports.sendReceiptEmail = sendReceiptEmail;
 //# sourceMappingURL=transaction.controller.js.map

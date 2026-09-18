@@ -33,7 +33,7 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getStaffPerformance = exports.getSalesStats = exports.getSaleById = exports.getRecentSales = exports.createCashSale = void 0;
+exports.sendSaleEmail = exports.getStaffPerformance = exports.getSalesStats = exports.getSaleById = exports.getRecentSales = exports.createCashSale = void 0;
 const client_1 = require("@prisma/client");
 const zod_1 = require("zod");
 const prisma = new client_1.PrismaClient();
@@ -149,6 +149,15 @@ const createCashSale = async (req, res) => {
                     }
                 });
             }
+            const business = await tx.businessProfile.findUnique({ where: { userId: merchantId } });
+            const salesCount = await tx.sale.count({ where: { merchantId } });
+            const receiptNumber = `RCPT-${String(salesCount + 1).padStart(6, '0')}`;
+            let kraNotes = notes || '';
+            if (business?.kraPinNumber) {
+                const cuInvoiceNumber = `TIMS-${Math.floor(100000 + Math.random() * 900000)}`;
+                const qrUrl = `https://itax.kra.go.ke/KRA-Portal/receipts?id=${cuInvoiceNumber}`;
+                kraNotes = `${kraNotes ? kraNotes + '\n' : ''}--- KRA ETR INFO ---\nPIN: ${business.kraPinNumber}\nCU INVOICE NO: ${cuInvoiceNumber}\nVerify: ${qrUrl}`;
+            }
             const sale = await tx.sale.create({
                 data: {
                     merchantId: merchantId,
@@ -168,7 +177,8 @@ const createCashSale = async (req, res) => {
                     changeGiven,
                     splitPayments: splitPayments ? JSON.stringify(splitPayments) : null,
                     transactionId: transaction?.id || transactionId,
-                    notes,
+                    receiptNumber,
+                    notes: kraNotes,
                     items: {
                         create: processedItems.map(item => ({
                             productId: item.productId,
@@ -425,4 +435,38 @@ const getStaffPerformance = async (req, res) => {
     }
 };
 exports.getStaffPerformance = getStaffPerformance;
+const sendSaleEmail = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { to } = req.body;
+        const file = req.file;
+        if (!to || !file) {
+            return res.status(400).json({ error: 'Email destination and PDF file are required' });
+        }
+        const sale = await prisma.sale.findUnique({ where: { id } });
+        if (!sale)
+            return res.status(404).json({ error: 'Sale not found' });
+        const { sendEmail } = await Promise.resolve().then(() => __importStar(require('../services/email.service')));
+        await sendEmail(sale.merchantId || '', to, `Receipt for your purchase (${sale.receiptNumber || id.slice(0, 8)})`, `
+                <div style="font-family: sans-serif; padding: 20px;">
+                    <h2>Purchase Receipt</h2>
+                    <p>Thank you for shopping with us.</p>
+                    <p>Please find attached the official receipt for your purchase <strong>${sale.receiptNumber || id.slice(0, 8)}</strong>.</p>
+                    <br/>
+                    <p>Best regards,<br/>The Team</p>
+                </div>
+            `, [
+            {
+                filename: `Receipt_${sale.receiptNumber || id.slice(0, 8)}.pdf`,
+                content: file.buffer
+            }
+        ]);
+        res.json({ message: 'Receipt sent successfully' });
+    }
+    catch (error) {
+        console.error('Send receipt email error:', error);
+        res.status(500).json({ error: 'Failed to send receipt email' });
+    }
+};
+exports.sendSaleEmail = sendSaleEmail;
 //# sourceMappingURL=sales.controller.js.map

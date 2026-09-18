@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useEffect, useState } from 'react';
@@ -9,7 +8,7 @@ import PaymentModal from '@/components/pos/PaymentModal';
 import { ReceiptModal } from '@/components/pos/ReceiptModal';
 import api from '@/lib/api';
 import { useToast } from '@/contexts/ToastContext';
-import { ShoppingCart, X } from 'lucide-react';
+import { ShoppingCart, X, LogOut, ArrowLeft } from 'lucide-react';
 
 interface Product {
     id: string;
@@ -46,8 +45,16 @@ export default function POSPage() {
     const [isLoading, setIsLoading] = useState(true);
     const [discountData, setDiscountData] = useState<{ discountType: 'PERCENTAGE' | 'FIXED', discountValue: number } | null>(null);
     const [isCartOpen, setIsCartOpen] = useState(false);
+    const [isKiosk, setIsKiosk] = useState(false);
+    const [posUser, setPosUser] = useState<any>(null);
 
     useEffect(() => {
+        const pToken = localStorage.getItem('posToken');
+        if (pToken) {
+            setIsKiosk(true);
+            const pu = localStorage.getItem('posUser');
+            if (pu) setPosUser(JSON.parse(pu));
+        }
         fetchData();
     }, []);
 
@@ -135,9 +142,34 @@ export default function POSPage() {
 
     const totalItems = cartItems.reduce((sum, item) => sum + item.quantity, 0);
 
-    return (
-        <DashboardLayout>
-            <div className="flex flex-col md:flex-row h-[calc(100vh-64px)] overflow-hidden bg-gray-50/50 dark:bg-gray-900/50 relative">
+    const handleExitPos = () => {
+        if (isKiosk) {
+            localStorage.removeItem('posToken');
+            localStorage.removeItem('posUser');
+            window.location.href = '/pos/login';
+        } else {
+            window.location.href = '/dashboard';
+        }
+    };
+
+    const content = (
+        <div className="flex flex-col h-screen bg-gray-50/50 dark:bg-gray-900/50 relative">
+            <header className="h-16 flex items-center justify-between px-6 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 shrink-0">
+                <div className="flex items-center gap-4">
+                    <h1 className="font-bold text-xl tracking-tight text-gray-900 dark:text-white">Point of Sale</h1>
+                    {isKiosk && posUser && (
+                        <span className="bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 px-3 py-1 rounded-full text-sm font-medium border border-indigo-100 dark:border-indigo-800">
+                            Cashier: {posUser.name}
+                        </span>
+                    )}
+                </div>
+                <button onClick={handleExitPos} className="flex items-center gap-2 hover:bg-gray-100 dark:hover:bg-gray-800 px-4 py-2 rounded-lg transition-colors text-gray-600 dark:text-gray-300">
+                    {isKiosk ? <LogOut className="w-4 h-4" /> : <ArrowLeft className="w-4 h-4" />}
+                    {isKiosk ? 'Lock Terminal' : 'Back to Dashboard'}
+                </button>
+            </header>
+            
+            <div className="flex-1 overflow-hidden flex flex-col md:flex-row relative">
                 {/* Main Product Area */}
                 <div className="flex-1 overflow-hidden flex flex-col">
                     <div className="flex-1 overflow-hidden">
@@ -186,8 +218,8 @@ export default function POSPage() {
                     <div className="md:hidden fixed inset-0 z-50 bg-black/50 backdrop-blur-sm">
                         <div className="absolute inset-x-0 bottom-0 bg-white dark:bg-gray-900 rounded-t-3xl shadow-2xl max-h-[85vh] flex flex-col">
                             {/* Header */}
-                            <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-800">
-                                <h2 className="text-lg font-bold text-gray-900 dark:text-white">Cart ({totalItems} items)</h2>
+                            <div className="flex items-center justify-between p-4 border-b border-gray-100 dark:border-gray-800">
+                                <h2 className="text-lg font-bold">Current Order ({totalItems})</h2>
                                 <button
                                     onClick={() => setIsCartOpen(false)}
                                     className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors"
@@ -197,7 +229,7 @@ export default function POSPage() {
                             </div>
 
                             {/* Cart Content */}
-                            <div className="flex-1 overflow-hidden">
+                            <div className="flex-1 overflow-y-auto bg-gray-50 dark:bg-gray-900/50">
                                 <CartSidebar
                                     cartItems={cartItems}
                                     onUpdateQuantity={updateQuantity}
@@ -231,6 +263,8 @@ export default function POSPage() {
                     onClose={() => setLastSale(null)}
                 />
             )}
-        </DashboardLayout>
+        </div>
     );
+
+    return isKiosk ? content : <DashboardLayout>{content}</DashboardLayout>;
 }

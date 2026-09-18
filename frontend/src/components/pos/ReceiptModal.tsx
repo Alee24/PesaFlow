@@ -1,7 +1,11 @@
-import React, { useRef } from 'react';
+import React, { useRef, useState } from 'react';
 import { useReactToPrint } from 'react-to-print';
 import { Button } from '@/components/ui/Button';
-import { X, Printer, CheckCircle } from 'lucide-react';
+import { X, Printer, CheckCircle, Mail } from 'lucide-react';
+import { EmailModal } from '@/components/ui/EmailModal';
+import { pdf } from '@react-pdf/renderer';
+import ReceiptPDF from '@/components/pdf/ReceiptPDF';
+import toast from 'react-hot-toast';
 
 interface ReceiptModalProps {
     sale: any;
@@ -10,8 +14,10 @@ interface ReceiptModalProps {
 
 export const ReceiptModal: React.FC<ReceiptModalProps> = ({ sale, onClose }) => {
     const componentRef = useRef<HTMLDivElement>(null);
-    const [logo, setLogo] = React.useState<string>('/logo.png');
-    const [companyName, setCompanyName] = React.useState<string>('Mpesa Connect');
+    const [logo, setLogo] = useState<string>('/logo.png');
+    const [companyName, setCompanyName] = useState<string>('Mpesa Connect');
+    const [isEmailModalOpen, setIsEmailModalOpen] = useState(false);
+    const [sendingEmail, setSendingEmail] = useState(false);
 
     React.useEffect(() => {
         // Fetch current merchant's profile, fallback is handled in backend
@@ -34,6 +40,32 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({ sale, onClose }) => 
             }).catch(console.error);
         });
     }, []);
+
+    const handleSendEmail = async (email: string) => {
+        setSendingEmail(true);
+        try {
+            // Generate PDF Blob using the standalone PDF component
+            const transactionForPdf = { sale, status: 'COMPLETED', reference: sale.receiptNumber, amount: sale.totalAmount, type: 'SALE', id: sale.id };
+            const blob = await pdf(<ReceiptPDF transaction={transactionForPdf} globalLogo={logo} />).toBlob();
+
+            const formData = new FormData();
+            formData.append('to', email);
+            formData.append('file', blob, `Receipt_${sale.receiptNumber || sale.id.slice(0, 8)}.pdf`);
+
+            const api = (await import('@/lib/api')).default;
+            await api.post(`/sales/${sale.id}/email`, formData, {
+                headers: { 'Content-Type': 'multipart/form-data' }
+            });
+            
+            toast.success('Receipt sent successfully');
+            setIsEmailModalOpen(false);
+        } catch (error) {
+            console.error('Failed to send email', error);
+            toast.error('Failed to send email');
+        } finally {
+            setSendingEmail(false);
+        }
+    };
 
     const handlePrint = useReactToPrint({
         contentRef: componentRef,
@@ -164,6 +196,13 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({ sale, onClose }) => 
                             )}
                         </div>
 
+                        {/* Notes / KRA Info */}
+                        {sale.notes && (
+                            <div className="mb-4 text-[10px] text-gray-600 border-t border-dashed border-gray-300 pt-2 whitespace-pre-wrap text-center">
+                                {sale.notes}
+                            </div>
+                        )}
+
                         {/* Footer */}
                         <div className="text-center text-xs text-gray-400 mt-6">
                             <p>Thank you for shopping with us!</p>
@@ -173,16 +212,27 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({ sale, onClose }) => 
                 </div>
 
                 {/* Footer Actions */}
-                <div className="p-4 border-t border-gray-100 dark:border-gray-700 bg-gray-50 flex gap-3 no-print">
-                    <Button variant="outline" onClick={onClose} className="flex-1">
+                <div className="p-4 border-t border-gray-100 dark:border-gray-700 bg-gray-50 flex gap-3 no-print flex-wrap">
+                    <Button variant="outline" onClick={onClose} className="flex-1 min-w-[100px]">
                         Close
                     </Button>
-                    <Button onClick={handlePrint} className="flex-1 flex items-center justify-center gap-2">
+                    <Button variant="outline" onClick={() => setIsEmailModalOpen(true)} className="flex-1 min-w-[100px] flex items-center justify-center gap-2">
+                        <Mail className="w-4 h-4" /> Email
+                    </Button>
+                    <Button onClick={handlePrint} className="flex-1 min-w-[140px] flex items-center justify-center gap-2">
                         <Printer className="w-4 h-4" /> Print Receipt
                     </Button>
                 </div>
             </div>
 
+            <EmailModal
+                isOpen={isEmailModalOpen}
+                onClose={() => setIsEmailModalOpen(false)}
+                onSend={handleSendEmail}
+                isLoading={sendingEmail}
+                title="Email Receipt"
+                defaultEmail={sale?.customerEmail || ''}
+            />
         </div>
     );
 };

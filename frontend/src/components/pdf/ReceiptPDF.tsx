@@ -256,6 +256,14 @@ const ReceiptPDF = ({ transaction, globalLogo }: ReceiptPDFProps) => {
                         <Text style={styles.totalLabel}>Grand Total</Text>
                         <Text style={styles.totalAmount}>{formatCurrency(Number(transaction.amount))}</Text>
                     </View>
+                    
+                    {transaction.sale?.notes && (
+                        <View style={{ marginTop: 15, paddingTop: 10, borderTop: '1px dashed #CCCCCC', alignItems: 'center' }}>
+                            <Text style={{ fontSize: 8, color: '#6B7280', textAlign: 'center', lineHeight: 1.5 }}>
+                                {transaction.sale.notes}
+                            </Text>
+                        </View>
+                    )}
                 </View>
 
                 <View style={styles.footer}>
