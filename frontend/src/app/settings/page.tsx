@@ -344,24 +344,26 @@ export default function SettingsPage() {
                                 </div>
                             </div>
 
-                            <div className="flex flex-col space-y-2">
-                                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Favicon (Browser Icon)</label>
-                                <div className="flex items-center gap-4">
-                                    <label className="cursor-pointer bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold py-2 px-4 rounded-lg border border-gray-300 transition">
-                                        Upload Favicon
-                                        <input type="file" accept="image/x-icon,image/png,image/jpeg" onChange={handleFaviconChange} className="hidden" />
-                                    </label>
-                                    {formData.faviconUrl && (
-                                        <div className="h-8 w-8 rounded-md overflow-hidden border bg-white flex items-center justify-center">
-                                            <img
-                                                src={getImageUrl(formData.faviconUrl) || ''}
-                                                alt="Favicon"
-                                                className="max-h-full max-w-full object-contain"
-                                            />
-                                        </div>
-                                    )}
+                            {user?.role === 'ADMIN' && (
+                                <div className="flex flex-col space-y-2">
+                                    <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Favicon (Browser Icon)</label>
+                                    <div className="flex items-center gap-4">
+                                        <label className="cursor-pointer bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold py-2 px-4 rounded-lg border border-gray-300 transition">
+                                            Upload Favicon
+                                            <input type="file" accept="image/x-icon,image/png,image/jpeg" onChange={handleFaviconChange} className="hidden" />
+                                        </label>
+                                        {formData.faviconUrl && (
+                                            <div className="h-8 w-8 rounded-md overflow-hidden border bg-white flex items-center justify-center">
+                                                <img
+                                                    src={getImageUrl(formData.faviconUrl) || ''}
+                                                    alt="Favicon"
+                                                    className="max-h-full max-w-full object-contain"
+                                                />
+                                            </div>
+                                        )}
+                                    </div>
                                 </div>
-                            </div>
+                            )}
 
                             <div>
                                 <Input
