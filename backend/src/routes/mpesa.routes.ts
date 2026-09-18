@@ -13,6 +13,7 @@ router.get('/status', authenticateToken, getMpesaStatus);
 router.post('/test', authenticateToken, requireActive, testConnection);
 router.post('/reset-config', authenticateToken, requireActive, resetMpesaConfig); // New Endpoint
 router.post('/bulk-process', authenticateToken, requireActive, bulkProcess); // Bulk Payment Processing
-router.post('/callback', mpesaCallback); // Public endpoint for Safaricom
+router.post('/callback', mpesaCallback); // Legacy Public endpoint for Safaricom
+router.post('/callback/:merchantId', mpesaCallback); // Unique endpoint per merchant
 
 export default router;

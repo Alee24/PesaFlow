@@ -541,7 +541,9 @@ export default function SettingsPage() {
                                                 size="sm"
                                                 onClick={() => {
                                                     const apiUrl = process.env.NEXT_PUBLIC_API_URL || window.location.origin.replace(/:\d+$/, ':5000');
-                                                    const callbackUrl = `${apiUrl}/api/mpesa/callback`;
+                                                    const baseUrl = apiUrl.replace(/\/api\/?$/, '');
+                                                    const uniqueId = user?.merchantId || user?.id || user?.userId || '';
+                                                    const callbackUrl = `${baseUrl}/api/mpesa/callback/${uniqueId}`;
                                                     setFormData(prev => ({ ...prev, mpesaCallbackUrl: callbackUrl }));
                                                     showToast('Callback URL generated successfully', 'success');
                                                 }}

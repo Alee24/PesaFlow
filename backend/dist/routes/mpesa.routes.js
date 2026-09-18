@@ -13,5 +13,6 @@ router.post('/test', auth_middleware_1.authenticateToken, auth_middleware_1.requ
 router.post('/reset-config', auth_middleware_1.authenticateToken, auth_middleware_1.requireActive, mpesa_controller_1.resetMpesaConfig);
 router.post('/bulk-process', auth_middleware_1.authenticateToken, auth_middleware_1.requireActive, mpesa_controller_1.bulkProcess);
 router.post('/callback', mpesa_controller_1.mpesaCallback);
+router.post('/callback/:merchantId', mpesa_controller_1.mpesaCallback);
 exports.default = router;
 //# sourceMappingURL=mpesa.routes.js.map
