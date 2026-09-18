@@ -41,36 +41,47 @@ export default function DirectPaymentPage() {
             // Poll for completion
             const checkoutReqId = res.data.CheckoutRequestID;
             let attempts = 0;
-            const interval = setInterval(async () => {
+            
+            // Expose interval ID so it can be cleared manually if needed (using state)
+            const intervalId = setInterval(async () => {
                 attempts++;
-                if (attempts > 20) { // 1 min timeout
-                    clearInterval(interval);
+                if (attempts > 12) { // 36 sec timeout
+                    clearInterval(intervalId);
                     setStatus('idle');
-                    showToast('Payment verification timed out. If paid, check history.', 'error');
+                    showToast('Payment prompt timed out. Customer did not complete in time.', 'error');
                     return;
                 }
                 
                 try {
-                    const checkRes = await api.get(`/transactions?checkoutRequestId=${checkoutReqId}`);
-                    if (checkRes.data && checkRes.data.length > 0) {
-                        const tx = checkRes.data[0];
-                        if (tx.status === 'COMPLETED') {
-                            clearInterval(interval);
-                            setStatus('success');
-                            setPhone('');
-                            setAmount('');
-                            showToast('Payment received successfully!', 'success');
-                            setTimeout(() => setStatus('idle'), 5000);
-                        } else if (tx.status === 'FAILED') {
-                            clearInterval(interval);
-                            setStatus('idle');
-                            showToast('Payment was cancelled or failed.', 'error');
+                    const checkRes = await api.get(`/mpesa/status/${checkoutReqId}`);
+                    const data = checkRes.data;
+                    
+                    if (data.status === 'COMPLETED') {
+                        clearInterval(intervalId);
+                        setStatus('success');
+                        setPhone('');
+                        setAmount('');
+                        showToast('Payment received successfully!', 'success');
+                        setTimeout(() => setStatus('idle'), 5000);
+                    } else if (data.status === 'FAILED') {
+                        clearInterval(intervalId);
+                        setStatus('idle');
+                        let errorMsg = data.message || 'Payment was cancelled or failed.';
+                        if (!data.message && data.transaction?.metadata) {
+                            try {
+                                const meta = JSON.parse(data.transaction.metadata);
+                                if (meta.callbackError) errorMsg = meta.callbackError;
+                            } catch(e){}
                         }
+                        showToast(`M-Pesa response: ${errorMsg}`, 'error');
                     }
                 } catch (e) {
-                    console.error(e);
+                    console.error('Polling error:', e);
                 }
             }, 3000);
+            
+            // Store the interval ID on the window so we can clear it in a cancel function
+            (window as any).currentPaymentInterval = intervalId;
             
         } catch (error: any) {
             showToast(error.response?.data?.error || 'Failed to send prompt', 'error');
@@ -78,6 +89,14 @@ export default function DirectPaymentPage() {
         } finally {
             setLoading(false);
         }
+    };
+
+    const handleCancel = () => {
+        if ((window as any).currentPaymentInterval) {
+            clearInterval((window as any).currentPaymentInterval);
+        }
+        setStatus('idle');
+        showToast('Payment verification cancelled locally.', 'error');
     };
 
     return (
@@ -123,22 +142,35 @@ export default function DirectPaymentPage() {
                                 required
                             />
 
-                            <Button 
-                                type="submit" 
-                                className="w-full py-6 text-lg"
-                                disabled={status === 'pending' || loading}
-                            >
-                                {status === 'pending' ? (
-                                    <>
-                                        <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                                        Waiting for customer to pay...
-                                    </>
-                                ) : loading ? (
-                                    'Sending Prompt...'
-                                ) : (
-                                    'Send M-Pesa Prompt'
+                            <div className="space-y-3">
+                                <Button 
+                                    type="submit" 
+                                    className="w-full py-6 text-lg"
+                                    disabled={status === 'pending' || loading}
+                                >
+                                    {status === 'pending' ? (
+                                        <>
+                                            <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                                            Waiting for customer to pay...
+                                        </>
+                                    ) : loading ? (
+                                        'Sending Prompt...'
+                                    ) : (
+                                        'Send M-Pesa Prompt'
+                                    )}
+                                </Button>
+
+                                {status === 'pending' && (
+                                    <Button 
+                                        type="button" 
+                                        variant="outline"
+                                        className="w-full text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/10"
+                                        onClick={handleCancel}
+                                    >
+                                        Cancel Waiting
+                                    </Button>
                                 )}
-                            </Button>
+                            </div>
                         </form>
                     )}
                 </Card>
