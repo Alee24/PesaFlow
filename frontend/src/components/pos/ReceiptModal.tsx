@@ -10,6 +10,30 @@ interface ReceiptModalProps {
 
 export const ReceiptModal: React.FC<ReceiptModalProps> = ({ sale, onClose }) => {
     const componentRef = useRef<HTMLDivElement>(null);
+    const [logo, setLogo] = React.useState<string>('/logo.png');
+    const [companyName, setCompanyName] = React.useState<string>('Mpesa Connect');
+
+    React.useEffect(() => {
+        // Fetch current merchant's profile, fallback is handled in backend
+        import('@/lib/api').then(({ default: api }) => {
+            api.get('/profile').then((res) => {
+                if (res.data) {
+                    if (res.data.companyName) setCompanyName(res.data.companyName);
+                    
+                    if (res.data.logoUrl) {
+                        setLogo(res.data.logoUrl.startsWith('http') ? res.data.logoUrl : `${process.env.NEXT_PUBLIC_API_URL?.replace('/api', '') || ''}${res.data.logoUrl}`);
+                    } else {
+                        // If no logo, fetch public settings which should have the platform logo
+                        api.get('/settings/public').then((pubRes) => {
+                            if (pubRes.data?.logoUrl) {
+                                setLogo(pubRes.data.logoUrl.startsWith('http') ? pubRes.data.logoUrl : `${process.env.NEXT_PUBLIC_API_URL?.replace('/api', '') || ''}${pubRes.data.logoUrl}`);
+                            }
+                        });
+                    }
+                }
+            }).catch(console.error);
+        });
+    }, []);
 
     const handlePrint = useReactToPrint({
         contentRef: componentRef,
@@ -49,9 +73,9 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({ sale, onClose }) => 
                         {/* Store Info */}
                         <div className="text-center mb-4 border-b border-dashed border-gray-300 pb-4">
                             <div className="flex justify-center mb-2">
-                                <img src="/logo.png" alt="Mpesa Connect" className="h-32 w-auto" />
+                                <img src={logo} alt={companyName} className="h-20 w-auto object-contain" />
                             </div>
-                            <p className="font-bold text-lg uppercase hidden">Mpesa Connect</p>
+                            <p className="font-bold text-lg uppercase hidden">{companyName}</p>
                             <p className="text-xs text-gray-500">Nairobi, Kenya</p>
                             <p className="text-xs text-gray-500">www.mpesaconnect.co.ke</p>
                         </div>

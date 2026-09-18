@@ -25,15 +25,17 @@ export const getPublicSettings = async (req: Request, res: Response) => {
             });
         }
 
-        const profile = await prisma.businessProfile.findFirst({
-            where: { logoUrl: { not: null } }
+        // Fetch Super Admin profile for global logo
+        const adminUser = await prisma.user.findFirst({
+            where: { role: 'ADMIN' },
+            include: { businessProfile: true }
         });
 
         res.json({
             serviceChargeEnabled: settings.serviceChargeEnabled,
             serviceChargeAmount: settings.serviceChargeAmount,
             googleAnalyticsId: settings.googleAnalyticsId,
-            logoUrl: profile?.logoUrl || null
+            logoUrl: adminUser?.businessProfile?.logoUrl || null
         });
     } catch (error: any) {
         res.status(500).json({ error: error.message });
