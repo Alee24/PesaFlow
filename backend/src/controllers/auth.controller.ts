@@ -67,9 +67,9 @@ export const register = async (req: Request, res: Response): Promise<void> => {
                     tokenExpiresAt,
                     subscription: {
                         create: {
-                            plan: 'FREE',
+                            plan: 'PRO',
                             status: 'ACTIVE',
-                            features: '[]',
+                            features: '["ALL"]',
                             endDate: oneYearFromNow
                         }
                     }
