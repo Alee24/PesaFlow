@@ -69,10 +69,21 @@ export const mpesaCallback = async (req: Request, res: Response): Promise<void> 
                     data: { status: 'COMPLETED', reference: receipt || transaction.reference }
                 });
 
-                const updatedWallet = await prisma.wallet.update({
+                const walletInfo = await prisma.wallet.findUnique({
                     where: { id: transaction.recipientWalletId },
-                    data: { balance: { increment: Number(amount) - Number(transaction.feeCharged || 0) } }
+                    include: { user: { include: { businessProfile: true } } }
                 });
+
+                const isCustomAPI = walletInfo?.user?.businessProfile?.useCustomMpesa === true;
+                let updatedWallet = walletInfo;
+
+                if (!isCustomAPI) {
+                    updatedWallet = await prisma.wallet.update({
+                        where: { id: transaction.recipientWalletId },
+                        data: { balance: { increment: Number(amount) - Number(transaction.feeCharged || 0) } },
+                        include: { user: { include: { businessProfile: true } } }
+                    });
+                }
 
                 // Automatically update linked Sale record to PAID
                 await prisma.sale.updateMany({
@@ -284,14 +295,22 @@ export const manualCompleteMpesa = async (req: AuthRequest, res: Response): Prom
 
             // Update wallet balance for DEPOSIT_STK if not already completed
             if (transaction.status !== 'COMPLETED' && upTx.type === 'DEPOSIT_STK') {
-                await tx.wallet.update({
+                const walletInfo = await tx.wallet.findUnique({
                     where: { id: upTx.recipientWalletId },
-                    data: {
-                        balance: {
-                            increment: upTx.amount
-                        }
-                    }
+                    include: { user: { include: { businessProfile: true } } }
                 });
+                
+                const isCustomAPI = walletInfo?.user?.businessProfile?.useCustomMpesa === true;
+                if (!isCustomAPI) {
+                    await tx.wallet.update({
+                        where: { id: upTx.recipientWalletId },
+                        data: {
+                            balance: {
+                                increment: upTx.amount
+                            }
+                        }
+                    });
+                }
             }
 
             // Mark linked sale as PAID

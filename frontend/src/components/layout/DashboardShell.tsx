@@ -7,7 +7,7 @@ import {
     LayoutDashboard, ShoppingCart, Package, CreditCard, ArrowLeftRight, Settings,
     LogOut, User, Store, FileText, Bell, X, CheckCircle, AlertCircle, Info, Lock,
     ShieldCheck, TrendingUp, BarChart3, Users, Wallet, MessageSquare, Key, Globe,
-    ChevronRight, Receipt, Zap, Building2
+    ChevronRight, Receipt, Zap, Building2, Smartphone
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useState, useEffect, useRef } from 'react';
@@ -38,6 +38,7 @@ export const navSections = [
     {
         label: 'Finance',
         items: [
+            { name: 'Direct Payment', href: '/direct-payment', icon: Smartphone },
             { name: 'Invoices', href: '/invoices', icon: FileText, feature: 'invoices' },
             { name: 'Wallet', href: '/wallet', icon: Wallet },
             { name: 'Withdrawals', href: '/withdrawals', icon: CreditCard },
@@ -82,6 +83,25 @@ export function Sidebar({ user, isMobileOpen, setIsMobileOpen }: {
     const { logout } = useAuth();
     const { theme, setTheme } = useTheme();
     const pathname = usePathname();
+    const [logoUrl, setLogoUrl] = useState<string | null>(null);
+
+    useEffect(() => {
+        const fetchSettings = async () => {
+            try {
+                const baseUrl = process.env.NEXT_PUBLIC_API_URL?.replace('/api', '') || window.location.origin.replace(/:\d+$/, ':5000');
+                const response = await fetch(`${baseUrl}/api/settings/public`);
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.logoUrl) {
+                        setLogoUrl(data.logoUrl.startsWith('http') ? data.logoUrl : `${baseUrl}${data.logoUrl}`);
+                    }
+                }
+            } catch (error) {
+                console.error('Failed to fetch public settings', error);
+            }
+        };
+        fetchSettings();
+    }, []);
 
     return (
         <>
@@ -102,10 +122,14 @@ export function Sidebar({ user, isMobileOpen, setIsMobileOpen }: {
                 {/* Logo / Brand */}
                 <div className="flex h-14 shrink-0 items-center justify-between px-4 border-b border-zinc-800">
                     <Link href="/dashboard" className="flex items-center gap-2.5" onClick={() => setIsMobileOpen?.(false)}>
-                        <div className="w-7 h-7 rounded-lg bg-emerald-500 flex items-center justify-center">
-                            <Zap className="w-4 h-4 text-white" fill="white" />
-                        </div>
-                        <span className="font-bold text-[15px] text-white tracking-tight">Mpesa Connect</span>
+                        {logoUrl ? (
+                            <img src={logoUrl} alt="Mpesa Connect" className="h-7 w-auto object-contain" />
+                        ) : (
+                            <div className="w-7 h-7 rounded-lg bg-emerald-500 flex items-center justify-center">
+                                <Zap className="w-4 h-4 text-white" fill="white" />
+                            </div>
+                        )}
+                        <span className="font-bold text-[15px] tracking-tight text-white">Mpesa Connect</span>
                     </Link>
                     <button
                         onClick={() => setIsMobileOpen?.(false)}
