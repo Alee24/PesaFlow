@@ -8,7 +8,7 @@ export const getTransactions = async (req: Request, res: Response) => {
     try {
         const userId = (req as any).user.userId;
         const userRole = (req as any).user.role;
-        const { startDate, endDate, status, type } = req.query;
+        const { startDate, endDate, status, type, checkoutRequestId } = req.query;
 
         const where: any = {};
 
@@ -20,6 +20,10 @@ export const getTransactions = async (req: Request, res: Response) => {
                 { initiatorUserId: userId },
                 { recipientWalletId: { in: walletIds } }
             ];
+        }
+
+        if (checkoutRequestId) {
+            where.checkoutRequestId = checkoutRequestId;
         }
 
         if (startDate && endDate) {

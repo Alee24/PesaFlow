@@ -52,6 +52,7 @@ const saleSchema = zod_1.z.object({
     discountType: zod_1.z.enum(['PERCENTAGE', 'FIXED']).optional(),
     discountValue: zod_1.z.number().optional().default(0),
     paymentMethod: zod_1.z.enum(['CASH', 'MPESA_STK', 'SPLIT']).default('CASH'),
+    transactionId: zod_1.z.string().optional(),
     splitPayments: zod_1.z.array(zod_1.z.object({
         method: zod_1.z.string(),
         amount: zod_1.z.number()
@@ -79,7 +80,7 @@ const createCashSale = async (req, res) => {
         const userId = req.user.userId;
         const merchantId = req.user.merchantId;
         const validatedData = saleSchema.parse(req.body);
-        const { items, customerName, customerPhone, customerEmail, discountType, discountValue, paymentMethod, splitPayments, amountPaid, notes } = validatedData;
+        const { items, customerName, customerPhone, customerEmail, discountType, discountValue, paymentMethod, transactionId, splitPayments, amountPaid, notes } = validatedData;
         const result = await prisma.$transaction(async (tx) => {
             let wallet = await tx.wallet.findUnique({ where: { userId: merchantId } });
             if (!wallet) {
@@ -166,7 +167,7 @@ const createCashSale = async (req, res) => {
                     amountDue,
                     changeGiven,
                     splitPayments: splitPayments ? JSON.stringify(splitPayments) : null,
-                    transactionId: transaction?.id,
+                    transactionId: transaction?.id || transactionId,
                     notes,
                     items: {
                         create: processedItems.map(item => ({

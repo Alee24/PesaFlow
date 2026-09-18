@@ -21,6 +21,7 @@ const saleSchema = z.object({
     discountType: z.enum(['PERCENTAGE', 'FIXED']).optional(),
     discountValue: z.number().optional().default(0),
     paymentMethod: z.enum(['CASH', 'MPESA_STK', 'SPLIT']).default('CASH'),
+    transactionId: z.string().optional(),
     splitPayments: z.array(z.object({
         method: z.string(),
         amount: z.number()
@@ -68,6 +69,7 @@ export const createCashSale = async (req: Request, res: Response) => {
             discountType,
             discountValue,
             paymentMethod,
+            transactionId,
             splitPayments,
             amountPaid,
             notes
@@ -180,7 +182,7 @@ export const createCashSale = async (req: Request, res: Response) => {
                     amountDue,
                     changeGiven,
                     splitPayments: splitPayments ? JSON.stringify(splitPayments) : null,
-                    transactionId: transaction?.id,
+                    transactionId: transaction?.id || transactionId,
                     notes,
                     items: {
                         create: processedItems.map(item => ({

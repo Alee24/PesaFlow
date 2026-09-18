@@ -99,14 +99,19 @@ const PaymentModal: React.FC<PaymentModalProps> = ({ totalAmount, items, discoun
 
         try {
             setLoading(true);
-            // Check if a sale was created with this checkout request
-            const res = await api.get(`/sales?checkoutRequestId=${checkoutRequestId}`);
+            // Check M-Pesa transaction status directly
+            const res = await api.get(`/transactions?checkoutRequestId=${checkoutRequestId}`);
 
             if (res.data && res.data.length > 0) {
-                const sale = res.data[0];
-                if (sale.paymentStatus === 'PAID') {
-                    toast.success('Payment confirmed! Sale completed.');
-                    onSuccess(sale);
+                const transaction = res.data[0];
+                if (transaction.status === 'COMPLETED') {
+                    toast.success('Payment confirmed! Finalizing sale...');
+                    // Automatically finalize the sale now that payment is in wallet
+                    await completeSale('MPESA_STK', totalAmount, false, transaction.id);
+                    return;
+                } else if (transaction.status === 'FAILED') {
+                    toast.error('Payment failed or cancelled by user.');
+                    setStep('payment');
                     return;
                 }
             }
@@ -133,7 +138,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({ totalAmount, items, discoun
         await completeSale('CASH', Number(tendered));
     };
 
-    const completeSale = async (paymentMethod: string, amountPaid: number, skipLoyalty = false) => {
+    const completeSale = async (paymentMethod: string, amountPaid: number, skipLoyalty = false, transactionId?: string) => {
         setLoading(true);
         try {
             let loyaltyData = null;
@@ -165,6 +170,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({ totalAmount, items, discoun
                 discountValue,
                 amountPaid,
                 paymentMethod,
+                transactionId, // link the M-Pesa transaction
                 loyaltyCustomerId: loyaltyData?.id || null
             });
 
