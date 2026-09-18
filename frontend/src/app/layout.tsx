@@ -47,6 +47,8 @@ import { AuthProvider } from "@/contexts/AuthContext";
 
 import { GoogleAnalytics } from "@/components/analytics/GoogleAnalytics";
 
+import AnalyticsTracker from "@/components/AnalyticsTracker";
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -59,6 +61,7 @@ export default function RootLayout({
         suppressHydrationWarning
       >
         <GoogleAnalytics />
+        <AnalyticsTracker />
         <Toaster position="top-right" />
         <ToastProvider>
           <AuthProvider>

@@ -46,7 +46,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             api.get('/profile')
                 .then(res => {
                     if (res.data) {
-                        if (res.data.onboardingCompleted === false && pathname !== '/onboarding') {
+                        const storedUser = JSON.parse(localStorage.getItem('user') || '{}');
+                        const isAdmin = storedUser?.role === 'ADMIN';
+                        const isProfileEmpty = !res.data.id;
+                        const isOnboardingIncomplete = res.data.onboardingCompleted === false;
+                        
+                        if (!isAdmin && (isProfileEmpty || isOnboardingIncomplete) && pathname !== '/onboarding') {
                             router.push('/onboarding');
                             return;
                         }

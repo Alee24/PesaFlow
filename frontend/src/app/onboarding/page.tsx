@@ -114,7 +114,7 @@ export default function OnboardingPage() {
             await api.put('/profile', formData);
             
             toast.success('Onboarding complete!');
-            router.push('/admin/system-dashboard');
+            router.push('/dashboard');
         } catch (error: any) {
             toast.error(error.response?.data?.error || 'Failed to complete onboarding');
         } finally {

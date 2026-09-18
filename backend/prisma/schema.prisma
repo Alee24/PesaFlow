@@ -232,6 +232,20 @@ model StockMovement {
   @@map("stock_movements")
 }
 
+model SiteVisit {
+  id        String   @id @default(uuid())
+  sessionId String   @map("session_id")
+  ip        String?
+  location  String?
+  userAgent String?  @map("user_agent")
+  path      String
+  timeSpent Int      @default(0) @map("time_spent") // in seconds
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("site_visits")
+}
+
 model Transaction {
   id                    String      @id @default(uuid())
   type                  String // DEPOSIT_STK, WITHDRAWAL, FEE, SALE_CREDIT

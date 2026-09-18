@@ -4,7 +4,8 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { 
   Shield, Smartphone, ArrowRight, Lock, LayoutDashboard, 
-  Menu, X, BarChart3, Box, Receipt, Store, CheckCircle2 
+  Menu, X, BarChart3, Box, Receipt, Store, CheckCircle2,
+  Users, HeartHandshake, MessageSquare, Globe
 } from 'lucide-react';
 
 export default function LandingPage() {
@@ -63,6 +64,26 @@ export default function LandingPage() {
       icon: Shield,
       title: 'KRA Compliance',
       description: 'Stay compliant effortlessly. The system automatically calculates necessary taxes and generates reports ready for your KRA returns.',
+    },
+    {
+      icon: Users,
+      title: 'Team & Branch Management',
+      description: 'Manage multiple staff members and branches. Assign specific roles and securely track the performance of each of your locations.',
+    },
+    {
+      icon: HeartHandshake,
+      title: 'CRM & Loyalty Program',
+      description: 'Keep your customers coming back by awarding loyalty points on their purchases and tracking customer purchase histories.',
+    },
+    {
+      icon: MessageSquare,
+      title: 'Automated Notifications',
+      description: 'Automatically send SMS and email alerts for successful sales, M-Pesa payments, new invoices, and low stock warnings.',
+    },
+    {
+      icon: Globe,
+      title: 'Real-time Site Analytics',
+      description: 'Monitor your business storefront visibility with detailed visitor analytics, tracking locations, active pages, and time spent.',
     }
   ];
 
@@ -154,10 +175,10 @@ export default function LandingPage() {
       <section className="relative pt-24 pb-32 overflow-hidden">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center">
           <h1 className="text-5xl md:text-6xl font-extrabold text-zinc-900 tracking-tight leading-tight max-w-4xl mx-auto mb-6">
-            Run your business with <span className="text-emerald-600">confidence</span>.
+            Your <span className="text-emerald-600">Free</span> M-Pesa Integration Platform.
           </h1>
           <p className="text-lg md:text-xl text-zinc-600 max-w-2xl mx-auto mb-10 leading-relaxed">
-            Everything you need to manage sales, track inventory, and accept M-Pesa payments in one unified platform. Built for modern Kenyan businesses.
+            Mpesa Connect is a completely free-to-use business management and M-Pesa integration application. All you need is your M-Pesa Paybill or Till Number and your API credentials to get started.
           </p>
           <div className="flex flex-col sm:flex-row justify-center items-center gap-4">
             <Link 

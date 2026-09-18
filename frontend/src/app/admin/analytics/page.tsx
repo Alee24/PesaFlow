@@ -5,7 +5,7 @@ import DashboardLayout from '@/components/layout/DashboardLayout';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import api from '@/lib/api';
-import { DollarSign, ShoppingCart, Users, TrendingUp, Award, Download, Calendar, PieChart as PieChartIcon } from 'lucide-react';
+import { DollarSign, ShoppingCart, Users, TrendingUp, Award, Download, Calendar, PieChart as PieChartIcon, Globe, MapPin, Clock } from 'lucide-react';
 import { LineChart, Line, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
 const COLORS = ['#10b981', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6'];
@@ -16,6 +16,7 @@ export default function AdminAnalyticsPage() {
     const [products, setProducts] = useState<any[]>([]);
     const [trends, setTrends] = useState<any[]>([]);
     const [paymentMethods, setPaymentMethods] = useState<any[]>([]);
+    const [visitors, setVisitors] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [dateRange, setDateRange] = useState({ days: 30 });
 
@@ -26,18 +27,20 @@ export default function AdminAnalyticsPage() {
     const fetchAnalytics = async () => {
         setLoading(true);
         try {
-            const [overviewRes, merchantsRes, productsRes, trendsRes, paymentRes] = await Promise.all([
+            const [overviewRes, merchantsRes, productsRes, trendsRes, paymentRes, visitorsRes] = await Promise.all([
                 api.get('/admin/analytics/overview'),
                 api.get('/admin/analytics/merchants?limit=10'),
                 api.get('/admin/analytics/products?limit=10'),
                 api.get(`/admin/analytics/trends?days=${dateRange.days}`),
-                api.get('/admin/analytics/payment-methods')
+                api.get('/admin/analytics/payment-methods'),
+                api.get('/analytics/visitors') // Fetch visitors
             ]);
 
             setOverview(overviewRes.data);
             setMerchants(merchantsRes.data);
             setProducts(productsRes.data);
             setTrends(trendsRes.data);
+            setVisitors(visitorsRes.data || []);
 
             // Process payment methods for pie chart
             const methodMap = new Map();
@@ -322,6 +325,59 @@ export default function AdminAnalyticsPage() {
                                         </td>
                                     </tr>
                                 ))}
+                            </tbody>
+                        </table>
+                    </div>
+                </Card>
+
+                {/* Live Site Visitors */}
+                <Card className="p-6 mt-6">
+                    <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-6 flex items-center gap-2">
+                        <Globe className="w-5 h-5 text-emerald-500" />
+                        Live Site Visitors
+                    </h2>
+                    <div className="overflow-x-auto">
+                        <table className="w-full">
+                            <thead>
+                                <tr className="border-b-2 border-gray-200 dark:border-gray-700">
+                                    <th className="text-left py-4 px-4 text-sm font-bold text-gray-700 dark:text-gray-300">IP Address</th>
+                                    <th className="text-left py-4 px-4 text-sm font-bold text-gray-700 dark:text-gray-300">Path</th>
+                                    <th className="text-left py-4 px-4 text-sm font-bold text-gray-700 dark:text-gray-300">Time Spent</th>
+                                    <th className="text-left py-4 px-4 text-sm font-bold text-gray-700 dark:text-gray-300">Location</th>
+                                    <th className="text-left py-4 px-4 text-sm font-bold text-gray-700 dark:text-gray-300">Last Active</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {visitors.map((visitor, index) => (
+                                    <tr key={index} className="border-b border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800/50">
+                                        <td className="py-4 px-4 text-sm text-gray-900 dark:text-gray-300 font-medium">{visitor.ip || 'Unknown'}</td>
+                                        <td className="py-4 px-4 text-sm text-gray-600 dark:text-gray-400">
+                                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                                {visitor.path}
+                                            </span>
+                                        </td>
+                                        <td className="py-4 px-4 text-sm text-gray-600 dark:text-gray-400 flex items-center gap-1">
+                                            <Clock className="w-4 h-4 text-gray-400" />
+                                            {visitor.timeSpent}s
+                                        </td>
+                                        <td className="py-4 px-4 text-sm text-gray-600 dark:text-gray-400">
+                                            <div className="flex items-center gap-1">
+                                                <MapPin className="w-4 h-4 text-gray-400" />
+                                                {visitor.location || 'Unknown'}
+                                            </div>
+                                        </td>
+                                        <td className="py-4 px-4 text-sm text-gray-600 dark:text-gray-400">
+                                            {new Date(visitor.updatedAt).toLocaleString()}
+                                        </td>
+                                    </tr>
+                                ))}
+                                {visitors.length === 0 && (
+                                    <tr>
+                                        <td colSpan={5} className="py-8 text-center text-gray-500 dark:text-gray-400 text-sm">
+                                            No recent visitors found.
+                                        </td>
+                                    </tr>
+                                )}
                             </tbody>
                         </table>
                     </div>
