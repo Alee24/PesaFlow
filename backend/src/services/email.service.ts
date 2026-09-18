@@ -10,53 +10,35 @@ export const sendEmail = async (userId: string, to: string, subject: string, htm
         let fromName = 'Mpesa Connect';
         let fromEmail = 'noreply@mpesaconnect.co.ke';
 
-        // 1. Try merchant-specific SMTP
-        const profile = await prisma.businessProfile.findUnique({ where: { userId } });
+        // Use global SMTP settings configured by Super Admin
+        const globalSettings = await prisma.systemSettings.findFirst();
 
-        if (profile?.smtpHost && profile?.smtpUser && profile?.smtpPass) {
-            console.log('Using merchant SMTP for user:', userId);
+        if (globalSettings?.smtpHost && globalSettings?.smtpUser && globalSettings?.smtpPass) {
+            console.log('Using global SMTP settings');
             transportConfig = {
-                host: profile.smtpHost,
-                port: profile.smtpPort || 587,
-                secure: profile.smtpPort === 465,
+                host: globalSettings.smtpHost,
+                port: globalSettings.smtpPort || 587,
+                secure: globalSettings.smtpPort === 465,
                 auth: {
-                    user: profile.smtpUser,
-                    pass: profile.smtpPass,
+                    user: globalSettings.smtpUser,
+                    pass: globalSettings.smtpPass,
                 },
             };
-            fromName = profile.companyName || 'Mpesa Connect';
-            fromEmail = profile.smtpUser;
+            fromName = globalSettings.smtpFromName || 'Mpesa Connect';
+            fromEmail = globalSettings.smtpFromEmail || globalSettings.smtpUser;
         } else {
-            // 2. Try global SMTP settings
-            const globalSettings = await prisma.systemSettings.findFirst();
-
-            if (globalSettings?.smtpHost && globalSettings?.smtpUser && globalSettings?.smtpPass) {
-                console.log('Using global SMTP settings');
-                transportConfig = {
-                    host: globalSettings.smtpHost,
-                    port: globalSettings.smtpPort || 587,
-                    secure: globalSettings.smtpPort === 465,
-                    auth: {
-                        user: globalSettings.smtpUser,
-                        pass: globalSettings.smtpPass,
-                    },
-                };
-                fromName = globalSettings.smtpFromName || 'Mpesa Connect';
-                fromEmail = globalSettings.smtpFromEmail || globalSettings.smtpUser;
-            } else {
-                // 3. Fallback to environment variables
-                console.log('Using environment SMTP settings');
-                transportConfig = {
-                    host: process.env.SMTP_HOST || 'mail.mpesaconnect.co.ke',
-                    port: Number(process.env.SMTP_PORT) || 587,
-                    secure: process.env.SMTP_SECURE === 'true' || Number(process.env.SMTP_PORT) === 465,
-                    auth: {
-                        user: process.env.SMTP_USER || 'system@mpesaconnect.co.ke',
-                        pass: process.env.SMTP_PASS || '',
-                    },
-                };
-                fromEmail = process.env.SMTP_USER || 'system@mpesaconnect.co.ke';
-            }
+            // Fallback to environment variables
+            console.log('Using environment SMTP settings');
+            transportConfig = {
+                host: process.env.SMTP_HOST || 'mail.mpesaconnect.co.ke',
+                port: Number(process.env.SMTP_PORT) || 587,
+                secure: process.env.SMTP_SECURE === 'true' || Number(process.env.SMTP_PORT) === 465,
+                auth: {
+                    user: process.env.SMTP_USER || 'system@mpesaconnect.co.ke',
+                    pass: process.env.SMTP_PASS || '',
+                },
+            };
+            fromEmail = process.env.SMTP_USER || 'system@mpesaconnect.co.ke';
         }
 
         if (!transportConfig) {
