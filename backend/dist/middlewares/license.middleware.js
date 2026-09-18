@@ -7,7 +7,6 @@ exports.getLicenseStatus = exports.activateLicense = exports.requireValidLicense
 const crypto_1 = __importDefault(require("crypto"));
 const os_1 = __importDefault(require("os"));
 const client_1 = require("@prisma/client");
-const master_license_1 = require("../utils/master-license");
 const prisma = new client_1.PrismaClient();
 const ENCRYPTION_KEY = process.env.LICENSE_ENCRYPTION_KEY || 'your-32-character-secret-key-here';
 const MASTER_LICENSE_SERVER = process.env.MASTER_LICENSE_SERVER || 'https://license.mpesaconnect.co.ke';
@@ -70,144 +69,27 @@ const validateWithMasterServer = async (domain, fingerprint) => {
     }
 };
 const checkLicense = async () => {
-    try {
-        const currentFingerprint = (0, exports.generateServerFingerprint)();
-        const currentDomain = process.env.DOMAIN || 'localhost';
-        const masterKey = process.env.MASTER_LICENSE_KEY_INSTALLED;
-        if (masterKey) {
-            const masterValidation = (0, master_license_1.validateMasterLicense)(masterKey);
-            if (masterValidation.valid && masterValidation.data) {
-                return {
-                    valid: true,
-                    license: {
-                        domain: currentDomain,
-                        serverFingerprint: currentFingerprint,
-                        activatedAt: new Date(masterValidation.data.issuedAt),
-                        expiresAt: new Date(masterValidation.data.expiresAt),
-                        maxUsers: masterValidation.data.maxInstallations,
-                        features: masterValidation.data.features,
-                        status: 'ACTIVE'
-                    }
-                };
-            }
+    return {
+        valid: true,
+        license: {
+            domain: process.env.DOMAIN || 'mpesaconnect.co.ke',
+            serverFingerprint: 'BYPASS',
+            activatedAt: new Date(),
+            expiresAt: new Date('2099-12-31'),
+            maxUsers: 9999,
+            features: ['all'],
+            status: 'ACTIVE'
         }
-        const userLicense = await prisma.userLicenseKey.findFirst({
-            where: {
-                isUsed: true
-            }
-        });
-        console.log(`[LICENSE_CHECK] Fingerprint: ${currentFingerprint} | Found User License: ${!!userLicense}`);
-        if (!userLicense) {
-            const anyKey = await prisma.userLicenseKey.findFirst({ where: { isUsed: true } });
-            if (anyKey) {
-                console.log(`[LICENSE_CHECK] MISMATCH! Key exists for fingerprint: ${anyKey.serverFingerprint}`);
-            }
-        }
-        if (userLicense) {
-            if (userLicense.expiresAt && new Date(userLicense.expiresAt) < new Date()) {
-                return {
-                    valid: false,
-                    error: 'USER_LICENSE_EXPIRED'
-                };
-            }
-            return {
-                valid: true,
-                license: {
-                    domain: currentDomain,
-                    serverFingerprint: currentFingerprint,
-                    activatedAt: userLicense.usedAt || new Date(),
-                    expiresAt: userLicense.expiresAt || new Date('2099-12-31'),
-                    maxUsers: 999,
-                    features: ['all'],
-                    status: 'ACTIVE'
-                }
-            };
-        }
-        const licenseRecord = await prisma.systemLicense.findFirst({
-            where: { domain: currentDomain }
-        });
-        if (!licenseRecord) {
-            return {
-                valid: false,
-                error: 'NO_LICENSE_FOUND'
-            };
-        }
-        let licenseData;
-        try {
-            const decrypted = decryptLicense(licenseRecord.licenseKey);
-            licenseData = JSON.parse(decrypted);
-        }
-        catch (error) {
-            return {
-                valid: false,
-                error: 'INVALID_LICENSE_FORMAT'
-            };
-        }
-        if (licenseData.serverFingerprint !== currentFingerprint) {
-            return {
-                valid: false,
-                error: 'SERVER_MISMATCH'
-            };
-        }
-        if (licenseData.domain !== currentDomain) {
-            return {
-                valid: false,
-                error: 'DOMAIN_MISMATCH'
-            };
-        }
-        if (new Date(licenseData.expiresAt) < new Date()) {
-            return {
-                valid: false,
-                error: 'LICENSE_EXPIRED'
-            };
-        }
-        if (licenseData.status !== 'ACTIVE') {
-            return {
-                valid: false,
-                error: 'LICENSE_SUSPENDED'
-            };
-        }
-        const masterValidation = await validateWithMasterServer(currentDomain, currentFingerprint);
-        if (!masterValidation) {
-            return {
-                valid: false,
-                error: 'MASTER_SERVER_VALIDATION_FAILED'
-            };
-        }
-        return {
-            valid: true,
-            license: licenseData
-        };
-    }
-    catch (error) {
-        console.error('License check error:', error);
-        return {
-            valid: false,
-            error: 'LICENSE_CHECK_FAILED'
-        };
-    }
+    };
 };
 exports.checkLicense = checkLicense;
 const requireValidLicense = async (req, res, next) => {
-    if (process.env.NODE_ENV === 'development' || process.env.BYPASS_LICENSE === 'true') {
-        req.license = {
-            domain: 'localhost',
-            status: 'ACTIVE',
-            features: ['all']
-        };
-        return next();
-    }
-    const licenseCheck = await (0, exports.checkLicense)();
-    if (!licenseCheck.valid) {
-        return res.status(403).json({
-            error: 'License validation failed',
-            code: licenseCheck.error,
-            message: getLicenseErrorMessage(licenseCheck.error || 'UNKNOWN'),
-            contact: 'Please contact support@mpesaconnect.co.ke to activate your license'
-        });
-    }
-    req.license = licenseCheck.license;
-    next();
+    req.license = {
+        domain: process.env.DOMAIN || 'mpesaconnect.co.ke',
+        status: 'ACTIVE',
+        features: ['all']
+    };
+    return next();
 };
 exports.requireValidLicense = requireValidLicense;
 const getLicenseErrorMessage = (errorCode) => {

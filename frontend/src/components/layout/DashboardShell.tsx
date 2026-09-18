@@ -6,8 +6,8 @@ import { usePathname, useRouter } from 'next/navigation';
 import {
     LayoutDashboard, ShoppingCart, Package, CreditCard, ArrowLeftRight, Settings,
     LogOut, User, Store, FileText, Bell, X, CheckCircle, AlertCircle, Info, Lock,
-    ShieldCheck, TrendingUp, BarChart3, Users, Wallet, MessageSquare, Key, Sun, Moon, Globe,
-    ChevronDown, ChevronRight
+    ShieldCheck, TrendingUp, BarChart3, Users, Wallet, MessageSquare, Key, Globe,
+    ChevronRight, Receipt, Zap, Building2
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useState, useEffect, useRef } from 'react';
@@ -15,47 +15,49 @@ import { formatDistanceToNow } from 'date-fns';
 import api from '@/lib/api';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTheme } from '@/contexts/ThemeContext';
-// import { ThemeToggle } from '../ui/ThemeToggle'; // Removed due to missing file
 
-export const menuGroups = [
+// Navigation structure - flat, clear, no collapsing required
+export const navSections = [
     {
-        title: 'Core Operations',
-        icon: Store,
+        label: null, // No label for top-level items
         items: [
-            { name: 'POS', href: '/pos', icon: ShoppingCart, feature: 'POS' },
-            { name: 'Products', href: '/products', icon: Package, feature: null },
-            { name: 'Sales', href: '/sales', icon: TrendingUp, feature: null },
-            { name: 'CRM', href: '/customers', icon: Users, feature: 'CRM' },
-            { name: 'Kiosk Mode', href: '/pos/login', icon: Store, feature: 'POS' },
+            { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
+            { name: 'Analytics', href: '/analytics', icon: BarChart3, feature: 'ANALYTICS' },
         ]
     },
     {
-        title: 'Finance & Billing',
-        icon: Wallet,
+        label: 'Sales & Products',
+        items: [
+            { name: 'Point of Sale', href: '/pos', icon: ShoppingCart },
+            { name: 'Products', href: '/products', icon: Package },
+            { name: 'Sales History', href: '/sales', icon: Receipt },
+            { name: 'Customers (CRM)', href: '/customers', icon: Users, feature: 'CRM' },
+            { name: 'Kiosk Mode', href: '/pos/login', icon: Store },
+        ]
+    },
+    {
+        label: 'Finance',
         items: [
             { name: 'Invoices', href: '/invoices', icon: FileText, feature: 'invoices' },
-            { name: 'Wallet', href: '/wallet', icon: Wallet, feature: null },
-            { name: 'Withdrawals', href: '/withdrawals', icon: CreditCard, feature: null },
+            { name: 'Wallet', href: '/wallet', icon: Wallet },
+            { name: 'Withdrawals', href: '/withdrawals', icon: CreditCard },
             { name: 'Bulk Payments', href: '/bulk-payments', icon: ArrowLeftRight, feature: 'MPESA_BULK' },
         ]
     },
     {
-        title: 'Management',
-        icon: Settings,
+        label: 'Account',
         items: [
-            { name: 'Settings', href: '/settings', icon: Settings, feature: null },
+            { name: 'Settings', href: '/settings', icon: Settings },
             { name: 'Team', href: '/team', icon: Users, feature: 'TEAM_MANAGEMENT' },
-            { name: 'Subscription', href: '/subscription', icon: ShieldCheck, feature: null },
-            { name: 'Support', href: '/support', icon: MessageSquare, feature: null },
+            { name: 'Subscription', href: '/subscription', icon: ShieldCheck },
+            { name: 'Support', href: '/support', icon: MessageSquare },
         ]
     },
     {
-        title: 'Overview & Admin',
-        icon: LayoutDashboard,
+        label: 'Administration',
+        role: 'ADMIN',
         items: [
-            { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard, feature: null },
-            { name: 'Analytics', href: '/analytics', icon: BarChart3, feature: 'ANALYTICS' },
-            { name: 'Admin Dashboard', href: '/admin', icon: LayoutDashboard, role: 'ADMIN' },
+            { name: 'Admin Dashboard', href: '/admin', icon: Building2, role: 'ADMIN' },
             { name: 'System Dashboard', href: '/admin/system-dashboard', icon: TrendingUp, role: 'ADMIN' },
             { name: 'System Health', href: '/admin/system-health', icon: ShieldCheck, role: 'ADMIN' },
             { name: 'License', href: '/admin/license', icon: Key, role: 'ADMIN' },
@@ -69,6 +71,9 @@ export const menuGroups = [
     }
 ];
 
+// Keep old export for any existing imports
+export const menuGroups = navSections;
+
 export function Sidebar({ user, isMobileOpen, setIsMobileOpen }: {
     user?: any;
     isMobileOpen?: boolean;
@@ -77,126 +82,126 @@ export function Sidebar({ user, isMobileOpen, setIsMobileOpen }: {
     const { logout } = useAuth();
     const { theme, setTheme } = useTheme();
     const pathname = usePathname();
-    const router = useRouter();
-    const [openGroups, setOpenGroups] = useState<string[]>(['Core Operations']);
-
-    const toggleGroup = (groupTitle: string) => {
-        if (groupTitle === 'Core Operations') return; // Permanently open
-        setOpenGroups(prev => {
-            if (prev.includes(groupTitle)) {
-                return ['Core Operations']; // Close it, back to Core only
-            } else {
-                return ['Core Operations', groupTitle]; // Open it along with Core
-            }
-        });
-    };
 
     return (
         <>
             {/* Mobile Overlay */}
             {isMobileOpen && (
                 <div
-                    className="fixed inset-0 bg-black/50 z-40 md:hidden"
+                    className="fixed inset-0 bg-black/40 z-40 md:hidden"
                     onClick={() => setIsMobileOpen?.(false)}
                 />
             )}
 
             {/* Sidebar */}
             <aside className={cn(
-                "fixed left-0 top-0 z-50 h-screen w-64 bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800 transition-transform duration-300 ease-in-out",
+                "fixed left-0 top-0 z-50 h-screen w-60 flex flex-col bg-zinc-950 border-r border-zinc-800 transition-transform duration-300 ease-in-out",
                 "md:translate-x-0 md:z-40",
                 isMobileOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
             )}>
-                <div className="flex h-16 items-center justify-between border-b border-gray-200 dark:border-gray-800 px-6">
-                    <div className="flex items-center gap-2 font-bold text-xl text-indigo-600 dark:text-indigo-400 animate-fade-in">
-                        <Store className="w-6 h-6 hover:rotate-12 transition-transform duration-300" />
-                        <span className="bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 to-violet-600">Mpesa Connect</span>
-                    </div>
-                    {/* Close button for mobile */}
+                {/* Logo / Brand */}
+                <div className="flex h-14 shrink-0 items-center justify-between px-4 border-b border-zinc-800">
+                    <Link href="/dashboard" className="flex items-center gap-2.5" onClick={() => setIsMobileOpen?.(false)}>
+                        <div className="w-7 h-7 rounded-lg bg-emerald-500 flex items-center justify-center">
+                            <Zap className="w-4 h-4 text-white" fill="white" />
+                        </div>
+                        <span className="font-bold text-[15px] text-white tracking-tight">Mpesa Connect</span>
+                    </Link>
                     <button
                         onClick={() => setIsMobileOpen?.(false)}
-                        className="md:hidden p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800"
+                        className="md:hidden p-1.5 rounded-md text-zinc-400 hover:text-white hover:bg-zinc-800"
                     >
-                        <X className="w-5 h-5" />
+                        <X className="w-4 h-4" />
                     </button>
                 </div>
 
-                <nav className="p-4 space-y-1 overflow-y-auto h-[calc(100vh-8rem)] custom-scrollbar">
-                    {menuGroups.map((group) => {
-                        // Filter items visible to the current user
-                        const visibleItems = group.items.filter((item: any) => {
+                {/* Navigation */}
+                <nav className="flex-1 overflow-y-auto py-3 px-3 space-y-5">
+                    {navSections.map((section, sIdx) => {
+                        // Filter items by role
+                        const visibleItems = section.items.filter((item: any) => {
                             if (item.role === 'ADMIN' && user?.role !== 'ADMIN') return false;
                             return true;
                         });
-                        // Skip entire group if no visible items
+
+                        // Skip admin section entirely for non-admins
+                        if (section.role === 'ADMIN' && user?.role !== 'ADMIN') return null;
                         if (visibleItems.length === 0) return null;
 
-                        const isOpen = openGroups.includes(group.title);
-
                         return (
-                            <div key={group.title}>
-                                <button
-                                    onClick={() => toggleGroup(group.title)}
-                                    className="w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-50 dark:text-gray-400 dark:hover:bg-gray-800 transition-colors"
-                                >
-                                    <div className="flex items-center gap-2">
-                                        <group.icon className="w-4 h-4" />
-                                        <span>{group.title}</span>
-                                    </div>
-                                    <ChevronDown className={cn(
-                                        "w-4 h-4 transition-transform duration-200",
-                                        isOpen ? "rotate-180" : "",
-                                        group.title === 'Core Operations' ? "hidden" : ""
-                                    )} />
-                                </button>
-                                {isOpen && (
-                                    <div className="ml-6 mt-1 space-y-1">
-                                        {visibleItems.map((item: any) => {
-
-                                            const isActive = pathname === item.href ||
-                                                (pathname.startsWith(item.href) && item.href !== '/');
-
-                                            return (
-                                                <Link
-                                                    key={item.name}
-                                                    href={item.href}
-                                                    onClick={() => setIsMobileOpen?.(false)}
-                                                    className={cn(
-                                                        "flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-all duration-200",
-                                                        isActive
-                                                            ? "bg-indigo-600 text-white shadow-md"
-                                                            : "text-gray-600 hover:bg-gray-50 dark:text-gray-400 dark:hover:bg-gray-800"
-                                                    )}
-                                                >
-                                                    <item.icon className="w-4 h-4" />
-                                                    <span>{item.name}</span>
-                                                </Link>
-                                            );
-                                        })}
-                                    </div>
+                            <div key={sIdx}>
+                                {section.label && (
+                                    <p className="px-2 mb-1.5 text-[10px] font-semibold uppercase tracking-widest text-zinc-500">
+                                        {section.label}
+                                    </p>
                                 )}
+                                <div className="space-y-0.5">
+                                    {visibleItems.map((item: any) => {
+                                        const isActive = pathname === item.href ||
+                                            (item.href !== '/dashboard' && item.href !== '/admin' && pathname.startsWith(item.href + '/')) ||
+                                            (item.href !== '/dashboard' && item.href !== '/admin' && pathname === item.href);
+
+                                        return (
+                                            <Link
+                                                key={item.name}
+                                                href={item.href}
+                                                onClick={() => setIsMobileOpen?.(false)}
+                                                className={cn(
+                                                    "flex items-center gap-2.5 px-2.5 py-2 rounded-md text-sm font-medium transition-all duration-150",
+                                                    isActive
+                                                        ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
+                                                        : "text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800/60"
+                                                )}
+                                            >
+                                                <item.icon className={cn("w-4 h-4 shrink-0", isActive ? "text-emerald-400" : "text-zinc-500")} />
+                                                <span className="truncate">{item.name}</span>
+                                                {isActive && <div className="ml-auto w-1.5 h-1.5 rounded-full bg-emerald-400" />}
+                                            </Link>
+                                        );
+                                    })}
+                                </div>
                             </div>
                         );
                     })}
                 </nav>
 
-                <div className="absolute bottom-0 w-full p-4 border-t border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900">
+                {/* Bottom: User Info + Sign Out */}
+                <div className="shrink-0 border-t border-zinc-800 p-3 space-y-2">
+                    {/* Theme Toggle */}
+                    <button
+                        onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+                        className="w-full flex items-center gap-2.5 px-2.5 py-2 rounded-md text-sm text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800/60 transition-all"
+                    >
+                        <span className="text-base">{theme === 'dark' ? '☀️' : '🌙'}</span>
+                        <span>{theme === 'dark' ? 'Light Mode' : 'Dark Mode'}</span>
+                    </button>
+
+                    {/* User profile mini */}
+                    {user && (
+                        <div className="flex items-center gap-2.5 px-2.5 py-2 rounded-md bg-zinc-900 border border-zinc-800">
+                            <div className="w-7 h-7 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 text-xs font-bold shrink-0">
+                                {(user.name || user.email || 'U').charAt(0).toUpperCase()}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                                <p className="text-xs font-medium text-zinc-200 truncate">{user.name || user.email}</p>
+                                <p className="text-[10px] text-zinc-500 capitalize">{user.role?.toLowerCase() || 'Merchant'}</p>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Sign Out */}
                     <button
                         onClick={logout}
-                        className="flex items-center justify-between w-full px-4 py-3 mt-auto text-red-600 bg-red-50 dark:bg-red-900/10 hover:bg-red-100 dark:hover:bg-red-900/30 rounded-xl text-sm font-bold shadow-sm transition-all duration-200 border border-red-100 dark:border-red-900/30"
+                        className="w-full flex items-center gap-2.5 px-2.5 py-2 rounded-md text-sm text-red-400 hover:text-red-300 hover:bg-red-500/5 transition-all"
                     >
-                        <div className="flex items-center gap-3">
-                            <LogOut className="w-5 h-5" />
-                            <span>Sign Out</span>
-                        </div>
+                        <LogOut className="w-4 h-4 shrink-0" />
+                        <span>Sign Out</span>
                     </button>
                 </div>
             </aside>
         </>
     );
 }
-
-
 
 
 export function Header({ user, onMenuClick }: {
@@ -207,41 +212,17 @@ export function Header({ user, onMenuClick }: {
     const [notifications, setNotifications] = useState<any[]>([]);
     const [showUserMenu, setShowUserMenu] = useState(false);
     const pathname = usePathname();
-    const router = useRouter();
     const prevCountRef = useRef(0);
-
-    const playBeep = () => {
-        try {
-            const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
-            if (!AudioContextClass) return;
-            const audioCtx = new AudioContextClass();
-            const oscillator = audioCtx.createOscillator();
-            const gainNode = audioCtx.createGain();
-            oscillator.connect(gainNode);
-            gainNode.connect(audioCtx.destination);
-            oscillator.type = 'sine';
-            oscillator.frequency.setValueAtTime(660, audioCtx.currentTime);
-            gainNode.gain.setValueAtTime(0, audioCtx.currentTime);
-            gainNode.gain.linearRampToValueAtTime(0.05, audioCtx.currentTime + 0.01);
-            gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.15);
-            oscillator.start(audioCtx.currentTime);
-            oscillator.stop(audioCtx.currentTime + 0.15);
-        } catch (e) { }
-    };
 
     const fetchNotifications = async () => {
         try {
             const res = await api.get('/notifications');
             const newNotifs = res.data;
             const newUnread = newNotifs.filter((n: any) => !n.read).length;
-
-            if (newUnread > prevCountRef.current) {
-                playBeep();
-            }
             prevCountRef.current = newUnread;
             setNotifications(newNotifs);
         } catch (error) {
-            console.error("Failed to fetch notifications");
+            // Silent fail
         }
     };
 
@@ -260,135 +241,102 @@ export function Header({ user, onMenuClick }: {
         if (unreadCount > 0) {
             try {
                 await api.post('/notifications/read');
-                // Optimistically mark all as read
                 setNotifications(prev => prev.map(n => ({ ...n, read: true })));
-            } catch (e) { console.error(e); }
+            } catch (e) { }
         }
     };
 
     const { logout } = useAuth();
 
-    const handleLogout = () => {
-        logout();
-    };
-
-    const getIcon = (type: string) => {
+    const getNotifIcon = (type: string) => {
         switch (type) {
-            case 'success': return <CheckCircle className="w-4 h-4 text-green-500" />;
+            case 'success': return <CheckCircle className="w-4 h-4 text-emerald-500" />;
             case 'error': return <AlertCircle className="w-4 h-4 text-red-500" />;
             default: return <Info className="w-4 h-4 text-blue-500" />;
         }
     };
 
-    // Breadcrumbs
-    const pathSegments = pathname.split('/').filter(Boolean);
+    // Page title from path
+    const getPageTitle = () => {
+        const segments = pathname.split('/').filter(Boolean);
+        if (segments.length === 0) return 'Dashboard';
+        const last = segments[segments.length - 1];
+        return last.charAt(0).toUpperCase() + last.slice(1).replace(/-/g, ' ');
+    };
 
     return (
         <>
-            <header className="sticky top-0 z-30 flex h-16 w-full items-center justify-between border-b border-gray-200 bg-white dark:bg-gray-900/95 backdrop-blur-sm px-4 md:px-6 shadow-sm transition-all duration-300">
-                <div className="flex items-center gap-4">
+            <header className="sticky top-0 z-30 flex h-14 w-full items-center justify-between border-b border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 px-4 md:px-6">
+                <div className="flex items-center gap-3">
                     {/* Mobile Menu Button */}
                     <button
                         onClick={onMenuClick}
-                        className="md:hidden p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                        className="md:hidden p-1.5 rounded-md text-zinc-500 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
                         aria-label="Open menu"
                     >
-                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 6h16M4 12h16M4 18h16" />
                         </svg>
                     </button>
 
-                    {/* Breadcrumbs */}
-                    <div className="flex items-center gap-2 text-sm">
-                        {pathSegments.map((segment, index) => (
-                            <div key={index} className="flex items-center gap-2">
-                                {index > 0 && <span className="text-gray-400">/</span>}
-                                <span className={index === pathSegments.length - 1 ? "text-gray-900 dark:text-white font-medium" : "text-gray-500 dark:text-gray-400"}>
-                                    {segment.charAt(0).toUpperCase() + segment.slice(1)}
-                                </span>
-                            </div>
-                        ))}
-                    </div>
-
-                    {/* Business Menu - Left aligned */}
-                    <div className="hidden lg:flex items-center gap-1 ml-8">
-                        {menuGroups.find(g => g.title === 'Business')?.items.map(item => {
-                            // Access Check
-                            if ((item as any).role === 'ADMIN' && user?.role !== 'ADMIN') return null;
-
-                            // Active Check
-                            const isActive = pathname === item.href || (pathname.startsWith(item.href) && item.href !== '/dashboard');
-
-                            return (
-                                <Link
-                                    key={item.name}
-                                    href={item.href}
-                                    className={cn(
-                                        "flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200",
-                                        isActive
-                                            ? "bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow-lg shadow-blue-500/50 ring-2 ring-blue-400/50"
-                                            : "text-gray-600 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-300 dark:hover:bg-gray-800 dark:hover:text-white"
-                                    )}
-                                >
-                                    <item.icon className={cn("w-4 h-4", isActive && "drop-shadow-[0_0_8px_rgba(255,255,255,0.8)]")} />
-                                    <span className={cn(isActive && "font-bold")}>{item.name}</span>
-                                </Link>
-                            );
-                        })}
+                    {/* Page Title */}
+                    <div className="flex items-center gap-2">
+                        <h1 className="text-sm font-semibold text-zinc-900 dark:text-white">{getPageTitle()}</h1>
                     </div>
                 </div>
 
-                <div className="flex items-center gap-2 md:gap-4 ml-auto">
-                    {/* Refresh Button */}
-                    <button
-                        onClick={() => window.location.reload()}
-                        className="hidden md:flex items-center gap-2 px-3 py-1.5 text-xs font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg shadow-sm transition-all hover:scale-105 active:scale-95"
-                    >
-                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                        </svg>
-                        Refresh Data
-                    </button>
+                <div className="flex items-center gap-1 md:gap-2">
                     {/* Notifications */}
                     <button
                         onClick={handleOpenNotifications}
-                        className="p-2 text-gray-500 hover:text-indigo-600 transition-colors relative rounded-full hover:bg-gray-100 dark:hover:bg-gray-800"
+                        className="relative p-2 rounded-md text-zinc-500 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
                     >
-                        <Bell className="w-5 h-5" />
+                        <Bell className="w-4.5 h-4.5" />
                         {unreadCount > 0 && (
-                            <span className="absolute top-1 right-2 w-2 h-2 bg-red-500 rounded-full animate-pulse border border-white"></span>
+                            <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-emerald-500 rounded-full border-2 border-white dark:border-zinc-950" />
                         )}
                     </button>
+
+                    {/* Divider */}
+                    <div className="w-px h-5 bg-zinc-200 dark:bg-zinc-800 mx-1" />
 
                     {/* User Profile */}
                     <div className="relative">
                         <button
                             onClick={() => setShowUserMenu(!showUserMenu)}
                             onBlur={() => setTimeout(() => setShowUserMenu(false), 200)}
-                            className="flex items-center gap-3 pl-4 border-l border-gray-200 dark:border-gray-700 hover:opacity-80 transition-opacity group"
+                            className="flex items-center gap-2.5 px-2 py-1.5 rounded-md hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
                         >
-                            <div className="flex flex-col text-right hidden sm:block">
-                                <span className="text-sm font-medium text-gray-900 dark:text-white group-hover:text-indigo-600 transition-colors">
-                                    {user?.name || 'User'}
-                                </span>
-                                <span className="text-xs text-gray-500 capitalize">{user?.role?.toLowerCase() || 'Merchant'}</span>
+                            <div className="w-7 h-7 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-600 dark:text-emerald-400 text-xs font-bold">
+                                {(user?.name || user?.email || 'U').charAt(0).toUpperCase()}
                             </div>
-                            <div className="h-10 w-10 rounded-full bg-indigo-100 dark:bg-indigo-900 flex items-center justify-center text-indigo-700 dark:text-indigo-300 group-hover:bg-indigo-200 transition-colors ring-2 ring-transparent group-hover:ring-indigo-100">
-                                <User className="w-5 h-5" />
+                            <div className="hidden sm:flex flex-col text-left">
+                                <span className="text-xs font-semibold text-zinc-900 dark:text-white leading-tight">{user?.name || user?.email?.split('@')[0] || 'User'}</span>
+                                <span className="text-[10px] text-zinc-500 capitalize leading-tight">{user?.role?.toLowerCase() || 'merchant'}</span>
                             </div>
+                            <ChevronRight className="hidden sm:block w-3.5 h-3.5 text-zinc-400 rotate-90" />
                         </button>
 
                         {/* Dropdown */}
                         {showUserMenu && (
-                            <div className="absolute right-0 top-12 w-48 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 py-1 z-50 animate-in zoom-in-95 duration-100" onMouseDown={(e) => e.preventDefault()}>
-                                <Link href="/profile" onClick={() => setShowUserMenu(false)} className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700">
+                            <div
+                                className="absolute right-0 top-11 w-44 bg-white dark:bg-zinc-900 rounded-xl shadow-xl border border-zinc-200 dark:border-zinc-700 py-1.5 z-50"
+                                onMouseDown={(e) => e.preventDefault()}
+                            >
+                                <Link href="/profile" onClick={() => setShowUserMenu(false)} className="flex items-center gap-2.5 px-3.5 py-2 text-sm text-zinc-700 dark:text-zinc-200 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors">
+                                    <User className="w-3.5 h-3.5 text-zinc-400" />
                                     Profile
                                 </Link>
-                                <Link href="/settings" onClick={() => setShowUserMenu(false)} className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700">
+                                <Link href="/settings" onClick={() => setShowUserMenu(false)} className="flex items-center gap-2.5 px-3.5 py-2 text-sm text-zinc-700 dark:text-zinc-200 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors">
+                                    <Settings className="w-3.5 h-3.5 text-zinc-400" />
                                     Settings
                                 </Link>
-                                <div className="border-t border-gray-100 dark:border-gray-700 my-1"></div>
-                                <button onClick={() => { setShowUserMenu(false); handleLogout(); }} className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20">
+                                <div className="my-1 border-t border-zinc-100 dark:border-zinc-800" />
+                                <button
+                                    onClick={() => { setShowUserMenu(false); logout(); }}
+                                    className="w-full flex items-center gap-2.5 px-3.5 py-2 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                                >
+                                    <LogOut className="w-3.5 h-3.5" />
                                     Sign out
                                 </button>
                             </div>
@@ -397,49 +345,58 @@ export function Header({ user, onMenuClick }: {
                 </div>
             </header>
 
-            {/* Notification Center Modal */}
+            {/* Notification Panel */}
             {showNotifications && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm animate-in fade-in duration-200" onClick={() => setShowNotifications(false)}>
+                <div
+                    className="fixed inset-0 z-50 flex items-start justify-end pt-16 pr-4 bg-black/20 backdrop-blur-sm"
+                    onClick={() => setShowNotifications(false)}
+                >
                     <div
-                        className="bg-white dark:bg-gray-900 w-full max-w-md rounded-2xl shadow-2xl overflow-hidden border border-gray-100 dark:border-gray-800 animate-in zoom-in-95 duration-200 scale-100"
+                        className="w-full max-w-sm bg-white dark:bg-zinc-900 rounded-xl shadow-2xl border border-zinc-200 dark:border-zinc-700 overflow-hidden"
                         onClick={e => e.stopPropagation()}
                     >
-                        <div className="px-6 py-4 border-b border-gray-100 dark:border-gray-800 flex justify-between items-center bg-gray-50/50 dark:bg-gray-800/50">
+                        <div className="px-4 py-3.5 border-b border-zinc-100 dark:border-zinc-800 flex justify-between items-center">
                             <div>
-                                <h3 className="font-bold text-lg text-gray-900 dark:text-white">Notifications</h3>
-                                <p className="text-xs text-gray-500">You have {unreadCount} unread messages</p>
+                                <h3 className="font-semibold text-sm text-zinc-900 dark:text-white">Notifications</h3>
+                                <p className="text-xs text-zinc-500 mt-0.5">{unreadCount} unread</p>
                             </div>
-                            <button onClick={() => setShowNotifications(false)} className="text-gray-400 hover:text-gray-600 transition-colors">
-                                <X className="w-5 h-5" />
+                            <button onClick={() => setShowNotifications(false)} className="p-1.5 rounded-md text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors">
+                                <X className="w-4 h-4" />
                             </button>
                         </div>
-                        <div className="max-h-[400px] overflow-y-auto p-2">
+                        <div className="max-h-[360px] overflow-y-auto">
                             {notifications.length === 0 ? (
-                                <div className="p-8 text-center text-gray-500 text-sm">No notifications</div>
+                                <div className="py-10 text-center">
+                                    <Bell className="w-8 h-8 text-zinc-300 mx-auto mb-2" />
+                                    <p className="text-sm text-zinc-400">No notifications yet</p>
+                                </div>
                             ) : (
                                 notifications.map((note) => (
-                                    <div key={note.id} className={`p-4 hover:bg-gray-50 dark:hover:bg-gray-800/50 rounded-xl transition-colors cursor-pointer flex gap-4 group ${!note.read ? 'bg-indigo-50/50 dark:bg-indigo-900/10' : ''}`}>
-                                        <div className="mt-1 bg-gray-100 dark:bg-gray-800 p-2 rounded-full h-fit group-hover:bg-white transition-colors shadow-sm">
-                                            {getIcon(note.type)}
+                                    <div key={note.id} className={cn(
+                                        "px-4 py-3.5 flex gap-3 border-b border-zinc-50 dark:border-zinc-800/50 last:border-0 hover:bg-zinc-50 dark:hover:bg-zinc-800/40 transition-colors",
+                                        !note.read && "bg-emerald-50/30 dark:bg-emerald-900/5"
+                                    )}>
+                                        <div className="mt-0.5 shrink-0">
+                                            {getNotifIcon(note.type)}
                                         </div>
-                                        <div className="flex-1">
-                                            <div className="flex justify-between items-start">
-                                                <h4 className={`font-semibold text-sm group-hover:text-indigo-600 transition-colors ${!note.read ? 'text-gray-900 dark:text-white' : 'text-gray-600 dark:text-gray-400'}`}>
+                                        <div className="flex-1 min-w-0">
+                                            <div className="flex justify-between items-start gap-2">
+                                                <h4 className={cn("text-xs font-semibold truncate", !note.read ? "text-zinc-900 dark:text-white" : "text-zinc-600 dark:text-zinc-400")}>
                                                     {note.title}
                                                 </h4>
-                                                <span className="text-[10px] text-gray-400 font-medium whitespace-nowrap ml-2">
+                                                <span className="text-[10px] text-zinc-400 shrink-0">
                                                     {formatDistanceToNow(new Date(note.createdAt), { addSuffix: true })}
                                                 </span>
                                             </div>
-                                            <p className="text-xs text-gray-500 mt-1 leading-relaxed">{note.message}</p>
+                                            <p className="text-xs text-zinc-500 mt-0.5 leading-relaxed">{note.message}</p>
                                         </div>
                                     </div>
                                 ))
                             )}
                         </div>
-                        <div className="p-4 border-t border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-800/50 text-center">
-                            <Link href="/notifications" onClick={() => setShowNotifications(false)} className="text-xs font-bold text-indigo-600 hover:text-indigo-700 uppercase tracking-wide">
-                                View All Notifications
+                        <div className="px-4 py-3 border-t border-zinc-100 dark:border-zinc-800 text-center">
+                            <Link href="/notifications" onClick={() => setShowNotifications(false)} className="text-xs font-medium text-emerald-600 hover:text-emerald-700 dark:text-emerald-400 dark:hover:text-emerald-300">
+                                View all notifications →
                             </Link>
                         </div>
                     </div>

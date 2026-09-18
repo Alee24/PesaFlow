@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.testMpesaConnectionService = exports.initiateSTKPush = void 0;
+exports.initiateB2CPayment = exports.testMpesaConnectionService = exports.initiateSTKPush = void 0;
 const axios_1 = __importDefault(require("axios"));
 const client_1 = require("@prisma/client");
 const prisma = new client_1.PrismaClient();
@@ -69,7 +69,7 @@ const getCredentials = async (userId) => {
 };
 const getAccessToken = async (creds) => {
     if (!creds.consumerKey || !creds.consumerSecret) {
-        throw new Error('Missing Consumer Key or Secret');
+        throw new Error('MPESA_NOT_CONFIGURED: Missing Consumer Key or Secret');
     }
     const url = creds.env === 'production'
         ? 'https://api.safaricom.co.ke/oauth/v1/generate?grant_type=client_credentials'
@@ -209,9 +209,15 @@ const initiateSTKPush = async (phoneNumber, amount, reference, userId, items = [
     }
 };
 exports.initiateSTKPush = initiateSTKPush;
-const testMpesaConnectionService = async (userId) => {
+const testMpesaConnectionService = async (userId, providedCreds) => {
     try {
-        const creds = await getCredentials(userId);
+        let creds;
+        if (providedCreds && providedCreds.consumerKey && providedCreds.consumerSecret) {
+            creds = { ...providedCreds };
+        }
+        else {
+            creds = await getCredentials(userId);
+        }
         if (!creds.consumerKey || !creds.consumerSecret) {
             throw new Error("Missing Consumer Key or Secret (Env or Settings)");
         }
@@ -223,4 +229,56 @@ const testMpesaConnectionService = async (userId) => {
     }
 };
 exports.testMpesaConnectionService = testMpesaConnectionService;
+const initiateB2CPayment = async (phoneNumber, amount, reference, userId, description = 'Bulk Payment') => {
+    const creds = await getCredentials(userId);
+    const token = await getAccessToken(creds);
+    const url = creds.env === 'production'
+        ? 'https://api.safaricom.co.ke/mpesa/b2c/v1/paymentrequest'
+        : 'https://sandbox.safaricom.co.ke/mpesa/b2c/v1/paymentrequest';
+    const formattedPhone = phoneNumber.startsWith('0')
+        ? `254${phoneNumber.slice(1)}`
+        : phoneNumber;
+    const requestBody = {
+        InitiatorName: creds.initiatorName,
+        SecurityCredential: creds.password,
+        CommandID: 'BusinessPayment',
+        Amount: amount,
+        PartyA: creds.shortCode,
+        PartyB: formattedPhone,
+        Remarks: description,
+        QueueTimeOutURL: creds.callbackUrl,
+        ResultURL: creds.callbackUrl,
+        Occasion: reference
+    };
+    try {
+        const response = await axios_1.default.post(url, requestBody, {
+            headers: {
+                Authorization: `Bearer ${token}`,
+            },
+        });
+        const wallet = await prisma.wallet.findFirst({ where: { userId } });
+        if (!wallet)
+            throw new Error("Wallet not found for user");
+        await prisma.transaction.create({
+            data: {
+                type: 'WITHDRAWAL',
+                amount: amount,
+                reference: reference,
+                merchantRequestId: response.data.ConversationID || response.data.OriginatorConversationID,
+                checkoutRequestId: response.data.ResponseCode,
+                initiatorUserId: userId,
+                recipientWalletId: wallet.id,
+                status: 'PENDING',
+                metadata: JSON.stringify(response.data)
+            }
+        });
+        return response.data;
+    }
+    catch (error) {
+        console.error('B2C Payment Error:', error.response?.data || error.message);
+        const safaricomError = error.response?.data?.errorMessage || error.message;
+        throw new Error(safaricomError || 'Failed to initiate B2C Payment');
+    }
+};
+exports.initiateB2CPayment = initiateB2CPayment;
 //# sourceMappingURL=mpesa.service.js.map

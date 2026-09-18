@@ -65,7 +65,7 @@ const getCredentials = async (userId?: string) => {
 
 const getAccessToken = async (creds: any) => {
     if (!creds.consumerKey || !creds.consumerSecret) {
-        throw new Error('Missing Consumer Key or Secret');
+        throw new Error('MPESA_NOT_CONFIGURED: Missing Consumer Key or Secret');
     }
 
     const url = creds.env === 'production'
@@ -231,9 +231,15 @@ export const initiateSTKPush = async (
     }
 };
 
-export const testMpesaConnectionService = async (userId?: string) => {
+export const testMpesaConnectionService = async (userId?: string, providedCreds?: { consumerKey: string, consumerSecret: string, env: string }) => {
     try {
-        const creds = await getCredentials(userId);
+        let creds;
+        if (providedCreds && providedCreds.consumerKey && providedCreds.consumerSecret) {
+            creds = { ...providedCreds };
+        } else {
+            creds = await getCredentials(userId);
+        }
+        
         if (!creds.consumerKey || !creds.consumerSecret) {
             throw new Error("Missing Consumer Key or Secret (Env or Settings)");
         }

@@ -1,4 +1,37 @@
 "use strict";
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || (function () {
+    var ownKeys = function(o) {
+        ownKeys = Object.getOwnPropertyNames || function (o) {
+            var ar = [];
+            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
+            return ar;
+        };
+        return ownKeys(o);
+    };
+    return function (mod) {
+        if (mod && mod.__esModule) return mod;
+        var result = {};
+        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
+        __setModuleDefault(result, mod);
+        return result;
+    };
+})();
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.rejectWithdrawal = exports.approveWithdrawal = exports.getAllWithdrawals = exports.requestWithdrawal = exports.getWithdrawals = void 0;
 const client_1 = require("@prisma/client");
@@ -50,6 +83,20 @@ const requestWithdrawal = async (req, res) => {
             where: { id: wallet.id },
             data: { balance: { decrement: totalDeduction } }
         });
+        try {
+            const { NotificationDispatcher } = await Promise.resolve().then(() => __importStar(require('../services/notification-dispatcher.service')));
+            NotificationDispatcher.dispatch({
+                activity: 'WITHDRAWAL_REQUESTED',
+                userId: req.user.userId,
+                amount: requestedAmount,
+                reference: withdrawal.id,
+                title: 'Withdrawal Requested',
+                message: `Withdrawal request for KES ${requestedAmount.toLocaleString()} submitted to ${mpesaNumber || 'account phone'}.`
+            });
+        }
+        catch (notifErr) {
+            console.error('Notification dispatch error:', notifErr);
+        }
         res.status(201).json(withdrawal);
     }
     catch (error) {
@@ -112,6 +159,20 @@ const approveWithdrawal = async (req, res) => {
                 metadata: JSON.stringify({ mpesaNumber: withdrawal.mpesaNumber })
             }
         });
+        try {
+            const { NotificationDispatcher } = await Promise.resolve().then(() => __importStar(require('../services/notification-dispatcher.service')));
+            NotificationDispatcher.dispatch({
+                activity: 'WITHDRAWAL_APPROVED',
+                userId: withdrawal.wallet.userId,
+                amount: Number(withdrawal.amount),
+                reference: withdrawal.id,
+                title: 'Withdrawal Approved',
+                message: `Your withdrawal of KES ${Number(withdrawal.amount).toLocaleString()} has been approved and disbursed.`
+            });
+        }
+        catch (notifErr) {
+            console.error('Notification dispatch error:', notifErr);
+        }
         res.json({ message: 'Withdrawal approved successfully' });
     }
     catch (error) {

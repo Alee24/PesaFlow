@@ -73,7 +73,17 @@ export const updateSettings = async (req: AuthRequest, res: Response) => {
             smtpPass,
             smtpFromName,
             smtpFromEmail,
-            googleAnalyticsId
+            googleAnalyticsId,
+            emailNotificationsEnabled,
+            smsNotificationsEnabled,
+            adminNotificationEmail,
+            adminNotificationPhone,
+            advantaPartnerId,
+            advantaApiKey,
+            advantaShortcode,
+            notifyAdminOnRegister,
+            notifyAdminOnPayment,
+            notifyAdminOnWithdrawal
         } = req.body;
 
         // Validate service charge inputs
@@ -107,6 +117,18 @@ export const updateSettings = async (req: AuthRequest, res: Response) => {
         if (smtpFromName !== undefined) updateData.smtpFromName = smtpFromName || null;
         if (smtpFromEmail !== undefined) updateData.smtpFromEmail = smtpFromEmail || null;
         if (googleAnalyticsId !== undefined) updateData.googleAnalyticsId = googleAnalyticsId || null;
+
+        // Notification Settings
+        if (emailNotificationsEnabled !== undefined) updateData.emailNotificationsEnabled = Boolean(emailNotificationsEnabled);
+        if (smsNotificationsEnabled !== undefined) updateData.smsNotificationsEnabled = Boolean(smsNotificationsEnabled);
+        if (adminNotificationEmail !== undefined) updateData.adminNotificationEmail = adminNotificationEmail || null;
+        if (adminNotificationPhone !== undefined) updateData.adminNotificationPhone = adminNotificationPhone || null;
+        if (advantaPartnerId !== undefined) updateData.advantaPartnerId = advantaPartnerId || null;
+        if (advantaApiKey !== undefined) updateData.advantaApiKey = advantaApiKey || null;
+        if (advantaShortcode !== undefined) updateData.advantaShortcode = advantaShortcode || null;
+        if (notifyAdminOnRegister !== undefined) updateData.notifyAdminOnRegister = Boolean(notifyAdminOnRegister);
+        if (notifyAdminOnPayment !== undefined) updateData.notifyAdminOnPayment = Boolean(notifyAdminOnPayment);
+        if (notifyAdminOnWithdrawal !== undefined) updateData.notifyAdminOnWithdrawal = Boolean(notifyAdminOnWithdrawal);
 
         if (settings) {
             settings = await prisma.systemSettings.update({
@@ -191,5 +213,32 @@ export const sendTestEmail = async (req: AuthRequest, res: Response) => {
             error: 'Failed to send test email',
             details: error.message
         });
+    }
+};
+
+// Send test SMS (admin only)
+export const sendTestSMS = async (req: AuthRequest, res: Response) => {
+    try {
+        const { testPhone, partnerId, apiKey, shortcode } = req.body;
+
+        if (!testPhone) {
+            return res.status(400).json({ error: 'Valid phone number is required' });
+        }
+
+        const { sendAdvantaSMS } = await import('../services/sms.service');
+        const result = await sendAdvantaSMS(
+            testPhone,
+            `[Mpesa Connect Admin] Test SMS: Advanta SMS gateway is operational and verified!`,
+            { partnerId, apiKey, shortcode }
+        );
+
+        if (result.success) {
+            res.json({ message: `Test SMS dispatched successfully to ${testPhone}!`, data: result.data });
+        } else {
+            res.status(400).json({ error: result.error || 'Failed to dispatch test SMS. Please verify credentials.' });
+        }
+    } catch (error: any) {
+        console.error('Test SMS error:', error);
+        res.status(500).json({ error: 'Failed to send test SMS', details: error.message });
     }
 };

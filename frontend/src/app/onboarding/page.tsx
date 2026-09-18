@@ -1,240 +1,245 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
-import { Card } from '@/components/ui/Card';
-import Toast from '@/components/ui/Toast';
+import toast from 'react-hot-toast';
 import api from '@/lib/api';
-import { Building2, FileUp, CheckCircle2, ShieldCheck, LogOut } from 'lucide-react';
 
 export default function OnboardingPage() {
     const router = useRouter();
-
-    // Manual logout since AuthContext is not available
-    const logout = () => {
-        localStorage.removeItem('token');
-        localStorage.removeItem('user');
-        window.location.href = '/auth/login';
-    };
-
-    const [step, setStep] = useState(1); // 1: Business Info, 2: Documents
+    const [step, setStep] = useState(1);
     const [loading, setLoading] = useState(false);
-    const [error, setError] = useState('');
-    const [toast, setToast] = useState({ visible: false, message: '', type: 'info' as 'success' | 'error' | 'info' });
-    const [formData, setFormData] = useState({
+    
+    // Step 1: Profile
+    const [profileData, setProfileData] = useState({
         companyName: '',
+        contactPhone: '',
         location: '',
-        idNumber: '',
+        website: '',
         kraPinNumber: '',
-        dataPolicyAccepted: false,
-        email: '',
-        contactPhone: ''
     });
-    const [files, setFiles] = useState<any>({
-        idFront: null,
-        idBack: null,
-        businessPermit: null,
-        registrationCert: null,
-        kraCert: null,
+    
+    // Step 2: M-Pesa
+    const [mpesaData, setMpesaData] = useState({
+        mpesaConsumerKey: '',
+        mpesaConsumerSecret: '',
+        mpesaShortcode: '',
+        mpesaPasskey: '',
+        mpesaEnv: 'sandbox',
+        useCustomMpesa: false
     });
+    
+    const [logo, setLogo] = useState<File | null>(null);
+    const [mpesaTestStatus, setMpesaTestStatus] = useState<'idle' | 'success' | 'error'>('idle');
 
-    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, field: string) => {
-        if (e.target.files) {
-            setFiles({ ...files, [field]: e.target.files[0] });
+    const handleProfileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setProfileData({ ...profileData, [e.target.name]: e.target.value });
+    };
+
+    const handleMpesaChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+        const { name, value, type } = e.target;
+        if (type === 'checkbox') {
+            setMpesaData({ ...mpesaData, [name]: (e.target as HTMLInputElement).checked });
+        } else {
+            setMpesaData({ ...mpesaData, [name]: value });
         }
     };
 
-    const nextStep = () => {
-        if (step === 1) {
-            if (!formData.companyName || !formData.idNumber || !formData.location) {
-                setError('Please fill in all business details');
-                return;
-            }
-            // Optional KRA PIN Format Check
-            if (formData.kraPinNumber) {
-                const kraRegex = /^[A-Z][0-9]{9}[A-Z]$/i;
-                if (!kraRegex.test(formData.kraPinNumber)) {
-                    setError('Invalid KRA PIN format. Example: P051234567Z');
-                    return;
-                }
-            }
-        }
-        setError('');
-        setStep(step + 1);
-    };
-
-    const prevStep = () => {
-        setStep(step - 1);
-    };
-
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        if (!formData.dataPolicyAccepted) {
-            setError('You must accept the Data Protection Policy');
+    const submitProfile = async () => {
+        if (!profileData.companyName) {
+            toast.error('Company Name is required');
             return;
         }
-
-        setLoading(true);
-        setError('');
-
+        
         try {
-            const data = new FormData();
-            Object.keys(formData).forEach(key => data.append(key, (formData as any)[key]));
-            Object.keys(files).forEach(key => {
-                if (files[key]) data.append(key, files[key]);
-            });
-
-            await api.post('/auth/complete-profile', data, {
-                headers: { 'Content-Type': 'multipart/form-data' }
-            });
-
-            // Update local storage to prevent redirect loop
-            const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
-            localStorage.setItem('user', JSON.stringify({ ...currentUser, isProfileComplete: true }));
-
-            // Redirect to dashboard
-            window.location.href = '/dashboard';
-        } catch (err: any) {
-            setError(err.response?.data?.error || 'Failed to submit profile');
+            setLoading(true);
+            const formData = new FormData();
+            formData.append('companyName', profileData.companyName);
+            formData.append('contactPhone', profileData.contactPhone);
+            formData.append('location', profileData.location);
+            formData.append('website', profileData.website);
+            formData.append('kraPinNumber', profileData.kraPinNumber);
+            
+            if (logo) {
+                formData.append('logo', logo);
+            }
+            
+            await api.put('/profile', formData);
+            toast.success('Business profile saved');
+            setStep(2);
+        } catch (error: any) {
+            toast.error(error.response?.data?.error || 'Failed to save profile');
         } finally {
             setLoading(false);
         }
     };
 
-    const handleSkip = () => {
-        localStorage.setItem('onboarding_skipped', 'true');
-        // Update local user object's isProfileComplete status to avoid immediate dashboard redirects
-        const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
-        localStorage.setItem('user', JSON.stringify({ ...currentUser, isProfileComplete: true }));
-        window.location.href = '/dashboard';
+    const testMpesa = async () => {
+        try {
+            setMpesaTestStatus('idle');
+            const res = await api.post('/mpesa/test', {
+                consumerKey: mpesaData.mpesaConsumerKey,
+                consumerSecret: mpesaData.mpesaConsumerSecret,
+                env: mpesaData.mpesaEnv
+            });
+            setMpesaTestStatus('success');
+            toast.success('M-Pesa Test Successful!');
+        } catch (error: any) {
+            setMpesaTestStatus('error');
+            toast.error(error.response?.data?.message || 'M-Pesa Test Failed');
+        }
+    };
+
+    const finishOnboarding = async (skipMpesa = false) => {
+        try {
+            setLoading(true);
+            
+            const formData = new FormData();
+            if (!skipMpesa && mpesaData.useCustomMpesa) {
+                formData.append('mpesaConsumerKey', mpesaData.mpesaConsumerKey);
+                formData.append('mpesaConsumerSecret', mpesaData.mpesaConsumerSecret);
+                formData.append('mpesaShortcode', mpesaData.mpesaShortcode);
+                formData.append('mpesaPasskey', mpesaData.mpesaPasskey);
+                formData.append('mpesaEnv', mpesaData.mpesaEnv);
+                formData.append('useCustomMpesa', 'true');
+            } else if (skipMpesa) {
+                formData.append('useCustomMpesa', 'false');
+            }
+            
+            formData.append('onboardingCompleted', 'true');
+            formData.append('companyName', profileData.companyName); // Required by schema
+            
+            await api.put('/profile', formData);
+            
+            toast.success('Onboarding complete!');
+            router.push('/admin/system-dashboard');
+        } catch (error: any) {
+            toast.error(error.response?.data?.error || 'Failed to complete onboarding');
+        } finally {
+            setLoading(false);
+        }
     };
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 p-4 py-12">
-            <Toast visible={toast.visible} message={toast.message} type={toast.type} onClose={() => setToast({ ...toast, visible: false })} />
-            <div className="w-full max-w-xl">
-                <div className="text-center mb-8">
-                    <h1 className="text-3xl font-black bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 to-purple-600 tracking-tight">
-                        Complete Setup
-                    </h1>
-                    <p className="text-gray-500 mt-2">Finish your business profile to verify your account</p>
-                </div>
+        <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+            <div className="sm:mx-auto sm:w-full sm:max-w-md">
+                <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
+                    Welcome to PesaFlow!
+                </h2>
+                <p className="mt-2 text-center text-sm text-gray-600">
+                    {step === 1 ? 'Let\'s set up your business profile.' : 'Set up M-Pesa Integration (Optional)'}
+                </p>
+            </div>
 
-                <Card className="shadow-2xl border-none">
-                    <form onSubmit={handleSubmit} className="p-2">
-                        {error && (
-                            <div className="bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 p-4 rounded-xl text-sm mb-6 flex items-center gap-2 border border-red-100 dark:border-red-900/50">
-                                <span className="font-bold">Error:</span> {error}
+            <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
+                <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
+                    {step === 1 && (
+                        <div className="space-y-6">
+                            <Input
+                                label="Company Name *"
+                                name="companyName"
+                                value={profileData.companyName}
+                                onChange={handleProfileChange}
+                            />
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700">Logo</label>
+                                <input
+                                    type="file"
+                                    accept="image/*"
+                                    onChange={(e) => e.target.files && setLogo(e.target.files[0])}
+                                    className="mt-1 block w-full text-sm text-gray-500"
+                                />
                             </div>
-                        )}
+                            <Input
+                                label="Contact Phone"
+                                name="contactPhone"
+                                value={profileData.contactPhone}
+                                onChange={handleProfileChange}
+                            />
+                            <Input
+                                label="Location"
+                                name="location"
+                                value={profileData.location}
+                                onChange={handleProfileChange}
+                            />
+                            <Button className="w-full" onClick={submitProfile} isLoading={loading}>
+                                Continue
+                            </Button>
+                        </div>
+                    )}
 
-                        {step === 1 && (
-                            <div className="space-y-4 animate-in slide-in-from-right duration-500">
-                                <div className="flex items-center gap-2 text-indigo-600 mb-2">
-                                    <Building2 className="w-5 h-5" />
-                                    <h3 className="font-semibold">Business Identity</h3>
-                                </div>
+                    {step === 2 && (
+                        <div className="space-y-6">
+                            <div className="flex items-center mb-4">
+                                <input
+                                    type="checkbox"
+                                    id="useCustomMpesa"
+                                    name="useCustomMpesa"
+                                    checked={mpesaData.useCustomMpesa}
+                                    onChange={handleMpesaChange}
+                                    className="h-4 w-4 text-green-600 border-gray-300 rounded"
+                                />
+                                <label htmlFor="useCustomMpesa" className="ml-2 block text-sm text-gray-900">
+                                    Enable Custom M-Pesa Configuration
+                                </label>
+                            </div>
 
-                                <Input
-                                    label="KRA PIN Number (Optional)"
-                                    value={formData.kraPinNumber}
-                                    onChange={(e) => setFormData({ ...formData, kraPinNumber: e.target.value })}
-                                    placeholder="A012345678Z"
-                                />
-
-                                <Input
-                                    label="Registered Business Name"
-                                    value={formData.companyName}
-                                    onChange={(e) => setFormData({ ...formData, companyName: e.target.value })}
-                                    required
-                                    placeholder="Safiri Solutions Ltd"
-                                />
-                                <Input
-                                    label="Physical Location / Address"
-                                    value={formData.location}
-                                    onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-                                    required
-                                    placeholder="Nairobi, CBD - Bihi Towers 4th Floor"
-                                />
-                                <Input
-                                    label="ID/Passport Number"
-                                    value={formData.idNumber}
-                                    onChange={(e) => setFormData({ ...formData, idNumber: e.target.value })}
-                                    required
-                                    placeholder="12345678"
-                                />
-
-                                <Button type="button" onClick={nextStep} className="w-full mt-4">
-                                    Next: Upload Documents
+                            {mpesaData.useCustomMpesa && (
+                                <>
+                                    <Input
+                                        label="Consumer Key"
+                                        name="mpesaConsumerKey"
+                                        value={mpesaData.mpesaConsumerKey}
+                                        onChange={handleMpesaChange}
+                                    />
+                                    <Input
+                                        label="Consumer Secret"
+                                        name="mpesaConsumerSecret"
+                                        type="password"
+                                        value={mpesaData.mpesaConsumerSecret}
+                                        onChange={handleMpesaChange}
+                                    />
+                                    <Input
+                                        label="Shortcode"
+                                        name="mpesaShortcode"
+                                        value={mpesaData.mpesaShortcode}
+                                        onChange={handleMpesaChange}
+                                    />
+                                    <div className="mb-4">
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">Environment</label>
+                                        <select
+                                            name="mpesaEnv"
+                                            value={mpesaData.mpesaEnv}
+                                            onChange={handleMpesaChange}
+                                            className="w-full border border-gray-300 rounded-md p-2"
+                                        >
+                                            <option value="sandbox">Sandbox</option>
+                                            <option value="production">Production</option>
+                                        </select>
+                                    </div>
+                                    <div className="flex gap-2">
+                                        <Button variant="outline" className="flex-1" onClick={testMpesa}>
+                                            Test Connection
+                                        </Button>
+                                    </div>
+                                    {mpesaTestStatus === 'success' && <p className="text-green-600 text-sm mt-1">Connection verified!</p>}
+                                    {mpesaTestStatus === 'error' && <p className="text-red-600 text-sm mt-1">Connection failed.</p>}
+                                </>
+                            )}
+                            
+                            <div className="flex flex-col gap-2 pt-4 border-t border-gray-200">
+                                <Button className="w-full" onClick={() => finishOnboarding(false)} isLoading={loading}>
+                                    Complete Setup
+                                </Button>
+                                <Button variant="outline" className="w-full text-gray-500" onClick={() => finishOnboarding(true)} disabled={loading}>
+                                    Skip M-Pesa Setup
                                 </Button>
                             </div>
-                        )}
-
-                        {step === 2 && (
-                            <div className="space-y-4 animate-in slide-in-from-right duration-500">
-                                <div className="flex items-center gap-2 text-indigo-600 mb-2">
-                                    <FileUp className="w-5 h-5" />
-                                    <h3 className="font-semibold">KYC Document Uploads</h3>
-                                </div>
-                                <div className="grid grid-cols-1 gap-4">
-                                    <div className="border-2 border-dashed border-gray-200 dark:border-gray-700 rounded-xl p-4 text-center hover:border-indigo-400 transition-colors">
-                                        <label className="cursor-pointer block">
-                                            <span className="text-xs font-semibold text-gray-500 uppercase block mb-2">ID Front Side</span>
-                                            <input type="file" onChange={(e) => handleFileChange(e, 'idFront')} className="hidden" accept="image/*" />
-                                            {files.idFront ? <div className="text-sm text-green-600 font-medium flex items-center justify-center gap-1"><CheckCircle2 className="w-4 h-4" /> {files.idFront.name}</div> : <div className="text-sm text-gray-400">Click to upload ID Front</div>}
-                                        </label>
-                                    </div>
-                                    <div className="border-2 border-dashed border-gray-200 dark:border-gray-700 rounded-xl p-4 text-center hover:border-indigo-400 transition-colors">
-                                        <label className="cursor-pointer block">
-                                            <span className="text-xs font-semibold text-gray-500 uppercase block mb-2">Registration Certificate</span>
-                                            <input type="file" onChange={(e) => handleFileChange(e, 'registrationCert')} className="hidden" accept="image/*,application/pdf" />
-                                            {files.registrationCert ? <div className="text-sm text-green-600 font-medium flex items-center justify-center gap-1"><CheckCircle2 className="w-4 h-4" /> {files.registrationCert.name}</div> : <div className="text-sm text-gray-400">Click to upload Business Cert</div>}
-                                        </label>
-                                    </div>
-                                    <div className="border-2 border-dashed border-gray-200 dark:border-gray-700 rounded-xl p-4 text-center hover:border-indigo-400 transition-colors">
-                                        <label className="cursor-pointer block">
-                                            <span className="text-xs font-semibold text-gray-500 uppercase block mb-2">KRA PIN Certificate</span>
-                                            <input type="file" onChange={(e) => handleFileChange(e, 'kraCert')} className="hidden" accept="image/*,application/pdf" />
-                                            {files.kraCert ? <div className="text-sm text-green-600 font-medium flex items-center justify-center gap-1"><CheckCircle2 className="w-4 h-4" /> {files.kraCert.name}</div> : <div className="text-sm text-gray-400">Click to upload PIN Cert</div>}
-                                        </label>
-                                    </div>
-                                </div>
-
-                                <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-xl mt-6">
-                                    <div className="flex items-start gap-3">
-                                        <input
-                                            type="checkbox"
-                                            id="dataConsent"
-                                            checked={formData.dataPolicyAccepted}
-                                            onChange={(e) => setFormData({ ...formData, dataPolicyAccepted: e.target.checked })}
-                                            className="mt-1 w-4 h-4 text-indigo-600 rounded"
-                                        />
-                                        <label htmlFor="dataConsent" className="text-xs text-blue-800 dark:text-blue-300">
-                                            I hereby consent to Mpesa Connect collecting and processing my data for verification in accordance with the <b>Kenya Data Protection Act (2019)</b>.
-                                        </label>
-                                    </div>
-                                </div>
-
-                                <div className="flex gap-4 mt-6">
-                                    <Button type="button" variant="outline" onClick={prevStep} className="flex-1">
-                                        Back
-                                    </Button>
-                                    <Button type="submit" className="flex-1" isLoading={loading}>
-                                        <ShieldCheck className="w-4 h-4 mr-2" /> Submit Profile
-                                    </Button>
-                                </div>
-                            </div>
-                        )}
-
-                        <div className="mt-8 text-center">
-                            <button type="button" onClick={handleSkip} className="text-sm text-gray-500 hover:text-indigo-600 flex items-center justify-center gap-1 mx-auto transition-colors">
-                                [→ Skip Setup]
-                            </button>
                         </div>
-                    </form>
-                </Card>
+                    )}
+                </div>
             </div>
         </div>
     );

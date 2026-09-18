@@ -26,8 +26,20 @@ export default function AdminSettingsPage() {
         smtpPass: '',
         smtpFromName: '',
         smtpFromEmail: '',
-        googleAnalyticsId: ''
+        googleAnalyticsId: '',
+        // Advanta SMS
+        advantaPartnerId: '',
+        advantaApiKey: '',
+        advantaShortcode: '',
+        adminNotificationEmail: '',
+        adminNotificationPhone: '',
+        emailNotificationsEnabled: false,
+        smsNotificationsEnabled: false,
+        notifyAdminOnRegister: true,
+        notifyAdminOnPayment: true,
+        notifyAdminOnWithdrawal: true,
     });
+
 
     useEffect(() => {
         const init = async () => {
@@ -54,8 +66,19 @@ export default function AdminSettingsPage() {
                     smtpPass: response.data.smtpPass || '',
                     smtpFromName: response.data.smtpFromName || '',
                     smtpFromEmail: response.data.smtpFromEmail || '',
-                    googleAnalyticsId: response.data.googleAnalyticsId || ''
+                    googleAnalyticsId: response.data.googleAnalyticsId || '',
+                    advantaPartnerId: response.data.advantaPartnerId || '',
+                    advantaApiKey: response.data.advantaApiKey || '',
+                    advantaShortcode: response.data.advantaShortcode || '',
+                    adminNotificationEmail: response.data.adminNotificationEmail || '',
+                    adminNotificationPhone: response.data.adminNotificationPhone || '',
+                    emailNotificationsEnabled: response.data.emailNotificationsEnabled ?? false,
+                    smsNotificationsEnabled: response.data.smsNotificationsEnabled ?? false,
+                    notifyAdminOnRegister: response.data.notifyAdminOnRegister ?? true,
+                    notifyAdminOnPayment: response.data.notifyAdminOnPayment ?? true,
+                    notifyAdminOnWithdrawal: response.data.notifyAdminOnWithdrawal ?? true,
                 });
+
             } catch (error: any) {
                 console.error('Failed to fetch settings:', error);
                 showToast(error.response?.data?.error || 'Failed to load settings', 'error');
@@ -339,6 +362,123 @@ export default function AdminSettingsPage() {
                             <p className="text-xs text-gray-500">
                                 Enter your Google Analytics 4 Measurement ID (starts with "G-").
                             </p>
+                        </div>
+                    </div>
+                </Card>
+
+                {/* Advanta SMS & Notification Settings */}
+                <Card className="mt-6">
+                    <div className="p-6">
+                        <div className="flex items-center gap-3 mb-6">
+                            <div className="p-2 bg-emerald-100 dark:bg-emerald-900/30 rounded-lg">
+                                <Settings className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+                            </div>
+                            <div>
+                                <h2 className="text-lg font-semibold text-gray-900 dark:text-white">SMS & Notification Settings</h2>
+                                <p className="text-sm text-gray-500">Configure global Advanta SMS credentials and admin alert preferences</p>
+                            </div>
+                        </div>
+
+                        <div className="space-y-6">
+                            {/* Master Toggles */}
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                                    <div>
+                                        <p className="text-sm font-medium text-gray-900 dark:text-white">Global Email Notifications</p>
+                                        <p className="text-xs text-gray-500 mt-0.5">Enable system-wide email alerts</p>
+                                    </div>
+                                    <button
+                                        onClick={() => setSettings({ ...settings, emailNotificationsEnabled: !settings.emailNotificationsEnabled })}
+                                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${settings.emailNotificationsEnabled ? 'bg-indigo-600' : 'bg-gray-300 dark:bg-gray-600'}`}
+                                    >
+                                        <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${settings.emailNotificationsEnabled ? 'translate-x-6' : 'translate-x-1'}`} />
+                                    </button>
+                                </div>
+                                <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                                    <div>
+                                        <p className="text-sm font-medium text-gray-900 dark:text-white">Global SMS Notifications</p>
+                                        <p className="text-xs text-gray-500 mt-0.5">Enable system-wide SMS alerts via Advanta</p>
+                                    </div>
+                                    <button
+                                        onClick={() => setSettings({ ...settings, smsNotificationsEnabled: !settings.smsNotificationsEnabled })}
+                                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${settings.smsNotificationsEnabled ? 'bg-indigo-600' : 'bg-gray-300 dark:bg-gray-600'}`}
+                                    >
+                                        <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${settings.smsNotificationsEnabled ? 'translate-x-6' : 'translate-x-1'}`} />
+                                    </button>
+                                </div>
+                            </div>
+
+                            {/* Advanta Credentials */}
+                            <div>
+                                <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Advanta SMS Credentials (Global Fallback)</h3>
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                    <Input
+                                        label="Partner ID"
+                                        value={settings.advantaPartnerId}
+                                        onChange={(e) => setSettings({ ...settings, advantaPartnerId: e.target.value })}
+                                        placeholder="e.g. 15400"
+                                    />
+                                    <Input
+                                        label="API Key"
+                                        type="password"
+                                        value={settings.advantaApiKey}
+                                        onChange={(e) => setSettings({ ...settings, advantaApiKey: e.target.value })}
+                                        placeholder="Your Advanta API Key"
+                                    />
+                                    <Input
+                                        label="Shortcode / Sender ID"
+                                        value={settings.advantaShortcode}
+                                        onChange={(e) => setSettings({ ...settings, advantaShortcode: e.target.value })}
+                                        placeholder="e.g. MPESACONNECT"
+                                    />
+                                </div>
+                            </div>
+
+                            {/* Admin Alert Recipients */}
+                            <div>
+                                <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Admin Alert Recipients</h3>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <Input
+                                        label="Admin Notification Email"
+                                        type="email"
+                                        value={settings.adminNotificationEmail}
+                                        onChange={(e) => setSettings({ ...settings, adminNotificationEmail: e.target.value })}
+                                        placeholder="admin@mpesaconnect.co.ke"
+                                    />
+                                    <Input
+                                        label="Admin Notification Phone"
+                                        type="tel"
+                                        value={settings.adminNotificationPhone}
+                                        onChange={(e) => setSettings({ ...settings, adminNotificationPhone: e.target.value })}
+                                        placeholder="+254 7..."
+                                    />
+                                </div>
+                            </div>
+
+                            {/* Admin Event Triggers */}
+                            <div>
+                                <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Notify admin when:</h3>
+                                <div className="space-y-3">
+                                    {[
+                                        { key: 'notifyAdminOnRegister', label: 'A new merchant registers', sub: 'Receive an alert for every new signup' },
+                                        { key: 'notifyAdminOnPayment', label: 'A payment is processed', sub: 'M-Pesa STK push confirmations' },
+                                        { key: 'notifyAdminOnWithdrawal', label: 'A withdrawal is requested', sub: 'When a merchant requests settlement' },
+                                    ].map((toggle) => (
+                                        <label key={toggle.key} className="flex items-start gap-3 p-3.5 rounded-xl bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 cursor-pointer hover:border-indigo-300 transition-colors">
+                                            <input
+                                                type="checkbox"
+                                                checked={(settings as any)[toggle.key]}
+                                                onChange={(e) => setSettings({ ...settings, [toggle.key]: e.target.checked })}
+                                                className="mt-0.5 w-4 h-4 text-indigo-600 rounded border-gray-300 focus:ring-indigo-500"
+                                            />
+                                            <div>
+                                                <p className="text-sm font-medium text-gray-800 dark:text-white">{toggle.label}</p>
+                                                <p className="text-xs text-gray-500 mt-0.5">{toggle.sub}</p>
+                                            </div>
+                                        </label>
+                                    ))}
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </Card>

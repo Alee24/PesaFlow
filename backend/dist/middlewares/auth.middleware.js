@@ -63,25 +63,6 @@ const authenticateToken = async (req, res, next) => {
         }
         const merchantId = user.parentId || user.id;
         if (user.parentId) {
-            const parentSubscription = await prisma.subscription.findUnique({
-                where: { merchantId: merchantId }
-            });
-            if (!parentSubscription || parentSubscription.status !== 'ACTIVE') {
-                res.status(403).json({
-                    error: 'Main merchant subscription required. Please contact your account owner.',
-                    requiresUpgrade: true
-                });
-                return;
-            }
-            if (parentSubscription.plan !== 'PRO' && parentSubscription.plan !== 'ENTERPRISE') {
-                res.status(403).json({
-                    error: 'Branch manager access requires PRO or ENTERPRISE plan. Please contact your account owner.',
-                    currentPlan: parentSubscription.plan,
-                    requiredPlan: 'PRO',
-                    requiresUpgrade: true
-                });
-                return;
-            }
         }
         req.user = {
             userId: user.id,

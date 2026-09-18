@@ -42,19 +42,26 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                     // But we'll let existing api interceptors handle 401s if they exist
                 });
 
-            // Fetch profile to set custom favicon dynamically
+            // Fetch profile to set custom favicon dynamically and check onboarding status
             api.get('/profile')
                 .then(res => {
-                    if (res.data && res.data.faviconUrl) {
-                        const fullUrl = getImageUrl(res.data.faviconUrl);
-                        if (fullUrl) {
-                            let link = document.querySelector("link[rel~='icon']") as HTMLLinkElement;
-                            if (!link) {
-                                link = document.createElement('link');
-                                link.rel = 'icon';
-                                document.getElementsByTagName('head')[0].appendChild(link);
+                    if (res.data) {
+                        if (res.data.onboardingCompleted === false && pathname !== '/onboarding') {
+                            router.push('/onboarding');
+                            return;
+                        }
+
+                        if (res.data.faviconUrl) {
+                            const fullUrl = getImageUrl(res.data.faviconUrl);
+                            if (fullUrl) {
+                                let link = document.querySelector("link[rel~='icon']") as HTMLLinkElement;
+                                if (!link) {
+                                    link = document.createElement('link');
+                                    link.rel = 'icon';
+                                    document.getElementsByTagName('head')[0].appendChild(link);
+                                }
+                                link.href = fullUrl;
                             }
-                            link.href = fullUrl;
                         }
                     }
                 })
@@ -76,7 +83,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     if (!user) return null;
 
     return (
-        <div className="flex min-h-screen bg-gray-100 dark:bg-gray-900 font-sans print:block print:bg-white print:min-h-0">
+        <div className="flex min-h-screen bg-zinc-50 dark:bg-zinc-950 font-sans print:block print:bg-white print:min-h-0">
             <div className="print:hidden">
                 <Sidebar
                     user={user}
@@ -84,7 +91,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                     setIsMobileOpen={setIsMobileMenuOpen}
                 />
             </div>
-            <div className="flex-1 md:ml-64 flex flex-col min-h-screen transition-all duration-300 ease-in-out print:ml-0 print:min-h-0 print:block">
+            <div className="flex-1 md:ml-60 flex flex-col min-h-screen transition-all duration-300 ease-in-out print:ml-0 print:min-h-0 print:block">
                 <div className="print:hidden">
                     <Header
                         user={user}

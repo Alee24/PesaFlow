@@ -39,6 +39,33 @@ const PaymentModal: React.FC<PaymentModalProps> = ({ totalAmount, items, discoun
     const [loyaltyCustomer, setLoyaltyCustomer] = useState<any>(null);
     const [pointsToEarn, setPointsToEarn] = useState(0);
 
+    const [mpesaEnabled, setMpesaEnabled] = useState(true);
+
+    useEffect(() => {
+        const checkMpesaStatus = async () => {
+            try {
+                const res = await api.get('/profile');
+                if (res.data && res.data.mpesaConsumerKey && res.data.useCustomMpesa) {
+                    setMpesaEnabled(true);
+                } else if (!res.data.useCustomMpesa && res.data.mpesaConsumerKey) {
+                    // System default Mpesa might be in use
+                    setMpesaEnabled(true);
+                } else if (!res.data.mpesaConsumerKey && !res.data.useCustomMpesa) {
+                    // It's possible the system default is active. Let's assume false if skipped.
+                    // Wait, if they skipped, they have no mpesaConsumerKey. Let's check backend endpoint or assume disabled if no keys.
+                    // To be safe, we'll try to let it enabled if system config is valid, but here we can just check if they have keys or system keys.
+                    // But if they skipped, they don't have custom keys. We will hide it if they explicitly have no keys and it's not custom.
+                    // For now, let's keep it simple: fetch /mpesa/test to see if it's configured, but that triggers an SMS/Token.
+                    // We'll trust the profile: if no mpesaConsumerKey, hide it (assuming they skipped).
+                    setMpesaEnabled(!!res.data.mpesaConsumerKey);
+                }
+            } catch (err) {
+                console.error(err);
+            }
+        };
+        checkMpesaStatus();
+    }, []);
+
     // Auto-check payment status every 3 seconds when pending
     useEffect(() => {
         if (step === 'mpesa-pending' && checkoutRequestId) {
@@ -241,22 +268,23 @@ const PaymentModal: React.FC<PaymentModalProps> = ({ totalAmount, items, discoun
                                 <p className="text-gray-500 text-sm">Amount Due</p>
                                 <h1 className="text-4xl font-extrabold text-gray-900 dark:text-white">KES {totalAmount.toLocaleString()}</h1>
                             </div>
-
-                            <div className="grid grid-cols-2 gap-4 mb-8">
+                            <div className="grid grid-cols-2 gap-4 mb-6">
                                 <button
                                     onClick={() => setMethod('CASH')}
-                                    className={`flex flex-col items-center justify-center p-4 rounded-xl border-2 transition-all ${method === 'CASH' ? 'border-indigo-600 bg-indigo-50 text-indigo-700' : 'border-gray-200 hover:border-indigo-200'}`}
+                                    className={`flex flex-col items-center justify-center p-4 rounded-xl border-2 transition-all ${method === 'CASH' ? 'border-green-600 bg-green-50 text-green-700' : 'border-gray-200 hover:border-green-200'}`}
                                 >
                                     <Banknote className="w-8 h-8 mb-2" />
                                     <span className="font-bold">Cash</span>
                                 </button>
-                                <button
-                                    onClick={() => setMethod('MPESA')}
-                                    className={`flex flex-col items-center justify-center p-4 rounded-xl border-2 transition-all ${method === 'MPESA' ? 'border-green-600 bg-green-50 text-green-700' : 'border-gray-200 hover:border-green-200'}`}
-                                >
-                                    <Smartphone className="w-8 h-8 mb-2" />
-                                    <span className="font-bold">M-Pesa</span>
-                                </button>
+                                {mpesaEnabled && (
+                                    <button
+                                        onClick={() => setMethod('MPESA')}
+                                        className={`flex flex-col items-center justify-center p-4 rounded-xl border-2 transition-all ${method === 'MPESA' ? 'border-green-600 bg-green-50 text-green-700' : 'border-gray-200 hover:border-green-200'}`}
+                                    >
+                                        <Smartphone className="w-8 h-8 mb-2" />
+                                        <span className="font-bold">M-Pesa</span>
+                                    </button>
+                                )}
                             </div>
 
                             {method === 'CASH' && (

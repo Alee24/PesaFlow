@@ -35,31 +35,21 @@ const getAccessToken = async (creds) => {
 const getSubscription = async (req, res) => {
     try {
         const userId = req.user.userId;
-        console.log(`🔍 [GET /subscriptions] Fetching for userId: ${userId}`);
-        let sub = await prisma.subscription.findUnique({
-            where: { merchantId: userId }
-        });
-        console.log(`   > Found Subscription:`, sub ? `ID: ${sub.id} | Plan: ${sub.plan} | Status: ${sub.status}` : 'Not Found');
-        if (!sub) {
-            return res.json({
-                plan: 'NONE',
-                status: 'INACTIVE',
-                daysRemaining: 0,
-                canAccess: false
-            });
-        }
-        const now = new Date();
-        const endDate = sub.endDate ? new Date(sub.endDate) : new Date();
-        const diffTime = endDate.getTime() - now.getTime();
-        const daysRemaining = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-        const isExpired = daysRemaining < 0;
-        const isInGracePeriod = isExpired && daysRemaining > -3;
-        res.json({
-            ...sub,
-            daysRemaining,
-            isExpired,
-            isInGracePeriod,
-            canAccess: !isExpired || isInGracePeriod
+        console.log(`🔍 [GET /subscriptions] Fetching for userId: ${userId} - OVERRIDDEN TO ENTERPRISE`);
+        return res.json({
+            id: 'default_enterprise_unlocked',
+            merchantId: userId,
+            plan: 'ENTERPRISE',
+            status: 'ACTIVE',
+            startDate: new Date().toISOString(),
+            endDate: new Date(new Date().getFullYear() + 10, 0, 1).toISOString(),
+            monthlyTxCount: 0,
+            txCountResetDate: new Date().toISOString(),
+            isEnterprise: true,
+            daysRemaining: 3650,
+            isExpired: false,
+            isInGracePeriod: false,
+            canAccess: true
         });
     }
     catch (error) {

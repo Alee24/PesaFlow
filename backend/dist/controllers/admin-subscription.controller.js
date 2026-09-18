@@ -7,7 +7,7 @@ const assignSubscription = async (req, res) => {
     try {
         const { userId } = req.params;
         const { plan } = req.body;
-        const validPlans = ['FREE', 'BASIC', 'PRO', 'ENTERPRISE'];
+        const validPlans = ['FREE', 'FREE_1Y', 'BASIC', 'PRO', 'ENTERPRISE'];
         if (!validPlans.includes(plan)) {
             return res.status(400).json({ error: 'Invalid subscription plan' });
         }
@@ -21,20 +21,26 @@ const assignSubscription = async (req, res) => {
             return res.status(400).json({ error: 'Can only assign subscriptions to merchants' });
         }
         let endDate = null;
-        if (plan !== 'FREE' && plan !== 'ENTERPRISE') {
+        let dbPlan = plan;
+        if (plan === 'FREE_1Y') {
+            endDate = new Date();
+            endDate.setDate(endDate.getDate() + 365);
+            dbPlan = 'FREE';
+        }
+        else if (plan !== 'FREE' && plan !== 'ENTERPRISE') {
             endDate = new Date();
             endDate.setMonth(endDate.getMonth() + 1);
         }
         const subscription = await prisma.subscription.upsert({
             where: { merchantId: userId },
             update: {
-                plan,
+                plan: dbPlan,
                 status: 'ACTIVE',
                 endDate
             },
             create: {
                 merchantId: userId,
-                plan,
+                plan: dbPlan,
                 status: 'ACTIVE',
                 endDate,
                 features: '[]'

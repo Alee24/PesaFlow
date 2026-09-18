@@ -129,6 +129,19 @@ model BusinessProfile {
   kraCertUrl          String? @map("kra_cert_url")
   dataPolicyAccepted  Boolean @default(false) @map("data_policy_accepted")
   verificationNotes   String? @map("verification_notes")
+  
+  // Notification & SMS Configuration
+  emailNotificationsEnabled Boolean @default(true) @map("email_notifications_enabled")
+  smsNotificationsEnabled   Boolean @default(false) @map("sms_notifications_enabled")
+  smsPartnerId             String?  @map("sms_partner_id")
+  smsApiKey                String?  @map("sms_api_key")
+  smsShortcode             String?  @map("sms_shortcode")
+  notifyOnSale             Boolean  @default(true) @map("notify_on_sale")
+  notifyOnMpesa            Boolean  @default(true) @map("notify_on_mpesa")
+  notifyOnInvoice          Boolean  @default(true) @map("notify_on_invoice")
+  notifyOnLowStock         Boolean  @default(true) @map("notify_on_low_stock")
+
+  onboardingCompleted Boolean @default(false) @map("onboarding_completed")
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
@@ -675,6 +688,18 @@ model SystemSettings {
   // Google Analytics
   googleAnalyticsId String? @map("google_analytics_id")
   
+  // Global Notification & Advanta SMS Settings
+  emailNotificationsEnabled Boolean @default(true) @map("email_notifications_enabled")
+  smsNotificationsEnabled   Boolean @default(false) @map("sms_notifications_enabled")
+  adminNotificationEmail    String? @map("admin_notification_email")
+  adminNotificationPhone    String? @map("admin_notification_phone")
+  advantaPartnerId          String? @map("advanta_partner_id")
+  advantaApiKey             String? @map("advanta_api_key")
+  advantaShortcode          String? @map("advanta_shortcode")
+  notifyAdminOnRegister     Boolean @default(true) @map("notify_admin_on_register")
+  notifyAdminOnPayment      Boolean @default(true) @map("notify_admin_on_payment")
+  notifyAdminOnWithdrawal   Boolean @default(true) @map("notify_admin_on_withdrawal")
+
   updatedAt             DateTime @updatedAt @map("updated_at")
   createdAt             DateTime @default(now()) @map("created_at")
 

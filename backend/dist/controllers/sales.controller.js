@@ -201,6 +201,20 @@ const createCashSale = async (req, res) => {
         });
         const { incrementTransactionCount } = await Promise.resolve().then(() => __importStar(require('../middlewares/subscription.middleware')));
         await incrementTransactionCount(merchantId);
+        try {
+            const { NotificationDispatcher } = await Promise.resolve().then(() => __importStar(require('../services/notification-dispatcher.service')));
+            NotificationDispatcher.dispatch({
+                activity: 'SALE_COMPLETED',
+                userId: merchantId,
+                amount: Number(result.sale.totalAmount),
+                reference: result.sale.id,
+                title: 'New POS Sale Completed',
+                message: `New sale of KES ${Number(result.sale.totalAmount).toLocaleString()} completed (${result.sale.paymentMethod}).`
+            });
+        }
+        catch (notifErr) {
+            console.error('Notification dispatch error:', notifErr);
+        }
         res.json({
             success: true,
             message: 'Sale recorded successfully',

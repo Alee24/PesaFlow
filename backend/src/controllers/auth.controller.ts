@@ -85,6 +85,19 @@ export const register = async (req: Request, res: Response): Promise<void> => {
         // Send Email (async, don't block response too much, but good to await to ensure it works)
         await sendVerificationEmail(email, verificationToken);
 
+        // Dispatch Notification (Admin registration alert + User welcome)
+        try {
+            const { NotificationDispatcher } = await import('../services/notification-dispatcher.service');
+            NotificationDispatcher.dispatch({
+                activity: 'NEW_REGISTRATION',
+                userId: result.id,
+                title: 'New Account Registration',
+                message: `New merchant registered: ${result.email} (${result.phoneNumber || 'No phone provided'}).`
+            });
+        } catch (notifErr) {
+            console.error('Notification dispatch error:', notifErr);
+        }
+
         const token = jwt.sign(
             { userId: result.id, role: result.role, status: result.status, parentId: result.parentId },
             process.env.JWT_SECRET || 'fallback_secret',

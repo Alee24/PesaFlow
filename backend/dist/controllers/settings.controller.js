@@ -1,6 +1,39 @@
 "use strict";
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || (function () {
+    var ownKeys = function(o) {
+        ownKeys = Object.getOwnPropertyNames || function (o) {
+            var ar = [];
+            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
+            return ar;
+        };
+        return ownKeys(o);
+    };
+    return function (mod) {
+        if (mod && mod.__esModule) return mod;
+        var result = {};
+        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
+        __setModuleDefault(result, mod);
+        return result;
+    };
+})();
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.sendTestEmail = exports.updateSettings = exports.getSettings = exports.getPublicSettings = void 0;
+exports.sendTestSMS = exports.sendTestEmail = exports.updateSettings = exports.getSettings = exports.getPublicSettings = void 0;
 const client_1 = require("@prisma/client");
 const prisma = new client_1.PrismaClient();
 const getPublicSettings = async (req, res) => {
@@ -14,10 +47,14 @@ const getPublicSettings = async (req, res) => {
                 }
             });
         }
+        const profile = await prisma.businessProfile.findFirst({
+            where: { logoUrl: { not: null } }
+        });
         res.json({
             serviceChargeEnabled: settings.serviceChargeEnabled,
             serviceChargeAmount: settings.serviceChargeAmount,
-            googleAnalyticsId: settings.googleAnalyticsId
+            googleAnalyticsId: settings.googleAnalyticsId,
+            logoUrl: profile?.logoUrl || null
         });
     }
     catch (error) {
@@ -45,7 +82,7 @@ const getSettings = async (req, res) => {
 exports.getSettings = getSettings;
 const updateSettings = async (req, res) => {
     try {
-        const { serviceChargeEnabled, serviceChargeAmount, smtpHost, smtpPort, smtpUser, smtpPass, smtpFromName, smtpFromEmail, googleAnalyticsId } = req.body;
+        const { serviceChargeEnabled, serviceChargeAmount, smtpHost, smtpPort, smtpUser, smtpPass, smtpFromName, smtpFromEmail, googleAnalyticsId, emailNotificationsEnabled, smsNotificationsEnabled, adminNotificationEmail, adminNotificationPhone, advantaPartnerId, advantaApiKey, advantaShortcode, notifyAdminOnRegister, notifyAdminOnPayment, notifyAdminOnWithdrawal } = req.body;
         if (serviceChargeEnabled !== undefined && typeof serviceChargeEnabled !== 'boolean') {
             return res.status(400).json({ error: 'serviceChargeEnabled must be a boolean' });
         }
@@ -78,6 +115,26 @@ const updateSettings = async (req, res) => {
             updateData.smtpFromEmail = smtpFromEmail || null;
         if (googleAnalyticsId !== undefined)
             updateData.googleAnalyticsId = googleAnalyticsId || null;
+        if (emailNotificationsEnabled !== undefined)
+            updateData.emailNotificationsEnabled = Boolean(emailNotificationsEnabled);
+        if (smsNotificationsEnabled !== undefined)
+            updateData.smsNotificationsEnabled = Boolean(smsNotificationsEnabled);
+        if (adminNotificationEmail !== undefined)
+            updateData.adminNotificationEmail = adminNotificationEmail || null;
+        if (adminNotificationPhone !== undefined)
+            updateData.adminNotificationPhone = adminNotificationPhone || null;
+        if (advantaPartnerId !== undefined)
+            updateData.advantaPartnerId = advantaPartnerId || null;
+        if (advantaApiKey !== undefined)
+            updateData.advantaApiKey = advantaApiKey || null;
+        if (advantaShortcode !== undefined)
+            updateData.advantaShortcode = advantaShortcode || null;
+        if (notifyAdminOnRegister !== undefined)
+            updateData.notifyAdminOnRegister = Boolean(notifyAdminOnRegister);
+        if (notifyAdminOnPayment !== undefined)
+            updateData.notifyAdminOnPayment = Boolean(notifyAdminOnPayment);
+        if (notifyAdminOnWithdrawal !== undefined)
+            updateData.notifyAdminOnWithdrawal = Boolean(notifyAdminOnWithdrawal);
         if (settings) {
             settings = await prisma.systemSettings.update({
                 where: { id: settings.id },
@@ -153,4 +210,25 @@ const sendTestEmail = async (req, res) => {
     }
 };
 exports.sendTestEmail = sendTestEmail;
+const sendTestSMS = async (req, res) => {
+    try {
+        const { testPhone, partnerId, apiKey, shortcode } = req.body;
+        if (!testPhone) {
+            return res.status(400).json({ error: 'Valid phone number is required' });
+        }
+        const { sendAdvantaSMS } = await Promise.resolve().then(() => __importStar(require('../services/sms.service')));
+        const result = await sendAdvantaSMS(testPhone, `[Mpesa Connect Admin] Test SMS: Advanta SMS gateway is operational and verified!`, { partnerId, apiKey, shortcode });
+        if (result.success) {
+            res.json({ message: `Test SMS dispatched successfully to ${testPhone}!`, data: result.data });
+        }
+        else {
+            res.status(400).json({ error: result.error || 'Failed to dispatch test SMS. Please verify credentials.' });
+        }
+    }
+    catch (error) {
+        console.error('Test SMS error:', error);
+        res.status(500).json({ error: 'Failed to send test SMS', details: error.message });
+    }
+};
+exports.sendTestSMS = sendTestSMS;
 //# sourceMappingURL=settings.controller.js.map

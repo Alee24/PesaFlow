@@ -5,25 +5,12 @@ import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import DashboardLayout from '@/components/layout/DashboardLayout';
-import { Card } from '@/components/ui/Card';
-import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { ShoppingCart, DollarSign, TrendingUp, Calendar, ArrowRight, Download } from 'lucide-react';
-import axios from 'axios';
-
-// Mock Data for Charts
-const chartData = [
-    { name: 'Mon', sales: 4000 },
-    { name: 'Tue', sales: 3000 },
-    { name: 'Wed', sales: 2000 },
-    { name: 'Thu', sales: 2780 },
-    { name: 'Fri', sales: 1890 },
-    { name: 'Sat', sales: 2390 },
-    { name: 'Sun', sales: 3490 },
-];
-
-// ... imports
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts';
+import {
+    ShoppingCart, DollarSign, TrendingUp, ArrowRight, Download, Package,
+    FileText, Zap, CreditCard, Plus, ArrowUpRight, ArrowDownRight, Activity
+} from 'lucide-react';
 import api from '@/lib/api';
-import { format } from 'date-fns';
 
 export default function DashboardPage() {
     const router = useRouter();
@@ -44,7 +31,6 @@ export default function DashboardPage() {
         const parsed = JSON.parse(userData);
         setUser(parsed);
 
-        // Fetch fresh user data to verify email status
         api.get('/auth/me')
             .then(res => {
                 if (res.data?.user) {
@@ -52,9 +38,7 @@ export default function DashboardPage() {
                     localStorage.setItem('user', JSON.stringify(res.data.user));
                 }
             })
-            .catch(err => {
-                console.error("Failed to load fresh user data:", err);
-            });
+            .catch(() => { });
     }, [router]);
 
     useEffect(() => {
@@ -81,29 +65,69 @@ export default function DashboardPage() {
 
     const { summary, chartData, transactions } = stats || {};
 
+    const statCards = [
+        {
+            label: user.role === 'ADMIN' ? 'System Liquidity' : 'Wallet Balance',
+            value: `KES ${Number(summary?.walletBalance || 0).toLocaleString()}`,
+            sub: 'Available funds',
+            icon: DollarSign,
+            trend: null,
+            color: 'emerald',
+        },
+        {
+            label: user.role === 'ADMIN' ? 'Total GTV' : 'Total Income',
+            value: `KES ${Number(summary?.totalIncome || 0).toLocaleString()}`,
+            sub: `Gross volume (${period})`,
+            icon: TrendingUp,
+            trend: '+12.4%',
+            trendUp: true,
+            color: 'blue',
+        },
+        {
+            label: 'Withdrawals',
+            value: `KES ${Number(summary?.totalWithdrawals || 0).toLocaleString()}`,
+            sub: `Total payouts (${period})`,
+            icon: ArrowRight,
+            trend: null,
+            color: 'rose',
+        },
+        {
+            label: user.role === 'ADMIN' ? 'Service Revenue' : 'Transaction Fees',
+            value: `KES ${Number(summary?.totalFeeIncome || 0).toLocaleString()}`,
+            sub: user.role === 'ADMIN' ? 'Net platform income' : 'Service charges',
+            icon: Activity,
+            trend: null,
+            color: 'amber',
+        },
+    ];
+
+    const colorMap: Record<string, { bg: string; icon: string; text: string; border: string }> = {
+        emerald: { bg: 'bg-emerald-50 dark:bg-emerald-900/10', icon: 'text-emerald-600 dark:text-emerald-400', text: 'text-emerald-600 dark:text-emerald-400', border: 'border-emerald-100 dark:border-emerald-900/30' },
+        blue: { bg: 'bg-blue-50 dark:bg-blue-900/10', icon: 'text-blue-600 dark:text-blue-400', text: 'text-blue-600 dark:text-blue-400', border: 'border-blue-100 dark:border-blue-900/30' },
+        rose: { bg: 'bg-rose-50 dark:bg-rose-900/10', icon: 'text-rose-600 dark:text-rose-400', text: 'text-rose-600 dark:text-rose-400', border: 'border-rose-100 dark:border-rose-900/30' },
+        amber: { bg: 'bg-amber-50 dark:bg-amber-900/10', icon: 'text-amber-600 dark:text-amber-400', text: 'text-amber-600 dark:text-amber-400', border: 'border-amber-100 dark:border-amber-900/30' },
+    };
+
     return (
         <DashboardLayout>
-            <div className="space-y-8">
+            <div className="space-y-6 pb-8">
+
                 {/* Email Verification Banner */}
                 {!user.emailVerified && (
-                    <div className="bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-950/20 dark:to-orange-950/20 border border-amber-200 dark:border-amber-900/50 rounded-2xl p-6 shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-6 transition-all duration-300">
-                        <div className="flex gap-4">
-                            <div className="w-12 h-12 bg-amber-100 dark:bg-amber-900/40 text-amber-600 dark:text-amber-400 rounded-full flex items-center justify-center shrink-0 shadow-inner">
-                                <span className="text-xl">⚠️</span>
+                    <div className="bg-amber-50 dark:bg-amber-900/10 border border-amber-200 dark:border-amber-800 rounded-xl p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                        <div className="flex gap-3">
+                            <div className="w-9 h-9 rounded-full bg-amber-100 dark:bg-amber-800/40 flex items-center justify-center shrink-0">
+                                <span className="text-lg">⚠️</span>
                             </div>
                             <div>
-                                <h4 className="text-base font-bold text-amber-800 dark:text-amber-300">Action Required: Verify Your Email</h4>
-                                <p className="text-sm text-amber-700 dark:text-amber-400 mt-1">
-                                    Your email address is not verified. Please verify it within <strong>24 hours</strong> of registration to prevent your account from being locked.
+                                <h4 className="text-sm font-semibold text-amber-800 dark:text-amber-300">Verify your email address</h4>
+                                <p className="text-xs text-amber-700 dark:text-amber-400 mt-0.5">
+                                    Please verify within <strong>24 hours</strong> to keep your account active.
                                 </p>
                                 {resendStatus.message && (
-                                    <div className={`mt-3 text-xs font-semibold px-3 py-1.5 rounded-lg inline-block ${
-                                        resendStatus.type === 'success' 
-                                            ? 'bg-green-50 dark:bg-green-950/30 text-green-700 dark:text-green-400 border border-green-200 dark:border-green-900/30' 
-                                            : 'bg-red-50 dark:bg-red-950/30 text-red-700 dark:text-red-400 border border-red-200 dark:border-red-900/30'
-                                    }`}>
+                                    <p className={`text-xs mt-1.5 font-medium ${resendStatus.type === 'success' ? 'text-green-700' : 'text-red-600'}`}>
                                         {resendStatus.message}
-                                    </div>
+                                    </p>
                                 )}
                             </div>
                         </div>
@@ -111,36 +135,38 @@ export default function DashboardPage() {
                             disabled={isResending}
                             onClick={async () => {
                                 setIsResending(true);
-                                setResendStatus({ type: null, message: '' });
                                 try {
                                     const response = await api.post('/auth/resend-verification');
-                                    setResendStatus({ type: 'success', message: response.data.message || 'Verification link sent successfully to your email!' });
+                                    setResendStatus({ type: 'success', message: response.data.message || 'Verification link sent!' });
                                 } catch (err: any) {
-                                    setResendStatus({ type: 'error', message: err.response?.data?.error || 'Failed to resend verification link. Please try again.' });
-                                } finally {
-                                    setIsResending(false);
-                                }
+                                    setResendStatus({ type: 'error', message: err.response?.data?.error || 'Failed to resend. Try again.' });
+                                } finally { setIsResending(false); }
                             }}
-                            className="w-full md:w-auto px-6 py-3 bg-amber-600 hover:bg-amber-700 disabled:bg-amber-400 text-white font-bold text-sm rounded-xl transition-all duration-200 shrink-0 shadow-md hover:shadow-lg active:scale-95"
+                            className="shrink-0 px-4 py-2 bg-amber-600 hover:bg-amber-700 disabled:opacity-60 text-white text-xs font-semibold rounded-lg transition-colors"
                         >
-                            {isResending ? 'Sending...' : 'Resend Verification Link'}
+                            {isResending ? 'Sending...' : 'Resend Link'}
                         </button>
                     </div>
                 )}
-                {/* Welcome Section */}
-                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+
+                {/* Header row */}
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
                     <div>
-                        <h1 className="text-xl sm:text-2xl font-bold text-gray-800 dark:text-white">Dashboard Overview</h1>
-                        <p className="text-gray-500 text-xs sm:text-sm">Welcome back, {user.email} ({user.role})</p>
+                        <h1 className="text-xl font-bold text-zinc-900 dark:text-white">
+                            Good {new Date().getHours() < 12 ? 'morning' : new Date().getHours() < 18 ? 'afternoon' : 'evening'}, {user.name?.split(' ')[0] || 'there'} 👋
+                        </h1>
+                        <p className="text-sm text-zinc-500 mt-0.5">Here's what's happening with your business today.</p>
                     </div>
-                    <div className="flex bg-white dark:bg-gray-800 rounded-lg p-1 shadow-sm border border-gray-200 dark:border-gray-700 w-full sm:w-auto overflow-x-auto">
+
+                    {/* Period Selector */}
+                    <div className="flex bg-zinc-100 dark:bg-zinc-800 rounded-lg p-1 gap-0.5">
                         {['day', 'week', 'month', 'year'].map((p) => (
                             <button
                                 key={p}
                                 onClick={() => setPeriod(p)}
-                                className={`flex-1 sm:flex-none px-3 sm:px-4 py-1.5 text-xs sm:text-sm font-medium rounded-md capitalize transition-colors ${period === p
-                                    ? 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/50 dark:text-indigo-300'
-                                    : 'text-gray-500 hover:text-gray-900 dark:hover:text-gray-300'
+                                className={`px-3 py-1.5 text-xs font-medium rounded-md capitalize transition-all ${period === p
+                                    ? 'bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white shadow-sm'
+                                    : 'text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300'
                                     }`}
                             >
                                 {p}
@@ -149,119 +175,195 @@ export default function DashboardPage() {
                     </div>
                 </div>
 
-                {/* Stat Cards */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
-
-                    {/* Card 1: Wallet Balance */}
-                    <div className="rounded-xl overflow-hidden shadow-lg bg-indigo-600 text-white p-4 sm:p-6 relative">
-                        <div className="flex justify-between items-start z-10 relative">
-                            <div>
-                                <h3 className="text-[10px] sm:text-sm font-medium opacity-80 uppercase tracking-wider">{user.role === 'ADMIN' ? 'System Liquidity' : 'Wallet Balance'}</h3>
-                                <div className="mt-1 sm:mt-2 text-2xl sm:text-3xl font-bold">KES {Number(summary?.walletBalance || 0).toLocaleString()}</div>
-                                <p className="text-[10px] sm:text-xs opacity-75 mt-1">Available Funds <span className="text-[9px] opacity-60 ml-1">(Only M-Pesa)</span></p>
-                            </div>
-                            <div className="p-2 sm:p-3 bg-white/20 rounded-full backdrop-blur-sm">
-                                <DollarSign className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Card 2: Income */}
-                    <div className="rounded-xl overflow-hidden shadow-lg bg-emerald-600 text-white p-4 sm:p-6 relative">
-                        <div className="flex justify-between items-start z-10 relative">
-                            <div>
-                                <h3 className="text-[10px] sm:text-sm font-medium opacity-80 uppercase tracking-wider">{user.role === 'ADMIN' ? 'Total GTV' : 'Total Income'}</h3>
-                                <div className="mt-1 sm:mt-2 text-2xl sm:text-3xl font-bold">KES {Number(summary?.totalIncome || 0).toLocaleString()}</div>
-                                <p className="text-[10px] sm:text-xs opacity-75 mt-1">Gross Transaction Volume</p>
-                            </div>
-                            <div className="p-2 sm:p-3 bg-white/20 rounded-full backdrop-blur-sm">
-                                <TrendingUp className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Card 3: Withdrawals */}
-                    <div className="rounded-xl overflow-hidden shadow-lg bg-rose-600 text-white p-4 sm:p-6 relative">
-                        <div className="flex justify-between items-start z-10 relative">
-                            <div>
-                                <h3 className="text-[10px] sm:text-sm font-medium opacity-80 uppercase tracking-wider">Withdrawals</h3>
-                                <div className="mt-1 sm:mt-2 text-2xl sm:text-3xl font-bold">KES {Number(summary?.totalWithdrawals || 0).toLocaleString()}</div>
-                                <p className="text-[10px] sm:text-xs opacity-75 mt-1">Total Payouts ({period})</p>
-                            </div>
-                            <div className="p-2 sm:p-3 bg-white/20 rounded-full backdrop-blur-sm">
-                                <ArrowRight className="w-5 h-5 sm:w-6 sm:h-6 text-white rotate-45" />
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Card 4: Service Income / Fees */}
-                    <div className="rounded-xl overflow-hidden shadow-lg bg-amber-500 text-white p-4 sm:p-6 relative">
-                        <div className="flex justify-between items-start z-10 relative">
-                            <div>
-                                <h3 className="text-[10px] sm:text-sm font-medium opacity-80 uppercase tracking-wider">{user.role === 'ADMIN' ? 'Service Revenue' : 'Transaction Fees'}</h3>
-                                <div className="mt-1 sm:mt-2 text-2xl sm:text-3xl font-bold">KES {Number(summary?.totalFeeIncome || 0).toLocaleString()}</div>
-                                <p className="text-[10px] sm:text-xs opacity-75 mt-1">{user.role === 'ADMIN' ? 'Net Platform Income' : 'Service Charges'}</p>
-                            </div>
-                            <div className="p-2 sm:p-3 bg-white/20 rounded-full backdrop-blur-sm">
-                                <ShoppingCart className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
-                            </div>
-                        </div>
-                    </div>
+                {/* Quick Actions */}
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                    {[
+                        { label: 'New Sale', href: '/pos', icon: ShoppingCart, color: 'bg-emerald-500 hover:bg-emerald-600' },
+                        { label: 'Create Invoice', href: '/invoices/new', icon: FileText, color: 'bg-blue-500 hover:bg-blue-600' },
+                        { label: 'STK Push', href: '/wallet', icon: Zap, color: 'bg-violet-500 hover:bg-violet-600' },
+                        { label: 'Withdraw', href: '/withdrawals', icon: CreditCard, color: 'bg-amber-500 hover:bg-amber-600' },
+                    ].map((action) => (
+                        <Link
+                            key={action.label}
+                            href={action.href}
+                            className={`flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl text-white text-sm font-semibold transition-all shadow-sm hover:shadow-md active:scale-95 ${action.color}`}
+                        >
+                            <action.icon className="w-4 h-4" />
+                            <span className="hidden sm:inline">{action.label}</span>
+                            <span className="sm:hidden">{action.label.split(' ')[0]}</span>
+                        </Link>
+                    ))}
                 </div>
 
-                {/* KRA VAT Statistics */}
+                {/* Stat Cards */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    {statCards.map((card, i) => {
+                        const colors = colorMap[card.color];
+                        return (
+                            <div key={i} className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-5">
+                                <div className="flex items-start justify-between mb-3">
+                                    <p className="text-xs font-semibold text-zinc-500 uppercase tracking-wider">{card.label}</p>
+                                    <div className={`w-8 h-8 rounded-lg ${colors.bg} ${colors.border} border flex items-center justify-center`}>
+                                        <card.icon className={`w-4 h-4 ${colors.icon}`} />
+                                    </div>
+                                </div>
+                                <p className="text-2xl font-bold text-zinc-900 dark:text-white leading-none mb-1">
+                                    {loading ? <span className="text-zinc-300 dark:text-zinc-700">—</span> : card.value}
+                                </p>
+                                <div className="flex items-center gap-2 mt-1.5">
+                                    <p className="text-xs text-zinc-400">{card.sub}</p>
+                                    {card.trend && (
+                                        <span className={`inline-flex items-center text-[10px] font-semibold ${card.trendUp ? 'text-emerald-600' : 'text-red-500'}`}>
+                                            {card.trendUp ? <ArrowUpRight className="w-3 h-3" /> : <ArrowDownRight className="w-3 h-3" />}
+                                            {card.trend}
+                                        </span>
+                                    )}
+                                </div>
+                            </div>
+                        );
+                    })}
+                </div>
+
+                {/* Chart + Invoice Stats Row */}
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                    {/* Revenue Chart - 2/3 width */}
+                    <div className="lg:col-span-2 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-5">
+                        <div className="flex items-center justify-between mb-5">
+                            <div>
+                                <h3 className="text-sm font-semibold text-zinc-900 dark:text-white">Revenue Overview</h3>
+                                <p className="text-xs text-zinc-400 mt-0.5">Income vs. Payouts over time</p>
+                            </div>
+                        </div>
+                        <div className="h-56">
+                            {loading ? (
+                                <div className="h-full flex items-center justify-center text-zinc-400 text-sm">Loading chart...</div>
+                            ) : (
+                                <ResponsiveContainer width="100%" height="100%">
+                                    <AreaChart data={chartData} margin={{ top: 5, right: 10, left: 0, bottom: 0 }}>
+                                        <defs>
+                                            <linearGradient id="colorIncome" x1="0" y1="0" x2="0" y2="1">
+                                                <stop offset="5%" stopColor="#10b981" stopOpacity={0.15} />
+                                                <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
+                                            </linearGradient>
+                                            <linearGradient id="colorWithdrawal" x1="0" y1="0" x2="0" y2="1">
+                                                <stop offset="5%" stopColor="#f43f5e" stopOpacity={0.15} />
+                                                <stop offset="95%" stopColor="#f43f5e" stopOpacity={0} />
+                                            </linearGradient>
+                                        </defs>
+                                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f4f4f5" />
+                                        <XAxis
+                                            dataKey="date"
+                                            tick={{ fontSize: 11, fill: '#a1a1aa' }}
+                                            tickLine={false}
+                                            axisLine={false}
+                                            tickFormatter={(str) => str?.slice?.(5) || str}
+                                            dy={8}
+                                        />
+                                        <YAxis
+                                            tick={{ fontSize: 11, fill: '#a1a1aa' }}
+                                            tickLine={false}
+                                            axisLine={false}
+                                            tickFormatter={(value) => `${value >= 1000 ? (value / 1000).toFixed(0) + 'k' : value}`}
+                                            width={40}
+                                        />
+                                        <Tooltip
+                                            content={({ active, payload, label }) => {
+                                                if (active && payload && payload.length) {
+                                                    return (
+                                                        <div className="bg-white dark:bg-zinc-800 p-3 rounded-xl shadow-xl border border-zinc-100 dark:border-zinc-700">
+                                                            <p className="text-xs font-semibold text-zinc-700 dark:text-white mb-2">{label}</p>
+                                                            {payload.map((entry: any, index: number) => (
+                                                                <div key={index} className="flex items-center gap-2 text-xs mb-1">
+                                                                    <div className="w-2 h-2 rounded-full" style={{ backgroundColor: entry.color }} />
+                                                                    <span className="text-zinc-500">{entry.name}:</span>
+                                                                    <span className="font-semibold text-zinc-900 dark:text-white">KES {Number(entry.value).toLocaleString()}</span>
+                                                                </div>
+                                                            ))}
+                                                        </div>
+                                                    );
+                                                }
+                                                return null;
+                                            }}
+                                        />
+                                        <Area type="monotone" dataKey="income" name="Income" stroke="#10b981" strokeWidth={2} fillOpacity={1} fill="url(#colorIncome)" activeDot={{ r: 4, strokeWidth: 0 }} />
+                                        <Area type="monotone" dataKey="withdrawal" name="Payouts" stroke="#f43f5e" strokeWidth={2} fillOpacity={1} fill="url(#colorWithdrawal)" activeDot={{ r: 4, strokeWidth: 0 }} />
+                                    </AreaChart>
+                                </ResponsiveContainer>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* Invoice Stats - 1/3 width */}
+                    {invoiceStats && (
+                        <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-5">
+                            <div className="flex items-center justify-between mb-4">
+                                <h3 className="text-sm font-semibold text-zinc-900 dark:text-white">Invoices</h3>
+                                <Link href="/invoices" className="text-xs text-emerald-600 dark:text-emerald-400 hover:underline font-medium">View all →</Link>
+                            </div>
+                            <div className="space-y-3">
+                                {[
+                                    { label: 'Paid', count: invoiceStats.paid.count, amount: invoiceStats.paid.amount, color: 'bg-emerald-100 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400' },
+                                    { label: 'Pending', count: invoiceStats.pending.count, amount: invoiceStats.pending.amount, color: 'bg-amber-100 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400' },
+                                    { label: 'Overdue', count: invoiceStats.overdue.count, amount: invoiceStats.overdue.amount, color: 'bg-red-100 dark:bg-red-900/20 text-red-700 dark:text-red-400' },
+                                    { label: 'Cancelled', count: invoiceStats.cancelled.count, amount: invoiceStats.cancelled.amount, color: 'bg-zinc-100 dark:bg-zinc-800 text-zinc-500' },
+                                ].map((item) => (
+                                    <div key={item.label} className="flex items-center justify-between">
+                                        <div className="flex items-center gap-2">
+                                            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${item.color}`}>{item.label}</span>
+                                            <span className="text-sm font-semibold text-zinc-700 dark:text-zinc-300">{item.count}</span>
+                                        </div>
+                                        <span className="text-xs text-zinc-500 font-medium">KES {Number(item.amount).toLocaleString()}</span>
+                                    </div>
+                                ))}
+                            </div>
+
+                            <div className="mt-4 pt-4 border-t border-zinc-100 dark:border-zinc-800">
+                                <Link
+                                    href="/invoices/new"
+                                    className="w-full flex items-center justify-center gap-1.5 py-2 bg-zinc-50 dark:bg-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 text-xs font-semibold rounded-lg transition-colors border border-zinc-200 dark:border-zinc-700"
+                                >
+                                    <Plus className="w-3.5 h-3.5" />
+                                    New Invoice
+                                </Link>
+                            </div>
+                        </div>
+                    )}
+                </div>
+
+                {/* KRA VAT Section */}
                 {summary?.vatEnabled && (
-                    <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-6">
+                    <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-5">
                         <div className="flex items-start justify-between">
                             <div className="flex-1">
-                                <div className="flex items-center gap-2 mb-2">
-                                    <div className="p-2 bg-red-100 dark:bg-red-900/30 rounded-lg">
-                                        <svg className="w-5 h-5 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                                        </svg>
+                                <div className="flex items-center gap-2.5 mb-4">
+                                    <div className="w-8 h-8 rounded-lg bg-red-50 dark:bg-red-900/20 flex items-center justify-center">
+                                        <FileText className="w-4 h-4 text-red-600 dark:text-red-400" />
                                     </div>
                                     <div>
-                                        <h3 className="text-sm font-semibold text-gray-900 dark:text-white">KRA VAT Liability</h3>
-                                        <p className="text-xs text-gray-500 dark:text-gray-400">16% VAT on Sales ({period})</p>
+                                        <h3 className="text-sm font-semibold text-zinc-900 dark:text-white">KRA VAT Liability</h3>
+                                        <p className="text-xs text-zinc-400">16% VAT on enabled sales ({period})</p>
                                     </div>
                                 </div>
-
-                                <div className="mt-3 grid grid-cols-1 md:grid-cols-3 gap-4">
-                                    <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-4">
-                                        <p className="text-xs text-gray-500 dark:text-gray-400 uppercase font-medium mb-1">Total Sales (VAT Enabled)</p>
-                                        <p className="text-xl font-bold text-gray-900 dark:text-white">
-                                            KES {Number(summary?.totalSalesWithVAT || 0).toLocaleString()}
-                                        </p>
+                                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                                    <div className="bg-zinc-50 dark:bg-zinc-800 rounded-lg p-3.5">
+                                        <p className="text-[10px] font-semibold text-zinc-400 uppercase tracking-wide mb-1">Sales (VAT Enabled)</p>
+                                        <p className="text-lg font-bold text-zinc-900 dark:text-white">KES {Number(summary?.totalSalesWithVAT || 0).toLocaleString()}</p>
                                     </div>
-                                    <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-4">
-                                        <p className="text-xs text-gray-500 dark:text-gray-400 uppercase font-medium mb-1">VAT Collected (16%)</p>
-                                        <p className="text-xl font-bold text-orange-600 dark:text-orange-400">
-                                            KES {Number(summary?.totalVATCollected || 0).toLocaleString()}
-                                        </p>
+                                    <div className="bg-zinc-50 dark:bg-zinc-800 rounded-lg p-3.5">
+                                        <p className="text-[10px] font-semibold text-zinc-400 uppercase tracking-wide mb-1">VAT Collected (16%)</p>
+                                        <p className="text-lg font-bold text-amber-600 dark:text-amber-400">KES {Number(summary?.totalVATCollected || 0).toLocaleString()}</p>
                                     </div>
-                                    <div className="bg-red-50 dark:bg-red-900/20 rounded-lg p-4 border border-red-200 dark:border-red-800">
-                                        <p className="text-xs text-red-600 dark:text-red-400 uppercase font-bold mb-1">Amount Owed to KRA</p>
-                                        <p className="text-2xl font-bold text-red-600 dark:text-red-400">
-                                            KES {Number(summary?.kraVATOwed || 0).toLocaleString()}
-                                        </p>
-                                        <p className="text-xs text-red-500 dark:text-red-400 mt-1">Must be remitted to KRA</p>
+                                    <div className="bg-red-50 dark:bg-red-900/10 border border-red-100 dark:border-red-900/30 rounded-lg p-3.5">
+                                        <p className="text-[10px] font-semibold text-red-500 uppercase tracking-wide mb-1">Amount Owed to KRA</p>
+                                        <p className="text-lg font-bold text-red-600 dark:text-red-400">KES {Number(summary?.kraVATOwed || 0).toLocaleString()}</p>
+                                        <p className="text-[10px] text-red-400 mt-0.5">Must be remitted to KRA</p>
                                     </div>
-                                </div>
-                                <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
-                                    <p className="text-xs text-blue-800 dark:text-blue-300">
-                                        <strong>Note:</strong> This calculation is based on Kenyan KRA tax laws (16% VAT).
-                                        Only sales from products with VAT enabled are included.
-                                        Ensure timely remittance to avoid penalties.
-                                    </p>
                                 </div>
                             </div>
                             <button
                                 onClick={async () => {
                                     try {
-                                        const response = await api.get('/kra/vat-report', {
-                                            responseType: 'blob',
-                                            params: { period }
-                                        });
+                                        const response = await api.get('/kra/vat-report', { responseType: 'blob', params: { period } });
                                         const url = window.URL.createObjectURL(new Blob([response.data]));
                                         const link = document.createElement('a');
                                         link.href = url;
@@ -269,192 +371,64 @@ export default function DashboardPage() {
                                         document.body.appendChild(link);
                                         link.click();
                                         link.remove();
-                                    } catch (error) {
-                                        console.error('Failed to download report', error);
-                                        alert('Failed to download KRA report');
-                                    }
+                                    } catch { alert('Failed to download KRA report'); }
                                 }}
-                                className="ml-4 flex items-center gap-2 px-3 py-1.5 text-xs font-medium text-white bg-red-600 hover:bg-red-700 rounded-lg transition-colors"
+                                className="ml-4 shrink-0 flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-white bg-red-600 hover:bg-red-700 rounded-lg transition-colors"
                             >
                                 <Download className="w-3.5 h-3.5" />
-                                Download iTax Report
+                                iTax Report
                             </button>
                         </div>
                     </div>
-
                 )}
 
-                {/* Invoice Stats Section */}
-                {invoiceStats && (
-                    <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-6">
-                        <h3 className="text-lg font-bold text-gray-800 dark:text-white mb-4">Invoice Analytics</h3>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
-                            <div className="p-3 sm:p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
-                                <span className="text-[10px] sm:text-xs font-bold text-gray-500 uppercase">Paid Invoices</span>
-                                <div className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white mt-1">{invoiceStats.paid.count}</div>
-                                <div className="text-[10px] sm:text-xs text-green-600 font-medium truncate">KES {Number(invoiceStats.paid.amount).toLocaleString()}</div>
-                            </div>
-                            <div className="p-3 sm:p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
-                                <span className="text-[10px] sm:text-xs font-bold text-gray-500 uppercase">Pending Invoices</span>
-                                <div className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white mt-1">{invoiceStats.pending.count}</div>
-                                <div className="text-[10px] sm:text-xs text-yellow-600 font-medium truncate">KES {Number(invoiceStats.pending.amount).toLocaleString()}</div>
-                            </div>
-                            <div className="p-3 sm:p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
-                                <span className="text-[10px] sm:text-xs font-bold text-gray-500 uppercase">Overdue Invoices</span>
-                                <div className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white mt-1">{invoiceStats.overdue.count}</div>
-                                <div className="text-[10px] sm:text-xs text-red-600 font-medium truncate">KES {Number(invoiceStats.overdue.amount).toLocaleString()}</div>
-                            </div>
-                            <div className="p-3 sm:p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
-                                <span className="text-[10px] sm:text-xs font-bold text-gray-500 uppercase">Cancelled</span>
-                                <div className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white mt-1">{invoiceStats.cancelled.count}</div>
-                                <div className="text-[10px] sm:text-xs text-gray-500 font-medium truncate">KES {Number(invoiceStats.cancelled.amount).toLocaleString()}</div>
-                            </div>
+                {/* Recent Transactions */}
+                <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl overflow-hidden">
+                    <div className="px-5 py-4 border-b border-zinc-100 dark:border-zinc-800 flex justify-between items-center">
+                        <div>
+                            <h3 className="text-sm font-semibold text-zinc-900 dark:text-white">Recent Transactions</h3>
+                            <p className="text-xs text-zinc-400 mt-0.5">Latest activity on your account</p>
                         </div>
-                    </div>
-                )}
-
-                {/* Chart Section */}
-                <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 border border-gray-100 dark:border-gray-700">
-                    <h3 className="text-lg font-bold text-gray-800 dark:text-white mb-6">Financial Overview</h3>
-                    <div className="h-80 w-full">
-                        {loading ? (
-                            <div className="h-full flex items-center justify-center text-gray-400">Loading Chart...</div>
-                        ) : (
-                            <ResponsiveContainer width="100%" height="100%">
-                                <AreaChart data={chartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
-                                    <defs>
-                                        <linearGradient id="colorIncome" x1="0" y1="0" x2="0" y2="1">
-                                            <stop offset="5%" stopColor="#6366f1" stopOpacity={0.3} />
-                                            <stop offset="95%" stopColor="#6366f1" stopOpacity={0} />
-                                        </linearGradient>
-                                        <linearGradient id="colorWithdrawal" x1="0" y1="0" x2="0" y2="1">
-                                            <stop offset="5%" stopColor="#f43f5e" stopOpacity={0.3} />
-                                            <stop offset="95%" stopColor="#f43f5e" stopOpacity={0} />
-                                        </linearGradient>
-                                        <linearGradient id="colorFees" x1="0" y1="0" x2="0" y2="1">
-                                            <stop offset="5%" stopColor="#f59e0b" stopOpacity={0.3} />
-                                            <stop offset="95%" stopColor="#f59e0b" stopOpacity={0} />
-                                        </linearGradient>
-                                    </defs>
-                                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f3f4f6" />
-                                    <XAxis
-                                        dataKey="date"
-                                        tick={{ fontSize: 11, fill: '#9ca3af' }}
-                                        tickLine={false}
-                                        axisLine={false}
-                                        tickFormatter={(str) => str.slice(5)}
-                                        dy={10}
-                                    />
-                                    <YAxis
-                                        tick={{ fontSize: 11, fill: '#9ca3af' }}
-                                        tickLine={false}
-                                        axisLine={false}
-                                        tickFormatter={(value) => `K${value >= 1000 ? (value / 1000).toFixed(1) + 'k' : value}`}
-                                    />
-                                    <Tooltip
-                                        content={({ active, payload, label }) => {
-                                            if (active && payload && payload.length) {
-                                                return (
-                                                    <div className="bg-white dark:bg-gray-800 p-4 rounded-xl shadow-xl border border-gray-100 dark:border-gray-700">
-                                                        <p className="text-sm font-semibold text-gray-900 dark:text-white mb-2">{label}</p>
-                                                        {payload.map((entry: any, index: number) => (
-                                                            <div key={index} className="flex items-center gap-2 text-xs mb-1">
-                                                                <div
-                                                                    className="w-2 h-2 rounded-full"
-                                                                    style={{ backgroundColor: entry.color }}
-                                                                />
-                                                                <span className="text-gray-500 capitalize">{entry.name}:</span>
-                                                                <span className="font-bold text-gray-900 dark:text-white">
-                                                                    KES {Number(entry.value).toLocaleString()}
-                                                                </span>
-                                                            </div>
-                                                        ))}
-                                                    </div>
-                                                );
-                                            }
-                                            return null;
-                                        }}
-                                    />
-                                    <Area
-                                        type="monotone"
-                                        dataKey="income"
-                                        name="Volume"
-                                        stroke="#6366f1"
-                                        strokeWidth={3}
-                                        fillOpacity={1}
-                                        fill="url(#colorIncome)"
-                                        activeDot={{ r: 6, strokeWidth: 0 }}
-                                    />
-                                    <Area
-                                        type="monotone"
-                                        dataKey="withdrawal"
-                                        name="Payouts"
-                                        stroke="#f43f5e"
-                                        strokeWidth={3}
-                                        fillOpacity={1}
-                                        fill="url(#colorWithdrawal)"
-                                        activeDot={{ r: 6, strokeWidth: 0 }}
-                                    />
-                                    <Area
-                                        type="monotone"
-                                        dataKey="fees"
-                                        name="Fees"
-                                        stroke="#f59e0b"
-                                        strokeWidth={3}
-                                        fillOpacity={1}
-                                        fill="url(#colorFees)"
-                                        activeDot={{ r: 6, strokeWidth: 0 }}
-                                    />
-                                </AreaChart>
-                            </ResponsiveContainer>
-                        )}
-                    </div>
-                </div>
-
-                {/* Recent Transactions Table */}
-                <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
-                    <div className="px-6 py-5 border-b border-gray-100 dark:border-gray-700 flex justify-between items-center">
-                        <h3 className="text-lg font-bold text-gray-800 dark:text-white">Recent Transactions</h3>
-                        <Link href="/transactions" className="text-sm text-indigo-600 font-medium hover:underline flex items-center gap-1">
-                            View All <ArrowRight className="w-4 h-4" />
+                        <Link href="/transactions" className="text-xs font-medium text-emerald-600 dark:text-emerald-400 hover:underline flex items-center gap-1">
+                            View all <ArrowRight className="w-3 h-3" />
                         </Link>
                     </div>
                     <div className="overflow-x-auto">
-                        <table className="w-full text-left text-sm text-gray-500">
-                            <thead className="bg-gray-50 dark:bg-gray-700/50 text-gray-700 dark:text-gray-300 uppercase text-xs">
+                        <table className="w-full text-left text-sm">
+                            <thead className="bg-zinc-50 dark:bg-zinc-800/50 text-zinc-400 dark:text-zinc-500 uppercase text-[10px] tracking-wider">
                                 <tr>
-                                    <th className="px-6 py-4 font-semibold">Date</th>
-                                    <th className="px-6 py-4 font-semibold">Type</th>
-                                    <th className="px-6 py-4 font-semibold">Reference</th>
-                                    <th className="px-6 py-4 font-semibold text-right">Amount</th>
-                                    <th className="px-6 py-4 font-semibold text-center">Status</th>
+                                    <th className="px-5 py-3 font-semibold">Date</th>
+                                    <th className="px-5 py-3 font-semibold">Type</th>
+                                    <th className="px-5 py-3 font-semibold hidden sm:table-cell">Reference</th>
+                                    <th className="px-5 py-3 font-semibold text-right">Amount</th>
+                                    <th className="px-5 py-3 font-semibold text-center">Status</th>
                                 </tr>
                             </thead>
-                            <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
+                            <tbody className="divide-y divide-zinc-50 dark:divide-zinc-800">
                                 {transactions && transactions.length > 0 ? (
                                     transactions.map((tx: any) => (
-                                        <tr key={tx.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
-                                            <td className="px-6 py-4">{new Date(tx.createdAt).toLocaleString()}</td>
-                                            <td className="px-6 py-4 font-medium">
-                                                <span className={`text-xs px-2 py-1 rounded-full ${tx.type === 'DEPOSIT_STK' ? 'bg-green-100 text-green-700' :
-                                                    tx.type === 'SALE_CASH' ? 'bg-blue-100 text-blue-700' :
-                                                        tx.type === 'WITHDRAWAL' ? 'bg-red-100 text-red-700' :
-                                                            'bg-gray-100 text-gray-700'
+                                        <tr key={tx.id} className="hover:bg-zinc-50/50 dark:hover:bg-zinc-800/30 transition-colors">
+                                            <td className="px-5 py-3.5 text-xs text-zinc-500">{new Date(tx.createdAt).toLocaleString()}</td>
+                                            <td className="px-5 py-3.5">
+                                                <span className={`text-[10px] font-semibold px-2 py-1 rounded-full ${tx.type === 'DEPOSIT_STK' ? 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400' :
+                                                    tx.type === 'SALE_CASH' ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400' :
+                                                        tx.type === 'WITHDRAWAL' ? 'bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400' :
+                                                            'bg-zinc-100 dark:bg-zinc-800 text-zinc-600'
                                                     }`}>
                                                     {tx.type === 'DEPOSIT_STK' ? 'M-Pesa' :
-                                                        tx.type === 'SALE_CASH' ? 'Cash' :
+                                                        tx.type === 'SALE_CASH' ? 'Cash Sale' :
                                                             tx.type === 'WITHDRAWAL' ? 'Withdrawal' :
-                                                                tx.type.replace('_', ' ')}
+                                                                tx.type.replace(/_/g, ' ')}
                                                 </span>
                                             </td>
-                                            <td className="px-6 py-4 font-mono text-xs">{tx.reference || tx.id.slice(0, 8)}</td>
-                                            <td className={`px-6 py-4 text-right font-medium ${tx.type === 'WITHDRAWAL' ? 'text-red-500' : 'text-green-600'}`}>
+                                            <td className="px-5 py-3.5 font-mono text-xs text-zinc-400 hidden sm:table-cell">{tx.reference || tx.id.slice(0, 12)}</td>
+                                            <td className={`px-5 py-3.5 text-right text-sm font-semibold ${tx.type === 'WITHDRAWAL' ? 'text-red-500' : 'text-emerald-600 dark:text-emerald-400'}`}>
                                                 {tx.type === 'WITHDRAWAL' ? '-' : '+'} KES {Number(tx.amount).toLocaleString()}
                                             </td>
-                                            <td className="px-6 py-4 text-center">
-                                                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${tx.status === 'COMPLETED' ? 'bg-green-100 text-green-800' :
-                                                    tx.status === 'PENDING' ? 'bg-yellow-100 text-yellow-800' :
-                                                        'bg-red-100 text-red-800'
+                                            <td className="px-5 py-3.5 text-center">
+                                                <span className={`inline-flex items-center text-[10px] font-bold px-2 py-1 rounded-full ${tx.status === 'COMPLETED' ? 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400' :
+                                                    tx.status === 'PENDING' ? 'bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400' :
+                                                        'bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400'
                                                     }`}>
                                                     {tx.status}
                                                 </span>
@@ -463,7 +437,7 @@ export default function DashboardPage() {
                                     ))
                                 ) : (
                                     <tr>
-                                        <td colSpan={5} className="px-6 py-12 text-center text-gray-400">
+                                        <td colSpan={5} className="px-5 py-10 text-center text-sm text-zinc-400">
                                             No transactions found for this period.
                                         </td>
                                     </tr>
@@ -473,12 +447,6 @@ export default function DashboardPage() {
                     </div>
                 </div>
             </div>
-
-
-
-        </DashboardLayout >
+        </DashboardLayout>
     );
 }
-
-// Add these to global css if not present or rely on standard tailwind colors
-// The gradients used are standard Tailwind: from-blue-500 to-indigo-600, etc.

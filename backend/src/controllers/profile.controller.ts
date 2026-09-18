@@ -34,6 +34,18 @@ const profileSchema = z.object({
     vatEnabled: z.boolean().optional().or(z.string().transform(val => val === 'true')),
     vatRate: z.number().optional().or(z.string().transform(val => parseFloat(val))),
     useCustomMpesa: z.boolean().optional().or(z.string().transform(val => val === 'true')),
+    onboardingCompleted: z.boolean().optional().or(z.string().transform(val => val === 'true')),
+
+    // Notification & SMS Configuration
+    emailNotificationsEnabled: z.boolean().optional().or(z.string().transform(val => val === 'true')),
+    smsNotificationsEnabled: z.boolean().optional().or(z.string().transform(val => val === 'true')),
+    smsPartnerId: z.string().optional().or(z.literal('')),
+    smsApiKey: z.string().optional().or(z.literal('')),
+    smsShortcode: z.string().optional().or(z.literal('')),
+    notifyOnSale: z.boolean().optional().or(z.string().transform(val => val === 'true')),
+    notifyOnMpesa: z.boolean().optional().or(z.string().transform(val => val === 'true')),
+    notifyOnInvoice: z.boolean().optional().or(z.string().transform(val => val === 'true')),
+    notifyOnLowStock: z.boolean().optional().or(z.string().transform(val => val === 'true')),
 });
 
 export const getProfile = async (req: Request, res: Response) => {
@@ -61,11 +73,12 @@ export const updateProfile = async (req: Request, res: Response) => {
 
         let rawData = { ...req.body };
 
-        // Handle boolean conversion for vatEnabled if it comes as string (multipart/form-data)
         if (rawData.vatEnabled === 'true') rawData.vatEnabled = true;
         if (rawData.vatEnabled === 'false') rawData.vatEnabled = false;
         if (rawData.useCustomMpesa === 'true') rawData.useCustomMpesa = true;
         if (rawData.useCustomMpesa === 'false') rawData.useCustomMpesa = false;
+        if (rawData.onboardingCompleted === 'true') rawData.onboardingCompleted = true;
+        if (rawData.onboardingCompleted === 'false') rawData.onboardingCompleted = false;
 
         // Handle file upload
         if (req.files) {
@@ -160,5 +173,41 @@ export const testSmtpConnection = async (req: Request, res: Response) => {
     } catch (error: any) {
         console.error("SMTP Test Error:", error);
         res.status(400).json({ message: 'Connection failed: ' + error.message });
+    }
+};
+
+export const testSMSConnection = async (req: Request, res: Response) => {
+    try {
+        const userId = (req as any).user.userId;
+        const { toPhone, partnerId, apiKey, shortcode } = req.body;
+        const profile = await prisma.businessProfile.findUnique({ where: { userId } });
+        const user = await prisma.user.findUnique({ where: { id: userId } });
+
+        const phone = toPhone || profile?.contactPhone || user?.phoneNumber;
+        if (!phone) {
+            return res.status(400).json({ message: 'Please provide a valid recipient phone number to send test SMS.' });
+        }
+
+        const { sendAdvantaSMS } = await import('../services/sms.service');
+        const config = {
+            partnerId: partnerId || profile?.smsPartnerId,
+            apiKey: apiKey || profile?.smsApiKey,
+            shortcode: shortcode || profile?.smsShortcode,
+        };
+
+        const result = await sendAdvantaSMS(
+            phone,
+            `[Mpesa Connect] Configuration Test: Your SMS alerts are active and working smoothly.`,
+            config
+        );
+
+        if (result.success) {
+            return res.json({ message: `Test SMS dispatched successfully to ${phone}!`, data: result.data });
+        } else {
+            return res.status(400).json({ message: result.error || 'Failed to dispatch test SMS. Verify your Advanta credentials.' });
+        }
+    } catch (error: any) {
+        console.error('Test SMS Error:', error);
+        res.status(500).json({ message: error.message || 'Failed to test SMS' });
     }
 };

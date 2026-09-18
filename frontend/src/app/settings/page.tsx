@@ -39,8 +39,19 @@ export default function SettingsPage() {
         mpesaEnv: 'sandbox',
         useCustomMpesa: false,
         vatEnabled: false,
-        vatRate: 16
+        vatRate: 16,
+        // Notifications & SMS
+        emailNotificationsEnabled: true,
+        smsNotificationsEnabled: false,
+        smsPartnerId: '',
+        smsApiKey: '',
+        smsShortcode: '',
+        notifyOnSale: true,
+        notifyOnMpesa: true,
+        notifyOnInvoice: true,
+        notifyOnLowStock: true,
     });
+
 
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
@@ -63,6 +74,10 @@ export default function SettingsPage() {
     const [smtpTestStatus, setSmtpTestStatus] = useState<'idle' | 'success' | 'error'>('idle');
     const [smtpTestMessage, setSmtpTestMessage] = useState('');
     const [testEmail, setTestEmail] = useState('');
+
+    const [smsTestStatus, setSmsTestStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
+    const [smsTestMessage, setSmsTestMessage] = useState('');
+
 
     useEffect(() => {
         const storedUser = localStorage.getItem('user');
@@ -204,12 +219,12 @@ export default function SettingsPage() {
         setMpesaTestStatus('idle');
         setMpesaTestMessage('');
         try {
-            // We should ideally save first, but for now assuming user might want to test saved creds
-            // Or we could send current form data to test endpoint? 
-            // The backend test endpoint currently reads from DB. So user MUST save first.
-            // Let's remind them or auto-save? Auto-saving might be too aggressive.
-            // We'll warn if dirty? No, simpler: Read from DB.
-            const res = await api.post('/mpesa/test');
+            const payload = {
+                consumerKey: formData.mpesaConsumerKey,
+                consumerSecret: formData.mpesaConsumerSecret,
+                env: formData.mpesaEnv
+            };
+            const res = await api.post('/mpesa/test', payload);
             setMpesaTestStatus('success');
             setMpesaTestMessage(`Success: ${res.data.message}`);
         } catch (e: any) {
@@ -230,6 +245,21 @@ export default function SettingsPage() {
             setSmtpTestMessage(`Connection Failed: ${e.response?.data?.message || e.message}`);
         }
     };
+
+    const handleTestSMS = async () => {
+        setSmsTestStatus('loading');
+        setSmsTestMessage('');
+        try {
+            const res = await api.post('/profile/test-sms');
+            setSmsTestStatus('success');
+            setSmsTestMessage(`Success: ${res.data.message || 'SMS sent successfully'}`);
+        } catch (e: any) {
+            setSmsTestStatus('error');
+            setSmsTestMessage(`Failed: ${e.response?.data?.message || e.message}`);
+        }
+    };
+
+
 
     if (loading) {
         return (
@@ -577,6 +607,98 @@ export default function SettingsPage() {
                             <div className="flex flex-col space-y-2">
                                 <label className="text-sm font-medium text-gray-700 dark:text-gray-300">M-Pesa Paybill/Till Advice</label>
                                 <textarea name="mpesaDetails" value={formData.mpesaDetails} onChange={handleChange} className="px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 w-full min-h-[80px]" />
+                            </div>
+                        </div>
+                    </Card>
+
+                    {/* Notifications & SMS */}
+                    <Card className="p-6">
+                        <h2 className="text-xl font-semibold mb-1 text-gray-800 dark:text-white">Notifications & SMS Alerts</h2>
+                        <p className="text-sm text-gray-500 mb-6 border-b pb-4">Control how you receive alerts for key business events. SMS powered by Advanta.</p>
+
+                        {/* Master Toggles */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                            <div className="flex items-start gap-4 p-4 bg-gray-50 dark:bg-gray-800/50 rounded-xl border border-gray-200 dark:border-gray-700">
+                                <label className="relative inline-flex items-center cursor-pointer mt-0.5">
+                                    <input
+                                        type="checkbox"
+                                        name="emailNotificationsEnabled"
+                                        checked={(formData as any).emailNotificationsEnabled}
+                                        onChange={handleChange}
+                                        className="sr-only peer"
+                                    />
+                                    <div className="w-11 h-6 bg-gray-200 peer-focus:ring-2 peer-focus:ring-indigo-500 rounded-full peer peer-checked:bg-indigo-600 after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:after:translate-x-full"></div>
+                                </label>
+                                <div>
+                                    <p className="text-sm font-semibold text-gray-800 dark:text-white">Email Notifications</p>
+                                    <p className="text-xs text-gray-500 mt-0.5">Receive email alerts for key activities</p>
+                                </div>
+                            </div>
+                            <div className="flex items-start gap-4 p-4 bg-gray-50 dark:bg-gray-800/50 rounded-xl border border-gray-200 dark:border-gray-700">
+                                <label className="relative inline-flex items-center cursor-pointer mt-0.5">
+                                    <input
+                                        type="checkbox"
+                                        name="smsNotificationsEnabled"
+                                        checked={(formData as any).smsNotificationsEnabled}
+                                        onChange={handleChange}
+                                        className="sr-only peer"
+                                    />
+                                    <div className="w-11 h-6 bg-gray-200 peer-focus:ring-2 peer-focus:ring-indigo-500 rounded-full peer peer-checked:bg-indigo-600 after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:after:translate-x-full"></div>
+                                </label>
+                                <div>
+                                    <p className="text-sm font-semibold text-gray-800 dark:text-white">SMS Notifications</p>
+                                    <p className="text-xs text-gray-500 mt-0.5">Receive SMS alerts via Advanta</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Advanta SMS Credentials — only show when SMS is enabled */}
+                        {(formData as any).smsNotificationsEnabled && (
+                            <div className="mb-6 space-y-4 animate-in fade-in slide-in-from-top-4 duration-300">
+                                <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 flex items-center gap-2">
+                                    <span className="w-5 h-5 rounded-full bg-green-100 text-green-700 text-xs flex items-center justify-center font-bold">S</span>
+                                    Advanta SMS Credentials
+                                </h3>
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                    <Input label="Partner ID" name="smsPartnerId" value={(formData as any).smsPartnerId} onChange={handleChange} placeholder="e.g. 15400" />
+                                    <Input label="API Key" name="smsApiKey" value={(formData as any).smsApiKey} onChange={handleChange} type="password" placeholder="Your Advanta API Key" />
+                                    <Input label="Shortcode / Sender ID" name="smsShortcode" value={(formData as any).smsShortcode} onChange={handleChange} placeholder="e.g. MPESACONNECT" />
+                                </div>
+                                <div className={`flex items-center justify-between p-3 rounded-lg border text-sm ${smsTestStatus === 'success' ? 'bg-green-50 border-green-200' : smsTestStatus === 'error' ? 'bg-red-50 border-red-200' : 'bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700'}`}>
+                                    <span className={smsTestStatus === 'success' ? 'text-green-700' : smsTestStatus === 'error' ? 'text-red-700' : 'text-gray-600 dark:text-gray-300'}>
+                                        {smsTestMessage || 'Test your Advanta SMS connection'}
+                                    </span>
+                                    <Button type="button" onClick={handleTestSMS} variant="outline" size="sm" isLoading={smsTestStatus === 'loading'}>
+                                        Send Test SMS
+                                    </Button>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Per-Activity Toggles */}
+                        <div>
+                            <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Notify me when:</h3>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                {[
+                                    { name: 'notifyOnSale', label: 'A POS sale is completed', sub: 'Every cash or card transaction' },
+                                    { name: 'notifyOnMpesa', label: 'M-Pesa payment received', sub: 'STK push confirmations' },
+                                    { name: 'notifyOnInvoice', label: 'Invoice is paid', sub: 'When a client pays an invoice' },
+                                    { name: 'notifyOnLowStock', label: 'Product stock is low', sub: 'Below minimum threshold' },
+                                ].map((toggle) => (
+                                    <label key={toggle.name} className="flex items-start gap-3 p-3.5 rounded-xl bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 cursor-pointer hover:border-indigo-300 dark:hover:border-indigo-600 transition-colors">
+                                        <input
+                                            type="checkbox"
+                                            name={toggle.name}
+                                            checked={(formData as any)[toggle.name]}
+                                            onChange={handleChange}
+                                            className="mt-0.5 w-4 h-4 text-indigo-600 rounded border-gray-300 focus:ring-indigo-500"
+                                        />
+                                        <div>
+                                            <p className="text-sm font-medium text-gray-800 dark:text-white">{toggle.label}</p>
+                                            <p className="text-xs text-gray-500 mt-0.5">{toggle.sub}</p>
+                                        </div>
+                                    </label>
+                                ))}
                             </div>
                         </div>
                     </Card>

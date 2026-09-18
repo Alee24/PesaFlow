@@ -40,7 +40,7 @@ const getTransactions = async (req, res) => {
     try {
         const userId = req.user.userId;
         const userRole = req.user.role;
-        const { startDate, endDate, status } = req.query;
+        const { startDate, endDate, status, type } = req.query;
         const where = {};
         if (userRole !== 'ADMIN') {
             const userWallets = await prisma.wallet.findMany({ where: { userId }, select: { id: true } });
@@ -63,6 +63,9 @@ const getTransactions = async (req, res) => {
         }
         if (status && status !== 'ALL') {
             where.status = status;
+        }
+        if (type && type !== 'ALL') {
+            where.type = type;
         }
         const transactions = await prisma.transaction.findMany({
             where,

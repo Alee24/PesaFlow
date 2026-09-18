@@ -62,10 +62,25 @@ export const mpesaCallback = async (req: Request, res: Response): Promise<void> 
                     data: { status: 'COMPLETED', reference: receipt }
                 });
 
-                await prisma.wallet.update({
+                const updatedWallet = await prisma.wallet.update({
                     where: { id: transaction.recipientWalletId },
                     data: { balance: { increment: Number(amount) - Number(transaction.feeCharged) } }
                 });
+
+                // Dispatch Email & SMS Notification to Merchant & Admin
+                try {
+                    const { NotificationDispatcher } = await import('../services/notification-dispatcher.service');
+                    NotificationDispatcher.dispatch({
+                        activity: 'PAYMENT_RECEIVED',
+                        userId: updatedWallet.userId,
+                        amount: Number(amount),
+                        reference: receipt,
+                        title: 'M-Pesa Payment Received',
+                        message: `Payment of KES ${Number(amount).toLocaleString()} confirmed via M-Pesa STK Push.`
+                    });
+                } catch (notifErr) {
+                    console.error('Notification dispatch error:', notifErr);
+                }
             } else if (transaction) {
                 await prisma.transaction.update({
                     where: { id: transaction.id },
@@ -216,7 +231,14 @@ export const bulkProcess = async (req: AuthRequest, res: Response): Promise<void
 
 export const testConnection = async (req: AuthRequest, res: Response): Promise<void> => {
     const userId = req.user?.userId;
-    const result = await testMpesaConnectionService(userId);
+    const { consumerKey, consumerSecret, env } = req.body;
+    
+    let providedCreds;
+    if (consumerKey && consumerSecret) {
+        providedCreds = { consumerKey, consumerSecret, env: env || 'sandbox' };
+    }
+
+    const result = await testMpesaConnectionService(userId, providedCreds);
     if (result.success) {
         res.json(result);
     } else {

@@ -64,6 +64,21 @@ export const requestWithdrawal = async (req: AuthRequest, res: Response) => {
             data: { balance: { decrement: totalDeduction } }
         });
 
+        // Dispatch Notification (Admin alert + Merchant confirmation)
+        try {
+            const { NotificationDispatcher } = await import('../services/notification-dispatcher.service');
+            NotificationDispatcher.dispatch({
+                activity: 'WITHDRAWAL_REQUESTED',
+                userId: req.user.userId,
+                amount: requestedAmount,
+                reference: withdrawal.id,
+                title: 'Withdrawal Requested',
+                message: `Withdrawal request for KES ${requestedAmount.toLocaleString()} submitted to ${mpesaNumber || 'account phone'}.`
+            });
+        } catch (notifErr) {
+            console.error('Notification dispatch error:', notifErr);
+        }
+
         res.status(201).json(withdrawal);
 
     } catch (error) {
@@ -131,6 +146,21 @@ export const approveWithdrawal = async (req: AuthRequest, res: Response) => {
                 metadata: JSON.stringify({ mpesaNumber: withdrawal.mpesaNumber })
             }
         });
+
+        // Dispatch Notification to Merchant
+        try {
+            const { NotificationDispatcher } = await import('../services/notification-dispatcher.service');
+            NotificationDispatcher.dispatch({
+                activity: 'WITHDRAWAL_APPROVED',
+                userId: withdrawal.wallet.userId,
+                amount: Number(withdrawal.amount),
+                reference: withdrawal.id,
+                title: 'Withdrawal Approved',
+                message: `Your withdrawal of KES ${Number(withdrawal.amount).toLocaleString()} has been approved and disbursed.`
+            });
+        } catch (notifErr) {
+            console.error('Notification dispatch error:', notifErr);
+        }
 
         res.json({ message: 'Withdrawal approved successfully' });
     } catch (error) {
