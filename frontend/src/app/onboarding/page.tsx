@@ -229,13 +229,22 @@ export default function OnboardingPage() {
                                 </>
                             )}
                             
+                            {!mpesaData.useCustomMpesa && (
+                                <div className="bg-blue-50 border border-blue-200 text-blue-800 text-sm p-4 rounded-lg mt-2 mb-4">
+                                    <p className="font-semibold mb-1">Using System M-Pesa Credentials</p>
+                                    <p>You can use the platform immediately without your own M-Pesa API credentials. However, please note that a <strong>2.5% service fee</strong> will be deducted from your withdrawals.</p>
+                                </div>
+                            )}
+
                             <div className="flex flex-col gap-2 pt-4 border-t border-gray-200">
                                 <Button className="w-full" onClick={() => finishOnboarding(false)} isLoading={loading}>
                                     Complete Setup
                                 </Button>
-                                <Button variant="outline" className="w-full text-gray-500" onClick={() => finishOnboarding(true)} disabled={loading}>
-                                    Skip M-Pesa Setup
-                                </Button>
+                                {mpesaData.useCustomMpesa && (
+                                    <Button variant="outline" className="w-full text-gray-500" onClick={() => finishOnboarding(true)} disabled={loading}>
+                                        Skip & Use System Credentials
+                                    </Button>
+                                )}
                             </div>
                         </div>
                     )}

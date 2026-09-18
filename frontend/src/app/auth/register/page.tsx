@@ -87,7 +87,7 @@ export default function RegisterPage() {
                         </div>
                         <h2 className="text-2xl font-bold text-gray-900 mb-4">Check your email</h2>
                         <p className="text-gray-600 mb-8">
-                            We've sent a verification link to your email address. Please click the link to verify your account and log in.
+                            We've sent a verification link to your email address. Please click the link to verify your account and log in. <strong>(Don't forget to check your spam/junk folder)</strong>.
                         </p>
                         <Button className="w-full" onClick={handleOkClick}>OK</Button>
                     </Card>

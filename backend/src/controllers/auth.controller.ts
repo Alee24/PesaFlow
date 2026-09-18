@@ -60,7 +60,7 @@ export const register = async (req: Request, res: Response): Promise<void> => {
                     phoneNumber,
                     passwordHash,
                     role,
-                    status: 'PENDING_VERIFICATION',
+                    status: 'ACTIVE',
                     emailVerified: false,
                     verificationToken,
                     subscription: {

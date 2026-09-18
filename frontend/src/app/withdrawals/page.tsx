@@ -19,6 +19,8 @@ export default function WithdrawalsPage() {
     const [mpesaNumber, setMpesaNumber] = useState('');
     const [loading, setLoading] = useState(false);
 
+    const [profile, setProfile] = useState<any>(null);
+
     useEffect(() => {
         fetchData();
     }, []);
@@ -26,16 +28,18 @@ export default function WithdrawalsPage() {
     const fetchData = async () => {
         try {
             // Fetch wallet stats from new endpoint
-            const statsRes = await api.get('/wallet/stats');
+            const [statsRes, res, profileRes] = await Promise.all([
+                api.get('/wallet/stats'),
+                api.get('/withdrawals'),
+                api.get('/profile')
+            ]);
+            
             setStats(statsRes.data);
             setBalance(statsRes.data.balance);
-
-            // Fetch history (still useful to keep separate or rely on stats recent)
-            const res = await api.get('/withdrawals');
             setWithdrawals(res.data);
+            setProfile(profileRes.data);
         } catch (e) {
             console.error(e);
-            // showToast("Failed to load wallet data", "error"); // Optional: don't spam if just initial load
         }
     };
 
@@ -151,6 +155,11 @@ export default function WithdrawalsPage() {
                                             Withdrawals are processed within 24 hours. Minimum withdrawal amount is KES 100.
                                             Ensure your M-Pesa number is correct.
                                         </p>
+                                        {!profile?.useCustomMpesa && (
+                                            <div className="mt-2 text-xs font-semibold text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-900/20 p-2 rounded border border-rose-100 dark:border-rose-800/30">
+                                                Note: A 2.5% service fee applies to withdrawals since you are using the platform's M-Pesa system credentials.
+                                            </div>
+                                        )}
                                     </div>
 
                                     <div className="space-y-4">
@@ -162,6 +171,12 @@ export default function WithdrawalsPage() {
                                             onChange={e => setAmount(e.target.value)}
                                             className="text-lg font-semibold"
                                         />
+                                        {!profile?.useCustomMpesa && Number(amount) >= 10 && (
+                                            <div className="text-xs text-gray-500">
+                                                Estimated Fee: KES {(Number(amount) * 0.025).toLocaleString()} <br/>
+                                                Total Deducted: KES {(Number(amount) * 1.025).toLocaleString()}
+                                            </div>
+                                        )}
                                         <Input
                                             label="M-Pesa Number"
                                             placeholder="2547..."

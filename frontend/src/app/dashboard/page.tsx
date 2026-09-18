@@ -122,7 +122,7 @@ export default function DashboardPage() {
                             <div>
                                 <h4 className="text-sm font-semibold text-amber-800 dark:text-amber-300">Verify your email address</h4>
                                 <p className="text-xs text-amber-700 dark:text-amber-400 mt-0.5">
-                                    Please verify within <strong>24 hours</strong> to keep your account active.
+                                    Please verify within <strong>24 hours</strong> to keep your account active. (Don't forget to check your spam/junk folder).
                                 </p>
                                 {resendStatus.message && (
                                     <p className={`text-xs mt-1.5 font-medium ${resendStatus.type === 'success' ? 'text-green-700' : 'text-red-600'}`}>
