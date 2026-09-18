@@ -35,7 +35,8 @@ export const getPublicSettings = async (req: Request, res: Response) => {
             serviceChargeEnabled: settings.serviceChargeEnabled,
             serviceChargeAmount: settings.serviceChargeAmount,
             googleAnalyticsId: settings.googleAnalyticsId,
-            logoUrl: adminUser?.businessProfile?.logoUrl || null
+            logoUrl: adminUser?.businessProfile?.logoUrl || null,
+            faviconUrl: adminUser?.businessProfile?.faviconUrl || null
         });
     } catch (error: any) {
         res.status(500).json({ error: error.message });

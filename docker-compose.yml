@@ -27,6 +27,8 @@ services:
       - "11399:2365"
     networks:
       - pesaflow_net
+    volumes:
+      - uploads_data:/app/public/uploads
 
   frontend:
     build:
@@ -53,3 +55,4 @@ networks:
 
 volumes:
   mysql_data:
+  uploads_data:

@@ -46,8 +46,8 @@ import { ThemeProvider } from "@/contexts/ThemeContext";
 import { AuthProvider } from "@/contexts/AuthContext";
 
 import { GoogleAnalytics } from "@/components/analytics/GoogleAnalytics";
-
 import AnalyticsTracker from "@/components/AnalyticsTracker";
+import { DynamicFavicon } from "@/components/DynamicFavicon";
 
 export default function RootLayout({
   children,
@@ -62,6 +62,7 @@ export default function RootLayout({
       >
         <GoogleAnalytics />
         <AnalyticsTracker />
+        <DynamicFavicon />
         <Toaster position="top-right" />
         <ToastProvider>
           <AuthProvider>
