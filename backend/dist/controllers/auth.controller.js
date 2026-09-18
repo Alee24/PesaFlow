@@ -91,9 +91,9 @@ const register = async (req, res) => {
                     tokenExpiresAt,
                     subscription: {
                         create: {
-                            plan: 'FREE',
+                            plan: 'PRO',
                             status: 'ACTIVE',
-                            features: '[]',
+                            features: '["ALL"]',
                             endDate: oneYearFromNow
                         }
                     }

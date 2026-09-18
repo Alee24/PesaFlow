@@ -83,10 +83,19 @@ const mpesaCallback = async (req, res) => {
                     where: { id: transaction.id },
                     data: { status: 'COMPLETED', reference: receipt || transaction.reference }
                 });
-                const updatedWallet = await prisma.wallet.update({
+                const walletInfo = await prisma.wallet.findUnique({
                     where: { id: transaction.recipientWalletId },
-                    data: { balance: { increment: Number(amount) - Number(transaction.feeCharged || 0) } }
+                    include: { user: { include: { businessProfile: true } } }
                 });
+                const isCustomAPI = walletInfo?.user?.businessProfile?.useCustomMpesa === true;
+                let updatedWallet = walletInfo;
+                if (!isCustomAPI) {
+                    updatedWallet = await prisma.wallet.update({
+                        where: { id: transaction.recipientWalletId },
+                        data: { balance: { increment: Number(amount) - Number(transaction.feeCharged || 0) } },
+                        include: { user: { include: { businessProfile: true } } }
+                    });
+                }
                 await prisma.sale.updateMany({
                     where: { transactionId: transaction.id },
                     data: {
@@ -99,7 +108,7 @@ const mpesaCallback = async (req, res) => {
                     const { NotificationDispatcher } = await Promise.resolve().then(() => __importStar(require('../services/notification-dispatcher.service')));
                     NotificationDispatcher.dispatch({
                         activity: 'PAYMENT_RECEIVED',
-                        userId: updatedWallet.userId,
+                        userId: updatedWallet?.userId || '',
                         amount: Number(amount),
                         reference: receipt,
                         title: 'M-Pesa Payment Received',
@@ -262,14 +271,21 @@ const manualCompleteMpesa = async (req, res) => {
                 }
             });
             if (transaction.status !== 'COMPLETED' && upTx.type === 'DEPOSIT_STK') {
-                await tx.wallet.update({
+                const walletInfo = await tx.wallet.findUnique({
                     where: { id: upTx.recipientWalletId },
-                    data: {
-                        balance: {
-                            increment: upTx.amount
-                        }
-                    }
+                    include: { user: { include: { businessProfile: true } } }
                 });
+                const isCustomAPI = walletInfo?.user?.businessProfile?.useCustomMpesa === true;
+                if (!isCustomAPI) {
+                    await tx.wallet.update({
+                        where: { id: upTx.recipientWalletId },
+                        data: {
+                            balance: {
+                                increment: upTx.amount
+                            }
+                        }
+                    });
+                }
             }
             let linkedSale = await tx.sale.findFirst({
                 where: { transactionId: transaction.id },

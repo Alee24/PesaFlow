@@ -47,14 +47,16 @@ const getPublicSettings = async (req, res) => {
                 }
             });
         }
-        const profile = await prisma.businessProfile.findFirst({
-            where: { logoUrl: { not: null } }
+        const adminUser = await prisma.user.findFirst({
+            where: { role: 'ADMIN' },
+            include: { businessProfile: true }
         });
         res.json({
             serviceChargeEnabled: settings.serviceChargeEnabled,
             serviceChargeAmount: settings.serviceChargeAmount,
             googleAnalyticsId: settings.googleAnalyticsId,
-            logoUrl: profile?.logoUrl || null
+            logoUrl: adminUser?.businessProfile?.logoUrl || null,
+            faviconUrl: adminUser?.businessProfile?.faviconUrl || null
         });
     }
     catch (error) {

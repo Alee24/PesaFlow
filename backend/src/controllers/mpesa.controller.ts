@@ -100,7 +100,7 @@ export const mpesaCallback = async (req: Request, res: Response): Promise<void> 
                     const { NotificationDispatcher } = await import('../services/notification-dispatcher.service');
                     NotificationDispatcher.dispatch({
                         activity: 'PAYMENT_RECEIVED',
-                        userId: updatedWallet.userId,
+                        userId: updatedWallet?.userId || '',
                         amount: Number(amount),
                         reference: receipt,
                         title: 'M-Pesa Payment Received',
