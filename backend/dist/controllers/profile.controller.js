@@ -145,6 +145,10 @@ const updateProfile = async (req, res) => {
             if (rawData.smtpPort === '')
                 delete rawData.smtpPort;
         }
+        const existingProfile = await prisma.businessProfile.findUnique({ where: { userId } });
+        if ((!rawData.companyName || (typeof rawData.companyName === 'string' && rawData.companyName.trim() === '')) && existingProfile?.companyName) {
+            rawData.companyName = existingProfile.companyName;
+        }
         const data = profileSchema.parse(rawData);
         const profile = await prisma.businessProfile.upsert({
             where: { userId },

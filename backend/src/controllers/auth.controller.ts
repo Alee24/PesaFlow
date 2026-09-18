@@ -48,6 +48,7 @@ export const register = async (req: Request, res: Response): Promise<void> => {
 
         const passwordHash = await bcrypt.hash(password, 10);
         const verificationToken = crypto.randomBytes(32).toString('hex');
+        const tokenExpiresAt = new Date(Date.now() + 48 * 60 * 60 * 1000); // 48 hours validity
 
         const result = await prisma.$transaction(async (tx) => {
             const oneYearFromNow = new Date();
@@ -63,6 +64,7 @@ export const register = async (req: Request, res: Response): Promise<void> => {
                     status: 'ACTIVE',
                     emailVerified: false,
                     verificationToken,
+                    tokenExpiresAt,
                     subscription: {
                         create: {
                             plan: 'FREE',
@@ -130,41 +132,120 @@ export const register = async (req: Request, res: Response): Promise<void> => {
 
 export const verifyEmail = async (req: Request, res: Response): Promise<void> => {
     try {
-        const { token } = req.query;
+        const { token, email } = req.query;
 
         if (!token || typeof token !== 'string') {
-            res.status(400).json({ error: 'Invalid token' });
+            res.status(400).json({ error: 'Verification token is required.' });
             return;
         }
 
+        const cleanToken = token.trim();
+
+        // 1. Check if token matches a pending verification
         const user = await prisma.user.findFirst({
-            where: { verificationToken: token }
+            where: { verificationToken: cleanToken }
         });
 
-        if (!user) {
-            res.status(400).json({ error: 'Invalid or expired verification token' });
+        if (user) {
+            // Check if token has expired
+            if (user.tokenExpiresAt && user.tokenExpiresAt < new Date()) {
+                res.status(400).json({ 
+                    error: 'Verification link has expired. Please request a new verification email.',
+                    isExpired: true,
+                    email: user.email 
+                });
+                return;
+            }
+
+            await prisma.user.update({
+                where: { id: user.id },
+                data: {
+                    emailVerified: true,
+                    verificationToken: null,
+                    tokenExpiresAt: null,
+                    status: 'ACTIVE'
+                }
+            });
+
+            res.json({ 
+                message: 'Your email has been verified successfully! You can now log in.',
+                alreadyVerified: false 
+            });
             return;
         }
 
-        await prisma.user.update({
-            where: { id: user.id },
-            data: {
-                emailVerified: true,
-                verificationToken: null,
-                status: 'ACTIVE' // Activate user upon email verification? Or keep PENDING_VERIFICATION for KYC?
-                // Let's keep PENDING_VERIFICATION if they haven't done KYC.
-                // But if they just need email to login, status should be handled carefully.
-                // Original logic used PENDING_VERIFICATION. Let's keep it, but allow login if emailVerified is true.
-            }
-        });
+        // 2. If token is not found, check if the email parameter was supplied and user is ALREADY verified
+        // (This happens when an email security scanner or browser pre-fetch consumed the token first)
+        if (email && typeof email === 'string') {
+            const cleanEmail = email.trim().toLowerCase();
+            const userByEmail = await prisma.user.findUnique({
+                where: { email: cleanEmail }
+            });
 
-        res.json({ message: 'Email verified successfully. You can now login.' });
+            if (userByEmail && userByEmail.emailVerified) {
+                res.json({ 
+                    message: 'Your email has already been verified. You can now log in.',
+                    alreadyVerified: true 
+                });
+                return;
+            }
+        }
+
+        // 3. Fallback: If token might be a JWT token, decode it
+        try {
+            const decoded = jwt.verify(cleanToken, process.env.JWT_SECRET || 'fallback_secret') as any;
+            if (decoded && (decoded.userId || decoded.email)) {
+                const userFromToken = await prisma.user.findFirst({
+                    where: {
+                        OR: [
+                            ...(decoded.userId ? [{ id: decoded.userId }] : []),
+                            ...(decoded.email ? [{ email: decoded.email }] : [])
+                        ]
+                    }
+                });
+
+                if (userFromToken) {
+                    if (userFromToken.emailVerified) {
+                        res.json({ 
+                            message: 'Your email has already been verified. You can now log in.',
+                            alreadyVerified: true 
+                        });
+                        return;
+                    }
+
+                    await prisma.user.update({
+                        where: { id: userFromToken.id },
+                        data: {
+                            emailVerified: true,
+                            verificationToken: null,
+                            tokenExpiresAt: null,
+                            status: 'ACTIVE'
+                        }
+                    });
+
+                    res.json({ 
+                        message: 'Your email has been verified successfully! You can now log in.',
+                        alreadyVerified: false 
+                    });
+                    return;
+                }
+            }
+        } catch {
+            // Not a JWT or token expired in JWT
+        }
+
+        // 4. Token not found and user cannot be verified
+        res.status(400).json({ 
+            error: 'This verification link is invalid or has already been used. If your account is already active, you can log in directly.',
+            isInvalid: true 
+        });
 
     } catch (error) {
         console.error("Verification Error:", error);
-        res.status(500).json({ error: 'Internal Server Error' });
+        res.status(500).json({ error: 'Internal Server Error while verifying email' });
     }
 };
+
 
 export const completeProfile = async (req: Request, res: Response): Promise<void> => {
     try {
@@ -393,27 +474,43 @@ export const getCurrentUser = async (req: Request, res: Response): Promise<void>
 
 export const resendVerification = async (req: Request, res: Response): Promise<void> => {
     try {
-        const userId = (req as any).user.userId;
-        const user = await prisma.user.findUnique({ where: { id: userId } });
+        const userId = (req as any).user?.userId;
+        const emailBody = req.body?.email || req.query?.email;
+
+        let user = null;
+        if (userId) {
+            user = await prisma.user.findUnique({ where: { id: userId } });
+        } else if (emailBody && typeof emailBody === 'string') {
+            user = await prisma.user.findUnique({ where: { email: emailBody.trim().toLowerCase() } });
+        }
+
         if (!user) {
-            res.status(404).json({ error: 'User not found' });
+            res.status(404).json({ error: 'Account not found with this email address.' });
             return;
         }
+
         if (user.emailVerified) {
-            res.status(400).json({ error: 'Email already verified' });
+            res.status(200).json({ 
+                message: 'This email account is already verified! You can log in directly.',
+                alreadyVerified: true 
+            });
             return;
         }
 
         const verificationToken = crypto.randomBytes(32).toString('hex');
+        const tokenExpiresAt = new Date(Date.now() + 48 * 60 * 60 * 1000); // 48 hours validity
         await prisma.user.update({
-            where: { id: userId },
-            data: { verificationToken }
+            where: { id: user.id },
+            data: { 
+                verificationToken,
+                tokenExpiresAt
+            }
         });
 
         await sendVerificationEmail(user.email, verificationToken);
-        res.json({ message: 'Verification email resent successfully.' });
+        res.json({ message: 'A new verification link has been sent to your email (valid for 48 hours).' });
     } catch (error) {
         console.error("Resend Verification Error:", error);
-        res.status(500).json({ error: 'Internal Server Error' });
+        res.status(500).json({ error: 'Internal Server Error while resending verification email.' });
     }
 };

@@ -48,10 +48,18 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                     if (res.data) {
                         const storedUser = JSON.parse(localStorage.getItem('user') || '{}');
                         const isAdmin = storedUser?.role === 'ADMIN';
-                        const isProfileEmpty = !res.data.id;
-                        const isOnboardingIncomplete = res.data.onboardingCompleted === false;
-                        
-                        if (!isAdmin && (isProfileEmpty || isOnboardingIncomplete) && pathname !== '/onboarding') {
+                        const hasProfile = !!(res.data.id && res.data.companyName);
+                        const isOnboarded = res.data.onboardingCompleted === true || storedUser?.onboardingCompleted === true;
+
+                        // If user has already configured their business profile or finished onboarding, ensure local state is synced
+                        if (hasProfile || isOnboarded) {
+                            if (!storedUser.onboardingCompleted || !storedUser.isProfileComplete) {
+                                storedUser.onboardingCompleted = true;
+                                storedUser.isProfileComplete = true;
+                                localStorage.setItem('user', JSON.stringify(storedUser));
+                            }
+                        } else if (!isAdmin && !hasProfile && pathname !== '/onboarding') {
+                            // Only redirect merchants who have never created a business profile
                             router.push('/onboarding');
                             return;
                         }

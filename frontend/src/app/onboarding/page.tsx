@@ -11,6 +11,7 @@ export default function OnboardingPage() {
     const router = useRouter();
     const [step, setStep] = useState(1);
     const [loading, setLoading] = useState(false);
+    const [hasExistingProfile, setHasExistingProfile] = useState(false);
     
     // Step 1: Profile
     const [profileData, setProfileData] = useState({
@@ -34,6 +35,48 @@ export default function OnboardingPage() {
     const [logo, setLogo] = useState<File | null>(null);
     const [mpesaTestStatus, setMpesaTestStatus] = useState<'idle' | 'success' | 'error'>('idle');
 
+    // Pre-populate existing profile details on load
+    useEffect(() => {
+        const fetchProfile = async () => {
+            try {
+                const res = await api.get('/profile');
+                if (res.data && res.data.id) {
+                    setHasExistingProfile(true);
+                    setProfileData(prev => ({
+                        companyName: res.data.companyName || prev.companyName,
+                        contactPhone: res.data.contactPhone || prev.contactPhone,
+                        location: res.data.location || prev.location,
+                        website: res.data.website || prev.website,
+                        kraPinNumber: res.data.kraPinNumber || prev.kraPinNumber,
+                    }));
+
+                    setMpesaData(prev => ({
+                        mpesaConsumerKey: res.data.mpesaConsumerKey || prev.mpesaConsumerKey,
+                        mpesaConsumerSecret: res.data.mpesaConsumerSecret || prev.mpesaConsumerSecret,
+                        mpesaShortcode: res.data.mpesaShortcode || prev.mpesaShortcode,
+                        mpesaPasskey: res.data.mpesaPasskey || prev.mpesaPasskey,
+                        mpesaEnv: res.data.mpesaEnv || prev.mpesaEnv,
+                        useCustomMpesa: res.data.useCustomMpesa ?? prev.useCustomMpesa
+                    }));
+
+                    // If profile has companyName, mark completed locally to prevent any layout traps
+                    if (res.data.companyName) {
+                        try {
+                            const stored = JSON.parse(localStorage.getItem('user') || '{}');
+                            stored.onboardingCompleted = true;
+                            stored.isProfileComplete = true;
+                            localStorage.setItem('user', JSON.stringify(stored));
+                        } catch {}
+                    }
+                }
+            } catch (err) {
+                console.error("Could not fetch profile in onboarding", err);
+            }
+        };
+
+        fetchProfile();
+    }, []);
+
     const handleProfileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setProfileData({ ...profileData, [e.target.name]: e.target.value });
     };
@@ -48,7 +91,7 @@ export default function OnboardingPage() {
     };
 
     const submitProfile = async () => {
-        if (!profileData.companyName) {
+        if (!profileData.companyName.trim()) {
             toast.error('Company Name is required');
             return;
         }
@@ -56,18 +99,29 @@ export default function OnboardingPage() {
         try {
             setLoading(true);
             const formData = new FormData();
-            formData.append('companyName', profileData.companyName);
+            formData.append('companyName', profileData.companyName.trim());
             formData.append('contactPhone', profileData.contactPhone);
             formData.append('location', profileData.location);
             formData.append('website', profileData.website);
             formData.append('kraPinNumber', profileData.kraPinNumber);
+            formData.append('onboardingCompleted', 'true'); // Save as completed so user is never trapped in loop!
             
             if (logo) {
                 formData.append('logo', logo);
             }
             
             await api.put('/profile', formData);
-            toast.success('Business profile saved');
+            
+            // Sync local storage immediately
+            try {
+                const stored = JSON.parse(localStorage.getItem('user') || '{}');
+                stored.onboardingCompleted = true;
+                stored.isProfileComplete = true;
+                localStorage.setItem('user', JSON.stringify(stored));
+            } catch {}
+
+            setHasExistingProfile(true);
+            toast.success('Business profile saved successfully!');
             setStep(2);
         } catch (error: any) {
             toast.error(error.response?.data?.error || 'Failed to save profile');
@@ -104,16 +158,25 @@ export default function OnboardingPage() {
                 formData.append('mpesaPasskey', mpesaData.mpesaPasskey);
                 formData.append('mpesaEnv', mpesaData.mpesaEnv);
                 formData.append('useCustomMpesa', 'true');
-            } else if (skipMpesa) {
+            } else {
                 formData.append('useCustomMpesa', 'false');
             }
             
             formData.append('onboardingCompleted', 'true');
-            formData.append('companyName', profileData.companyName); // Required by schema
+            if (profileData.companyName.trim()) {
+                formData.append('companyName', profileData.companyName.trim());
+            }
             
             await api.put('/profile', formData);
             
-            toast.success('Onboarding complete!');
+            try {
+                const stored = JSON.parse(localStorage.getItem('user') || '{}');
+                stored.onboardingCompleted = true;
+                stored.isProfileComplete = true;
+                localStorage.setItem('user', JSON.stringify(stored));
+            } catch {}
+
+            toast.success('Onboarding completed successfully!');
             router.push('/dashboard');
         } catch (error: any) {
             toast.error(error.response?.data?.error || 'Failed to complete onboarding');
@@ -121,6 +184,7 @@ export default function OnboardingPage() {
             setLoading(false);
         }
     };
+
 
     return (
         <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
@@ -167,6 +231,16 @@ export default function OnboardingPage() {
                             <Button className="w-full" onClick={submitProfile} isLoading={loading}>
                                 Continue
                             </Button>
+                            {hasExistingProfile && (
+                                <Button 
+                                    type="button"
+                                    variant="outline" 
+                                    className="w-full text-gray-600" 
+                                    onClick={() => router.push('/dashboard')}
+                                >
+                                    Already Set Up? Go to Dashboard
+                                </Button>
+                            )}
                         </div>
                     )}
 
@@ -245,6 +319,22 @@ export default function OnboardingPage() {
                                         Skip & Use System Credentials
                                     </Button>
                                 )}
+                                <div className="flex justify-between items-center pt-2">
+                                    <button 
+                                        type="button" 
+                                        onClick={() => setStep(1)} 
+                                        className="text-xs text-indigo-600 hover:text-indigo-800 underline"
+                                    >
+                                        &larr; Back to Business Details
+                                    </button>
+                                    <button 
+                                        type="button" 
+                                        onClick={() => router.push('/dashboard')} 
+                                        className="text-xs text-gray-500 hover:text-gray-700 underline"
+                                    >
+                                        Go to Dashboard &rarr;
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     )}

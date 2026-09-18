@@ -18,6 +18,11 @@ router.post('/login', auth_controller_1.login);
 router.get('/me', auth_middleware_1.authenticateToken, auth_controller_1.getCurrentUser);
 router.get('/current-user', auth_middleware_1.authenticateToken, auth_controller_1.getCurrentUser);
 router.put('/me', auth_middleware_1.authenticateToken, auth_controller_1.updateUser);
-router.post('/resend-verification', auth_middleware_1.authenticateToken, auth_controller_1.resendVerification);
+router.post('/resend-verification', (req, res, next) => {
+    if (req.headers.authorization) {
+        return (0, auth_middleware_1.authenticateToken)(req, res, next);
+    }
+    next();
+}, auth_controller_1.resendVerification);
 exports.default = router;
 //# sourceMappingURL=auth.routes.js.map

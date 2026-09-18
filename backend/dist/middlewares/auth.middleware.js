@@ -88,8 +88,9 @@ const requireAdmin = (req, res, next) => {
 };
 exports.requireAdmin = requireAdmin;
 const requireActive = (req, res, next) => {
-    if (req.user?.status !== 'ACTIVE' && req.user?.role !== 'ADMIN') {
-        res.status(403).json({ error: 'Full account activation required for this feature.' });
+    const isSuspendedOrRejected = req.user?.status === 'SUSPENDED' || req.user?.status === 'REJECTED';
+    if (isSuspendedOrRejected && req.user?.role !== 'ADMIN') {
+        res.status(403).json({ error: 'Your account is suspended or rejected.' });
         return;
     }
     next();

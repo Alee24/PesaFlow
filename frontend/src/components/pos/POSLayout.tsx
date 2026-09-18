@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Loader2, LogOut, ExternalLink, RefreshCw, Wifi, WifiOff } from 'lucide-react';
-import { toast } from 'sonner';
+import toast from 'react-hot-toast';
 
 interface POSLayoutProps {
     children: React.ReactNode;
@@ -42,7 +42,7 @@ export default function POSLayout({ children }: POSLayoutProps) {
         // Clear POS session but KEEP Device Session (Admin 'token')
         localStorage.removeItem('posToken');
         localStorage.removeItem('posUser');
-        toast.info("Logged out");
+        toast.success("Logged out");
         router.push('/pos/login');
     };
 

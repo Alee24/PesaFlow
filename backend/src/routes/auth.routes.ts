@@ -19,6 +19,11 @@ router.post('/login', login);
 router.get('/me', authenticateToken, getCurrentUser);
 router.get('/current-user', authenticateToken, getCurrentUser);
 router.put('/me', authenticateToken, updateUser);
-router.post('/resend-verification', authenticateToken, resendVerification);
+router.post('/resend-verification', (req, res, next) => {
+    if (req.headers.authorization) {
+        return authenticateToken(req, res, next);
+    }
+    next();
+}, resendVerification);
 
 export default router;

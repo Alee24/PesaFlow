@@ -62,13 +62,16 @@ const requestWithdrawal = async (req, res) => {
         const requestedAmount = Number(amount);
         if (requestedAmount < 10)
             return res.status(400).json({ error: 'Minimum withdrawal is KES 10' });
-        const fee = requestedAmount * 0.02;
+        const profile = await prisma.businessProfile.findUnique({ where: { userId: req.user.userId } });
+        const isCustom = profile?.useCustomMpesa;
+        const feePercentage = isCustom ? 0 : 0.025;
+        const fee = requestedAmount * feePercentage;
         const totalDeduction = requestedAmount + fee;
         const wallet = await prisma.wallet.findFirst({ where: { userId: req.user.userId } });
         if (!wallet)
             return res.status(404).json({ error: 'Wallet not found' });
         if (Number(wallet.balance) < totalDeduction) {
-            return res.status(400).json({ error: `Insufficient funds. You need KES ${totalDeduction.toLocaleString()} (including 2% fee).` });
+            return res.status(400).json({ error: `Insufficient funds. You need KES ${totalDeduction.toLocaleString()} (including ${feePercentage * 100}% fee).` });
         }
         const withdrawal = await prisma.withdrawal.create({
             data: {

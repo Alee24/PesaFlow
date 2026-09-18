@@ -116,6 +116,12 @@ export const updateProfile = async (req: Request, res: Response) => {
             if (rawData.smtpPort === '') delete rawData.smtpPort;
         }
 
+        // If companyName was not supplied in partial update, fallback to existing profile companyName
+        const existingProfile = await prisma.businessProfile.findUnique({ where: { userId } });
+        if ((!rawData.companyName || (typeof rawData.companyName === 'string' && rawData.companyName.trim() === '')) && existingProfile?.companyName) {
+            rawData.companyName = existingProfile.companyName;
+        }
+
         const data = profileSchema.parse(rawData);
 
         const profile = await prisma.businessProfile.upsert({

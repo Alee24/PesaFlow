@@ -12,50 +12,33 @@ const sendEmail = async (userId, to, subject, html, attachments) => {
         let transportConfig = null;
         let fromName = 'Mpesa Connect';
         let fromEmail = 'noreply@mpesaconnect.co.ke';
-        const profile = await prisma.businessProfile.findUnique({ where: { userId } });
-        if (profile?.smtpHost && profile?.smtpUser && profile?.smtpPass) {
-            console.log('Using merchant SMTP for user:', userId);
+        const globalSettings = await prisma.systemSettings.findFirst();
+        if (globalSettings?.smtpHost && globalSettings?.smtpUser && globalSettings?.smtpPass) {
+            console.log('Using global SMTP settings');
             transportConfig = {
-                host: profile.smtpHost,
-                port: profile.smtpPort || 587,
-                secure: profile.smtpPort === 465,
+                host: globalSettings.smtpHost,
+                port: globalSettings.smtpPort || 587,
+                secure: globalSettings.smtpPort === 465,
                 auth: {
-                    user: profile.smtpUser,
-                    pass: profile.smtpPass,
+                    user: globalSettings.smtpUser,
+                    pass: globalSettings.smtpPass,
                 },
             };
-            fromName = profile.companyName || 'Mpesa Connect';
-            fromEmail = profile.smtpUser;
+            fromName = globalSettings.smtpFromName || 'Mpesa Connect';
+            fromEmail = globalSettings.smtpFromEmail || globalSettings.smtpUser;
         }
         else {
-            const globalSettings = await prisma.systemSettings.findFirst();
-            if (globalSettings?.smtpHost && globalSettings?.smtpUser && globalSettings?.smtpPass) {
-                console.log('Using global SMTP settings');
-                transportConfig = {
-                    host: globalSettings.smtpHost,
-                    port: globalSettings.smtpPort || 587,
-                    secure: globalSettings.smtpPort === 465,
-                    auth: {
-                        user: globalSettings.smtpUser,
-                        pass: globalSettings.smtpPass,
-                    },
-                };
-                fromName = globalSettings.smtpFromName || 'Mpesa Connect';
-                fromEmail = globalSettings.smtpFromEmail || globalSettings.smtpUser;
-            }
-            else {
-                console.log('Using environment SMTP settings');
-                transportConfig = {
-                    host: process.env.SMTP_HOST || 'mail.mpesaconnect.co.ke',
-                    port: Number(process.env.SMTP_PORT) || 587,
-                    secure: process.env.SMTP_SECURE === 'true' || Number(process.env.SMTP_PORT) === 465,
-                    auth: {
-                        user: process.env.SMTP_USER || 'system@mpesaconnect.co.ke',
-                        pass: process.env.SMTP_PASS || '',
-                    },
-                };
-                fromEmail = process.env.SMTP_USER || 'system@mpesaconnect.co.ke';
-            }
+            console.log('Using environment SMTP settings');
+            transportConfig = {
+                host: process.env.SMTP_HOST || 'mail.mpesaconnect.co.ke',
+                port: Number(process.env.SMTP_PORT) || 587,
+                secure: process.env.SMTP_SECURE === 'true' || Number(process.env.SMTP_PORT) === 465,
+                auth: {
+                    user: process.env.SMTP_USER || 'system@mpesaconnect.co.ke',
+                    pass: process.env.SMTP_PASS || '',
+                },
+            };
+            fromEmail = process.env.SMTP_USER || 'system@mpesaconnect.co.ke';
         }
         if (!transportConfig) {
             console.log('No SMTP configuration available');
@@ -103,7 +86,7 @@ const getSystemTransporter = async () => {
 };
 const sendVerificationEmail = async (email, token) => {
     const baseUrl = process.env.BASE_URL || 'https://mpesaconnect.co.ke';
-    const verifyUrl = `${baseUrl}/auth/verify?token=${token}`;
+    const verifyUrl = `${baseUrl}/auth/verify?token=${token}&email=${encodeURIComponent(email)}`;
     const transporter = await getSystemTransporter();
     const globalSettings = await prisma.systemSettings.findFirst();
     const fromName = globalSettings?.smtpFromName || 'Mpesa Connect Support';

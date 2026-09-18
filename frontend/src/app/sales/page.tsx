@@ -20,7 +20,7 @@ import {
     RefreshCw
 } from 'lucide-react';
 import { ReceiptModal } from '@/components/pos/ReceiptModal';
-import { toast } from 'sonner';
+import toast from 'react-hot-toast';
 
 export default function SalesPage() {
     const [sales, setSales] = useState<any[]>([]);
