@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.initiateB2CPayment = exports.testMpesaConnectionService = exports.initiateSTKPush = void 0;
+exports.initiateB2CPayment = exports.testMpesaConnectionService = exports.querySTKPushStatus = exports.initiateSTKPush = void 0;
 const axios_1 = __importDefault(require("axios"));
 const client_1 = require("@prisma/client");
 const prisma = new client_1.PrismaClient();
@@ -209,6 +209,48 @@ const initiateSTKPush = async (phoneNumber, amount, reference, userId, items = [
     }
 };
 exports.initiateSTKPush = initiateSTKPush;
+const querySTKPushStatus = async (checkoutRequestId, userId) => {
+    try {
+        const creds = await getCredentials(userId || undefined);
+        const token = await getAccessToken(creds);
+        const date = new Date();
+        const timestamp = date.getFullYear() +
+            ('0' + (date.getMonth() + 1)).slice(-2) +
+            ('0' + date.getDate()).slice(-2) +
+            ('0' + date.getHours()).slice(-2) +
+            ('0' + date.getMinutes()).slice(-2) +
+            ('0' + date.getSeconds()).slice(-2);
+        const password = Buffer.from(`${creds.shortCode}${creds.passkey}${timestamp}`).toString('base64');
+        const url = creds.env === 'production'
+            ? 'https://api.safaricom.co.ke/mpesa/stkpushquery/v1/query'
+            : 'https://sandbox.safaricom.co.ke/mpesa/stkpushquery/v1/query';
+        const requestBody = {
+            BusinessShortCode: creds.shortCode,
+            Password: password,
+            Timestamp: timestamp,
+            CheckoutRequestID: checkoutRequestId,
+        };
+        const response = await axios_1.default.post(url, requestBody, {
+            headers: {
+                Authorization: `Bearer ${token}`,
+            },
+            timeout: 8000
+        });
+        console.log(`[M-Pesa STK Query] CheckoutRequestID: ${checkoutRequestId}, Result:`, response.data);
+        return {
+            success: true,
+            data: response.data
+        };
+    }
+    catch (error) {
+        console.error('[M-Pesa STK Query Error]:', error.response?.data || error.message);
+        return {
+            success: false,
+            error: error.response?.data || error.message
+        };
+    }
+};
+exports.querySTKPushStatus = querySTKPushStatus;
 const testMpesaConnectionService = async (userId, providedCreds) => {
     try {
         let creds;

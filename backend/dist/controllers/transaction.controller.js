@@ -43,15 +43,20 @@ const getTransactions = async (req, res) => {
         const { startDate, endDate, status, type, checkoutRequestId } = req.query;
         const where = {};
         if (userRole !== 'ADMIN') {
-            const userWallets = await prisma.wallet.findMany({ where: { userId }, select: { id: true } });
+            const merchantId = req.user.merchantId || userId;
+            const userWallets = await prisma.wallet.findMany({
+                where: { userId: { in: [userId, merchantId] } },
+                select: { id: true }
+            });
             const walletIds = userWallets.map(w => w.id);
             where.OR = [
                 { initiatorUserId: userId },
+                { initiatorUserId: merchantId },
                 { recipientWalletId: { in: walletIds } }
             ];
         }
         if (checkoutRequestId) {
-            where.checkoutRequestId = checkoutRequestId;
+            where.checkoutRequestId = String(checkoutRequestId);
         }
         if (startDate && endDate) {
             where.createdAt = {

@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { X, CheckCircle, Smartphone, Banknote, Gift, UserPlus, SkipForward, RefreshCw, Clock, AlertCircle } from 'lucide-react';
@@ -66,11 +66,13 @@ const PaymentModal: React.FC<PaymentModalProps> = ({ totalAmount, items, discoun
         checkMpesaStatus();
     }, []);
 
+    const isCheckingRef = useRef(false);
+
     // Auto-check payment status every 3 seconds when pending
     useEffect(() => {
         if (step === 'mpesa-pending' && checkoutRequestId) {
             const interval = setInterval(() => {
-                checkPaymentStatus();
+                checkPaymentStatus(false);
             }, 3000);
 
             return () => clearInterval(interval);
@@ -94,34 +96,46 @@ const PaymentModal: React.FC<PaymentModalProps> = ({ totalAmount, items, discoun
         }
     };
 
-    const checkPaymentStatus = async () => {
-        if (!checkoutRequestId) return;
+    const checkPaymentStatus = async (isManual = false) => {
+        if (!checkoutRequestId || isCheckingRef.current) return;
 
         try {
-            setLoading(true);
-            // Check M-Pesa transaction status directly
-            const res = await api.get(`/transactions?checkoutRequestId=${checkoutRequestId}`);
+            isCheckingRef.current = true;
+            if (isManual) setLoading(true);
 
-            if (res.data && res.data.length > 0) {
-                const transaction = res.data[0];
-                if (transaction.status === 'COMPLETED') {
+            // Check M-Pesa transaction & Daraja status directly
+            const res = await api.get(`/mpesa/status/${checkoutRequestId}`);
+
+            if (res.data) {
+                if (res.data.status === 'COMPLETED') {
                     toast.success('Payment confirmed! Finalizing sale...');
-                    // Automatically finalize the sale now that payment is in wallet
-                    await completeSale('MPESA_STK', totalAmount, false, transaction.id);
+                    // If sale was already pre-created during STK push initiation, finish directly
+                    if (res.data.sale) {
+                        onSuccess(res.data.sale);
+                    } else {
+                        // Fallback in case sale was not pre-created
+                        await completeSale('MPESA_STK', totalAmount, false, res.data.transaction?.id);
+                    }
                     return;
-                } else if (transaction.status === 'FAILED') {
-                    toast.error('Payment failed or cancelled by user.');
+                } else if (res.data.status === 'FAILED') {
+                    toast.error(res.data.message || 'Payment failed or cancelled by user.');
                     setStep('payment');
                     return;
                 }
             }
 
             setCheckAttempts(prev => prev + 1);
-            toast('Payment still pending...', { icon: '⏳' });
-        } catch (error) {
+            if (isManual) {
+                toast('Payment still pending on phone...', { icon: '⏳' });
+            }
+        } catch (error: any) {
             console.error('Error checking payment status:', error);
+            if (isManual) {
+                toast.error(error.response?.data?.error || 'Could not verify payment status');
+            }
         } finally {
-            setLoading(false);
+            isCheckingRef.current = false;
+            if (isManual) setLoading(false);
         }
     };
 
@@ -375,7 +389,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({ totalAmount, items, discoun
                             <div className="space-y-3">
                                 <Button
                                     className="w-full py-3 text-lg"
-                                    onClick={checkPaymentStatus}
+                                    onClick={() => checkPaymentStatus(true)}
                                     disabled={loading}
                                     isLoading={loading}
                                 >
@@ -391,6 +405,14 @@ const PaymentModal: React.FC<PaymentModalProps> = ({ totalAmount, items, discoun
                                             onClick={async () => {
                                                 try {
                                                     setLoading(true);
+                                                    // First check the direct status for this checkoutRequestId
+                                                    const statusRes = await api.get(`/mpesa/status/${checkoutRequestId}`);
+                                                    if (statusRes.data?.status === 'COMPLETED' && statusRes.data?.sale) {
+                                                        toast.success('Receipt found!');
+                                                        onSuccess(statusRes.data.sale);
+                                                        return;
+                                                    }
+
                                                     // Fetch the most recent sale for this amount
                                                     const res = await api.get(`/sales?limit=10`);
                                                     const recentSale = res.data.find((s: any) =>
@@ -433,8 +455,12 @@ const PaymentModal: React.FC<PaymentModalProps> = ({ totalAmount, items, discoun
 
                                                     toast.success('M-Pesa payment marked as complete!');
                                                     
-                                                    // Now finalize the sale
-                                                    await completeSale('MPESA_STK', totalAmount, false, mpesaRes.data.transactionId);
+                                                    // Finalize with returned sale if available (avoids duplicate stock decrement)
+                                                    if (mpesaRes.data?.sale) {
+                                                        onSuccess(mpesaRes.data.sale);
+                                                    } else {
+                                                        await completeSale('MPESA_STK', totalAmount, false, mpesaRes.data?.transactionId);
+                                                    }
                                                     
                                                 } catch (error: any) {
                                                     console.error('Manual completion error:', error);

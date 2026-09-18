@@ -33,7 +33,7 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.resetMpesaConfig = exports.testConnection = exports.bulkProcess = exports.initiateInvoicePayment = exports.mpesaCallback = exports.stkPush = void 0;
+exports.resetMpesaConfig = exports.testConnection = exports.getMpesaStatus = exports.manualCompleteMpesa = exports.bulkProcess = exports.initiateInvoicePayment = exports.mpesaCallback = exports.stkPush = void 0;
 const mpesa_service_1 = require("../services/mpesa.service");
 const client_1 = require("@prisma/client");
 const prisma = new client_1.PrismaClient();
@@ -65,21 +65,35 @@ const mpesaCallback = async (req, res) => {
         if (req.body.Body?.stkCallback) {
             const { stkCallback } = req.body.Body;
             const merchantRequestID = stkCallback.MerchantRequestID;
+            const checkoutRequestID = stkCallback.CheckoutRequestID;
             const resultCode = stkCallback.ResultCode;
             const transaction = await prisma.transaction.findFirst({
-                where: { merchantRequestId: merchantRequestID }
+                where: {
+                    OR: [
+                        ...(merchantRequestID ? [{ merchantRequestId: merchantRequestID }] : []),
+                        ...(checkoutRequestID ? [{ checkoutRequestId: checkoutRequestID }] : [])
+                    ]
+                }
             });
             if (transaction && resultCode === 0) {
-                const metaItems = stkCallback.CallbackMetadata.Item;
+                const metaItems = stkCallback.CallbackMetadata?.Item || [];
                 const receipt = metaItems.find((i) => i.Name === 'MpesaReceiptNumber')?.Value;
-                const amount = metaItems.find((i) => i.Name === 'Amount')?.Value;
+                const amount = metaItems.find((i) => i.Name === 'Amount')?.Value || transaction.amount;
                 await prisma.transaction.update({
                     where: { id: transaction.id },
-                    data: { status: 'COMPLETED', reference: receipt }
+                    data: { status: 'COMPLETED', reference: receipt || transaction.reference }
                 });
                 const updatedWallet = await prisma.wallet.update({
                     where: { id: transaction.recipientWalletId },
-                    data: { balance: { increment: Number(amount) - Number(transaction.feeCharged) } }
+                    data: { balance: { increment: Number(amount) - Number(transaction.feeCharged || 0) } }
+                });
+                await prisma.sale.updateMany({
+                    where: { transactionId: transaction.id },
+                    data: {
+                        paymentStatus: 'PAID',
+                        amountPaid: Number(amount),
+                        amountDue: 0
+                    }
                 });
                 try {
                     const { NotificationDispatcher } = await Promise.resolve().then(() => __importStar(require('../services/notification-dispatcher.service')));
@@ -100,6 +114,10 @@ const mpesaCallback = async (req, res) => {
                 await prisma.transaction.update({
                     where: { id: transaction.id },
                     data: { status: 'FAILED' }
+                });
+                await prisma.sale.updateMany({
+                    where: { transactionId: transaction.id },
+                    data: { paymentStatus: 'FAILED' }
                 });
             }
         }
@@ -217,6 +235,210 @@ const bulkProcess = async (req, res) => {
     }
 };
 exports.bulkProcess = bulkProcess;
+const manualCompleteMpesa = async (req, res) => {
+    try {
+        if (!req.user) {
+            res.status(401).json({ error: 'Unauthorized' });
+            return;
+        }
+        const { checkoutRequestId } = req.body;
+        if (!checkoutRequestId) {
+            res.status(400).json({ error: 'checkoutRequestId required' });
+            return;
+        }
+        const transaction = await prisma.transaction.findFirst({
+            where: { checkoutRequestId }
+        });
+        if (!transaction) {
+            res.status(404).json({ error: 'Transaction not found' });
+            return;
+        }
+        const result = await prisma.$transaction(async (tx) => {
+            const upTx = await tx.transaction.update({
+                where: { id: transaction.id },
+                data: {
+                    status: 'COMPLETED',
+                    reference: transaction.reference?.startsWith('MANUAL') ? transaction.reference : `MANUAL-${Date.now()}`
+                }
+            });
+            if (transaction.status !== 'COMPLETED' && upTx.type === 'DEPOSIT_STK') {
+                await tx.wallet.update({
+                    where: { id: upTx.recipientWalletId },
+                    data: {
+                        balance: {
+                            increment: upTx.amount
+                        }
+                    }
+                });
+            }
+            let linkedSale = await tx.sale.findFirst({
+                where: { transactionId: transaction.id },
+                include: {
+                    items: {
+                        include: { product: true }
+                    }
+                }
+            });
+            if (linkedSale) {
+                linkedSale = await tx.sale.update({
+                    where: { id: linkedSale.id },
+                    data: {
+                        paymentStatus: 'PAID',
+                        amountPaid: upTx.amount,
+                        amountDue: 0
+                    },
+                    include: {
+                        items: {
+                            include: { product: true }
+                        }
+                    }
+                });
+            }
+            return { upTx, linkedSale };
+        });
+        res.json({
+            success: true,
+            transactionId: result.upTx.id,
+            sale: result.linkedSale
+        });
+    }
+    catch (error) {
+        console.error('Manual complete error:', error);
+        res.status(500).json({ error: 'Failed to manually complete payment' });
+    }
+};
+exports.manualCompleteMpesa = manualCompleteMpesa;
+const getMpesaStatus = async (req, res) => {
+    try {
+        const checkoutRequestId = req.params.checkoutRequestId || req.query.checkoutRequestId;
+        if (!checkoutRequestId) {
+            res.status(400).json({ error: 'checkoutRequestId is required' });
+            return;
+        }
+        const transaction = await prisma.transaction.findFirst({
+            where: { checkoutRequestId },
+            include: {
+                sale: {
+                    include: {
+                        items: {
+                            include: { product: true }
+                        }
+                    }
+                }
+            }
+        });
+        if (!transaction) {
+            res.status(404).json({ error: 'Transaction not found for this checkoutRequestId' });
+            return;
+        }
+        if (transaction.status === 'COMPLETED') {
+            let sale = transaction.sale;
+            if (sale && sale.paymentStatus !== 'PAID') {
+                sale = await prisma.sale.update({
+                    where: { id: sale.id },
+                    data: {
+                        paymentStatus: 'PAID',
+                        amountPaid: transaction.amount,
+                        amountDue: 0
+                    },
+                    include: {
+                        items: {
+                            include: { product: true }
+                        }
+                    }
+                });
+            }
+            res.json({
+                status: 'COMPLETED',
+                transaction,
+                sale
+            });
+            return;
+        }
+        if (transaction.status === 'FAILED') {
+            res.json({
+                status: 'FAILED',
+                transaction,
+                sale: transaction.sale
+            });
+            return;
+        }
+        try {
+            const queryRes = await (0, mpesa_service_1.querySTKPushStatus)(checkoutRequestId, transaction.initiatorUserId);
+            if (queryRes.success && queryRes.data) {
+                const resultCode = String(queryRes.data.ResultCode);
+                if (resultCode === '0') {
+                    const receipt = queryRes.data.MpesaReceiptNumber || transaction.reference;
+                    const resolved = await prisma.$transaction(async (tx) => {
+                        const upTx = await tx.transaction.update({
+                            where: { id: transaction.id },
+                            data: {
+                                status: 'COMPLETED',
+                                reference: receipt
+                            }
+                        });
+                        await tx.wallet.update({
+                            where: { id: transaction.recipientWalletId },
+                            data: { balance: { increment: Number(transaction.amount) - Number(transaction.feeCharged || 0) } }
+                        });
+                        let sale = await tx.sale.findFirst({
+                            where: { transactionId: transaction.id },
+                            include: { items: { include: { product: true } } }
+                        });
+                        if (sale) {
+                            sale = await tx.sale.update({
+                                where: { id: sale.id },
+                                data: {
+                                    paymentStatus: 'PAID',
+                                    amountPaid: transaction.amount,
+                                    amountDue: 0
+                                },
+                                include: { items: { include: { product: true } } }
+                            });
+                        }
+                        return { upTx, sale };
+                    });
+                    res.json({
+                        status: 'COMPLETED',
+                        confirmedBySafaricom: true,
+                        transaction: resolved.upTx,
+                        sale: resolved.sale
+                    });
+                    return;
+                }
+                else if (resultCode === '1032' || resultCode === '1') {
+                    await prisma.transaction.update({
+                        where: { id: transaction.id },
+                        data: { status: 'FAILED' }
+                    });
+                    await prisma.sale.updateMany({
+                        where: { transactionId: transaction.id },
+                        data: { paymentStatus: 'FAILED' }
+                    });
+                    res.json({
+                        status: 'FAILED',
+                        message: queryRes.data.ResultDesc || 'Payment was cancelled on phone',
+                        transaction
+                    });
+                    return;
+                }
+            }
+        }
+        catch (queryErr) {
+            console.error('Active Daraja status query error:', queryErr);
+        }
+        res.json({
+            status: 'PENDING',
+            transaction,
+            sale: transaction.sale
+        });
+    }
+    catch (error) {
+        console.error('getMpesaStatus Error:', error);
+        res.status(500).json({ error: 'Failed to retrieve payment status' });
+    }
+};
+exports.getMpesaStatus = getMpesaStatus;
 const testConnection = async (req, res) => {
     const userId = req.user?.userId;
     const { consumerKey, consumerSecret, env } = req.body;
