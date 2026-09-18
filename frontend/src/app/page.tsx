@@ -89,6 +89,45 @@ export default function LandingPage() {
 
   return (
     <div className="min-h-screen bg-zinc-50 font-sans text-zinc-900 selection:bg-emerald-200">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "SoftwareApplication",
+            "name": "Mpesa Connect",
+            "operatingSystem": "Web",
+            "applicationCategory": "BusinessApplication",
+            "description": "Mpesa Connect is a completely free-to-use business management application providing M-Pesa STK push payments, customer relationship management (CRM), professional invoicing, and real-time reports.",
+            "offers": {
+              "@type": "Offer",
+              "price": "0.00",
+              "priceCurrency": "KES"
+            },
+            "mainEntity": {
+              "@type": "FAQPage",
+              "mainEntity": [
+                {
+                  "@type": "Question",
+                  "name": "How does the M-Pesa STK Push integration work?",
+                  "acceptedAnswer": {
+                    "@type": "Answer",
+                    "text": "Our platform integrates directly with the Safaricom Daraja API. By entering your Paybill or Till number credentials, you can trigger an automatic M-Pesa STK Push prompt on your customer's phone."
+                  }
+                },
+                {
+                  "@type": "Question",
+                  "name": "Does the CRM include invoicing and automated reports?",
+                  "acceptedAnswer": {
+                    "@type": "Answer",
+                    "text": "Yes! The built-in CRM tracks all your customers' purchase histories. You can generate professional invoices with a single click, send them via email or SMS, and track unpaid balances with real-time reports."
+                  }
+                }
+              ]
+            }
+          })
+        }}
+      />
       {/* Navigation */}
       <nav className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-zinc-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -174,11 +213,11 @@ export default function LandingPage() {
       {/* Hero Section */}
       <section className="relative pt-24 pb-32 overflow-hidden">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center">
-          <h1 className="text-5xl md:text-6xl font-extrabold text-zinc-900 tracking-tight leading-tight max-w-4xl mx-auto mb-6">
-            Your <span className="text-emerald-600">Free</span> M-Pesa Integration Platform.
+          <h1 className="text-5xl md:text-7xl font-extrabold text-zinc-900 tracking-tight leading-tight max-w-5xl mx-auto mb-6">
+            The Ultimate <span className="text-emerald-600">STK Push</span>, CRM &amp; Invoicing Platform.
           </h1>
-          <p className="text-lg md:text-xl text-zinc-600 max-w-2xl mx-auto mb-10 leading-relaxed">
-            Mpesa Connect is a completely free-to-use business management and M-Pesa integration application. All you need is your M-Pesa Paybill or Till Number and your API credentials to get started.
+          <p className="text-lg md:text-xl text-zinc-600 max-w-3xl mx-auto mb-10 leading-relaxed">
+            Mpesa Connect is a completely free-to-use business management application. Automate M-Pesa STK push payments, manage customers with our advanced CRM, generate professional invoices, and access real-time financial reports. All you need is your Paybill/Till Number and API credentials to get started.
           </p>
           <div className="flex flex-col sm:flex-row justify-center items-center gap-4">
             <Link 
@@ -296,6 +335,36 @@ export default function LandingPage() {
                   Our systems are continually monitored and updated to protect against vulnerabilities. Every payment request is securely validated to ensure your funds reach your account without fail.
                 </p>
               </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* SEO/AEO FAQ Section */}
+      <section id="faq" className="py-24 bg-white border-t border-zinc-200">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl md:text-4xl font-bold text-zinc-900 mb-4">Frequently Asked Questions</h2>
+            <p className="text-lg text-zinc-600">Everything you need to know about our STK Push, CRM, Invoicing, and Reporting capabilities.</p>
+          </div>
+          <div className="space-y-8">
+            <div className="bg-zinc-50 p-8 rounded-2xl border border-zinc-200">
+              <h3 className="text-xl font-bold text-zinc-900 mb-3">How does the M-Pesa STK Push integration work?</h3>
+              <p className="text-zinc-600 leading-relaxed">
+                Our platform integrates directly with the Safaricom Daraja API. By entering your Paybill or Till number credentials, you can trigger an automatic M-Pesa STK Push prompt on your customer's phone. Once they input their PIN, the payment is verified instantly, and the receipt is generated.
+              </p>
+            </div>
+            <div className="bg-zinc-50 p-8 rounded-2xl border border-zinc-200">
+              <h3 className="text-xl font-bold text-zinc-900 mb-3">Does the CRM include invoicing and automated reports?</h3>
+              <p className="text-zinc-600 leading-relaxed">
+                Yes! The built-in CRM tracks all your customers' purchase histories. You can generate professional invoices with a single click, send them via email or SMS, and track unpaid balances. Real-time reports give you insights into your top customers, revenue trends, and outstanding invoices.
+              </p>
+            </div>
+            <div className="bg-zinc-50 p-8 rounded-2xl border border-zinc-200">
+              <h3 className="text-xl font-bold text-zinc-900 mb-3">Can I use this software to prompt users for payment remotely?</h3>
+              <p className="text-zinc-600 leading-relaxed">
+                Absolutely. With our Direct Payment feature, you can simply enter a customer's phone number and the amount due. The system will prompt the user for payment via STK Push wherever they are, making it perfect for remote billing and invoice collection.
+              </p>
             </div>
           </div>
         </div>

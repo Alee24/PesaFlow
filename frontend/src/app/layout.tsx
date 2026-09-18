@@ -21,8 +21,22 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  title: "Mpesa Connect - Complete Business Management Platform",
-  description: "Advanced POS, Inventory Management, M-Pesa Integration & Merchant Verification System",
+  title: "Mpesa Connect | STK Push, CRM, Invoicing & POS Software",
+  description: "The complete business management platform for automated M-Pesa STK push payments, customer relationship management (CRM), professional invoicing, and real-time reports.",
+  keywords: "M-Pesa STK push, CRM software, automated invoicing, POS system, payment collection, business reports, M-Pesa integration, merchant software, receipt generation",
+  openGraph: {
+    title: "Mpesa Connect | STK Push, CRM, Invoicing & POS",
+    description: "Automate your business with M-Pesa STK push payments, advanced CRM, invoicing, and real-time reports.",
+    url: "https://mpesaconnect.co.ke",
+    siteName: "Mpesa Connect",
+    locale: "en_KE",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Mpesa Connect | STK Push, CRM, Invoicing & POS",
+    description: "Automate your business with M-Pesa STK push payments, advanced CRM, invoicing, and real-time reports.",
+  },
   manifest: "/manifest.json",
   icons: {
     icon: '/favicon.png',
