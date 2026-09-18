@@ -18,6 +18,12 @@ const styles = StyleSheet.create({
         backgroundColor: '#FFFFFF',
         fontFamily: 'Helvetica',
     },
+    logo: {
+        height: 50,
+        alignSelf: 'center',
+        marginBottom: 10,
+        objectFit: 'contain'
+    },
     header: {
         marginBottom: 20,
         borderBottom: 1,
@@ -162,26 +168,40 @@ const formatCurrency = (amount: number) => {
 
 interface ReceiptPDFProps {
     transaction: any;
+    globalLogo?: string | null;
 }
 
-const ReceiptPDF = ({ transaction }: ReceiptPDFProps) => {
+const ReceiptPDF = ({ transaction, globalLogo }: ReceiptPDFProps) => {
     // Get the base URL for the image to work in client-side PDF generation
-    const logoUrl = typeof window !== 'undefined' ? `${window.location.origin}/logo.png` : '/logo.png';
+    const getImageUrl = (path: string | null | undefined): string | undefined => {
+        if (!path) return undefined;
+        if (path.startsWith('http')) return path;
+        const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+        return `${API_URL}${path}`;
+    };
+
+    const biz = transaction?.sale?.merchant?.businessProfile || transaction?.recipientWallet?.user?.businessProfile;
+    const renderLogo = biz?.logoUrl || globalLogo;
 
     return (
         <Document>
-            <Page size="A5" style={styles.page}>
-                <View style={styles.header}>
-                    <Image src={logoUrl} style={{ height: 50, alignSelf: 'center', marginBottom: 10 }} />
-                    <Text style={styles.title}>Mpesa Connect</Text>
-                    <Text style={styles.subtitle}>OFFICIAL TRANSACTION RECEIPT</Text>
-                </View>
-
+            <Page size={[300, 600]} style={styles.page}>
+                {renderLogo && (
+                    <Image
+                        style={styles.logo}
+                        src={getImageUrl(renderLogo) || ''}
+                    />
+                )}
                 {transaction.status === 'COMPLETED' || transaction.status === 'PAID' ? (
                     <View style={styles.stamp}>
                         <Text style={styles.stampText}>PAID</Text>
                     </View>
                 ) : null}
+
+                <View style={styles.header}>
+                    <Text style={styles.title}>Mpesa Connect</Text>
+                    <Text style={styles.subtitle}>OFFICIAL TRANSACTION RECEIPT</Text>
+                </View>
 
                 <View style={styles.infoSection}>
                     <View style={styles.infoBlock}>

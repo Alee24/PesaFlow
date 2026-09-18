@@ -26,6 +26,7 @@ const PDFDownloadLink = dynamic(
 export default function InvoicePage() {
     const { id } = useParams();
     const [invoice, setInvoice] = useState<any>(null);
+    const [globalLogo, setGlobalLogo] = useState<string | null>(null);
     const [loading, setLoading] = useState(true);
     const [isClient, setIsClient] = useState(false);
     const [confirmLoading, setConfirmLoading] = useState(false);
@@ -61,8 +62,12 @@ export default function InvoicePage() {
 
     const fetchInvoice = async () => {
         try {
-            const res = await api.get(`/transactions/${id}`);
+            const [res, settingsRes] = await Promise.all([
+                api.get(`/transactions/${id}`),
+                api.get('/settings/public')
+            ]);
             setInvoice(res.data);
+            setGlobalLogo(settingsRes.data.logoUrl);
         } catch (error) {
             console.error(error);
         } finally {
@@ -168,7 +173,7 @@ export default function InvoicePage() {
         setSendingEmail(true);
         try {
             // Generate PDF Blob
-            const blob = await pdf(<InvoicePDF invoice={invoice} />).toBlob();
+            const blob = await pdf(<InvoicePDF invoice={invoice} globalLogo={globalLogo} />).toBlob();
 
             // Create FormData
             const formData = new FormData();
@@ -230,7 +235,7 @@ export default function InvoicePage() {
                             <Printer className="w-4 h-4" /> Print
                         </Button>
                         {isClient && (
-                            <PDFDownloadLink document={<InvoicePDF invoice={invoice} />} fileName={`Invoice_${invoice.reference}.pdf`}>
+                            <PDFDownloadLink document={<InvoicePDF invoice={invoice} globalLogo={globalLogo} />} fileName={`Invoice_${invoice.reference}.pdf`}>
                                 {({ loading }) => (
                                     <Button disabled={loading} className="flex items-center gap-2">
                                         <Download className="w-4 h-4" /> {loading ? 'Generating...' : 'Download PDF'}

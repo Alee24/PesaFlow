@@ -20,6 +20,7 @@ const PDFDownloadLink = dynamic(
 
 export default function TransactionsPage() {
     const [transactions, setTransactions] = useState<any[]>([]);
+    const [globalLogo, setGlobalLogo] = useState<string | null>(null);
     const [loading, setLoading] = useState(true);
     const [startDate, setStartDate] = useState('');
     const [endDate, setEndDate] = useState('');
@@ -44,14 +45,18 @@ export default function TransactionsPage() {
                 end.setHours(23, 59, 59, 999);
                 params.append('endDate', end.toISOString());
             }
-            if (status && status !== 'ALL') params.append('status', status);
+            if (status !== 'ALL') params.append('status', status);
 
             if (params.toString()) {
                 url += `?${params.toString()}`;
             }
 
-            const res = await api.get(url);
+            const [res, settingsRes] = await Promise.all([
+                api.get(url),
+                api.get('/settings/public')
+            ]);
             setTransactions(res.data);
+            setGlobalLogo(settingsRes.data.logoUrl);
         } catch (e) {
             console.error(e);
         } finally {
@@ -266,7 +271,7 @@ export default function TransactionsPage() {
                                 </span>
                                 {isClient && (
                                     <PDFDownloadLink
-                                        document={<ReceiptPDF transaction={selectedTx} />}
+                                        document={<ReceiptPDF transaction={selectedTx} globalLogo={globalLogo} />}
                                         fileName={`Receipt_${selectedTx.reference || selectedTx.id.split('-')[0]}.pdf`}
                                     >
                                         {({ loading }) => (

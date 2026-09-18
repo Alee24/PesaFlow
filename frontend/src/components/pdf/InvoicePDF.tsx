@@ -169,9 +169,10 @@ const styles = StyleSheet.create({
 
 interface InvoicePDFProps {
     invoice: any;
+    globalLogo?: string | null;
 }
 
-const InvoicePDF: React.FC<InvoicePDFProps> = ({ invoice }) => {
+const InvoicePDF: React.FC<InvoicePDFProps> = ({ invoice, globalLogo }) => {
     const biz = invoice.initiator?.businessProfile;
 
     // Helper to get full image URL
@@ -202,6 +203,8 @@ const InvoicePDF: React.FC<InvoicePDFProps> = ({ invoice }) => {
 
     const isPaid = invoice.status === 'COMPLETED' || invoice.status === 'PAID';
 
+    const renderLogo = biz?.logoUrl || globalLogo;
+
     return (
         <Document>
             <Page size="A4" style={styles.page}>
@@ -209,10 +212,10 @@ const InvoicePDF: React.FC<InvoicePDFProps> = ({ invoice }) => {
                 {/* Header */}
                 <View style={styles.header}>
                     <View style={styles.companyCol}>
-                        {biz?.logoUrl && (
+                        {renderLogo && (
                             <Image
                                 style={styles.logo}
-                                src={getImageUrl(biz.logoUrl) || ''}
+                                src={getImageUrl(renderLogo) || ''}
                             />
                         )}
                         <Text style={styles.companyName}>{biz?.companyName || 'Company Name'}</Text>
