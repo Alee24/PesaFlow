@@ -426,18 +426,16 @@ const PaymentModal: React.FC<PaymentModalProps> = ({ totalAmount, items, discoun
                                                 try {
                                                     setLoading(true);
 
-                                                    // Create sale record manually
-                                                    const res = await api.post('/sales/mpesa-manual', {
-                                                        items,
-                                                        totalAmount,
-                                                        discountType,
-                                                        discountValue,
-                                                        phoneNumber: phone,
-                                                        checkoutRequestId: checkoutRequestId || 'MANUAL_COMPLETION'
+                                                    // Mark the transaction as manually completed in backend
+                                                    const mpesaRes = await api.post('/mpesa/manual-complete', {
+                                                        checkoutRequestId: checkoutRequestId
                                                     });
 
-                                                    toast.success('Payment marked as complete! Sale created.');
-                                                    onSuccess(res.data.sale);
+                                                    toast.success('M-Pesa payment marked as complete!');
+                                                    
+                                                    // Now finalize the sale
+                                                    await completeSale('MPESA_STK', totalAmount, false, mpesaRes.data.transactionId);
+                                                    
                                                 } catch (error: any) {
                                                     console.error('Manual completion error:', error);
                                                     toast.error(error.response?.data?.error || 'Failed to complete payment');

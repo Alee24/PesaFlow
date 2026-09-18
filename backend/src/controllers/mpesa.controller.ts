@@ -229,6 +229,65 @@ export const bulkProcess = async (req: AuthRequest, res: Response): Promise<void
     }
 };
 
+export const manualCompleteMpesa = async (req: AuthRequest, res: Response): Promise<void> => {
+    try {
+        if (!req.user) {
+            res.status(401).json({ error: 'Unauthorized' });
+            return;
+        }
+
+        const { checkoutRequestId } = req.body;
+        if (!checkoutRequestId) {
+            res.status(400).json({ error: 'checkoutRequestId required' });
+            return;
+        }
+
+        const transaction = await prisma.transaction.findFirst({
+            where: { checkoutRequestId }
+        });
+
+        if (!transaction) {
+            res.status(404).json({ error: 'Transaction not found' });
+            return;
+        }
+
+        if (transaction.status === 'COMPLETED') {
+            res.json({ success: true, transactionId: transaction.id });
+            return;
+        }
+
+        // Manually complete the transaction
+        const updatedTx = await prisma.$transaction(async (tx) => {
+            const upTx = await tx.transaction.update({
+                where: { id: transaction.id },
+                data: {
+                    status: 'COMPLETED',
+                    reference: `MANUAL-${Date.now()}`
+                }
+            });
+
+            // Update wallet balance for DEPOSIT_STK
+            if (upTx.type === 'DEPOSIT_STK') {
+                await tx.wallet.update({
+                    where: { id: upTx.recipientWalletId },
+                    data: {
+                        balance: {
+                            increment: upTx.amount
+                        }
+                    }
+                });
+            }
+
+            return upTx;
+        });
+
+        res.json({ success: true, transactionId: updatedTx.id });
+    } catch (error: any) {
+        console.error('Manual complete error:', error);
+        res.status(500).json({ error: 'Failed to manually complete payment' });
+    }
+};
+
 export const testConnection = async (req: AuthRequest, res: Response): Promise<void> => {
     const userId = req.user?.userId;
     const { consumerKey, consumerSecret, env } = req.body;
