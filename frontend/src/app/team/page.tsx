@@ -6,7 +6,7 @@ import DashboardLayout from '@/components/layout/DashboardLayout';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { useToast } from '@/contexts/ToastContext';
-import { Users, UserPlus, UserX, TrendingUp } from 'lucide-react';
+import { Users, UserPlus, UserX } from 'lucide-react';
 import api from '@/lib/api';
 
 interface TeamMember {
@@ -191,48 +191,6 @@ export default function TeamPage() {
                     </div>
                 </Card>
 
-                {/* Staff Performance */}
-                {performance.length > 0 && (
-                    <Card>
-                        <div className="p-6">
-                            <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                                <TrendingUp className="w-5 h-5" />
-                                Staff Sales Performance
-                            </h2>
-                            <div className="overflow-x-auto">
-                                <table className="w-full text-left text-sm">
-                                    <thead>
-                                        <tr className="border-b dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50">
-                                            <th className="py-3 px-4 font-semibold">Staff Member</th>
-                                            <th className="py-3 px-4 font-semibold">Role</th>
-                                            <th className="py-3 px-4 font-semibold text-right">Total Sales</th>
-                                            <th className="py-3 px-4 font-semibold text-right">Total Revenue</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody className="divide-y dark:divide-gray-700">
-                                        {performance.map((p) => (
-                                            <tr key={p.userId} className="hover:bg-gray-50 dark:hover:bg-gray-800/50">
-                                                <td className="py-3 px-4">
-                                                    <div className="font-medium">{p.userName}</div>
-                                                    <div className="text-xs text-gray-500">{p.userEmail}</div>
-                                                </td>
-                                                <td className="py-3 px-4">
-                                                    <span className="bg-gray-100 text-gray-700 text-xs px-2 py-1 rounded-full">
-                                                        {p.role}
-                                                    </span>
-                                                </td>
-                                                <td className="py-3 px-4 text-right font-medium">{p.totalSales}</td>
-                                                <td className="py-3 px-4 text-right font-bold text-green-600">
-                                                    KES {(p.totalRevenue || 0).toLocaleString()}
-                                                </td>
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                    </Card>
-                )}
             </div>
 
             {/* Add Member Modal */}
