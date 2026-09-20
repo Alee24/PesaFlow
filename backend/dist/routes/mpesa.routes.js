@@ -9,6 +9,8 @@ router.post('/stkpush/invoice', auth_middleware_1.authenticateToken, auth_middle
 router.post('/manual-complete', auth_middleware_1.authenticateToken, auth_middleware_1.requireActive, mpesa_controller_1.manualCompleteMpesa);
 router.get('/status/:checkoutRequestId', auth_middleware_1.authenticateToken, mpesa_controller_1.getMpesaStatus);
 router.get('/status', auth_middleware_1.authenticateToken, mpesa_controller_1.getMpesaStatus);
+router.post('/qr/generate', auth_middleware_1.authenticateToken, auth_middleware_1.requireActive, mpesa_controller_1.generateQrCode);
+router.get('/qr/product/:id', auth_middleware_1.authenticateToken, auth_middleware_1.requireActive, mpesa_controller_1.generateProductQrCode);
 router.post('/test', auth_middleware_1.authenticateToken, auth_middleware_1.requireActive, mpesa_controller_1.testConnection);
 router.post('/reset-config', auth_middleware_1.authenticateToken, auth_middleware_1.requireActive, mpesa_controller_1.resetMpesaConfig);
 router.post('/bulk-process', auth_middleware_1.authenticateToken, auth_middleware_1.requireActive, mpesa_controller_1.bulkProcess);

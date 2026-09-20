@@ -7,9 +7,10 @@ import { Button } from '@/components/ui/Button';
 import Link from 'next/link';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import api from '@/lib/api';
-import { Tag, Trash2, FileUp, Download } from 'lucide-react';
+import { Tag, Trash2, FileUp, Download, QrCode } from 'lucide-react';
 import { useToast } from '@/contexts/ToastContext';
 import { ConfirmModal } from '@/components/ui/ConfirmModal';
+import { ProductQrModal } from '@/components/qr/ProductQrModal';
 import { getImageUrl } from '@/lib/utils';
 
 interface Product {
@@ -31,6 +32,8 @@ export default function ProductsPage() {
         elementId: '',
         loading: false
     });
+    const [selectedQrProduct, setSelectedQrProduct] = useState<Product | null>(null);
+    const [isQrModalOpen, setIsQrModalOpen] = useState(false);
     const [uploading, setUploading] = useState(false);
     const fileInputRef = React.useRef<HTMLInputElement>(null);
 
@@ -178,7 +181,19 @@ export default function ProductsPage() {
                                                     {product.status}
                                                 </span>
                                             </td>
-                                            <td className="py-4 px-6 text-right">
+                                            <td className="py-4 px-6 text-right whitespace-nowrap">
+                                                <Button
+                                                    variant="outline"
+                                                    size="sm"
+                                                    className="border-emerald-500/30 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/20 mr-2"
+                                                    onClick={() => {
+                                                        setSelectedQrProduct(product);
+                                                        setIsQrModalOpen(true);
+                                                    }}
+                                                >
+                                                    <QrCode className="w-3.5 h-3.5 mr-1" />
+                                                    M-Pesa QR
+                                                </Button>
                                                 <Link href={`/products/${product.id}`}>
                                                     <Button variant="ghost" size="sm" className="text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50">Edit</Button>
                                                 </Link>
@@ -208,6 +223,14 @@ export default function ProductsPage() {
                 variant="danger"
                 loading={deleteModal.loading}
                 confirmText="Delete"
+            />
+            <ProductQrModal
+                isOpen={isQrModalOpen}
+                onClose={() => {
+                    setIsQrModalOpen(false);
+                    setSelectedQrProduct(null);
+                }}
+                product={selectedQrProduct}
             />
         </DashboardLayout>
     );

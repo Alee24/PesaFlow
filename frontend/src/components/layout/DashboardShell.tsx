@@ -7,7 +7,7 @@ import {
     LayoutDashboard, ShoppingCart, Package, CreditCard, ArrowLeftRight, Settings,
     LogOut, User, Store, FileText, Bell, X, CheckCircle, AlertCircle, Info, Lock,
     ShieldCheck, TrendingUp, BarChart3, Users, Wallet, MessageSquare, Key, Globe,
-    ChevronRight, Receipt, Zap, Building2, Smartphone
+    ChevronRight, Receipt, Zap, Building2, Smartphone, QrCode
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useState, useEffect, useRef } from 'react';
@@ -39,6 +39,7 @@ export const navSections = [
         label: 'Finance',
         items: [
             { name: 'Direct Payment', href: '/direct-payment', icon: Smartphone },
+            { name: 'M-Pesa QR Generator', href: '/qr-generator', icon: QrCode },
             { name: 'Invoices', href: '/invoices', icon: FileText, feature: 'invoices' },
             { name: 'Wallet', href: '/wallet', icon: Wallet },
             { name: 'Withdrawals', href: '/withdrawals', icon: CreditCard },
@@ -115,12 +116,12 @@ export function Sidebar({ user, isMobileOpen, setIsMobileOpen }: {
 
             {/* Sidebar */}
             <aside className={cn(
-                "fixed left-0 top-0 z-50 h-screen w-60 flex flex-col bg-zinc-950 border-r border-zinc-800 transition-transform duration-300 ease-in-out",
+                "fixed left-0 top-0 z-50 h-screen w-60 flex flex-col bg-white dark:bg-zinc-950 border-r border-gray-200 dark:border-zinc-800 transition-transform duration-300 ease-in-out",
                 "md:translate-x-0 md:z-40",
                 isMobileOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
             )}>
                 {/* Logo / Brand */}
-                <div className="flex h-14 shrink-0 items-center justify-between px-4 border-b border-zinc-800">
+                <div className="flex h-14 shrink-0 items-center justify-between px-4 border-b border-gray-200 dark:border-zinc-800">
                     <Link href="/dashboard" className="flex items-center gap-2.5" onClick={() => setIsMobileOpen?.(false)}>
                         {logoUrl ? (
                             <img src={logoUrl} alt="Mpesa Connect" className="h-7 w-auto object-contain" />
@@ -129,11 +130,11 @@ export function Sidebar({ user, isMobileOpen, setIsMobileOpen }: {
                                 <Zap className="w-4 h-4 text-white" fill="white" />
                             </div>
                         )}
-                        <span className="font-bold text-[15px] tracking-tight text-white">Mpesa Connect</span>
+                        <span className="font-bold text-[15px] tracking-tight text-gray-900 dark:text-white">Mpesa Connect</span>
                     </Link>
                     <button
                         onClick={() => setIsMobileOpen?.(false)}
-                        className="md:hidden p-1.5 rounded-md text-zinc-400 hover:text-white hover:bg-zinc-800"
+                        className="md:hidden p-1.5 rounded-md text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-zinc-800"
                     >
                         <X className="w-4 h-4" />
                     </button>
@@ -155,7 +156,7 @@ export function Sidebar({ user, isMobileOpen, setIsMobileOpen }: {
                         return (
                             <div key={sIdx}>
                                 {section.label && (
-                                    <p className="px-2 mb-1.5 text-[10px] font-semibold uppercase tracking-widest text-zinc-500">
+                                    <p className="px-2 mb-1.5 text-[10px] font-semibold uppercase tracking-widest text-gray-500 dark:text-zinc-500">
                                         {section.label}
                                     </p>
                                 )}
@@ -173,13 +174,13 @@ export function Sidebar({ user, isMobileOpen, setIsMobileOpen }: {
                                                 className={cn(
                                                     "flex items-center gap-2.5 px-2.5 py-2 rounded-md text-sm font-medium transition-all duration-150",
                                                     isActive
-                                                        ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
-                                                        : "text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800/60"
+                                                        ? "bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/20"
+                                                        : "text-gray-600 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-zinc-100 hover:bg-gray-100 dark:hover:bg-zinc-800/60"
                                                 )}
                                             >
-                                                <item.icon className={cn("w-4 h-4 shrink-0", isActive ? "text-emerald-400" : "text-zinc-500")} />
+                                                <item.icon className={cn("w-4 h-4 shrink-0", isActive ? "text-emerald-600 dark:text-emerald-400" : "text-gray-400 dark:text-zinc-500")} />
                                                 <span className="truncate">{item.name}</span>
-                                                {isActive && <div className="ml-auto w-1.5 h-1.5 rounded-full bg-emerald-400" />}
+                                                {isActive && <div className="ml-auto w-1.5 h-1.5 rounded-full bg-emerald-500 dark:bg-emerald-400" />}
                                             </Link>
                                         );
                                     })}
@@ -190,33 +191,37 @@ export function Sidebar({ user, isMobileOpen, setIsMobileOpen }: {
                 </nav>
 
                 {/* Bottom: User Info + Sign Out */}
-                <div className="shrink-0 border-t border-zinc-800 p-3 space-y-2">
+                <div className="shrink-0 border-t border-gray-200 dark:border-zinc-800 p-3 space-y-2">
                     {/* Theme Toggle */}
                     <button
                         onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-                        className="w-full flex items-center gap-2.5 px-2.5 py-2 rounded-md text-sm text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800/60 transition-all"
+                        className="w-full flex items-center gap-2.5 px-2.5 py-2 rounded-md text-sm text-gray-600 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-zinc-100 hover:bg-gray-100 dark:hover:bg-zinc-800/60 transition-all"
                     >
                         <span className="text-base">{theme === 'dark' ? '☀️' : '🌙'}</span>
                         <span>{theme === 'dark' ? 'Light Mode' : 'Dark Mode'}</span>
                     </button>
 
-                    {/* User profile mini */}
-                    {user && (
-                        <div className="flex items-center gap-2.5 px-2.5 py-2 rounded-md bg-zinc-900 border border-zinc-800">
-                            <div className="w-7 h-7 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 text-xs font-bold shrink-0">
-                                {(user.name || user.email || 'U').charAt(0).toUpperCase()}
-                            </div>
-                            <div className="flex-1 min-w-0">
-                                <p className="text-xs font-medium text-zinc-200 truncate">{user.name || user.email}</p>
-                                <p className="text-[10px] text-zinc-500 capitalize">{user.role?.toLowerCase() || 'Merchant'}</p>
-                            </div>
+                    {/* User Profile Summary */}
+                    <div className="flex items-center gap-2.5 px-2.5 py-2 rounded-md bg-gray-50 dark:bg-zinc-900 border border-gray-100 dark:border-zinc-800">
+                        <div className="w-8 h-8 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center shrink-0">
+                            <span className="text-sm font-bold text-emerald-600 dark:text-emerald-400">
+                                {user?.name?.charAt(0).toUpperCase() || 'U'}
+                            </span>
                         </div>
-                    )}
+                        <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
+                                {user?.name || 'User'}
+                            </p>
+                            <p className="text-[10px] text-gray-500 dark:text-zinc-500 truncate uppercase">
+                                {user?.role || 'MERCHANT'}
+                            </p>
+                        </div>
+                    </div>
 
                     {/* Sign Out */}
                     <button
                         onClick={logout}
-                        className="w-full flex items-center gap-2.5 px-2.5 py-2 rounded-md text-sm text-red-400 hover:text-red-300 hover:bg-red-500/5 transition-all"
+                        className="w-full flex items-center gap-2.5 px-2.5 py-2 rounded-md text-sm font-medium text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10 transition-all"
                     >
                         <LogOut className="w-4 h-4 shrink-0" />
                         <span>Sign Out</span>

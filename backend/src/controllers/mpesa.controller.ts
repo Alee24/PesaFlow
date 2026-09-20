@@ -1,6 +1,6 @@
 
 import { Request, Response } from 'express';
-import { initiateSTKPush, initiateB2CPayment, testMpesaConnectionService, querySTKPushStatus } from '../services/mpesa.service';
+import { initiateSTKPush, initiateB2CPayment, testMpesaConnectionService, querySTKPushStatus, generateDynamicMpesaQrCode } from '../services/mpesa.service';
 import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
@@ -540,5 +540,85 @@ export const resetMpesaConfig = async (req: AuthRequest, res: Response): Promise
         res.json({ success: true, message: 'Settings reset successful' });
     } catch (error: any) {
         res.status(500).json({ error: 'Failed to reset settings' });
+    }
+};
+
+export const generateQrCode = async (req: AuthRequest, res: Response): Promise<void> => {
+    try {
+        if (!req.user) {
+            res.status(401).json({ error: 'Unauthorized' });
+            return;
+        }
+
+        const userId = req.user.merchantId || req.user.userId;
+        const { refNo, amount, trxCode, merchantName, cpi, size } = req.body;
+
+        if (!refNo) {
+            res.status(400).json({ error: 'Reference number / item name (refNo) is required' });
+            return;
+        }
+
+        const parsedAmount = Number(amount) || 1;
+
+        const result = await generateDynamicMpesaQrCode(userId, {
+            refNo: String(refNo),
+            amount: parsedAmount,
+            trxCode: trxCode || undefined,
+            merchantName: merchantName || undefined,
+            cpi: cpi || undefined,
+            size: size ? String(size) : '300'
+        });
+
+        res.json(result);
+    } catch (error: any) {
+        console.error('generateQrCode Error:', error);
+        res.status(500).json({ error: error.message || 'Failed to generate dynamic M-Pesa QR code' });
+    }
+};
+
+export const generateProductQrCode = async (req: AuthRequest, res: Response): Promise<void> => {
+    try {
+        if (!req.user) {
+            res.status(401).json({ error: 'Unauthorized' });
+            return;
+        }
+
+        const userId = req.user.merchantId || req.user.userId;
+        const { id } = req.params;
+
+        const product = await prisma.product.findFirst({
+            where: {
+                id,
+                merchantId: userId
+            }
+        });
+
+        if (!product) {
+            res.status(404).json({ error: 'Product not found or not owned by merchant' });
+            return;
+        }
+
+        const { trxCode, size } = req.query;
+
+        const result = await generateDynamicMpesaQrCode(userId, {
+            refNo: product.name.slice(0, 20),
+            amount: Number(product.price) || 1,
+            trxCode: (trxCode as any) || undefined,
+            size: size ? String(size) : '300'
+        });
+
+        res.json({
+            ...result,
+            product: {
+                id: product.id,
+                name: product.name,
+                price: Number(product.price),
+                sku: product.sku,
+                imageUrl: product.imageUrl
+            }
+        });
+    } catch (error: any) {
+        console.error('generateProductQrCode Error:', error);
+        res.status(500).json({ error: error.message || 'Failed to generate product M-Pesa QR code' });
     }
 };
