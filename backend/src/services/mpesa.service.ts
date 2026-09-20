@@ -5,7 +5,7 @@ import QRCode from 'qrcode';
 
 const prisma = new PrismaClient();
 
-const getCredentials = async (userId?: string) => {
+export const getCredentials = async (userId?: string) => {
     // 1. Start with .env as baseline
     let creds = {
         consumerKey: process.env.MPESA_CONSUMER_KEY,
@@ -64,7 +64,7 @@ const getCredentials = async (userId?: string) => {
     return creds;
 }
 
-const getAccessToken = async (creds: any) => {
+export const getAccessToken = async (creds: any) => {
     if (!creds.consumerKey || !creds.consumerSecret) {
         throw new Error('MPESA_NOT_CONFIGURED: Missing Consumer Key or Secret');
     }

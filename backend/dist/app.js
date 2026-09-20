@@ -33,6 +33,7 @@ const system_health_routes_1 = __importDefault(require("./routes/system-health.r
 const license_routes_1 = __importDefault(require("./routes/license.routes"));
 const user_license_routes_1 = __importDefault(require("./routes/user-license.routes"));
 const kra_routes_1 = __importDefault(require("./routes/kra.routes"));
+const safaricom_apis_routes_1 = __importDefault(require("./routes/safaricom-apis.routes"));
 const license_middleware_1 = require("./middlewares/license.middleware");
 const app = (0, express_1.default)();
 app.use(express_1.default.json());
@@ -70,6 +71,7 @@ app.use('/api/sales', sales_routes_1.default);
 app.use('/api/crm', crm_routes_1.default);
 app.use('/api/support', support_routes_1.default);
 app.use('/api/kra', kra_routes_1.default);
+app.use('/api/safaricom-apis', safaricom_apis_routes_1.default);
 app.use('/api/analytics', analytics_routes_1.default);
 app.use('/api/pos/auth', pos_auth_routes_1.default);
 app.get('/', (req, res) => {

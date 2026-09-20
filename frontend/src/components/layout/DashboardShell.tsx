@@ -7,7 +7,7 @@ import {
     LayoutDashboard, ShoppingCart, Package, CreditCard, ArrowLeftRight, Settings,
     LogOut, User, Store, FileText, Bell, X, CheckCircle, AlertCircle, Info, Lock,
     ShieldCheck, TrendingUp, BarChart3, Users, Wallet, MessageSquare, Key, Globe,
-    ChevronRight, Receipt, Zap, Building2, Smartphone, QrCode
+    ChevronRight, Receipt, Zap, Building2, Smartphone, QrCode, Activity
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useState, useEffect, useRef } from 'react';
@@ -39,6 +39,7 @@ export const navSections = [
         label: 'Finance',
         items: [
             { name: 'Direct Payment', href: '/direct-payment', icon: Smartphone },
+            { name: 'Safaricom APIs', href: '/safaricom-apis', icon: Activity },
             { name: 'M-Pesa QR Generator', href: '/qr-generator', icon: QrCode },
             { name: 'Invoices', href: '/invoices', icon: FileText, feature: 'invoices' },
             { name: 'Wallet', href: '/wallet', icon: Wallet },
@@ -60,6 +61,7 @@ export const navSections = [
         role: 'ADMIN',
         items: [
             { name: 'Admin Dashboard', href: '/admin', icon: Building2, role: 'ADMIN' },
+            { name: 'Safaricom APIs Hub', href: '/safaricom-apis', icon: Activity, role: 'ADMIN' },
             { name: 'System Dashboard', href: '/admin/system-dashboard', icon: TrendingUp, role: 'ADMIN' },
             { name: 'System Health', href: '/admin/system-health', icon: ShieldCheck, role: 'ADMIN' },
             { name: 'License', href: '/admin/license', icon: Key, role: 'ADMIN' },

@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.generateDynamicMpesaQrCode = exports.initiateB2CPayment = exports.testMpesaConnectionService = exports.querySTKPushStatus = exports.initiateSTKPush = void 0;
+exports.generateDynamicMpesaQrCode = exports.initiateB2CPayment = exports.testMpesaConnectionService = exports.querySTKPushStatus = exports.initiateSTKPush = exports.getAccessToken = exports.getCredentials = void 0;
 const axios_1 = __importDefault(require("axios"));
 const client_1 = require("@prisma/client");
 const qrcode_1 = __importDefault(require("qrcode"));
@@ -68,6 +68,7 @@ const getCredentials = async (userId) => {
     console.log(`[M-Pesa Config] Key: ${creds.consumerKey?.substring(0, 5)}... ShortCode: ${creds.shortCode} Env: ${creds.env}`);
     return creds;
 };
+exports.getCredentials = getCredentials;
 const getAccessToken = async (creds) => {
     if (!creds.consumerKey || !creds.consumerSecret) {
         throw new Error('MPESA_NOT_CONFIGURED: Missing Consumer Key or Secret');
@@ -88,10 +89,11 @@ const getAccessToken = async (creds) => {
         throw new Error(`Token Error: ${detailedError}`);
     }
 };
+exports.getAccessToken = getAccessToken;
 const initiateSTKPush = async (phoneNumber, amount, reference, userId, items = [], invoiceId, saleId) => {
-    const creds = await getCredentials(userId);
+    const creds = await (0, exports.getCredentials)(userId);
     console.log(`[M-Pesa Service] Using Environment: ${creds.env}`);
-    const token = await getAccessToken(creds);
+    const token = await (0, exports.getAccessToken)(creds);
     const date = new Date();
     const timestamp = date.getFullYear() +
         ('0' + (date.getMonth() + 1)).slice(-2) +
@@ -212,8 +214,8 @@ const initiateSTKPush = async (phoneNumber, amount, reference, userId, items = [
 exports.initiateSTKPush = initiateSTKPush;
 const querySTKPushStatus = async (checkoutRequestId, userId) => {
     try {
-        const creds = await getCredentials(userId || undefined);
-        const token = await getAccessToken(creds);
+        const creds = await (0, exports.getCredentials)(userId || undefined);
+        const token = await (0, exports.getAccessToken)(creds);
         const date = new Date();
         const timestamp = date.getFullYear() +
             ('0' + (date.getMonth() + 1)).slice(-2) +
@@ -259,12 +261,12 @@ const testMpesaConnectionService = async (userId, providedCreds) => {
             creds = { ...providedCreds };
         }
         else {
-            creds = await getCredentials(userId);
+            creds = await (0, exports.getCredentials)(userId);
         }
         if (!creds.consumerKey || !creds.consumerSecret) {
             throw new Error("Missing Consumer Key or Secret (Env or Settings)");
         }
-        const token = await getAccessToken(creds);
+        const token = await (0, exports.getAccessToken)(creds);
         return { success: true, message: 'Connection successful. Access Token generated.', token: token.slice(0, 10) + '...' };
     }
     catch (error) {
@@ -273,8 +275,8 @@ const testMpesaConnectionService = async (userId, providedCreds) => {
 };
 exports.testMpesaConnectionService = testMpesaConnectionService;
 const initiateB2CPayment = async (phoneNumber, amount, reference, userId, description = 'Bulk Payment') => {
-    const creds = await getCredentials(userId);
-    const token = await getAccessToken(creds);
+    const creds = await (0, exports.getCredentials)(userId);
+    const token = await (0, exports.getAccessToken)(creds);
     const url = creds.env === 'production'
         ? 'https://api.safaricom.co.ke/mpesa/b2c/v1/paymentrequest'
         : 'https://sandbox.safaricom.co.ke/mpesa/b2c/v1/paymentrequest';
@@ -325,10 +327,10 @@ const initiateB2CPayment = async (phoneNumber, amount, reference, userId, descri
 };
 exports.initiateB2CPayment = initiateB2CPayment;
 const generateDynamicMpesaQrCode = async (userId, options) => {
-    const creds = await getCredentials(userId);
+    const creds = await (0, exports.getCredentials)(userId);
     let token = null;
     try {
-        token = await getAccessToken(creds);
+        token = await (0, exports.getAccessToken)(creds);
     }
     catch (tokenErr) {
         console.warn('[Daraja QR] Token generation warning:', tokenErr.message);
