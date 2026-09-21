@@ -304,13 +304,13 @@ export default function SafaricomApisPage() {
                 <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b border-gray-200 dark:border-zinc-800 pb-6">
                     <div>
                         <div className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400 font-semibold text-xs tracking-wider uppercase mb-1">
-                            <ShieldCheck className="w-4 h-4" /> Official Daraja Production Portal
+                            <ShieldCheck className="w-4 h-4" /> Official Safaricom Daraja Production Services
                         </div>
                         <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white flex items-center gap-3">
-                            Safaricom APIs Operations Hub
+                            M-Pesa Services Hub
                         </h1>
                         <p className="text-gray-500 dark:text-gray-400 text-sm mt-1 max-w-2xl">
-                            Consolidated command center for all 11+ Safaricom production APIs. Inquire balances, audit transactions, trigger B2B & Pochi disbursements, manage standing orders, and inspect network KYC.
+                            Comprehensive operations console for all 11+ Safaricom production M-Pesa services: Inquire float balances, audit transactions, trigger B2B transfers & Pochi la Biashara disbursements, manage M-Pesa Ratiba standing orders, and inspect mobile KYC.
                         </p>
                     </div>
 
@@ -371,7 +371,7 @@ export default function SafaricomApisPage() {
                 <div className="border-b border-gray-200 dark:border-zinc-800 overflow-x-auto">
                     <div className="flex space-x-2 min-w-max pb-1">
                         {[
-                            { id: 'overview', label: 'API Directory (11+)', icon: Activity },
+                            { id: 'overview', label: 'All M-Pesa Services (11+)', icon: Activity },
                             { id: 'balance', label: 'Account Balance', icon: Building2 },
                             { id: 'status', label: 'Transaction Status', icon: Search },
                             { id: 'disbursements', label: 'B2B & Pochi Payouts', icon: ArrowUpRight },
@@ -400,12 +400,12 @@ export default function SafaricomApisPage() {
                     </div>
                 </div>
 
-                {/* TAB 1: API DIRECTORY (11+ APIs) */}
+                {/* TAB 1: ALL M-PESA SERVICES (11+ Services) */}
                 {activeTab === 'overview' && (
                     <div className="space-y-6 animate-in fade-in duration-200">
                         <div className="flex items-center justify-between">
                             <h2 className="text-lg font-bold text-gray-900 dark:text-white">
-                                Production Daraja APIs Service Directory
+                                Production M-Pesa Services Directory (11+ Active Daraja Services)
                             </h2>
                             <span className="text-xs text-gray-500">
                                 Matching Safaricom Production App Configuration

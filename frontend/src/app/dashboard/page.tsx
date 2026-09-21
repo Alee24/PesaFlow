@@ -8,7 +8,8 @@ import DashboardLayout from '@/components/layout/DashboardLayout';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts';
 import {
     ShoppingCart, DollarSign, TrendingUp, ArrowRight, Download, Package,
-    FileText, Zap, CreditCard, Plus, ArrowUpRight, ArrowDownRight, Activity
+    FileText, Zap, CreditCard, Plus, ArrowUpRight, ArrowDownRight, Activity,
+    Building2, Search, QrCode, Smartphone, Repeat, Undo2, ShieldCheck, ArrowLeftRight
 } from 'lucide-react';
 import api from '@/lib/api';
 
@@ -328,6 +329,78 @@ export default function DashboardPage() {
                             </div>
                         </div>
                     )}
+                </div>
+
+                {/* M-Pesa Services Suite (11+ Production Services Showcase) */}
+                <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-5 space-y-4">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-zinc-100 dark:border-zinc-800 pb-3">
+                        <div className="flex items-center gap-2.5">
+                            <div className="w-8 h-8 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-500/20 flex items-center justify-center">
+                                <Activity className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                            </div>
+                            <div>
+                                <h3 className="text-sm font-bold text-zinc-900 dark:text-white flex items-center gap-2">
+                                    M-Pesa Services Suite
+                                    <span className="text-[10px] font-semibold bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-400 px-2 py-0.5 rounded-full">
+                                        11+ Active Services
+                                    </span>
+                                </h3>
+                                <p className="text-xs text-zinc-400">Direct Safaricom Daraja Production integration for your business</p>
+                            </div>
+                        </div>
+                        <Link
+                            href="/mpesa-services"
+                            className="text-xs font-semibold text-emerald-600 dark:text-emerald-400 hover:underline flex items-center gap-1 shrink-0"
+                        >
+                            Open Services Hub →
+                        </Link>
+                    </div>
+
+                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+                        {[
+                            { name: 'Account Balance', desc: 'Working & Utility Float', href: '/mpesa-services', icon: Building2, tag: 'Query' },
+                            { name: 'Transaction Status', desc: 'Audit M-Pesa Receipts', href: '/mpesa-services', icon: Search, tag: 'Audit' },
+                            { name: 'Dynamic QR Code', desc: 'Scan & Pay Standees', href: '/qr-generator', icon: QrCode, tag: 'Inbound' },
+                            { name: 'B2B Transfers', desc: 'Paybill & Till Payouts', href: '/mpesa-services', icon: ArrowUpRight, tag: 'Outbound' },
+                            { name: 'Business to Pochi', desc: 'Direct Pochi Payments', href: '/mpesa-services', icon: Smartphone, tag: 'Disburse' },
+                            { name: 'M-Pesa Ratiba', desc: 'Standing Orders & Subscriptions', href: '/mpesa-services', icon: Repeat, tag: 'Recurring' },
+                            { name: 'Reversal Console', desc: 'Mistaken Payment Refunds', href: '/mpesa-services', icon: Undo2, tag: 'Admin' },
+                            { name: 'Pull Transactions', desc: 'Batch Reconciliation', href: '/mpesa-services', icon: Download, tag: 'Sync' },
+                            { name: 'Mobile & KYC', desc: 'Carrier & State Check', href: '/mpesa-services', icon: ShieldCheck, tag: 'Verify' },
+                            { name: 'C2B v2 Payments', desc: 'Webhook Registration', href: '/mpesa-services', icon: ArrowLeftRight, tag: 'Webhooks' },
+                            { name: 'STK Push Online', desc: 'SIM Toolkit Push', href: '/wallet', icon: Zap, tag: 'Instant' },
+                            { name: 'Bill Manager', desc: 'Automated Invoicing', href: '/invoices', icon: FileText, tag: 'Billing' },
+                        ].map((srv, idx) => {
+                            const SrvIcon = srv.icon;
+                            return (
+                                <Link
+                                    key={idx}
+                                    href={srv.href}
+                                    className="p-3 rounded-lg border border-zinc-100 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-800/40 hover:border-emerald-500/40 hover:bg-emerald-50/20 dark:hover:bg-emerald-950/20 transition-all flex flex-col justify-between group"
+                                >
+                                    <div>
+                                        <div className="flex items-center justify-between mb-2">
+                                            <div className="w-7 h-7 rounded-md bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 flex items-center justify-center group-hover:border-emerald-500/40">
+                                                <SrvIcon className="w-3.5 h-3.5 text-zinc-600 dark:text-zinc-300 group-hover:text-emerald-500" />
+                                            </div>
+                                            <span className="text-[9px] font-bold uppercase tracking-wider text-zinc-400 bg-white dark:bg-zinc-800 px-1.5 py-0.5 rounded border border-zinc-100 dark:border-zinc-700">
+                                                {srv.tag}
+                                            </span>
+                                        </div>
+                                        <p className="text-xs font-bold text-zinc-900 dark:text-white truncate group-hover:text-emerald-600 dark:group-hover:text-emerald-400">
+                                            {srv.name}
+                                        </p>
+                                        <p className="text-[10px] text-zinc-500 dark:text-zinc-400 line-clamp-1 mt-0.5">
+                                            {srv.desc}
+                                        </p>
+                                    </div>
+                                    <div className="mt-2 text-[10px] font-semibold text-emerald-600 dark:text-emerald-400 flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                                        Launch &rarr;
+                                    </div>
+                                </Link>
+                            );
+                        })}
+                    </div>
                 </div>
 
                 {/* KRA VAT Section */}

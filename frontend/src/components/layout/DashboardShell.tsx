@@ -39,7 +39,7 @@ export const navSections = [
         label: 'Finance',
         items: [
             { name: 'Direct Payment', href: '/direct-payment', icon: Smartphone },
-            { name: 'Safaricom APIs', href: '/safaricom-apis', icon: Activity },
+            { name: 'M-Pesa Services', href: '/mpesa-services', icon: Activity },
             { name: 'M-Pesa QR Generator', href: '/qr-generator', icon: QrCode },
             { name: 'Invoices', href: '/invoices', icon: FileText, feature: 'invoices' },
             { name: 'Wallet', href: '/wallet', icon: Wallet },
@@ -61,7 +61,7 @@ export const navSections = [
         role: 'ADMIN',
         items: [
             { name: 'Admin Dashboard', href: '/admin', icon: Building2, role: 'ADMIN' },
-            { name: 'Safaricom APIs Hub', href: '/safaricom-apis', icon: Activity, role: 'ADMIN' },
+            { name: 'M-Pesa Services', href: '/mpesa-services', icon: Activity, role: 'ADMIN' },
             { name: 'System Dashboard', href: '/admin/system-dashboard', icon: TrendingUp, role: 'ADMIN' },
             { name: 'System Health', href: '/admin/system-health', icon: ShieldCheck, role: 'ADMIN' },
             { name: 'License', href: '/admin/license', icon: Key, role: 'ADMIN' },
