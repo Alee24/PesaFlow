@@ -1,7 +1,32 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.validateMobile = exports.pullTransactions = exports.createRatibaOrder = exports.initiateBusinessToPochi = exports.initiateB2B = exports.simulateC2bPayment = exports.registerC2bUrls = exports.requestReversal = exports.queryTransactionStatus = exports.queryAccountBalance = exports.getApisOverview = void 0;
+exports.validateMobile = exports.pullTransactions = exports.createRatibaOrder = exports.initiateBusinessToPochi = exports.initiateB2B = exports.simulateC2bPayment = exports.registerC2bUrls = exports.requestReversal = exports.queryTransactionStatus = exports.getBalanceResult = exports.getLatestAccountBalance = exports.queryAccountBalance = exports.getApisOverview = void 0;
 const safaricom_apis_service_1 = require("../services/safaricom-apis.service");
+const formatDarajaError = (error, fallback) => {
+    const raw = error.response?.data || error.message;
+    const detailed = error.response?.data?.errorMessage || error.response?.data?.error || error.message || fallback;
+    let message = detailed;
+    let resolutionSteps = undefined;
+    const lower = typeof detailed === 'string' ? detailed.toLowerCase() : '';
+    if (lower.includes('invalid access token') || lower.includes('unauthorized')) {
+        message = 'Safaricom Daraja rejected the API request with "Invalid Access Token". While your OAuth credentials generate an access token successfully, Safaricom requires that the app created on developer.safaricom.co.ke has specific permission grants for each API (e.g. Account Balance, PullTransactions, B2B, Reversal).';
+        resolutionSteps = [
+            'Confirm the Daraja Application in your Safaricom Developer Portal has the specific API product enabled (e.g. "Account Balance", "Pull Transactions", etc.).',
+            'Verify that the Shortcode configured (4007897) is linked to this Daraja Consumer Key on the Safaricom portal.',
+            'Ensure the Initiator Username and Initiator Password in Settings → M-Pesa match your live M-Pesa Web Portal operator credentials.',
+            'For production accounts, ensure your Go-Live request on Daraja is approved by Safaricom.'
+        ];
+    }
+    else if (lower.includes('initiator') || lower.includes('security credential')) {
+        message = 'Initiator authorization failed on Safaricom. The operator username or encrypted security credential was not accepted for this shortcode.';
+        resolutionSteps = [
+            'Go to Settings → M-Pesa and confirm the Initiator Name matches your Safaricom portal operator username.',
+            'Ensure the Initiator Password entered is your current active M-Pesa operator password.',
+            'Verify the operator has the "Business Administrator" or "API Operator" role in your Safaricom M-Pesa portal.'
+        ];
+    }
+    return { message, raw, resolutionSteps };
+};
 const getApisOverview = async (req, res) => {
     try {
         if (!req.user) {
@@ -25,17 +50,54 @@ const queryAccountBalance = async (req, res) => {
             return;
         }
         const userId = req.user.merchantId || req.user.userId;
-        const { remarks } = req.body;
-        const result = await (0, safaricom_apis_service_1.executeAccountBalanceQuery)(userId, remarks);
+        const { remarks, identifierType } = req.body;
+        const result = await (0, safaricom_apis_service_1.executeAccountBalanceQuery)(userId, remarks, identifierType);
         res.json(result);
     }
     catch (error) {
         console.error('queryAccountBalance Error:', error);
-        const detailed = error.response?.data?.errorMessage || error.message;
-        res.status(500).json({ error: detailed || 'Failed to query account balance on Safaricom' });
+        const err = formatDarajaError(error, 'Failed to query account balance on Safaricom');
+        res.status(500).json({ error: err.message, darajaResponse: err.raw, resolutionSteps: err.resolutionSteps });
     }
 };
 exports.queryAccountBalance = queryAccountBalance;
+const getLatestAccountBalance = async (req, res) => {
+    try {
+        if (!req.user) {
+            res.status(401).json({ error: 'Unauthorized' });
+            return;
+        }
+        const userId = req.user.merchantId || req.user.userId;
+        const balance = await (0, safaricom_apis_service_1.getLatestBalance)(userId);
+        res.json({ balance });
+    }
+    catch (error) {
+        console.error('getLatestAccountBalance Error:', error);
+        res.status(500).json({ error: error.message || 'Failed to retrieve saved balance' });
+    }
+};
+exports.getLatestAccountBalance = getLatestAccountBalance;
+const getBalanceResult = async (req, res) => {
+    try {
+        if (!req.user) {
+            res.status(401).json({ error: 'Unauthorized' });
+            return;
+        }
+        const userId = req.user.merchantId || req.user.userId;
+        const { conversationId } = req.params;
+        if (!conversationId) {
+            res.status(400).json({ error: 'ConversationID is required' });
+            return;
+        }
+        const result = await (0, safaricom_apis_service_1.getBalanceQueryResult)(conversationId, userId);
+        res.json(result);
+    }
+    catch (error) {
+        console.error('getBalanceResult Error:', error);
+        res.status(500).json({ error: error.message || 'Failed to check balance result' });
+    }
+};
+exports.getBalanceResult = getBalanceResult;
 const queryTransactionStatus = async (req, res) => {
     try {
         if (!req.user) {
@@ -53,8 +115,8 @@ const queryTransactionStatus = async (req, res) => {
     }
     catch (error) {
         console.error('queryTransactionStatus Error:', error);
-        const detailed = error.response?.data?.errorMessage || error.message;
-        res.status(500).json({ error: detailed || 'Failed to query transaction status on Daraja' });
+        const err = formatDarajaError(error, 'Failed to query transaction status on Daraja');
+        res.status(500).json({ error: err.message, darajaResponse: err.raw, resolutionSteps: err.resolutionSteps });
     }
 };
 exports.queryTransactionStatus = queryTransactionStatus;
@@ -79,8 +141,8 @@ const requestReversal = async (req, res) => {
     }
     catch (error) {
         console.error('requestReversal Error:', error);
-        const detailed = error.response?.data?.errorMessage || error.message;
-        res.status(500).json({ error: detailed || 'Failed to initiate transaction reversal' });
+        const err = formatDarajaError(error, 'Failed to initiate transaction reversal');
+        res.status(500).json({ error: err.message, darajaResponse: err.raw, resolutionSteps: err.resolutionSteps });
     }
 };
 exports.requestReversal = requestReversal;
@@ -101,8 +163,8 @@ const registerC2bUrls = async (req, res) => {
     }
     catch (error) {
         console.error('registerC2bUrls Error:', error);
-        const detailed = error.response?.data?.errorMessage || error.message;
-        res.status(500).json({ error: detailed || 'Failed to register C2B URLs with Safaricom' });
+        const err = formatDarajaError(error, 'Failed to register C2B URLs with Safaricom');
+        res.status(500).json({ error: err.message, darajaResponse: err.raw, resolutionSteps: err.resolutionSteps });
     }
 };
 exports.registerC2bUrls = registerC2bUrls;
@@ -128,8 +190,8 @@ const simulateC2bPayment = async (req, res) => {
     }
     catch (error) {
         console.error('simulateC2bPayment Error:', error);
-        const detailed = error.response?.data?.errorMessage || error.message;
-        res.status(500).json({ error: detailed || 'Failed to simulate C2B payment' });
+        const err = formatDarajaError(error, 'Failed to simulate C2B payment');
+        res.status(500).json({ error: err.message, darajaResponse: err.raw, resolutionSteps: err.resolutionSteps });
     }
 };
 exports.simulateC2bPayment = simulateC2bPayment;
@@ -157,8 +219,8 @@ const initiateB2B = async (req, res) => {
     }
     catch (error) {
         console.error('initiateB2B Error:', error);
-        const detailed = error.response?.data?.errorMessage || error.message;
-        res.status(500).json({ error: detailed || 'Failed to process B2B transfer' });
+        const err = formatDarajaError(error, 'Failed to process B2B transfer');
+        res.status(500).json({ error: err.message, darajaResponse: err.raw, resolutionSteps: err.resolutionSteps });
     }
 };
 exports.initiateB2B = initiateB2B;
@@ -183,8 +245,8 @@ const initiateBusinessToPochi = async (req, res) => {
     }
     catch (error) {
         console.error('initiateBusinessToPochi Error:', error);
-        const detailed = error.response?.data?.errorMessage || error.message;
-        res.status(500).json({ error: detailed || 'Failed to send to Pochi la Biashara' });
+        const err = formatDarajaError(error, 'Failed to send to Pochi la Biashara');
+        res.status(500).json({ error: err.message, darajaResponse: err.raw, resolutionSteps: err.resolutionSteps });
     }
 };
 exports.initiateBusinessToPochi = initiateBusinessToPochi;
@@ -214,8 +276,8 @@ const createRatibaOrder = async (req, res) => {
     }
     catch (error) {
         console.error('createRatibaOrder Error:', error);
-        const detailed = error.response?.data?.errorMessage || error.message;
-        res.status(500).json({ error: detailed || 'Failed to create M-Pesa Ratiba standing order' });
+        const err = formatDarajaError(error, 'Failed to create M-Pesa Ratiba standing order');
+        res.status(500).json({ error: err.message, darajaResponse: err.raw, resolutionSteps: err.resolutionSteps });
     }
 };
 exports.createRatibaOrder = createRatibaOrder;
@@ -240,8 +302,8 @@ const pullTransactions = async (req, res) => {
     }
     catch (error) {
         console.error('pullTransactions Error:', error);
-        const detailed = error.response?.data?.errorMessage || error.message;
-        res.status(500).json({ error: detailed || 'Failed to pull transactions from Safaricom' });
+        const err = formatDarajaError(error, 'Failed to pull transactions from Safaricom');
+        res.status(500).json({ error: err.message, darajaResponse: err.raw, resolutionSteps: err.resolutionSteps });
     }
 };
 exports.pullTransactions = pullTransactions;
@@ -262,7 +324,8 @@ const validateMobile = async (req, res) => {
     }
     catch (error) {
         console.error('validateMobile Error:', error);
-        res.status(500).json({ error: error.message || 'Failed to validate mobile number' });
+        const err = formatDarajaError(error, 'Failed to validate mobile number');
+        res.status(500).json({ error: err.message, darajaResponse: err.raw, resolutionSteps: err.resolutionSteps });
     }
 };
 exports.validateMobile = validateMobile;

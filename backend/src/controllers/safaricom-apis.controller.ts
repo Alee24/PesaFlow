@@ -10,7 +10,9 @@ import {
     executeBusinessToPochi,
     executeRatibaStandingOrder,
     executePullTransactionsQuery,
-    executeMobileValidation
+    executeMobileValidation,
+    getLatestBalance,
+    getBalanceQueryResult
 } from '../services/safaricom-apis.service';
 
 interface AuthRequest extends Request {
@@ -78,6 +80,41 @@ export const queryAccountBalance = async (req: AuthRequest, res: Response): Prom
         console.error('queryAccountBalance Error:', error);
         const err = formatDarajaError(error, 'Failed to query account balance on Safaricom');
         res.status(500).json({ error: err.message, darajaResponse: err.raw, resolutionSteps: err.resolutionSteps });
+    }
+};
+
+export const getLatestAccountBalance = async (req: AuthRequest, res: Response): Promise<void> => {
+    try {
+        if (!req.user) {
+            res.status(401).json({ error: 'Unauthorized' });
+            return;
+        }
+        const userId = req.user.merchantId || req.user.userId;
+        const balance = await getLatestBalance(userId);
+        res.json({ balance });
+    } catch (error: any) {
+        console.error('getLatestAccountBalance Error:', error);
+        res.status(500).json({ error: error.message || 'Failed to retrieve saved balance' });
+    }
+};
+
+export const getBalanceResult = async (req: AuthRequest, res: Response): Promise<void> => {
+    try {
+        if (!req.user) {
+            res.status(401).json({ error: 'Unauthorized' });
+            return;
+        }
+        const userId = req.user.merchantId || req.user.userId;
+        const { conversationId } = req.params;
+        if (!conversationId) {
+            res.status(400).json({ error: 'ConversationID is required' });
+            return;
+        }
+        const result = await getBalanceQueryResult(conversationId, userId);
+        res.json(result);
+    } catch (error: any) {
+        console.error('getBalanceResult Error:', error);
+        res.status(500).json({ error: error.message || 'Failed to check balance result' });
     }
 };
 

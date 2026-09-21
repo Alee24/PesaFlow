@@ -770,3 +770,24 @@ model UserLicenseKey {
   
   @@map("user_license_keys")
 }
+
+model DarajaBalanceQuery {
+  id                      String    @id @default(uuid())
+  conversationId          String    @unique @map("conversation_id")
+  originatorConversationId String?  @map("originator_conversation_id")
+  userId                  String    @map("user_id")
+  shortCode               String    @map("short_code")
+  workingAccount          Decimal?  @map("working_account") @db.Decimal(12, 2)
+  utilityAccount          Decimal?  @map("utility_account") @db.Decimal(12, 2)
+  chargesPaidAccount      Decimal?  @map("charges_paid_account") @db.Decimal(12, 2)
+  rawBalanceString        String?   @map("raw_balance_string") @db.Text
+  status                  String    @default("PENDING") // PENDING, COMPLETED, FAILED
+  resultCode              Int?      @map("result_code")
+  resultDesc              String?   @map("result_desc") @db.Text
+  queriedAt               DateTime  @default(now()) @map("queried_at")
+  completedAt             DateTime? @map("completed_at")
+
+  @@index([userId])
+  @@index([shortCode])
+  @@map("daraja_balance_queries")
+}

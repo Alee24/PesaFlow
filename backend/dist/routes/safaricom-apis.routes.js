@@ -5,6 +5,8 @@ const safaricom_apis_controller_1 = require("../controllers/safaricom-apis.contr
 const auth_middleware_1 = require("../middlewares/auth.middleware");
 const router = (0, express_1.Router)();
 router.get('/overview', auth_middleware_1.authenticateToken, auth_middleware_1.requireActive, safaricom_apis_controller_1.getApisOverview);
+router.get('/balance-latest', auth_middleware_1.authenticateToken, auth_middleware_1.requireActive, safaricom_apis_controller_1.getLatestAccountBalance);
+router.get('/balance-result/:conversationId', auth_middleware_1.authenticateToken, auth_middleware_1.requireActive, safaricom_apis_controller_1.getBalanceResult);
 router.post('/account-balance', auth_middleware_1.authenticateToken, auth_middleware_1.requireActive, safaricom_apis_controller_1.queryAccountBalance);
 router.post('/transaction-status', auth_middleware_1.authenticateToken, auth_middleware_1.requireActive, safaricom_apis_controller_1.queryTransactionStatus);
 router.post('/reversal', auth_middleware_1.authenticateToken, auth_middleware_1.requireActive, safaricom_apis_controller_1.requestReversal);

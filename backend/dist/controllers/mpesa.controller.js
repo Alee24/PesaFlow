@@ -35,6 +35,7 @@ var __importStar = (this && this.__importStar) || (function () {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.generateProductQrCode = exports.generateQrCode = exports.resetMpesaConfig = exports.testConnection = exports.getMpesaStatus = exports.manualCompleteMpesa = exports.bulkProcess = exports.initiateInvoicePayment = exports.mpesaCallback = exports.stkPush = void 0;
 const mpesa_service_1 = require("../services/mpesa.service");
+const safaricom_apis_service_1 = require("../services/safaricom-apis.service");
 const client_1 = require("@prisma/client");
 const prisma = new client_1.PrismaClient();
 const stkPush = async (req, res) => {
@@ -136,12 +137,79 @@ const mpesaCallback = async (req, res) => {
             const conversationID = Result.ConversationID;
             const originatorConversationID = Result.OriginatorConversationID;
             const resultCode = Result.ResultCode;
-            console.log(`[M-Pesa B2C] Callback for ConversationID: ${conversationID}, ResultCode: ${resultCode}`);
+            const resultDesc = Result.ResultDesc;
+            console.log(`[M-Pesa Result Callback] ConversationID: ${conversationID}, OriginatorConversationID: ${originatorConversationID}, ResultCode: ${resultCode}, Desc: ${resultDesc}`);
+            const paramItems = Result.ResultParameters?.ResultParameter || [];
+            const balanceParam = paramItems.find((p) => p.Key === 'AccountBalance');
+            const isBalanceQuery = Boolean(balanceParam) || (conversationID && await prisma.darajaBalanceQuery.findFirst({
+                where: {
+                    OR: [
+                        { conversationId: conversationID },
+                        ...(originatorConversationID ? [{ originatorConversationId: originatorConversationID }] : [])
+                    ]
+                }
+            }));
+            if (isBalanceQuery) {
+                console.log(`[Daraja Account Balance Callback] Processing balance data for conversation: ${conversationID}`);
+                const rawBalance = balanceParam?.Value || '';
+                let workingBal = null;
+                let utilityBal = null;
+                let chargesBal = null;
+                if (rawBalance) {
+                    const parsed = (0, safaricom_apis_service_1.parseDarajaBalanceString)(rawBalance);
+                    workingBal = parsed.workingAccount;
+                    utilityBal = parsed.utilityAccount;
+                    chargesBal = parsed.chargesPaidAccount;
+                }
+                const existingQuery = await prisma.darajaBalanceQuery.findFirst({
+                    where: {
+                        OR: [
+                            ...(conversationID ? [{ conversationId: conversationID }] : []),
+                            ...(originatorConversationID ? [{ originatorConversationId: originatorConversationID }] : [])
+                        ]
+                    }
+                });
+                if (existingQuery) {
+                    await prisma.darajaBalanceQuery.update({
+                        where: { id: existingQuery.id },
+                        data: {
+                            status: resultCode === 0 ? 'COMPLETED' : 'FAILED',
+                            resultCode: Number(resultCode),
+                            resultDesc: resultDesc || (resultCode === 0 ? 'Balance retrieved successfully.' : 'Balance query failed.'),
+                            rawBalanceString: rawBalance || existingQuery.rawBalanceString,
+                            workingAccount: workingBal !== null ? workingBal : existingQuery.workingAccount,
+                            utilityAccount: utilityBal !== null ? utilityBal : existingQuery.utilityAccount,
+                            chargesPaidAccount: chargesBal !== null ? chargesBal : existingQuery.chargesPaidAccount,
+                            completedAt: new Date()
+                        }
+                    });
+                    console.log(`✅ [Daraja Account Balance] Updated query ${existingQuery.id}: Working=${workingBal}, Utility=${utilityBal}, Charges=${chargesBal}`);
+                }
+                else if (conversationID) {
+                    await prisma.darajaBalanceQuery.create({
+                        data: {
+                            conversationId: conversationID,
+                            originatorConversationId: originatorConversationID || null,
+                            userId: 'SYSTEM',
+                            shortCode: '',
+                            status: resultCode === 0 ? 'COMPLETED' : 'FAILED',
+                            resultCode: Number(resultCode),
+                            resultDesc: resultDesc || '',
+                            rawBalanceString: rawBalance,
+                            workingAccount: workingBal,
+                            utilityAccount: utilityBal,
+                            chargesPaidAccount: chargesBal,
+                            completedAt: new Date()
+                        }
+                    });
+                    console.log(`✅ [Daraja Account Balance] Created new balance record for ${conversationID}`);
+                }
+            }
             const transaction = await prisma.transaction.findFirst({
                 where: {
                     OR: [
-                        { merchantRequestId: conversationID },
-                        { merchantRequestId: originatorConversationID }
+                        ...(conversationID ? [{ merchantRequestId: conversationID }] : []),
+                        ...(originatorConversationID ? [{ merchantRequestId: originatorConversationID }] : [])
                     ]
                 }
             });

@@ -10,7 +10,9 @@ import {
     initiateBusinessToPochi,
     createRatibaOrder,
     pullTransactions,
-    validateMobile
+    validateMobile,
+    getLatestAccountBalance,
+    getBalanceResult
 } from '../controllers/safaricom-apis.controller';
 import { authenticateToken, requireActive } from '../middlewares/auth.middleware';
 
@@ -20,6 +22,8 @@ const router = Router();
 router.get('/overview', authenticateToken, requireActive, getApisOverview);
 
 // Account Balance & Querying
+router.get('/balance-latest', authenticateToken, requireActive, getLatestAccountBalance);
+router.get('/balance-result/:conversationId', authenticateToken, requireActive, getBalanceResult);
 router.post('/account-balance', authenticateToken, requireActive, queryAccountBalance);
 router.post('/transaction-status', authenticateToken, requireActive, queryTransactionStatus);
 

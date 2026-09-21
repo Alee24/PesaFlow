@@ -155,6 +155,8 @@ export const getSafaricomApisOverview = async (userId: string) => {
         }
     ];
 
+    const latestBalance = await getLatestBalance(userId);
+
     return {
         credentialsSummary: {
             environment: creds.env,
@@ -168,6 +170,7 @@ export const getSafaricomApisOverview = async (userId: string) => {
         },
         totalApis: apis.length,
         readyApis: apis.filter(a => a.status === 'READY').length,
+        latestBalance,
         apis
     };
 };
@@ -177,6 +180,138 @@ export const getBaseDarajaUrl = (env: string) => {
     return (normalized === 'production' || normalized === 'live')
         ? 'https://api.safaricom.co.ke'
         : 'https://sandbox.safaricom.co.ke';
+};
+
+export function parseDarajaBalanceString(rawStr: string): {
+    workingAccount: number | null;
+    utilityAccount: number | null;
+    chargesPaidAccount: number | null;
+    accounts: Array<{
+        accountName: string;
+        currency: string;
+        currentBalance: number;
+        availableBalance: number;
+        reservedBalance: number;
+        unclearedBalance: number;
+    }>;
+} {
+    const result = {
+        workingAccount: null as number | null,
+        utilityAccount: null as number | null,
+        chargesPaidAccount: null as number | null,
+        accounts: [] as any[]
+    };
+
+    if (!rawStr || typeof rawStr !== 'string') return result;
+
+    const sections = rawStr.split('&');
+    for (const sec of sections) {
+        const parts = sec.split('|').map(s => s.trim());
+        if (parts.length >= 3) {
+            const accountName = parts[0];
+            const currency = parts[1] || 'KES';
+            const currentBalance = parseFloat(parts[2]) || 0;
+            const availableBalance = parts[3] ? parseFloat(parts[3]) || 0 : currentBalance;
+            const reservedBalance = parts[4] ? parseFloat(parts[4]) || 0 : 0;
+            const unclearedBalance = parts[5] ? parseFloat(parts[5]) || 0 : 0;
+
+            result.accounts.push({
+                accountName,
+                currency,
+                currentBalance,
+                availableBalance,
+                reservedBalance,
+                unclearedBalance
+            });
+
+            const lowerName = accountName.toLowerCase();
+            if (lowerName.includes('working')) {
+                result.workingAccount = currentBalance;
+            } else if (lowerName.includes('utility')) {
+                result.utilityAccount = currentBalance;
+            } else if (lowerName.includes('charges') || lowerName.includes('charge')) {
+                result.chargesPaidAccount = currentBalance;
+            }
+        }
+    }
+
+    return result;
+}
+
+export const getLatestBalance = async (userId: string) => {
+    try {
+        const creds = await getCredentials(userId);
+        
+        const query = await prisma.darajaBalanceQuery.findFirst({
+            where: {
+                OR: [
+                    { userId },
+                    ...(creds.shortCode ? [{ shortCode: creds.shortCode }] : [])
+                ]
+            },
+            orderBy: { queriedAt: 'desc' }
+        });
+
+        if (!query) {
+            return null;
+        }
+
+        const parsed = parseDarajaBalanceString(query.rawBalanceString || '');
+
+        return {
+            id: query.id,
+            conversationId: query.conversationId,
+            originatorConversationId: query.originatorConversationId,
+            shortCode: query.shortCode,
+            workingAccount: query.workingAccount ? Number(query.workingAccount) : (parsed.workingAccount || 0),
+            utilityAccount: query.utilityAccount ? Number(query.utilityAccount) : (parsed.utilityAccount || 0),
+            chargesPaidAccount: query.chargesPaidAccount ? Number(query.chargesPaidAccount) : (parsed.chargesPaidAccount || 0),
+            accounts: parsed.accounts,
+            rawBalanceString: query.rawBalanceString,
+            status: query.status,
+            resultCode: query.resultCode,
+            resultDesc: query.resultDesc,
+            queriedAt: query.queriedAt,
+            completedAt: query.completedAt
+        };
+    } catch (err) {
+        console.error('[Daraja] getLatestBalance error:', err);
+        return null;
+    }
+};
+
+export const getBalanceQueryResult = async (conversationId: string, userId: string) => {
+    const query = await prisma.darajaBalanceQuery.findUnique({
+        where: { conversationId }
+    });
+
+    if (!query) {
+        return {
+            found: false,
+            status: 'PENDING',
+            message: 'Query is awaiting callback from Safaricom...'
+        };
+    }
+
+    const parsed = parseDarajaBalanceString(query.rawBalanceString || '');
+
+    return {
+        found: true,
+        id: query.id,
+        conversationId: query.conversationId,
+        originatorConversationId: query.originatorConversationId,
+        shortCode: query.shortCode,
+        workingAccount: query.workingAccount ? Number(query.workingAccount) : (parsed.workingAccount || 0),
+        utilityAccount: query.utilityAccount ? Number(query.utilityAccount) : (parsed.utilityAccount || 0),
+        chargesPaidAccount: query.chargesPaidAccount ? Number(query.chargesPaidAccount) : (parsed.chargesPaidAccount || 0),
+        accounts: parsed.accounts,
+        rawBalanceString: query.rawBalanceString,
+        status: query.status,
+        resultCode: query.resultCode,
+        resultDesc: query.resultDesc,
+        queriedAt: query.queriedAt,
+        completedAt: query.completedAt
+    };
 };
 
 // 1. Account Balance Query
@@ -216,18 +351,47 @@ export const executeAccountBalanceQuery = async (
         timeout: 15000
     });
 
+    const conversationId = response.data?.ConversationID;
+    const originatorConversationId = response.data?.OriginatorConversationID;
+
+    // Record pending query in database immediately
+    if (conversationId) {
+        try {
+            await prisma.darajaBalanceQuery.upsert({
+                where: { conversationId },
+                update: {
+                    originatorConversationId: originatorConversationId || undefined,
+                    userId,
+                    shortCode: creds.shortCode || '',
+                    resultDesc: response.data?.ResponseDescription || 'Accept the service request successfully.'
+                },
+                create: {
+                    conversationId,
+                    originatorConversationId: originatorConversationId || null,
+                    userId,
+                    shortCode: creds.shortCode || '',
+                    status: 'PENDING',
+                    resultDesc: response.data?.ResponseDescription || 'Accept the service request successfully.'
+                }
+            });
+            console.log(`✅ [Daraja Account Balance] Created pending query record: ${conversationId}`);
+        } catch (dbErr) {
+            console.error('[Daraja Account Balance] DB record error:', dbErr);
+        }
+    }
+
     return {
         success: true,
         summary: {
-            title: '✅ Account Balance Query Accepted',
-            description: 'Safaricom is processing your balance inquiry. Results will be delivered to your callback URL shortly.',
+            title: '✅ Account Balance Query Dispatched',
+            description: 'Safaricom is processing your balance inquiry. Real balances will be received via webhook callback and saved to the database.',
             shortCode: creds.shortCode,
             environment: creds.env.toUpperCase(),
             initiator: creds.initiatorName,
         },
         rawResponse: response.data,
-        conversationId: response.data?.ConversationID,
-        originatorConversationId: response.data?.OriginatorConversationID,
+        conversationId,
+        originatorConversationId,
         responseCode: response.data?.ResponseCode,
         responseDescription: response.data?.ResponseDescription,
         message: response.data?.ResponseDescription || 'Balance inquiry request accepted — result arrives via callback.'

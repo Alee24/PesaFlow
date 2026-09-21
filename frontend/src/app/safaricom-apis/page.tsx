@@ -11,7 +11,8 @@ import {
     Activity, ShieldCheck, ArrowUpRight, Search, RefreshCw, Smartphone,
     CheckCircle, AlertCircle, Building2, Repeat, Undo2, Users, Download,
     Send, Check, Copy, ExternalLink, HelpCircle, FileText, ArrowLeftRight,
-    CheckCircle2, ChevronRight, AlertTriangle
+    CheckCircle2, ChevronRight, AlertTriangle, Wallet, DollarSign, Clock,
+    Database, Sparkles
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -24,8 +25,23 @@ export default function SafaricomApisPage() {
     const [loadingOverview, setLoadingOverview] = useState(true);
     const { showToast } = useToast();
 
-    // 1. Balance Query State
+    // 1. Balance Query & Stored State
+    const [latestBalance, setLatestBalance] = useState<{
+        id?: string;
+        workingAccount: number;
+        utilityAccount: number;
+        chargesPaidAccount: number;
+        accounts?: any[];
+        rawBalanceString?: string;
+        queriedAt?: string;
+        completedAt?: string;
+        status?: string;
+        shortCode?: string;
+        resultDesc?: string;
+    } | null>(null);
     const [balanceLoading, setBalanceLoading] = useState(false);
+    const [isPollingBalance, setIsPollingBalance] = useState(false);
+    const [pollingSeconds, setPollingSeconds] = useState(0);
     const [balanceResult, setBalanceResult] = useState<any>(null);
     const [balanceRemarks, setBalanceRemarks] = useState('Float Query');
 
@@ -87,11 +103,27 @@ export default function SafaricomApisPage() {
         fetchOverview();
     }, []);
 
+    const fetchLatestBalance = async () => {
+        try {
+            const res = await api.get('/safaricom-apis/balance-latest');
+            if (res.data?.balance) {
+                setLatestBalance(res.data.balance);
+            }
+        } catch (err) {
+            console.error('Failed to fetch latest balance', err);
+        }
+    };
+
     const fetchOverview = async () => {
         setLoadingOverview(true);
         try {
             const res = await api.get('/safaricom-apis/overview');
             setOverviewData(res.data);
+            if (res.data?.latestBalance) {
+                setLatestBalance(res.data.latestBalance);
+            } else {
+                fetchLatestBalance();
+            }
             if (res.data?.credentialsSummary?.callbackUrl) {
                 setC2bConfUrl(res.data.credentialsSummary.callbackUrl);
                 setC2bValUrl(res.data.credentialsSummary.callbackUrl);
@@ -150,63 +182,52 @@ export default function SafaricomApisPage() {
                         )}
                     </div>
                 ) : (
-                    <div className="p-4 rounded-xl border border-emerald-200 dark:border-emerald-900/50 bg-emerald-50/60 dark:bg-emerald-950/20 text-emerald-950 dark:text-emerald-300 space-y-3">
-                        <div className="flex items-start justify-between gap-2">
-                            <div className="flex items-center gap-2">
-                                <CheckCircle2 className="w-5 h-5 text-emerald-600 dark:text-emerald-400 shrink-0" />
-                                <h4 className="font-bold text-sm text-emerald-900 dark:text-emerald-200">
+                    <div className="p-4 rounded-xl border border-emerald-200 dark:border-emerald-900/40 bg-emerald-50/60 dark:bg-emerald-950/20 text-emerald-950 dark:text-emerald-200 space-y-3">
+                        <div className="flex items-start gap-3">
+                            <CheckCircle2 className="w-5 h-5 text-emerald-600 dark:text-emerald-400 mt-0.5 shrink-0" />
+                            <div className="space-y-1">
+                                <h4 className="font-bold text-sm text-emerald-900 dark:text-emerald-100">
                                     {summary.title || 'Request Dispatched Successfully'}
                                 </h4>
+                                <p className="text-xs leading-relaxed text-emerald-800 dark:text-emerald-300">
+                                    {summary.description || responseDesc || 'Daraja acknowledged and processed the command.'}
+                                </p>
                             </div>
-                            {responseCode && (
-                                <span className="text-[10px] font-bold px-2 py-0.5 bg-emerald-100 dark:bg-emerald-900 text-emerald-800 dark:text-emerald-200 rounded-full">
-                                    Code: {responseCode}
-                                </span>
-                            )}
                         </div>
 
-                        {summary.description && (
-                            <p className="text-xs text-emerald-800 dark:text-emerald-300 leading-relaxed">
-                                {summary.description}
-                            </p>
-                        )}
-
-                        {/* Structured details badges */}
-                        <div className="grid grid-cols-2 gap-2 pt-2 text-xs">
-                            {Object.entries(summary).map(([k, v]: [string, any]) => {
-                                if (k === 'title' || k === 'description') return null;
-                                return (
-                                    <div key={k} className="p-2 bg-white/80 dark:bg-zinc-900/80 rounded-lg border border-emerald-100 dark:border-zinc-800">
-                                        <span className="text-[10px] text-gray-500 uppercase tracking-wider block font-semibold">{k}</span>
-                                        <span className="font-bold text-gray-900 dark:text-white truncate block">{String(v)}</span>
-                                    </div>
-                                );
-                            })}
+                        <div className="grid grid-cols-2 gap-2 pt-2 text-[11px] border-t border-emerald-200/60 dark:border-emerald-900/30">
                             {conversationId && (
-                                <div className="p-2 bg-white/80 dark:bg-zinc-900/80 rounded-lg border border-emerald-100 dark:border-zinc-800 col-span-2">
-                                    <span className="text-[10px] text-gray-500 uppercase tracking-wider block font-semibold">Conversation ID</span>
-                                    <code className="text-xs font-mono text-emerald-700 dark:text-emerald-400 break-all">{conversationId}</code>
+                                <div>
+                                    <span className="text-emerald-700/70 dark:text-emerald-400/70 block">Conversation ID</span>
+                                    <code className="font-mono font-medium text-emerald-900 dark:text-emerald-200 truncate block">
+                                        {conversationId}
+                                    </code>
+                                </div>
+                            )}
+                            {originatorId && (
+                                <div>
+                                    <span className="text-emerald-700/70 dark:text-emerald-400/70 block">Originator ID</span>
+                                    <code className="font-mono font-medium text-emerald-900 dark:text-emerald-200 truncate block">
+                                        {originatorId}
+                                    </code>
                                 </div>
                             )}
                         </div>
                     </div>
                 )}
 
-                {/* Raw JSON toggle button */}
-                <div className="flex items-center justify-between pt-1">
+                <div className="flex items-center justify-between text-xs pt-1">
                     <button
-                        type="button"
                         onClick={() => setShowRaw(!showRaw)}
-                        className="text-xs text-gray-500 hover:text-gray-800 dark:hover:text-gray-200 flex items-center gap-1 font-medium underline"
+                        className="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 underline font-medium text-[11px]"
                     >
-                        {showRaw ? 'Hide Raw Technical Payload' : 'View Raw Safaricom Payload'}
+                        {showRaw ? 'Hide Raw JSON' : 'Show Technical Daraja JSON'}
                     </button>
                     <button
-                        type="button"
                         onClick={copyJson}
-                        className="text-xs text-gray-500 hover:text-emerald-600 flex items-center gap-1 font-medium"
+                        className="inline-flex items-center gap-1 text-[11px] font-medium text-emerald-600 dark:text-emerald-400 hover:underline"
                     >
-                        {copied ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
+                        <Copy className="w-3 h-3" />
                         {copied ? 'Copied' : 'Copy JSON'}
                     </button>
                 </div>
@@ -224,17 +245,74 @@ export default function SafaricomApisPage() {
     const handleQueryBalance = async (e: React.FormEvent) => {
         e.preventDefault();
         setBalanceLoading(true);
+        setIsPollingBalance(true);
+        setPollingSeconds(0);
         try {
             const res = await api.post('/safaricom-apis/account-balance', { remarks: balanceRemarks });
             setBalanceResult(res.data);
-            showToast('Account balance inquiry dispatched to Daraja', 'success');
+            const conversationId = res.data?.conversationId;
+
+            if (conversationId) {
+                showToast('Inquiry sent to Safaricom. Listening for live callback...', 'info');
+
+                let attempts = 0;
+                const maxAttempts = 12; // 18 seconds
+                const pollInterval = setInterval(async () => {
+                    attempts++;
+                    setPollingSeconds(attempts * 1.5);
+                    try {
+                        const pollRes = await api.get(`/safaricom-apis/balance-result/${conversationId}`);
+                        if (pollRes.data?.status === 'COMPLETED') {
+                            clearInterval(pollInterval);
+                            setIsPollingBalance(false);
+                            setBalanceLoading(false);
+                            setLatestBalance(pollRes.data);
+                            setBalanceResult({
+                                success: true,
+                                summary: {
+                                    title: '✅ Live Account Balance Retrieved & Saved to Database',
+                                    description: `Working Float: KES ${Number(pollRes.data.workingAccount || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })} | Utility: KES ${Number(pollRes.data.utilityAccount || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}`,
+                                    shortCode: pollRes.data.shortCode,
+                                    completedAt: new Date(pollRes.data.completedAt).toLocaleString()
+                                },
+                                ...pollRes.data
+                            });
+                            showToast(`Account balance synchronized: Working Float KES ${Number(pollRes.data.workingAccount || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}`, 'success');
+                        } else if (pollRes.data?.status === 'FAILED') {
+                            clearInterval(pollInterval);
+                            setIsPollingBalance(false);
+                            setBalanceLoading(false);
+                            setBalanceResult({
+                                error: pollRes.data.resultDesc || 'Safaricom returned an error for this balance inquiry.',
+                                darajaResponse: pollRes.data
+                            });
+                            showToast(`Balance inquiry rejected: ${pollRes.data.resultDesc || 'Failed'}`, 'error');
+                        } else if (attempts >= maxAttempts) {
+                            clearInterval(pollInterval);
+                            setIsPollingBalance(false);
+                            setBalanceLoading(false);
+                            showToast('Request accepted by Safaricom. Webhook callback will update the database momentarily.', 'info');
+                        }
+                    } catch (pollErr) {
+                        console.error('Polling error:', pollErr);
+                        if (attempts >= maxAttempts) {
+                            clearInterval(pollInterval);
+                            setIsPollingBalance(false);
+                            setBalanceLoading(false);
+                        }
+                    }
+                }, 1500);
+            } else {
+                setBalanceLoading(false);
+                setIsPollingBalance(false);
+            }
         } catch (err: any) {
+            setIsPollingBalance(false);
+            setBalanceLoading(false);
             const data = err.response?.data || {};
             const msg = data.error || 'Inquiry failed';
             showToast(msg, 'error');
             setBalanceResult(data.error ? data : { error: msg, darajaResponse: data });
-        } finally {
-            setBalanceLoading(false);
         }
     };
 
@@ -493,6 +571,47 @@ export default function SafaricomApisPage() {
                     </Card>
                 </div>
 
+                {/* Persistent Live M-Pesa Float Strip */}
+                {latestBalance && (
+                    <div className="bg-gradient-to-r from-emerald-500/10 via-emerald-500/5 to-transparent border border-emerald-500/20 rounded-xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                        <div className="flex items-center gap-3">
+                            <div className="p-2.5 rounded-lg bg-emerald-600 text-white shrink-0">
+                                <Wallet className="w-5 h-5" />
+                            </div>
+                            <div>
+                                <div className="flex items-center gap-2">
+                                    <span className="text-xs font-bold text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Live Stored Float</span>
+                                    <span className="text-[10px] bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 font-semibold px-2 py-0.5 rounded-full flex items-center gap-1">
+                                        <Database className="w-3 h-3" /> Saved in Database
+                                    </span>
+                                </div>
+                                <div className="flex flex-wrap items-baseline gap-4 mt-1">
+                                    <div>
+                                        <span className="text-xs text-gray-500 mr-1.5">Working Float:</span>
+                                        <span className="text-base font-extrabold text-gray-900 dark:text-white font-mono">
+                                            KES {Number(latestBalance.workingAccount || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                        </span>
+                                    </div>
+                                    <div>
+                                        <span className="text-xs text-gray-500 mr-1.5">Utility Account:</span>
+                                        <span className="text-base font-extrabold text-gray-900 dark:text-white font-mono">
+                                            KES {Number(latestBalance.utilityAccount || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div className="flex items-center gap-2 self-start sm:self-center">
+                            <button
+                                onClick={() => setActiveTab('balance')}
+                                className="text-xs font-semibold text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 hover:underline flex items-center gap-1"
+                            >
+                                Manage Float & Query Live &rarr;
+                            </button>
+                        </div>
+                    </div>
+                )}
+
                 {/* Tab Navigation */}
                 <div className="border-b border-gray-200 dark:border-zinc-800 overflow-x-auto">
                     <div className="flex space-x-2 min-w-max pb-1">
@@ -590,47 +709,211 @@ export default function SafaricomApisPage() {
 
                 {/* TAB 2: ACCOUNT BALANCE */}
                 {activeTab === 'balance' && (
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start animate-in fade-in duration-200">
-                        <Card className="p-6 border border-gray-100 dark:border-zinc-800">
-                            <h2 className="text-base font-bold text-gray-900 dark:text-white mb-2 flex items-center gap-2">
-                                <Building2 className="w-5 h-5 text-emerald-600" />
-                                Account Balance Query
-                            </h2>
-                            <p className="text-xs text-gray-500 mb-6">
-                                Queries real-time Working Account, Utility Account, and Charges Paid balances directly from Safaricom.
-                            </p>
+                    <div className="space-y-6 animate-in fade-in duration-200">
+                        {/* Live Account Balance Top Cards */}
+                        <div className="bg-white dark:bg-zinc-900 rounded-2xl border border-gray-100 dark:border-zinc-800 p-6 space-y-6">
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-gray-100 dark:border-zinc-800 pb-4">
+                                <div>
+                                    <h2 className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2.5">
+                                        <Building2 className="w-5 h-5 text-emerald-600" />
+                                        M-Pesa Multi-Account Live Balance
+                                    </h2>
+                                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                        Real-time ledger synchronized with Safaricom Daraja core network. Data is stored securely in your database and retained across page refreshes.
+                                    </p>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={fetchLatestBalance}
+                                        className="text-xs flex items-center gap-1.5 border-gray-200 dark:border-zinc-700"
+                                    >
+                                        <Database className="w-3.5 h-3.5 text-emerald-600" />
+                                        Sync from DB
+                                    </Button>
+                                    <span className="text-[11px] font-mono bg-gray-100 dark:bg-zinc-800 text-gray-600 dark:text-gray-300 px-2.5 py-1 rounded-lg">
+                                        Shortcode: {latestBalance?.shortCode || overviewData?.credentialsSummary?.shortCode || '—'}
+                                    </span>
+                                </div>
+                            </div>
 
-                            <form onSubmit={handleQueryBalance} className="space-y-4">
-                                <Input
-                                    label="Query Remarks"
-                                    value={balanceRemarks}
-                                    onChange={(e: any) => setBalanceRemarks(e.target.value)}
-                                    placeholder="e.g. Morning Float Check"
-                                />
-                                <Button
-                                    type="submit"
-                                    disabled={balanceLoading}
-                                    className="w-full bg-emerald-600 hover:bg-emerald-700 text-white flex items-center justify-center gap-2"
-                                >
-                                    <RefreshCw className={`w-4 h-4 ${balanceLoading ? 'animate-spin' : ''}`} />
-                                    {balanceLoading ? 'Querying Safaricom...' : 'Inquire Live Account Balance'}
-                                </Button>
-                            </form>
-                        </Card>
+                            {/* 3 Metric Cards */}
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+                                {/* Working Account Card */}
+                                <div className="p-5 rounded-xl border border-emerald-200/70 dark:border-emerald-900/50 bg-emerald-50/40 dark:bg-emerald-950/20 relative overflow-hidden">
+                                    <div className="flex items-center justify-between mb-2">
+                                        <span className="text-xs font-bold text-emerald-800 dark:text-emerald-300 uppercase tracking-wider flex items-center gap-1.5">
+                                            <Wallet className="w-4 h-4 text-emerald-600" /> Working Account Float
+                                        </span>
+                                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-900/70 text-emerald-700 dark:text-emerald-300">
+                                            Disbursements
+                                        </span>
+                                    </div>
+                                    <p className="text-2xl sm:text-3xl font-extrabold text-emerald-950 dark:text-white font-mono tracking-tight my-2">
+                                        KES {Number(latestBalance?.workingAccount || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                    </p>
+                                    <p className="text-[11px] text-emerald-700/80 dark:text-emerald-400/80 leading-relaxed">
+                                        Available float for B2C disbursements, vendor payouts, and operational settlement.
+                                    </p>
+                                </div>
 
-                        <Card className="p-6 border border-gray-100 dark:border-zinc-800 bg-gray-50/50 dark:bg-zinc-900/50">
-                            <h3 className="text-sm font-bold text-gray-900 dark:text-white mb-3 flex items-center justify-between">
-                                <span>Daraja Operational Feedback</span>
-                                {balanceResult && <span className="text-[10px] font-normal text-gray-500">Live network sync</span>}
-                            </h3>
-                            {balanceResult ? (
-                                <ResponseViewer result={balanceResult} title="Account Balance Result" />
-                            ) : (
-                                <div className="text-center py-12 text-gray-400 text-xs">
-                                    Click "Inquire Live Account Balance" to test.
+                                {/* Utility Account Card */}
+                                <div className="p-5 rounded-xl border border-blue-200/70 dark:border-blue-900/50 bg-blue-50/40 dark:bg-blue-950/20 relative overflow-hidden">
+                                    <div className="flex items-center justify-between mb-2">
+                                        <span className="text-xs font-bold text-blue-800 dark:text-blue-300 uppercase tracking-wider flex items-center gap-1.5">
+                                            <Building2 className="w-4 h-4 text-blue-600" /> Utility Account
+                                        </span>
+                                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-900/70 text-blue-700 dark:text-blue-300">
+                                            Collections
+                                        </span>
+                                    </div>
+                                    <p className="text-2xl sm:text-3xl font-extrabold text-blue-950 dark:text-white font-mono tracking-tight my-2">
+                                        KES {Number(latestBalance?.utilityAccount || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                    </p>
+                                    <p className="text-[11px] text-blue-700/80 dark:text-blue-400/80 leading-relaxed">
+                                        Revenue accumulated from customer Paybill and Till Number transactions.
+                                    </p>
+                                </div>
+
+                                {/* Charges Paid Card */}
+                                <div className="p-5 rounded-xl border border-zinc-200/80 dark:border-zinc-800 bg-zinc-50/70 dark:bg-zinc-900/50 relative overflow-hidden">
+                                    <div className="flex items-center justify-between mb-2">
+                                        <span className="text-xs font-bold text-zinc-700 dark:text-zinc-300 uppercase tracking-wider flex items-center gap-1.5">
+                                            <DollarSign className="w-4 h-4 text-zinc-500" /> Charges Paid Account
+                                        </span>
+                                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-zinc-200 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300">
+                                            Tariffs
+                                        </span>
+                                    </div>
+                                    <p className="text-2xl sm:text-3xl font-extrabold text-zinc-900 dark:text-white font-mono tracking-tight my-2">
+                                        KES {Number(latestBalance?.chargesPaidAccount || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                    </p>
+                                    <p className="text-[11px] text-zinc-600 dark:text-zinc-400 leading-relaxed">
+                                        Cumulative Safaricom network processing tariffs and operator charges.
+                                    </p>
+                                </div>
+                            </div>
+
+                            {/* Sync Status Banner */}
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs text-gray-500 dark:text-gray-400 pt-2 border-t border-gray-100 dark:border-zinc-800">
+                                <div className="flex items-center gap-2">
+                                    <Clock className="w-4 h-4 text-emerald-600" />
+                                    <span>
+                                        Last synchronized: {latestBalance?.completedAt || latestBalance?.queriedAt ? new Date(latestBalance.completedAt || latestBalance.queriedAt!).toLocaleString() : 'Never queried yet'}
+                                    </span>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <span className="inline-flex items-center gap-1 font-medium text-emerald-700 dark:text-emerald-400">
+                                        <CheckCircle2 className="w-3.5 h-3.5" /> Data Saved In DB & Persisted
+                                    </span>
+                                </div>
+                            </div>
+
+                            {/* Active Polling Status Banner */}
+                            {isPollingBalance && (
+                                <div className="p-4 rounded-xl border border-amber-200 dark:border-amber-900/50 bg-amber-50/80 dark:bg-amber-950/30 flex items-start gap-3 animate-pulse">
+                                    <RefreshCw className="w-5 h-5 text-amber-600 dark:text-amber-400 animate-spin mt-0.5 shrink-0" />
+                                    <div>
+                                        <h4 className="text-xs font-bold text-amber-900 dark:text-amber-200">
+                                            Awaiting Asynchronous Safaricom Webhook Callback ({pollingSeconds}s elapsed)...
+                                        </h4>
+                                        <p className="text-[11px] text-amber-800 dark:text-amber-300 mt-0.5 leading-relaxed">
+                                            Safaricom processes balance inquiries asynchronously. The moment the callback arrives at your ResultURL, your database and these metric cards will update automatically.
+                                        </p>
+                                    </div>
                                 </div>
                             )}
-                        </Card>
+
+                            {/* Detailed Sub-Account Ledger Table */}
+                            {latestBalance?.accounts && latestBalance.accounts.length > 0 && (
+                                <div className="space-y-3 pt-2">
+                                    <h4 className="text-xs font-bold text-gray-900 dark:text-white uppercase tracking-wider">
+                                        Sub-Account Breakdown Ledger
+                                    </h4>
+                                    <div className="overflow-x-auto rounded-xl border border-gray-100 dark:border-zinc-800">
+                                        <table className="w-full text-left text-xs">
+                                            <thead className="bg-gray-50 dark:bg-zinc-800/60 text-gray-600 dark:text-gray-400 font-semibold">
+                                                <tr>
+                                                    <th className="py-2.5 px-4">Account Name</th>
+                                                    <th className="py-2.5 px-4">Currency</th>
+                                                    <th className="py-2.5 px-4 text-right">Current Balance</th>
+                                                    <th className="py-2.5 px-4 text-right">Available Balance</th>
+                                                    <th className="py-2.5 px-4 text-right">Reserved Balance</th>
+                                                    <th className="py-2.5 px-4 text-right">Uncleared Balance</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody className="divide-y divide-gray-100 dark:divide-zinc-800 font-mono">
+                                                {latestBalance.accounts.map((acc: any, i: number) => (
+                                                    <tr key={i} className="hover:bg-gray-50/50 dark:hover:bg-zinc-800/30">
+                                                        <td className="py-2.5 px-4 font-sans font-medium text-gray-900 dark:text-white">
+                                                            {acc.accountName}
+                                                        </td>
+                                                        <td className="py-2.5 px-4 text-gray-500">{acc.currency}</td>
+                                                        <td className="py-2.5 px-4 text-right font-bold text-gray-900 dark:text-white">
+                                                            KES {Number(acc.currentBalance).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                                                        </td>
+                                                        <td className="py-2.5 px-4 text-right text-emerald-600 font-bold">
+                                                            KES {Number(acc.availableBalance).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                                                        </td>
+                                                        <td className="py-2.5 px-4 text-right text-gray-500">
+                                                            KES {Number(acc.reservedBalance).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                                                        </td>
+                                                        <td className="py-2.5 px-4 text-right text-gray-500">
+                                                            KES {Number(acc.unclearedBalance).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                                                        </td>
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Inquiry Action Form & Feedback */}
+                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+                            <Card className="p-6 border border-gray-100 dark:border-zinc-800">
+                                <h2 className="text-base font-bold text-gray-900 dark:text-white mb-2 flex items-center gap-2">
+                                    <Sparkles className="w-5 h-5 text-emerald-600" />
+                                    Inquire Live Account Balance
+                                </h2>
+                                <p className="text-xs text-gray-500 mb-6">
+                                    Dispatches an encrypted balance query to Safaricom Daraja. The response payload will be intercepted by your webhook and persisted to the database.
+                                </p>
+
+                                <form onSubmit={handleQueryBalance} className="space-y-4">
+                                    <Input
+                                        label="Query Remarks"
+                                        value={balanceRemarks}
+                                        onChange={(e: any) => setBalanceRemarks(e.target.value)}
+                                        placeholder="e.g. Morning Float Check"
+                                    />
+                                    <Button
+                                        type="submit"
+                                        disabled={balanceLoading || isPollingBalance}
+                                        className="w-full bg-emerald-600 hover:bg-emerald-700 text-white flex items-center justify-center gap-2"
+                                    >
+                                        <RefreshCw className={`w-4 h-4 ${(balanceLoading || isPollingBalance) ? 'animate-spin' : ''}`} />
+                                        {isPollingBalance ? `Syncing with Safaricom (${pollingSeconds}s)...` : balanceLoading ? 'Querying Safaricom...' : 'Inquire Live Account Balance'}
+                                    </Button>
+                                </form>
+                            </Card>
+
+                            <Card className="p-6 border border-gray-100 dark:border-zinc-800 bg-gray-50/50 dark:bg-zinc-900/50">
+                                <h3 className="text-sm font-bold text-gray-900 dark:text-white mb-3 flex items-center justify-between">
+                                    <span>Daraja Operational Feedback</span>
+                                    {balanceResult && <span className="text-[10px] font-normal text-gray-500">Live network sync</span>}
+                                </h3>
+                                {balanceResult ? (
+                                    <ResponseViewer result={balanceResult} title="Account Balance Result" />
+                                ) : (
+                                    <div className="text-center py-12 text-gray-400 text-xs">
+                                        Click "Inquire Live Account Balance" to query Safaricom.
+                                    </div>
+                                )}
+                            </Card>
+                        </div>
                     </div>
                 )}
 
