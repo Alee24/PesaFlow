@@ -117,7 +117,7 @@ const register = async (req, res) => {
         catch (notifErr) {
             console.error('Notification dispatch error:', notifErr);
         }
-        const token = jsonwebtoken_1.default.sign({ userId: result.id, role: result.role, status: result.status, parentId: result.parentId }, process.env.JWT_SECRET || 'fallback_secret', { expiresIn: '7d' });
+        const token = jsonwebtoken_1.default.sign({ userId: result.id, role: result.role, status: result.status, parentId: result.parentId }, process.env.JWT_SECRET || 'fallback_secret', { expiresIn: '30d' });
         res.status(201).json({
             message: 'Account created successfully. Please check your email to verify your account.',
             token,
@@ -310,7 +310,7 @@ const login = async (req, res) => {
             res.status(403).json({ error: 'Your account has been suspended. Please call 0724454757 for activation.' });
             return;
         }
-        const token = jsonwebtoken_1.default.sign({ userId: user.id, role: user.role, status: user.status, parentId: user.parentId }, process.env.JWT_SECRET || 'fallback_secret', { expiresIn: '7d' });
+        const token = jsonwebtoken_1.default.sign({ userId: user.id, role: user.role, status: user.status, parentId: user.parentId }, process.env.JWT_SECRET || 'fallback_secret', { expiresIn: '30d' });
         res.json({
             message: 'Login successful',
             token,
@@ -411,13 +411,39 @@ const updateUser = async (req, res) => {
 exports.updateUser = updateUser;
 const getCurrentUser = async (req, res) => {
     try {
-        const userId = req.user.userId;
+        const authUser = req.user;
+        if (!authUser) {
+            res.status(401).json({ error: 'Unauthorized' });
+            return;
+        }
+        if (authUser.isTeamMember) {
+            const member = await prisma.teamMember.findUnique({
+                where: { id: authUser.userId },
+                include: { merchant: { include: { businessProfile: true } } }
+            });
+            if (!member) {
+                res.status(404).json({ error: 'Staff member not found' });
+                return;
+            }
+            res.json({
+                user: {
+                    id: member.id,
+                    name: member.name,
+                    role: member.role,
+                    status: member.status,
+                    merchantId: member.merchantId,
+                    isTeamMember: true,
+                    isProfileComplete: true
+                }
+            });
+            return;
+        }
         const user = await prisma.user.findUnique({
-            where: { id: userId },
+            where: { id: authUser.userId },
             include: { businessProfile: true }
         });
         if (!user) {
-            res.status(404).json({ error: 'User not found' });
+            res.status(404).json({ error: 'User account not found' });
             return;
         }
         res.json({

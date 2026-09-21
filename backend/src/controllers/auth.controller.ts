@@ -103,7 +103,7 @@ export const register = async (req: Request, res: Response): Promise<void> => {
         const token = jwt.sign(
             { userId: result.id, role: result.role, status: result.status, parentId: result.parentId },
             process.env.JWT_SECRET || 'fallback_secret',
-            { expiresIn: '7d' }
+            { expiresIn: '30d' }
         );
 
         res.status(201).json({
@@ -333,7 +333,7 @@ export const login = async (req: Request, res: Response): Promise<void> => {
         const token = jwt.sign(
             { userId: user.id, role: user.role, status: user.status, parentId: user.parentId },
             process.env.JWT_SECRET || 'fallback_secret',
-            { expiresIn: '7d' }
+            { expiresIn: '30d' }
         );
 
         res.json({
@@ -444,14 +444,42 @@ export const updateUser = async (req: Request, res: Response): Promise<void> => 
 };
 export const getCurrentUser = async (req: Request, res: Response): Promise<void> => {
     try {
-        const userId = (req as any).user.userId;
+        const authUser = (req as any).user;
+        if (!authUser) {
+            res.status(401).json({ error: 'Unauthorized' });
+            return;
+        }
+
+        if (authUser.isTeamMember) {
+            const member = await prisma.teamMember.findUnique({
+                where: { id: authUser.userId },
+                include: { merchant: { include: { businessProfile: true } } }
+            });
+            if (!member) {
+                res.status(404).json({ error: 'Staff member not found' });
+                return;
+            }
+            res.json({
+                user: {
+                    id: member.id,
+                    name: member.name,
+                    role: member.role,
+                    status: member.status,
+                    merchantId: member.merchantId,
+                    isTeamMember: true,
+                    isProfileComplete: true
+                }
+            });
+            return;
+        }
+
         const user = await prisma.user.findUnique({
-            where: { id: userId },
+            where: { id: authUser.userId },
             include: { businessProfile: true }
         });
 
         if (!user) {
-            res.status(404).json({ error: 'User not found' });
+            res.status(404).json({ error: 'User account not found' });
             return;
         }
 

@@ -81,6 +81,7 @@ export default function AnalyticsPage() {
             setInventoryData(inventory.data);
             setTeamData(team.data);
         } catch (error: any) {
+            if (error.response?.status === 401) return;
             showToast(error.response?.data?.error || 'Failed to load analytics', 'error');
         } finally {
             setLoading(false);

@@ -61,6 +61,12 @@ export const authenticateToken = async (req: AuthRequest, res: Response, next: N
             return;
         }
 
+        // Validate payload structure
+        if (!payload || (!payload.userId && !payload.teamMemberId)) {
+            res.status(401).json({ error: 'Invalid session structure. Please sign in again.' });
+            return;
+        }
+
         // STANDARD USER TOKEN (Merchants, Admins)
         const user = await prisma.user.findUnique({
             where: { id: payload.userId },
@@ -74,7 +80,7 @@ export const authenticateToken = async (req: AuthRequest, res: Response, next: N
         });
 
         if (!user) {
-            res.status(401).json({ error: 'User does not exist' });
+            res.status(401).json({ error: 'User account not found. Please sign in again.' });
             return;
         }
 
@@ -87,11 +93,6 @@ export const authenticateToken = async (req: AuthRequest, res: Response, next: N
         // Branch Manager: merchantId is the parent (main merchant)
         const merchantId = user.parentId || user.id;
 
-        // Parent subscription checks for branch managers bypassed to allow 100% unlocked unlimited access
-        if (user.parentId) {
-            // Unlocked: Bypassed plan limits on login
-        }
-
         req.user = {
             userId: user.id,
             merchantId,
@@ -102,8 +103,17 @@ export const authenticateToken = async (req: AuthRequest, res: Response, next: N
 
         next();
 
-    } catch (err) {
-        res.status(403).json({ error: 'Invalid or expired token' });
+    } catch (err: any) {
+        if (err.name === 'TokenExpiredError') {
+            res.status(401).json({ error: 'Your session has expired. Please sign in again to continue.' });
+            return;
+        }
+        if (err.name === 'JsonWebTokenError') {
+            res.status(401).json({ error: 'Invalid authentication session. Please sign in again.' });
+            return;
+        }
+        console.error('[Auth Middleware Unexpected Error]:', err);
+        res.status(500).json({ error: 'Authentication service temporarily unavailable. Please try again.' });
         return;
     }
 };

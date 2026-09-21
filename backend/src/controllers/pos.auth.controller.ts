@@ -120,7 +120,7 @@ export const verifyPin = async (req: Request, res: Response): Promise<void> => {
                 isTeamMember: true
             },
             process.env.JWT_SECRET || 'fallback_secret',
-            { expiresIn: '12h' }
+            { expiresIn: '30d' }
         );
 
 

@@ -43,6 +43,10 @@ const authenticateToken = async (req, res, next) => {
             next();
             return;
         }
+        if (!payload || (!payload.userId && !payload.teamMemberId)) {
+            res.status(401).json({ error: 'Invalid session structure. Please sign in again.' });
+            return;
+        }
         const user = await prisma.user.findUnique({
             where: { id: payload.userId },
             select: {
@@ -54,7 +58,7 @@ const authenticateToken = async (req, res, next) => {
             }
         });
         if (!user) {
-            res.status(401).json({ error: 'User does not exist' });
+            res.status(401).json({ error: 'User account not found. Please sign in again.' });
             return;
         }
         if (user.status === 'REJECTED' || user.status === 'SUSPENDED') {
@@ -62,8 +66,6 @@ const authenticateToken = async (req, res, next) => {
             return;
         }
         const merchantId = user.parentId || user.id;
-        if (user.parentId) {
-        }
         req.user = {
             userId: user.id,
             merchantId,
@@ -74,7 +76,16 @@ const authenticateToken = async (req, res, next) => {
         next();
     }
     catch (err) {
-        res.status(403).json({ error: 'Invalid or expired token' });
+        if (err.name === 'TokenExpiredError') {
+            res.status(401).json({ error: 'Your session has expired. Please sign in again to continue.' });
+            return;
+        }
+        if (err.name === 'JsonWebTokenError') {
+            res.status(401).json({ error: 'Invalid authentication session. Please sign in again.' });
+            return;
+        }
+        console.error('[Auth Middleware Unexpected Error]:', err);
+        res.status(500).json({ error: 'Authentication service temporarily unavailable. Please try again.' });
         return;
     }
 };

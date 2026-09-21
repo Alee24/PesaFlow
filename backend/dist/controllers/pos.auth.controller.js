@@ -101,7 +101,7 @@ const verifyPin = async (req, res) => {
             merchantId: user.merchantId,
             role: user.role,
             isTeamMember: true
-        }, process.env.JWT_SECRET || 'fallback_secret', { expiresIn: '12h' });
+        }, process.env.JWT_SECRET || 'fallback_secret', { expiresIn: '30d' });
         res.json({
             message: 'Login successful',
             token,

@@ -28,7 +28,8 @@ export const stkPush = async (req: AuthRequest, res: Response): Promise<void> =>
         }
 
         console.log(`Initiating STK Push for ${phoneNumber} amount ${amount}${saleId ? ` (Retry for sale ${saleId})` : ''}`);
-        const response = await initiateSTKPush(phoneNumber, Number(amount), 'POS Sale', req.user.userId, items, undefined, saleId);
+        const effectiveUserId = req.user.merchantId || req.user.userId;
+        const response = await initiateSTKPush(phoneNumber, Number(amount), 'POS Sale', effectiveUserId, items, undefined, saleId);
         console.log('STK Initiation Successful:', response);
         res.json(response);
 
@@ -198,11 +199,12 @@ export const initiateInvoicePayment = async (req: AuthRequest, res: Response): P
         }
 
         console.log(`Initiating Invoice Payment for ${invoiceId} - ${phoneNumber}`);
+        const effectiveUserId = req.user.merchantId || req.user.userId;
         const response = await initiateSTKPush(
             phoneNumber,
             Number(invoice.amount),
             `Inv ${invoice.reference || 'Ref'}`,
-            req.user.userId,
+            effectiveUserId,
             [],
             invoiceId
         );

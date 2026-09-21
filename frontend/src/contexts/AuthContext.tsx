@@ -44,6 +44,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
 
     const login = (token: string, userData: User) => {
+        // Clear any old POS kiosk tokens so fresh merchant credentials are used
+        localStorage.removeItem('posToken');
+        localStorage.removeItem('posUser');
         localStorage.setItem('token', token);
         localStorage.setItem('user', JSON.stringify(userData));
         setUser(userData);
@@ -53,6 +56,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const logout = () => {
         localStorage.removeItem('token');
         localStorage.removeItem('user');
+        localStorage.removeItem('posToken');
+        localStorage.removeItem('posUser');
         setUser(null);
         router.push('/auth/login');
     };

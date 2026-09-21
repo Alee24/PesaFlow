@@ -49,7 +49,8 @@ const stkPush = async (req, res) => {
             return;
         }
         console.log(`Initiating STK Push for ${phoneNumber} amount ${amount}${saleId ? ` (Retry for sale ${saleId})` : ''}`);
-        const response = await (0, mpesa_service_1.initiateSTKPush)(phoneNumber, Number(amount), 'POS Sale', req.user.userId, items, undefined, saleId);
+        const effectiveUserId = req.user.merchantId || req.user.userId;
+        const response = await (0, mpesa_service_1.initiateSTKPush)(phoneNumber, Number(amount), 'POS Sale', effectiveUserId, items, undefined, saleId);
         console.log('STK Initiation Successful:', response);
         res.json(response);
     }
@@ -197,7 +198,8 @@ const initiateInvoicePayment = async (req, res) => {
             return;
         }
         console.log(`Initiating Invoice Payment for ${invoiceId} - ${phoneNumber}`);
-        const response = await (0, mpesa_service_1.initiateSTKPush)(phoneNumber, Number(invoice.amount), `Inv ${invoice.reference || 'Ref'}`, req.user.userId, [], invoiceId);
+        const effectiveUserId = req.user.merchantId || req.user.userId;
+        const response = await (0, mpesa_service_1.initiateSTKPush)(phoneNumber, Number(invoice.amount), `Inv ${invoice.reference || 'Ref'}`, effectiveUserId, [], invoiceId);
         res.json(response);
     }
     catch (error) {
