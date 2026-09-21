@@ -1,6 +1,7 @@
 import axios from 'axios';
 import { PrismaClient } from '@prisma/client';
 import { getCredentials, getAccessToken } from './mpesa.service';
+import { generateSecurityCredential, isProductionEnv } from '../utils/daraja-security';
 
 const prisma = new PrismaClient();
 
@@ -187,14 +188,17 @@ export const executeAccountBalanceQuery = async (
     const creds = await getCredentials(userId);
     const token = await getAccessToken(creds);
     const baseUrl = getBaseDarajaUrl(creds.env);
+    const isProd = isProductionEnv(creds.env);
 
     if (!creds.initiatorName || !creds.password) {
-        throw new Error('Account Balance inquiry requires Initiator Name and Security Password configured in M-Pesa Settings.');
+        throw new Error('Account Balance inquiry requires Initiator Name and Initiator Password configured in Settings → M-Pesa.');
     }
+
+    const securityCredential = generateSecurityCredential(creds.password, isProd);
 
     const payload = {
         Initiator: creds.initiatorName,
-        SecurityCredential: creds.password,
+        SecurityCredential: securityCredential,
         CommandID: 'AccountBalance',
         PartyA: creds.shortCode,
         IdentifierType: identifierType || '4',
@@ -203,7 +207,7 @@ export const executeAccountBalanceQuery = async (
         ResultURL: creds.callbackUrl
     };
 
-    console.log(`[Daraja Account Balance] Inquiring for Shortcode ${creds.shortCode} on ${baseUrl} (IdentifierType: ${identifierType || '4'})`);
+    console.log(`[Daraja Account Balance] Inquiring for Shortcode ${creds.shortCode} on ${baseUrl}`);
     const response = await axios.post(`${baseUrl}/mpesa/accountbalance/v1/query`, payload, {
         headers: { 
             Authorization: `Bearer ${token}`,
@@ -214,24 +218,39 @@ export const executeAccountBalanceQuery = async (
 
     return {
         success: true,
-        data: response.data,
-        message: 'Account balance query dispatched to Safaricom Daraja.'
+        summary: {
+            title: '✅ Account Balance Query Accepted',
+            description: 'Safaricom is processing your balance inquiry. Results will be delivered to your callback URL shortly.',
+            shortCode: creds.shortCode,
+            environment: creds.env.toUpperCase(),
+            initiator: creds.initiatorName,
+        },
+        rawResponse: response.data,
+        conversationId: response.data?.ConversationID,
+        originatorConversationId: response.data?.OriginatorConversationID,
+        responseCode: response.data?.ResponseCode,
+        responseDescription: response.data?.ResponseDescription,
+        message: response.data?.ResponseDescription || 'Balance inquiry request accepted — result arrives via callback.'
     };
 };
+
 
 // 2. Transaction Status Query
 export const executeTransactionStatusQuery = async (userId: string, transactionId: string, remarks: string = 'Status Query') => {
     const creds = await getCredentials(userId);
     const token = await getAccessToken(creds);
     const baseUrl = getBaseDarajaUrl(creds.env);
+    const isProd = isProductionEnv(creds.env);
 
     if (!creds.initiatorName || !creds.password) {
-        throw new Error('Transaction Status Query requires Initiator Name and Security Password.');
+        throw new Error('Transaction Status Query requires Initiator Name and Initiator Password in Settings → M-Pesa.');
     }
+
+    const securityCredential = generateSecurityCredential(creds.password, isProd);
 
     const payload = {
         Initiator: creds.initiatorName,
-        SecurityCredential: creds.password,
+        SecurityCredential: securityCredential,
         CommandID: 'TransactionStatusQuery',
         TransactionID: transactionId.trim().toUpperCase(),
         PartyA: creds.shortCode,
@@ -253,8 +272,19 @@ export const executeTransactionStatusQuery = async (userId: string, transactionI
 
     return {
         success: true,
-        data: response.data,
-        message: `Status inquiry for ${transactionId} received by Safaricom.`
+        summary: {
+            title: '🔍 Transaction Status Inquiry Accepted',
+            description: 'Safaricom is auditing the specified transaction. The result will be dispatched to your callback URL.',
+            transactionId: transactionId.trim().toUpperCase(),
+            shortCode: creds.shortCode,
+            environment: creds.env.toUpperCase(),
+        },
+        rawResponse: response.data,
+        conversationId: response.data?.ConversationID,
+        originatorConversationId: response.data?.OriginatorConversationID,
+        responseCode: response.data?.ResponseCode,
+        responseDescription: response.data?.ResponseDescription,
+        message: response.data?.ResponseDescription || `Status inquiry for ${transactionId} dispatched successfully.`
     };
 };
 
@@ -266,14 +296,17 @@ export const executeTransactionReversal = async (
     const creds = await getCredentials(userId);
     const token = await getAccessToken(creds);
     const baseUrl = getBaseDarajaUrl(creds.env);
+    const isProd = isProductionEnv(creds.env);
 
     if (!creds.initiatorName || !creds.password) {
-        throw new Error('Reversal requires Initiator Name and Security Credential in M-Pesa Settings.');
+        throw new Error('Reversal requires Initiator Name and Initiator Password in Settings → M-Pesa.');
     }
+
+    const securityCredential = generateSecurityCredential(creds.password, isProd);
 
     const payload = {
         Initiator: creds.initiatorName,
-        SecurityCredential: creds.password,
+        SecurityCredential: securityCredential,
         CommandID: 'TransactionReversal',
         TransactionID: params.transactionId.trim().toUpperCase(),
         Amount: params.amount,
@@ -296,8 +329,20 @@ export const executeTransactionReversal = async (
 
     return {
         success: true,
-        data: response.data,
-        message: `Reversal request for ${params.transactionId} dispatched successfully.`
+        summary: {
+            title: '↩️ Reversal Request Submitted',
+            description: 'Safaricom has received the reversal request. The transaction amount will be reversed back to the customer if approved.',
+            transactionId: params.transactionId.trim().toUpperCase(),
+            amount: `KES ${params.amount.toLocaleString()}`,
+            shortCode: creds.shortCode,
+            environment: creds.env.toUpperCase(),
+        },
+        rawResponse: response.data,
+        conversationId: response.data?.ConversationID,
+        originatorConversationId: response.data?.OriginatorConversationID,
+        responseCode: response.data?.ResponseCode,
+        responseDescription: response.data?.ResponseDescription,
+        message: response.data?.ResponseDescription || `Reversal request for ${params.transactionId} dispatched successfully.`
     };
 };
 
@@ -331,8 +376,17 @@ export const executeC2bUrlRegistration = async (
 
     return {
         success: true,
-        data: response.data,
-        urls: { confirmationUrl: confUrl, validationUrl: valUrl }
+        summary: {
+            title: '🔗 C2B URLs Registered Successfully',
+            description: 'Safaricom has registered your confirmation and validation URLs for C2B payments. All customer payments to this shortcode will now trigger your webhooks.',
+            shortCode: creds.shortCode,
+            environment: creds.env.toUpperCase(),
+        },
+        rawResponse: response.data,
+        urls: { confirmationUrl: confUrl, validationUrl: valUrl },
+        responseCode: response.data?.ResponseCode,
+        responseDescription: response.data?.ResponseDescription,
+        message: response.data?.ResponseDescription || 'C2B URLs registered with Safaricom.'
     };
 };
 
@@ -368,9 +422,22 @@ export const executeC2bSimulation = async (
 
     return {
         success: true,
-        data: response.data
+        summary: {
+            title: '🧪 C2B Payment Simulated',
+            description: `Test payment of KES ${params.amount.toLocaleString()} from ${formattedPhone} dispatched to shortcode ${creds.shortCode}.`,
+            from: formattedPhone,
+            to: creds.shortCode,
+            amount: `KES ${params.amount.toLocaleString()}`,
+            reference: params.billRefNumber || 'InvoiceTest',
+            environment: creds.env.toUpperCase(),
+        },
+        rawResponse: response.data,
+        responseCode: response.data?.ResponseCode,
+        responseDescription: response.data?.ResponseDescription,
+        message: response.data?.ResponseDescription || 'C2B simulation accepted by Safaricom.'
     };
 };
+
 
 // 6. B2B Payment Request
 export const executeB2BPayment = async (
@@ -387,14 +454,17 @@ export const executeB2BPayment = async (
     const creds = await getCredentials(userId);
     const token = await getAccessToken(creds);
     const baseUrl = getBaseDarajaUrl(creds.env);
+    const isProd = isProductionEnv(creds.env);
 
     if (!creds.initiatorName || !creds.password) {
-        throw new Error('B2B payments require Initiator Name and Security Password in M-Pesa Settings.');
+        throw new Error('B2B payments require Initiator Name and Initiator Password in Settings → M-Pesa.');
     }
+
+    const securityCredential = generateSecurityCredential(creds.password, isProd);
 
     const payload = {
         Initiator: creds.initiatorName,
-        SecurityCredential: creds.password,
+        SecurityCredential: securityCredential,
         CommandID: params.commandId || 'BusinessPayBill',
         SenderIdentifierType: '4',
         RecieverIdentifierType: params.receiverType || '4',
@@ -418,7 +488,21 @@ export const executeB2BPayment = async (
 
     return {
         success: true,
-        data: response.data
+        summary: {
+            title: '🏦 B2B Transfer Initiated',
+            description: `Transfer of KES ${params.amount.toLocaleString()} to ${params.partyB} is being processed by Safaricom.`,
+            from: creds.shortCode,
+            to: params.partyB,
+            amount: `KES ${params.amount.toLocaleString()}`,
+            reference: params.accountReference,
+            environment: creds.env.toUpperCase(),
+        },
+        rawResponse: response.data,
+        conversationId: response.data?.ConversationID,
+        originatorConversationId: response.data?.OriginatorConversationID,
+        responseCode: response.data?.ResponseCode,
+        responseDescription: response.data?.ResponseDescription,
+        message: response.data?.ResponseDescription || 'B2B transfer initiated — awaiting Safaricom confirmation.'
     };
 };
 
@@ -434,18 +518,21 @@ export const executeBusinessToPochi = async (
     const creds = await getCredentials(userId);
     const token = await getAccessToken(creds);
     const baseUrl = getBaseDarajaUrl(creds.env);
+    const isProd = isProductionEnv(creds.env);
 
     if (!creds.initiatorName || !creds.password) {
-        throw new Error('Business to Pochi requires Initiator Name and Security Password in M-Pesa Settings.');
+        throw new Error('Business to Pochi requires Initiator Name and Initiator Password in Settings → M-Pesa.');
     }
 
     const formattedPhone = params.phoneNumber.startsWith('0')
         ? `254${params.phoneNumber.slice(1)}`
         : params.phoneNumber;
 
+    const securityCredential = generateSecurityCredential(creds.password, isProd);
+
     const payload = {
         InitiatorName: creds.initiatorName,
-        SecurityCredential: creds.password,
+        SecurityCredential: securityCredential,
         CommandID: 'BusinessPayment',
         Amount: params.amount,
         PartyA: creds.shortCode,
@@ -467,9 +554,22 @@ export const executeBusinessToPochi = async (
 
     return {
         success: true,
-        data: response.data
+        summary: {
+            title: '📲 Pochi la Biashara Transfer Sent',
+            description: `KES ${params.amount.toLocaleString()} is being disbursed to ${formattedPhone}'s Pochi la Biashara wallet.`,
+            recipient: formattedPhone,
+            amount: `KES ${params.amount.toLocaleString()}`,
+            environment: creds.env.toUpperCase(),
+        },
+        rawResponse: response.data,
+        conversationId: response.data?.ConversationID,
+        originatorConversationId: response.data?.OriginatorConversationID,
+        responseCode: response.data?.ResponseCode,
+        responseDescription: response.data?.ResponseDescription,
+        message: response.data?.ResponseDescription || 'Pochi la Biashara disbursement initiated successfully.'
     };
 };
+
 
 // 8. M-Pesa Ratiba (Standing Orders)
 export const executeRatibaStandingOrder = async (
@@ -520,7 +620,21 @@ export const executeRatibaStandingOrder = async (
 
     return {
         success: true,
-        data: response.data
+        summary: {
+            title: '📅 M-Pesa Ratiba Order Registered',
+            description: `Standing order "${params.standingOrderName}" created for ${formattedPhone} for KES ${params.amount.toLocaleString()}.`,
+            orderName: params.standingOrderName,
+            phoneNumber: formattedPhone,
+            amount: `KES ${params.amount.toLocaleString()}`,
+            frequency: params.frequency || 'Monthly',
+            startDate: params.startDate,
+            endDate: params.endDate,
+            environment: creds.env.toUpperCase()
+        },
+        rawResponse: response.data,
+        responseCode: response.data?.ResponseCode,
+        responseDescription: response.data?.ResponseDescription,
+        message: response.data?.ResponseDescription || 'Ratiba Standing Order registered successfully.'
     };
 };
 
@@ -551,7 +665,18 @@ export const executePullTransactionsQuery = async (
 
     return {
         success: true,
-        data: response.data
+        summary: {
+            title: '📥 Transactions Stream Pulled',
+            description: `Retrieved historical transaction settlement batch between ${params.startDate} and ${params.endDate}.`,
+            shortCode: creds.shortCode,
+            window: `${params.startDate} to ${params.endDate}`,
+            offset: params.offset || '0',
+            environment: creds.env.toUpperCase()
+        },
+        rawResponse: response.data,
+        responseCode: response.data?.ResponseCode,
+        responseDescription: response.data?.ResponseDescription,
+        message: response.data?.ResponseDescription || 'Transaction batch stream pulled successfully.'
     };
 };
 

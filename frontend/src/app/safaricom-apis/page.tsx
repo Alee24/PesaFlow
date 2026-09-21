@@ -10,7 +10,8 @@ import { useToast } from '@/contexts/ToastContext';
 import {
     Activity, ShieldCheck, ArrowUpRight, Search, RefreshCw, Smartphone,
     CheckCircle, AlertCircle, Building2, Repeat, Undo2, Users, Download,
-    Send, Check, Copy, ExternalLink, HelpCircle, FileText, ArrowLeftRight
+    Send, Check, Copy, ExternalLink, HelpCircle, FileText, ArrowLeftRight,
+    CheckCircle2, ChevronRight, AlertTriangle
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -103,6 +104,122 @@ export default function SafaricomApisPage() {
         }
     };
 
+    // Component to render human-readable structured responses instead of plain JSON
+    const ResponseViewer = ({ result, title = 'API Response' }: { result: any; title?: string }) => {
+        const [copied, setCopied] = useState(false);
+        const [showRaw, setShowRaw] = useState(false);
+
+        if (!result) return null;
+
+        const isError = Boolean(result.error);
+        const summary = result.summary || {};
+        const responseDesc = result.message || result.responseDescription || result.darajaResponse?.ResponseDescription || result.darajaResponse?.errorMessage;
+        const conversationId = result.conversationId || result.darajaResponse?.ConversationID;
+        const originatorId = result.originatorConversationId || result.darajaResponse?.OriginatorConversationID;
+        const responseCode = result.responseCode || result.darajaResponse?.ResponseCode;
+
+        const copyJson = () => {
+            navigator.clipboard.writeText(JSON.stringify(result, null, 2));
+            setCopied(true);
+            setTimeout(() => setCopied(false), 2000);
+        };
+
+        return (
+            <div className="space-y-3 animate-in fade-in duration-300">
+                {isError ? (
+                    <div className="p-4 rounded-xl border border-red-200 dark:border-red-900/50 bg-red-50/70 dark:bg-red-950/30 text-red-900 dark:text-red-300 space-y-3">
+                        <div className="flex items-start gap-3">
+                            <AlertCircle className="w-5 h-5 text-red-600 dark:text-red-400 mt-0.5 shrink-0" />
+                            <div className="space-y-1">
+                                <h4 className="font-bold text-sm text-red-800 dark:text-red-200">Safaricom Gateway Notice</h4>
+                                <p className="text-xs leading-relaxed text-red-700 dark:text-red-300">{result.error}</p>
+                            </div>
+                        </div>
+
+                        {result.resolutionSteps && (
+                            <div className="mt-3 pt-3 border-t border-red-200/60 dark:border-red-900/40 text-xs">
+                                <p className="font-semibold text-red-800 dark:text-red-200 mb-1.5 flex items-center gap-1.5">
+                                    <ShieldCheck className="w-3.5 h-3.5" /> Recommended Steps:
+                                </p>
+                                <ul className="space-y-1 list-disc list-inside text-red-700 dark:text-red-300">
+                                    {result.resolutionSteps.map((step: string, idx: number) => (
+                                        <li key={idx}>{step}</li>
+                                    ))}
+                                </ul>
+                            </div>
+                        )}
+                    </div>
+                ) : (
+                    <div className="p-4 rounded-xl border border-emerald-200 dark:border-emerald-900/50 bg-emerald-50/60 dark:bg-emerald-950/20 text-emerald-950 dark:text-emerald-300 space-y-3">
+                        <div className="flex items-start justify-between gap-2">
+                            <div className="flex items-center gap-2">
+                                <CheckCircle2 className="w-5 h-5 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                                <h4 className="font-bold text-sm text-emerald-900 dark:text-emerald-200">
+                                    {summary.title || 'Request Dispatched Successfully'}
+                                </h4>
+                            </div>
+                            {responseCode && (
+                                <span className="text-[10px] font-bold px-2 py-0.5 bg-emerald-100 dark:bg-emerald-900 text-emerald-800 dark:text-emerald-200 rounded-full">
+                                    Code: {responseCode}
+                                </span>
+                            )}
+                        </div>
+
+                        {summary.description && (
+                            <p className="text-xs text-emerald-800 dark:text-emerald-300 leading-relaxed">
+                                {summary.description}
+                            </p>
+                        )}
+
+                        {/* Structured details badges */}
+                        <div className="grid grid-cols-2 gap-2 pt-2 text-xs">
+                            {Object.entries(summary).map(([k, v]: [string, any]) => {
+                                if (k === 'title' || k === 'description') return null;
+                                return (
+                                    <div key={k} className="p-2 bg-white/80 dark:bg-zinc-900/80 rounded-lg border border-emerald-100 dark:border-zinc-800">
+                                        <span className="text-[10px] text-gray-500 uppercase tracking-wider block font-semibold">{k}</span>
+                                        <span className="font-bold text-gray-900 dark:text-white truncate block">{String(v)}</span>
+                                    </div>
+                                );
+                            })}
+                            {conversationId && (
+                                <div className="p-2 bg-white/80 dark:bg-zinc-900/80 rounded-lg border border-emerald-100 dark:border-zinc-800 col-span-2">
+                                    <span className="text-[10px] text-gray-500 uppercase tracking-wider block font-semibold">Conversation ID</span>
+                                    <code className="text-xs font-mono text-emerald-700 dark:text-emerald-400 break-all">{conversationId}</code>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                )}
+
+                {/* Raw JSON toggle button */}
+                <div className="flex items-center justify-between pt-1">
+                    <button
+                        type="button"
+                        onClick={() => setShowRaw(!showRaw)}
+                        className="text-xs text-gray-500 hover:text-gray-800 dark:hover:text-gray-200 flex items-center gap-1 font-medium underline"
+                    >
+                        {showRaw ? 'Hide Raw Technical Payload' : 'View Raw Safaricom Payload'}
+                    </button>
+                    <button
+                        type="button"
+                        onClick={copyJson}
+                        className="text-xs text-gray-500 hover:text-emerald-600 flex items-center gap-1 font-medium"
+                    >
+                        {copied ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
+                        {copied ? 'Copied' : 'Copy JSON'}
+                    </button>
+                </div>
+
+                {showRaw && (
+                    <pre className="p-3 bg-zinc-900 text-emerald-400 rounded-lg text-[11px] font-mono overflow-x-auto border border-zinc-800">
+                        {JSON.stringify(result, null, 2)}
+                    </pre>
+                )}
+            </div>
+        );
+    };
+
     // Actions
     const handleQueryBalance = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -112,9 +229,10 @@ export default function SafaricomApisPage() {
             setBalanceResult(res.data);
             showToast('Account balance inquiry dispatched to Daraja', 'success');
         } catch (err: any) {
-            const msg = err.response?.data?.error || 'Inquiry failed';
+            const data = err.response?.data || {};
+            const msg = data.error || 'Inquiry failed';
             showToast(msg, 'error');
-            setBalanceResult({ error: msg });
+            setBalanceResult(data.error ? data : { error: msg, darajaResponse: data });
         } finally {
             setBalanceLoading(false);
         }
@@ -132,9 +250,10 @@ export default function SafaricomApisPage() {
             setTxResult(res.data);
             showToast('Transaction inquiry completed', 'success');
         } catch (err: any) {
-            const msg = err.response?.data?.error || 'Query failed';
+            const data = err.response?.data || {};
+            const msg = data.error || 'Query failed';
             showToast(msg, 'error');
-            setTxResult({ error: msg });
+            setTxResult(data.error ? data : { error: msg, darajaResponse: data });
         } finally {
             setTxLoading(false);
         }
@@ -156,9 +275,10 @@ export default function SafaricomApisPage() {
             setRevResult(res.data);
             showToast('Reversal request sent to Daraja', 'success');
         } catch (err: any) {
-            const msg = err.response?.data?.error || 'Reversal failed';
+            const data = err.response?.data || {};
+            const msg = data.error || 'Reversal failed';
             showToast(msg, 'error');
-            setRevResult({ error: msg });
+            setRevResult(data.error ? data : { error: msg, darajaResponse: data });
         } finally {
             setRevLoading(false);
         }
@@ -187,9 +307,10 @@ export default function SafaricomApisPage() {
                 showToast('Pochi disbursement dispatched', 'success');
             }
         } catch (err: any) {
-            const msg = err.response?.data?.error || 'Disbursement failed';
+            const data = err.response?.data || {};
+            const msg = data.error || 'Disbursement failed';
             showToast(msg, 'error');
-            setDisbResult({ error: msg });
+            setDisbResult(data.error ? data : { error: msg, darajaResponse: data });
         } finally {
             setDisbLoading(false);
         }
@@ -211,9 +332,10 @@ export default function SafaricomApisPage() {
             setRatibaResult(res.data);
             showToast('M-Pesa Ratiba standing order registered', 'success');
         } catch (err: any) {
-            const msg = err.response?.data?.error || 'Standing order creation failed';
+            const data = err.response?.data || {};
+            const msg = data.error || 'Standing order creation failed';
             showToast(msg, 'error');
-            setRatibaResult({ error: msg });
+            setRatibaResult(data.error ? data : { error: msg, darajaResponse: data });
         } finally {
             setRatibaLoading(false);
         }
@@ -231,9 +353,10 @@ export default function SafaricomApisPage() {
             setPullResult(res.data);
             showToast('Transactions pulled successfully', 'success');
         } catch (err: any) {
-            const msg = err.response?.data?.error || 'Pull query failed';
+            const data = err.response?.data || {};
+            const msg = data.error || 'Pull query failed';
             showToast(msg, 'error');
-            setPullResult({ error: msg });
+            setPullResult(data.error ? data : { error: msg, darajaResponse: data });
         } finally {
             setPullLoading(false);
         }
@@ -251,9 +374,10 @@ export default function SafaricomApisPage() {
             setKycResult(res.data);
             showToast('Mobile validation completed', 'success');
         } catch (err: any) {
-            const msg = err.response?.data?.error || 'Validation failed';
+            const data = err.response?.data || {};
+            const msg = data.error || 'Validation failed';
             showToast(msg, 'error');
-            setKycResult({ error: msg });
+            setKycResult(data.error ? data : { error: msg, darajaResponse: data });
         } finally {
             setKycLoading(false);
         }
@@ -269,9 +393,10 @@ export default function SafaricomApisPage() {
             setC2bResult(res.data);
             showToast('C2B Webhook URLs registered with Safaricom', 'success');
         } catch (err: any) {
-            const msg = err.response?.data?.error || 'URL registration failed';
+            const data = err.response?.data || {};
+            const msg = data.error || 'URL registration failed';
             showToast(msg, 'error');
-            setC2bResult({ error: msg });
+            setC2bResult(data.error ? data : { error: msg, darajaResponse: data });
         } finally {
             setC2bLoading(false);
         }
@@ -289,9 +414,10 @@ export default function SafaricomApisPage() {
             setC2bResult(res.data);
             showToast('C2B Payment simulated successfully', 'success');
         } catch (err: any) {
-            const msg = err.response?.data?.error || 'Simulation failed';
+            const data = err.response?.data || {};
+            const msg = data.error || 'Simulation failed';
             showToast(msg, 'error');
-            setC2bResult({ error: msg });
+            setC2bResult(data.error ? data : { error: msg, darajaResponse: data });
         } finally {
             setC2bLoading(false);
         }
@@ -493,11 +619,12 @@ export default function SafaricomApisPage() {
                         </Card>
 
                         <Card className="p-6 border border-gray-100 dark:border-zinc-800 bg-gray-50/50 dark:bg-zinc-900/50">
-                            <h3 className="text-sm font-bold text-gray-900 dark:text-white mb-3">Daraja Response Payload</h3>
+                            <h3 className="text-sm font-bold text-gray-900 dark:text-white mb-3 flex items-center justify-between">
+                                <span>Daraja Operational Feedback</span>
+                                {balanceResult && <span className="text-[10px] font-normal text-gray-500">Live network sync</span>}
+                            </h3>
                             {balanceResult ? (
-                                <pre className="p-4 bg-white dark:bg-zinc-900 rounded-lg border border-gray-200 dark:border-zinc-800 text-xs overflow-x-auto text-gray-800 dark:text-emerald-400 font-mono">
-                                    {JSON.stringify(balanceResult, null, 2)}
-                                </pre>
+                                <ResponseViewer result={balanceResult} title="Account Balance Result" />
                             ) : (
                                 <div className="text-center py-12 text-gray-400 text-xs">
                                     Click "Inquire Live Account Balance" to test.
@@ -539,11 +666,12 @@ export default function SafaricomApisPage() {
                         </Card>
 
                         <Card className="p-6 border border-gray-100 dark:border-zinc-800 bg-gray-50/50 dark:bg-zinc-900/50">
-                            <h3 className="text-sm font-bold text-gray-900 dark:text-white mb-3">Audit Response</h3>
+                            <h3 className="text-sm font-bold text-gray-900 dark:text-white mb-3 flex items-center justify-between">
+                                <span>Audit Response</span>
+                                {txResult && <span className="text-[10px] font-normal text-gray-500">Live query status</span>}
+                            </h3>
                             {txResult ? (
-                                <pre className="p-4 bg-white dark:bg-zinc-900 rounded-lg border border-gray-200 dark:border-zinc-800 text-xs overflow-x-auto text-gray-800 dark:text-emerald-400 font-mono">
-                                    {JSON.stringify(txResult, null, 2)}
-                                </pre>
+                                <ResponseViewer result={txResult} title="Transaction Audit Result" />
                             ) : (
                                 <div className="text-center py-12 text-gray-400 text-xs">
                                     Enter a transaction ID to inspect.
@@ -667,11 +795,12 @@ export default function SafaricomApisPage() {
                         </Card>
 
                         <Card className="p-6 border border-gray-100 dark:border-zinc-800 bg-gray-50/50 dark:bg-zinc-900/50">
-                            <h3 className="text-sm font-bold text-gray-900 dark:text-white mb-3">Disbursement Response</h3>
+                            <h3 className="text-sm font-bold text-gray-900 dark:text-white mb-3 flex items-center justify-between">
+                                <span>Disbursement Status</span>
+                                {disbResult && <span className="text-[10px] font-normal text-gray-500">Live network sync</span>}
+                            </h3>
                             {disbResult ? (
-                                <pre className="p-4 bg-white dark:bg-zinc-900 rounded-lg border border-gray-200 dark:border-zinc-800 text-xs overflow-x-auto text-gray-800 dark:text-emerald-400 font-mono">
-                                    {JSON.stringify(disbResult, null, 2)}
-                                </pre>
+                                <ResponseViewer result={disbResult} title="Disbursement Response" />
                             ) : (
                                 <div className="text-center py-12 text-gray-400 text-xs">
                                     Disbursement logs and confirmation will appear here.
@@ -729,11 +858,12 @@ export default function SafaricomApisPage() {
                         </Card>
 
                         <Card className="p-6 border border-gray-100 dark:border-zinc-800 bg-gray-50/50 dark:bg-zinc-900/50">
-                            <h3 className="text-sm font-bold text-gray-900 dark:text-white mb-3">Reversal Response</h3>
+                            <h3 className="text-sm font-bold text-gray-900 dark:text-white mb-3 flex items-center justify-between">
+                                <span>Reversal Status</span>
+                                {revResult && <span className="text-[10px] font-normal text-gray-500">Live network sync</span>}
+                            </h3>
                             {revResult ? (
-                                <pre className="p-4 bg-white dark:bg-zinc-900 rounded-lg border border-gray-200 dark:border-zinc-800 text-xs overflow-x-auto text-gray-800 dark:text-emerald-400 font-mono">
-                                    {JSON.stringify(revResult, null, 2)}
-                                </pre>
+                                <ResponseViewer result={revResult} title="Reversal Response" />
                             ) : (
                                 <div className="text-center py-12 text-gray-400 text-xs">
                                     Reversal confirmation and Daraja reference will display here.
@@ -827,11 +957,12 @@ export default function SafaricomApisPage() {
                         </Card>
 
                         <Card className="p-6 border border-gray-100 dark:border-zinc-800 bg-gray-50/50 dark:bg-zinc-900/50">
-                            <h3 className="text-sm font-bold text-gray-900 dark:text-white mb-3">Ratiba Registration Response</h3>
+                            <h3 className="text-sm font-bold text-gray-900 dark:text-white mb-3 flex items-center justify-between">
+                                <span>Ratiba Registration Feedback</span>
+                                {ratibaResult && <span className="text-[10px] font-normal text-gray-500">Live network sync</span>}
+                            </h3>
                             {ratibaResult ? (
-                                <pre className="p-4 bg-white dark:bg-zinc-900 rounded-lg border border-gray-200 dark:border-zinc-800 text-xs overflow-x-auto text-gray-800 dark:text-emerald-400 font-mono">
-                                    {JSON.stringify(ratibaResult, null, 2)}
-                                </pre>
+                                <ResponseViewer result={ratibaResult} title="Ratiba Registration" />
                             ) : (
                                 <div className="text-center py-12 text-gray-400 text-xs">
                                     Standing order creation feedback will appear here.
@@ -886,11 +1017,12 @@ export default function SafaricomApisPage() {
                         </Card>
 
                         <Card className="p-6 border border-gray-100 dark:border-zinc-800 bg-gray-50/50 dark:bg-zinc-900/50">
-                            <h3 className="text-sm font-bold text-gray-900 dark:text-white mb-3">Pulled Transaction Data</h3>
+                            <h3 className="text-sm font-bold text-gray-900 dark:text-white mb-3 flex items-center justify-between">
+                                <span>Pulled Transaction Records</span>
+                                {pullResult && <span className="text-[10px] font-normal text-gray-500">Live query status</span>}
+                            </h3>
                             {pullResult ? (
-                                <pre className="p-4 bg-white dark:bg-zinc-900 rounded-lg border border-gray-200 dark:border-zinc-800 text-xs overflow-x-auto text-gray-800 dark:text-emerald-400 font-mono">
-                                    {JSON.stringify(pullResult, null, 2)}
-                                </pre>
+                                <ResponseViewer result={pullResult} title="Pull Transactions Stream" />
                             ) : (
                                 <div className="text-center py-12 text-gray-400 text-xs">
                                     Select date range to pull settlement records.
@@ -1046,9 +1178,9 @@ export default function SafaricomApisPage() {
                             </form>
 
                             {c2bResult && (
-                                <pre className="p-3 bg-white dark:bg-zinc-900 rounded-lg border border-gray-200 dark:border-zinc-800 text-[11px] overflow-x-auto text-gray-800 dark:text-emerald-400 font-mono mt-3">
-                                    {JSON.stringify(c2bResult, null, 2)}
-                                </pre>
+                                <div className="mt-4 pt-3 border-t border-gray-100 dark:border-zinc-800">
+                                    <ResponseViewer result={c2bResult} title="C2B Simulation Feedback" />
+                                </div>
                             )}
                         </Card>
                     </div>

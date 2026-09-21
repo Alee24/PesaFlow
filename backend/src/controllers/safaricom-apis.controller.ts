@@ -21,14 +21,32 @@ interface AuthRequest extends Request {
     };
 }
 
-const formatDarajaError = (error: any, fallback: string): { message: string; raw: any } => {
+const formatDarajaError = (error: any, fallback: string): { message: string; raw: any; resolutionSteps?: string[] } => {
     const raw = error.response?.data || error.message;
     const detailed = error.response?.data?.errorMessage || error.response?.data?.error || error.message || fallback;
     let message = detailed;
-    if (typeof detailed === 'string' && (detailed.toLowerCase().includes('invalid access token') || detailed.toLowerCase().includes('unauthorized'))) {
-        message = 'Safaricom Daraja rejected the access token. Please verify that your Consumer Key and Consumer Secret in M-Pesa Settings match the active Daraja application and are approved for the selected environment (Production vs Sandbox) in your Safaricom Developer Portal.';
+    let resolutionSteps: string[] | undefined = undefined;
+
+    const lower = typeof detailed === 'string' ? detailed.toLowerCase() : '';
+
+    if (lower.includes('invalid access token') || lower.includes('unauthorized')) {
+        message = 'Safaricom Daraja rejected the API request with "Invalid Access Token". While your OAuth credentials generate an access token successfully, Safaricom requires that the app created on developer.safaricom.co.ke has specific permission grants for each API (e.g. Account Balance, PullTransactions, B2B, Reversal).';
+        resolutionSteps = [
+            'Confirm the Daraja Application in your Safaricom Developer Portal has the specific API product enabled (e.g. "Account Balance", "Pull Transactions", etc.).',
+            'Verify that the Shortcode configured (4007897) is linked to this Daraja Consumer Key on the Safaricom portal.',
+            'Ensure the Initiator Username and Initiator Password in Settings → M-Pesa match your live M-Pesa Web Portal operator credentials.',
+            'For production accounts, ensure your Go-Live request on Daraja is approved by Safaricom.'
+        ];
+    } else if (lower.includes('initiator') || lower.includes('security credential')) {
+        message = 'Initiator authorization failed on Safaricom. The operator username or encrypted security credential was not accepted for this shortcode.';
+        resolutionSteps = [
+            'Go to Settings → M-Pesa and confirm the Initiator Name matches your Safaricom portal operator username.',
+            'Ensure the Initiator Password entered is your current active M-Pesa operator password.',
+            'Verify the operator has the "Business Administrator" or "API Operator" role in your Safaricom M-Pesa portal.'
+        ];
     }
-    return { message, raw };
+
+    return { message, raw, resolutionSteps };
 };
 
 export const getApisOverview = async (req: AuthRequest, res: Response): Promise<void> => {
@@ -59,7 +77,7 @@ export const queryAccountBalance = async (req: AuthRequest, res: Response): Prom
     } catch (error: any) {
         console.error('queryAccountBalance Error:', error);
         const err = formatDarajaError(error, 'Failed to query account balance on Safaricom');
-        res.status(500).json({ error: err.message, darajaResponse: err.raw });
+        res.status(500).json({ error: err.message, darajaResponse: err.raw, resolutionSteps: err.resolutionSteps });
     }
 };
 
@@ -80,7 +98,7 @@ export const queryTransactionStatus = async (req: AuthRequest, res: Response): P
     } catch (error: any) {
         console.error('queryTransactionStatus Error:', error);
         const err = formatDarajaError(error, 'Failed to query transaction status on Daraja');
-        res.status(500).json({ error: err.message, darajaResponse: err.raw });
+        res.status(500).json({ error: err.message, darajaResponse: err.raw, resolutionSteps: err.resolutionSteps });
     }
 };
 
@@ -105,7 +123,7 @@ export const requestReversal = async (req: AuthRequest, res: Response): Promise<
     } catch (error: any) {
         console.error('requestReversal Error:', error);
         const err = formatDarajaError(error, 'Failed to initiate transaction reversal');
-        res.status(500).json({ error: err.message, darajaResponse: err.raw });
+        res.status(500).json({ error: err.message, darajaResponse: err.raw, resolutionSteps: err.resolutionSteps });
     }
 };
 
@@ -126,7 +144,7 @@ export const registerC2bUrls = async (req: AuthRequest, res: Response): Promise<
     } catch (error: any) {
         console.error('registerC2bUrls Error:', error);
         const err = formatDarajaError(error, 'Failed to register C2B URLs with Safaricom');
-        res.status(500).json({ error: err.message, darajaResponse: err.raw });
+        res.status(500).json({ error: err.message, darajaResponse: err.raw, resolutionSteps: err.resolutionSteps });
     }
 };
 
@@ -152,7 +170,7 @@ export const simulateC2bPayment = async (req: AuthRequest, res: Response): Promi
     } catch (error: any) {
         console.error('simulateC2bPayment Error:', error);
         const err = formatDarajaError(error, 'Failed to simulate C2B payment');
-        res.status(500).json({ error: err.message, darajaResponse: err.raw });
+        res.status(500).json({ error: err.message, darajaResponse: err.raw, resolutionSteps: err.resolutionSteps });
     }
 };
 
@@ -180,7 +198,7 @@ export const initiateB2B = async (req: AuthRequest, res: Response): Promise<void
     } catch (error: any) {
         console.error('initiateB2B Error:', error);
         const err = formatDarajaError(error, 'Failed to process B2B transfer');
-        res.status(500).json({ error: err.message, darajaResponse: err.raw });
+        res.status(500).json({ error: err.message, darajaResponse: err.raw, resolutionSteps: err.resolutionSteps });
     }
 };
 
@@ -205,7 +223,7 @@ export const initiateBusinessToPochi = async (req: AuthRequest, res: Response): 
     } catch (error: any) {
         console.error('initiateBusinessToPochi Error:', error);
         const err = formatDarajaError(error, 'Failed to send to Pochi la Biashara');
-        res.status(500).json({ error: err.message, darajaResponse: err.raw });
+        res.status(500).json({ error: err.message, darajaResponse: err.raw, resolutionSteps: err.resolutionSteps });
     }
 };
 
@@ -235,7 +253,7 @@ export const createRatibaOrder = async (req: AuthRequest, res: Response): Promis
     } catch (error: any) {
         console.error('createRatibaOrder Error:', error);
         const err = formatDarajaError(error, 'Failed to create M-Pesa Ratiba standing order');
-        res.status(500).json({ error: err.message, darajaResponse: err.raw });
+        res.status(500).json({ error: err.message, darajaResponse: err.raw, resolutionSteps: err.resolutionSteps });
     }
 };
 
@@ -260,7 +278,7 @@ export const pullTransactions = async (req: AuthRequest, res: Response): Promise
     } catch (error: any) {
         console.error('pullTransactions Error:', error);
         const err = formatDarajaError(error, 'Failed to pull transactions from Safaricom');
-        res.status(500).json({ error: err.message, darajaResponse: err.raw });
+        res.status(500).json({ error: err.message, darajaResponse: err.raw, resolutionSteps: err.resolutionSteps });
     }
 };
 
@@ -281,6 +299,6 @@ export const validateMobile = async (req: AuthRequest, res: Response): Promise<v
     } catch (error: any) {
         console.error('validateMobile Error:', error);
         const err = formatDarajaError(error, 'Failed to validate mobile number');
-        res.status(500).json({ error: err.message, darajaResponse: err.raw });
+        res.status(500).json({ error: err.message, darajaResponse: err.raw, resolutionSteps: err.resolutionSteps });
     }
 };
