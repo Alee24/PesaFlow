@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import nodemailer from 'nodemailer';
 import { PrismaClient } from '@prisma/client';
 import { z } from 'zod';
+import { isPrecomputedSecurityCredential } from '../utils/daraja-security';
 
 const prisma = new PrismaClient();
 
@@ -124,6 +125,25 @@ export const updateProfile = async (req: Request, res: Response) => {
             rawData.companyName = existingProfile.companyName;
         }
 
+        // Clean & normalize Daraja Initiator credentials
+        if (rawData.mpesaInitiatorPass && typeof rawData.mpesaInitiatorPass === 'string') {
+            const cleanPass = rawData.mpesaInitiatorPass.trim();
+            // If user passed a 160+ char Base64 SecurityCredential into the Initiator Password field
+            if (isPrecomputedSecurityCredential(cleanPass)) {
+                rawData.mpesaInitiatorPass = cleanPass;
+                if (!rawData.mpesaSecurityCredential || (typeof rawData.mpesaSecurityCredential === 'string' && rawData.mpesaSecurityCredential.trim() === '')) {
+                    rawData.mpesaSecurityCredential = cleanPass;
+                }
+            }
+        }
+
+        if (rawData.mpesaSecurityCredential && typeof rawData.mpesaSecurityCredential === 'string') {
+            const cleanCred = rawData.mpesaSecurityCredential.trim();
+            if (isPrecomputedSecurityCredential(cleanCred)) {
+                rawData.mpesaSecurityCredential = cleanCred;
+            }
+        }
+
         const data = profileSchema.parse(rawData);
 
         const profile = await prisma.businessProfile.upsert({
@@ -136,9 +156,11 @@ export const updateProfile = async (req: Request, res: Response) => {
     } catch (error: any) {
         console.error("Update Profile Error:", error);
         if (error instanceof z.ZodError) {
-            return res.status(400).json({ error: (error as any).errors[0].message });
+            return res.status(400).json({ error: (error as any).errors[0]?.message || 'Validation error' });
         }
-        res.status(500).json({ error: 'Failed to update profile' });
+        res.status(500).json({ 
+            error: error.message || 'Failed to update profile. Please verify your credentials format.' 
+        });
     }
 };
 

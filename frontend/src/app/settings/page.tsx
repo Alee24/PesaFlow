@@ -136,6 +136,33 @@ export default function SettingsPage() {
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
         const { name, value, type } = e.target;
         const val = type === 'checkbox' ? (e.target as HTMLInputElement).checked : value;
+
+        if (name === 'mpesaInitiatorPass' && typeof val === 'string') {
+            const clean = val.trim();
+            // If user pastes pre-computed 160+ char Base64 SecurityCredential into Initiator Password
+            if (clean.length >= 160 && /^[A-Za-z0-9+/=]+$/.test(clean)) {
+                setFormData(prev => ({
+                    ...prev,
+                    mpesaInitiatorPass: clean,
+                    mpesaSecurityCredential: prev.mpesaSecurityCredential || clean
+                }));
+                showToast('Pre-computed Security Credential detected & synced to Security Credential field!', 'info');
+                return;
+            }
+        }
+
+        if (name === 'mpesaSecurityCredential' && typeof val === 'string') {
+            const clean = val.trim();
+            if (clean.length >= 160 && /^[A-Za-z0-9+/=]+$/.test(clean)) {
+                setFormData(prev => ({
+                    ...prev,
+                    mpesaSecurityCredential: clean,
+                    mpesaInitiatorPass: prev.mpesaInitiatorPass || clean
+                }));
+                return;
+            }
+        }
+
         setFormData(prev => ({ ...prev, [name]: val }));
     };
 
@@ -561,14 +588,22 @@ export default function SettingsPage() {
                                                 value={formData.mpesaInitiatorName} 
                                                 onChange={handleChange} 
                                             />
-                                            <Input 
-                                                label="Initiator Password (Auto-encrypted)" 
-                                                name="mpesaInitiatorPass" 
-                                                value={formData.mpesaInitiatorPass} 
-                                                onChange={handleChange} 
-                                                type="password" 
-                                                placeholder="Operator password"
-                                            />
+                                            <div>
+                                                <Input 
+                                                    label="Initiator Password / Pre-computed Credential" 
+                                                    name="mpesaInitiatorPass" 
+                                                    value={formData.mpesaInitiatorPass} 
+                                                    onChange={handleChange} 
+                                                    type={formData.mpesaInitiatorPass && formData.mpesaInitiatorPass.length > 50 ? "text" : "password"} 
+                                                    placeholder="Operator password or 344-char pre-computed credential"
+                                                />
+                                                {formData.mpesaInitiatorPass && formData.mpesaInitiatorPass.trim().length >= 160 && (
+                                                    <p className="text-[11px] text-emerald-600 dark:text-emerald-400 font-medium mt-1 flex items-center gap-1">
+                                                        <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
+                                                        Valid {formData.mpesaInitiatorPass.trim().length}-character Pre-computed Security Credential detected &amp; active
+                                                    </p>
+                                                )}
+                                            </div>
                                         </div>
 
                                         <div className="mt-4 flex flex-col space-y-1">

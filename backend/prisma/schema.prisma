@@ -102,7 +102,7 @@ model BusinessProfile {
   mpesaPasskey        String? @map("mpesa_passkey")
   mpesaShortcode      String? @map("mpesa_shortcode")
   mpesaInitiatorName      String? @map("mpesa_initiator_name")
-  mpesaInitiatorPass      String? @map("mpesa_initiator_pass")
+  mpesaInitiatorPass      String? @map("mpesa_initiator_pass") @db.Text
   mpesaSecurityCredential String? @map("mpesa_security_credential") @db.Text
   mpesaCertificate        String? @map("mpesa_certificate") @db.Text
   mpesaCallbackUrl        String? @map("mpesa_callback_url")

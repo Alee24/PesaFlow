@@ -40,6 +40,7 @@ exports.testSMSConnection = exports.testSmtpConnection = exports.updateProfile =
 const nodemailer_1 = __importDefault(require("nodemailer"));
 const client_1 = require("@prisma/client");
 const zod_1 = require("zod");
+const daraja_security_1 = require("../utils/daraja-security");
 const prisma = new client_1.PrismaClient();
 const profileSchema = zod_1.z.object({
     companyName: zod_1.z.string().min(1, "Company Name is required"),
@@ -151,6 +152,21 @@ const updateProfile = async (req, res) => {
         if ((!rawData.companyName || (typeof rawData.companyName === 'string' && rawData.companyName.trim() === '')) && existingProfile?.companyName) {
             rawData.companyName = existingProfile.companyName;
         }
+        if (rawData.mpesaInitiatorPass && typeof rawData.mpesaInitiatorPass === 'string') {
+            const cleanPass = rawData.mpesaInitiatorPass.trim();
+            if ((0, daraja_security_1.isPrecomputedSecurityCredential)(cleanPass)) {
+                rawData.mpesaInitiatorPass = cleanPass;
+                if (!rawData.mpesaSecurityCredential || (typeof rawData.mpesaSecurityCredential === 'string' && rawData.mpesaSecurityCredential.trim() === '')) {
+                    rawData.mpesaSecurityCredential = cleanPass;
+                }
+            }
+        }
+        if (rawData.mpesaSecurityCredential && typeof rawData.mpesaSecurityCredential === 'string') {
+            const cleanCred = rawData.mpesaSecurityCredential.trim();
+            if ((0, daraja_security_1.isPrecomputedSecurityCredential)(cleanCred)) {
+                rawData.mpesaSecurityCredential = cleanCred;
+            }
+        }
         const data = profileSchema.parse(rawData);
         const profile = await prisma.businessProfile.upsert({
             where: { userId },
@@ -162,9 +178,11 @@ const updateProfile = async (req, res) => {
     catch (error) {
         console.error("Update Profile Error:", error);
         if (error instanceof zod_1.z.ZodError) {
-            return res.status(400).json({ error: error.errors[0].message });
+            return res.status(400).json({ error: error.errors[0]?.message || 'Validation error' });
         }
-        res.status(500).json({ error: 'Failed to update profile' });
+        res.status(500).json({
+            error: error.message || 'Failed to update profile. Please verify your credentials format.'
+        });
     }
 };
 exports.updateProfile = updateProfile;
