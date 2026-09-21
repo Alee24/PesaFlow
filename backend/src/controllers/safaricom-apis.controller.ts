@@ -21,6 +21,16 @@ interface AuthRequest extends Request {
     };
 }
 
+const formatDarajaError = (error: any, fallback: string): { message: string; raw: any } => {
+    const raw = error.response?.data || error.message;
+    const detailed = error.response?.data?.errorMessage || error.response?.data?.error || error.message || fallback;
+    let message = detailed;
+    if (typeof detailed === 'string' && (detailed.toLowerCase().includes('invalid access token') || detailed.toLowerCase().includes('unauthorized'))) {
+        message = 'Safaricom Daraja rejected the access token. Please verify that your Consumer Key and Consumer Secret in M-Pesa Settings match the active Daraja application and are approved for the selected environment (Production vs Sandbox) in your Safaricom Developer Portal.';
+    }
+    return { message, raw };
+};
+
 export const getApisOverview = async (req: AuthRequest, res: Response): Promise<void> => {
     try {
         if (!req.user) {
@@ -43,13 +53,13 @@ export const queryAccountBalance = async (req: AuthRequest, res: Response): Prom
             return;
         }
         const userId = req.user.merchantId || req.user.userId;
-        const { remarks } = req.body;
-        const result = await executeAccountBalanceQuery(userId, remarks);
+        const { remarks, identifierType } = req.body;
+        const result = await executeAccountBalanceQuery(userId, remarks, identifierType);
         res.json(result);
     } catch (error: any) {
         console.error('queryAccountBalance Error:', error);
-        const detailed = error.response?.data?.errorMessage || error.message;
-        res.status(500).json({ error: detailed || 'Failed to query account balance on Safaricom' });
+        const err = formatDarajaError(error, 'Failed to query account balance on Safaricom');
+        res.status(500).json({ error: err.message, darajaResponse: err.raw });
     }
 };
 
@@ -69,8 +79,8 @@ export const queryTransactionStatus = async (req: AuthRequest, res: Response): P
         res.json(result);
     } catch (error: any) {
         console.error('queryTransactionStatus Error:', error);
-        const detailed = error.response?.data?.errorMessage || error.message;
-        res.status(500).json({ error: detailed || 'Failed to query transaction status on Daraja' });
+        const err = formatDarajaError(error, 'Failed to query transaction status on Daraja');
+        res.status(500).json({ error: err.message, darajaResponse: err.raw });
     }
 };
 
@@ -94,8 +104,8 @@ export const requestReversal = async (req: AuthRequest, res: Response): Promise<
         res.json(result);
     } catch (error: any) {
         console.error('requestReversal Error:', error);
-        const detailed = error.response?.data?.errorMessage || error.message;
-        res.status(500).json({ error: detailed || 'Failed to initiate transaction reversal' });
+        const err = formatDarajaError(error, 'Failed to initiate transaction reversal');
+        res.status(500).json({ error: err.message, darajaResponse: err.raw });
     }
 };
 
@@ -115,8 +125,8 @@ export const registerC2bUrls = async (req: AuthRequest, res: Response): Promise<
         res.json(result);
     } catch (error: any) {
         console.error('registerC2bUrls Error:', error);
-        const detailed = error.response?.data?.errorMessage || error.message;
-        res.status(500).json({ error: detailed || 'Failed to register C2B URLs with Safaricom' });
+        const err = formatDarajaError(error, 'Failed to register C2B URLs with Safaricom');
+        res.status(500).json({ error: err.message, darajaResponse: err.raw });
     }
 };
 
@@ -141,8 +151,8 @@ export const simulateC2bPayment = async (req: AuthRequest, res: Response): Promi
         res.json(result);
     } catch (error: any) {
         console.error('simulateC2bPayment Error:', error);
-        const detailed = error.response?.data?.errorMessage || error.message;
-        res.status(500).json({ error: detailed || 'Failed to simulate C2B payment' });
+        const err = formatDarajaError(error, 'Failed to simulate C2B payment');
+        res.status(500).json({ error: err.message, darajaResponse: err.raw });
     }
 };
 
@@ -169,8 +179,8 @@ export const initiateB2B = async (req: AuthRequest, res: Response): Promise<void
         res.json(result);
     } catch (error: any) {
         console.error('initiateB2B Error:', error);
-        const detailed = error.response?.data?.errorMessage || error.message;
-        res.status(500).json({ error: detailed || 'Failed to process B2B transfer' });
+        const err = formatDarajaError(error, 'Failed to process B2B transfer');
+        res.status(500).json({ error: err.message, darajaResponse: err.raw });
     }
 };
 
@@ -194,8 +204,8 @@ export const initiateBusinessToPochi = async (req: AuthRequest, res: Response): 
         res.json(result);
     } catch (error: any) {
         console.error('initiateBusinessToPochi Error:', error);
-        const detailed = error.response?.data?.errorMessage || error.message;
-        res.status(500).json({ error: detailed || 'Failed to send to Pochi la Biashara' });
+        const err = formatDarajaError(error, 'Failed to send to Pochi la Biashara');
+        res.status(500).json({ error: err.message, darajaResponse: err.raw });
     }
 };
 
@@ -224,8 +234,8 @@ export const createRatibaOrder = async (req: AuthRequest, res: Response): Promis
         res.json(result);
     } catch (error: any) {
         console.error('createRatibaOrder Error:', error);
-        const detailed = error.response?.data?.errorMessage || error.message;
-        res.status(500).json({ error: detailed || 'Failed to create M-Pesa Ratiba standing order' });
+        const err = formatDarajaError(error, 'Failed to create M-Pesa Ratiba standing order');
+        res.status(500).json({ error: err.message, darajaResponse: err.raw });
     }
 };
 
@@ -249,8 +259,8 @@ export const pullTransactions = async (req: AuthRequest, res: Response): Promise
         res.json(result);
     } catch (error: any) {
         console.error('pullTransactions Error:', error);
-        const detailed = error.response?.data?.errorMessage || error.message;
-        res.status(500).json({ error: detailed || 'Failed to pull transactions from Safaricom' });
+        const err = formatDarajaError(error, 'Failed to pull transactions from Safaricom');
+        res.status(500).json({ error: err.message, darajaResponse: err.raw });
     }
 };
 
@@ -270,6 +280,7 @@ export const validateMobile = async (req: AuthRequest, res: Response): Promise<v
         res.json(result);
     } catch (error: any) {
         console.error('validateMobile Error:', error);
-        res.status(500).json({ error: error.message || 'Failed to validate mobile number' });
+        const err = formatDarajaError(error, 'Failed to validate mobile number');
+        res.status(500).json({ error: err.message, darajaResponse: err.raw });
     }
 };

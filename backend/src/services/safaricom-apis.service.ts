@@ -171,20 +171,25 @@ export const getSafaricomApisOverview = async (userId: string) => {
     };
 };
 
-const getBaseDarajaUrl = (env: string) => {
-    return env === 'production'
+export const getBaseDarajaUrl = (env: string) => {
+    const normalized = (env || '').trim().toLowerCase();
+    return (normalized === 'production' || normalized === 'live')
         ? 'https://api.safaricom.co.ke'
         : 'https://sandbox.safaricom.co.ke';
 };
 
 // 1. Account Balance Query
-export const executeAccountBalanceQuery = async (userId: string, remarks: string = 'Balance Query') => {
+export const executeAccountBalanceQuery = async (
+    userId: string,
+    remarks: string = 'Balance Query',
+    identifierType: string = '4'
+) => {
     const creds = await getCredentials(userId);
     const token = await getAccessToken(creds);
     const baseUrl = getBaseDarajaUrl(creds.env);
 
     if (!creds.initiatorName || !creds.password) {
-        throw new Error('Account Balance inquiry requires Initiator Name and Security Password configured.');
+        throw new Error('Account Balance inquiry requires Initiator Name and Security Password configured in M-Pesa Settings.');
     }
 
     const payload = {
@@ -192,16 +197,19 @@ export const executeAccountBalanceQuery = async (userId: string, remarks: string
         SecurityCredential: creds.password,
         CommandID: 'AccountBalance',
         PartyA: creds.shortCode,
-        IdentifierType: '4', // 4 for Organization
+        IdentifierType: identifierType || '4',
         Remarks: remarks,
         QueueTimeOutURL: creds.callbackUrl,
         ResultURL: creds.callbackUrl
     };
 
-    console.log(`[Daraja Account Balance] Requesting for Shortcode ${creds.shortCode}`);
+    console.log(`[Daraja Account Balance] Inquiring for Shortcode ${creds.shortCode} on ${baseUrl} (IdentifierType: ${identifierType || '4'})`);
     const response = await axios.post(`${baseUrl}/mpesa/accountbalance/v1/query`, payload, {
-        headers: { Authorization: `Bearer ${token}` },
-        timeout: 10000
+        headers: { 
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json'
+        },
+        timeout: 15000
     });
 
     return {
@@ -234,10 +242,13 @@ export const executeTransactionStatusQuery = async (userId: string, transactionI
         Occasion: 'Audit'
     };
 
-    console.log(`[Daraja Tx Query] Inquiring Transaction ID: ${transactionId}`);
+    console.log(`[Daraja Tx Query] Inquiring Transaction ID: ${transactionId} on ${baseUrl}`);
     const response = await axios.post(`${baseUrl}/mpesa/transactionstatus/v1/query`, payload, {
-        headers: { Authorization: `Bearer ${token}` },
-        timeout: 10000
+        headers: { 
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json'
+        },
+        timeout: 15000
     });
 
     return {
@@ -257,7 +268,7 @@ export const executeTransactionReversal = async (
     const baseUrl = getBaseDarajaUrl(creds.env);
 
     if (!creds.initiatorName || !creds.password) {
-        throw new Error('Reversal requires Initiator Name and Security Credential.');
+        throw new Error('Reversal requires Initiator Name and Security Credential in M-Pesa Settings.');
     }
 
     const payload = {
@@ -274,10 +285,13 @@ export const executeTransactionReversal = async (
         Occasion: 'Reversal'
     };
 
-    console.log(`[Daraja Reversal] Requesting reversal for ${params.transactionId}`);
+    console.log(`[Daraja Reversal] Requesting reversal for ${params.transactionId} on ${baseUrl}`);
     const response = await axios.post(`${baseUrl}/mpesa/reversal/v1/request`, payload, {
-        headers: { Authorization: `Bearer ${token}` },
-        timeout: 10000
+        headers: { 
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json'
+        },
+        timeout: 15000
     });
 
     return {
@@ -306,10 +320,13 @@ export const executeC2bUrlRegistration = async (
         ValidationURL: valUrl
     };
 
-    console.log(`[Daraja C2B Register] Registering URLs for ShortCode: ${creds.shortCode}`);
+    console.log(`[Daraja C2B Register] Registering URLs for ShortCode: ${creds.shortCode} on ${baseUrl}`);
     const response = await axios.post(`${baseUrl}/mpesa/c2b/v1/registerurl`, payload, {
-        headers: { Authorization: `Bearer ${token}` },
-        timeout: 10000
+        headers: { 
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json'
+        },
+        timeout: 15000
     });
 
     return {
@@ -340,10 +357,13 @@ export const executeC2bSimulation = async (
         BillRefNumber: params.billRefNumber || 'InvoiceTest'
     };
 
-    console.log(`[Daraja C2B Simulation] Simulating KES ${params.amount} from ${formattedPhone}`);
+    console.log(`[Daraja C2B Simulation] Simulating KES ${params.amount} from ${formattedPhone} on ${baseUrl}`);
     const response = await axios.post(`${baseUrl}/mpesa/c2b/v1/simulate`, payload, {
-        headers: { Authorization: `Bearer ${token}` },
-        timeout: 10000
+        headers: { 
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json'
+        },
+        timeout: 15000
     });
 
     return {
@@ -369,7 +389,7 @@ export const executeB2BPayment = async (
     const baseUrl = getBaseDarajaUrl(creds.env);
 
     if (!creds.initiatorName || !creds.password) {
-        throw new Error('B2B payments require Initiator Name and Security Password.');
+        throw new Error('B2B payments require Initiator Name and Security Password in M-Pesa Settings.');
     }
 
     const payload = {
@@ -387,10 +407,13 @@ export const executeB2BPayment = async (
         ResultURL: creds.callbackUrl
     };
 
-    console.log(`[Daraja B2B] Sending KES ${params.amount} from ${creds.shortCode} to ${params.partyB}`);
+    console.log(`[Daraja B2B] Sending KES ${params.amount} from ${creds.shortCode} to ${params.partyB} on ${baseUrl}`);
     const response = await axios.post(`${baseUrl}/mpesa/b2b/v1/paymentrequest`, payload, {
-        headers: { Authorization: `Bearer ${token}` },
-        timeout: 10000
+        headers: { 
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json'
+        },
+        timeout: 15000
     });
 
     return {
@@ -413,7 +436,7 @@ export const executeBusinessToPochi = async (
     const baseUrl = getBaseDarajaUrl(creds.env);
 
     if (!creds.initiatorName || !creds.password) {
-        throw new Error('Business to Pochi requires Initiator Name and Security Password.');
+        throw new Error('Business to Pochi requires Initiator Name and Security Password in M-Pesa Settings.');
     }
 
     const formattedPhone = params.phoneNumber.startsWith('0')
@@ -433,10 +456,13 @@ export const executeBusinessToPochi = async (
         Occasion: 'Pochi'
     };
 
-    console.log(`[Daraja Pochi] Disbursing KES ${params.amount} to Pochi: ${formattedPhone}`);
+    console.log(`[Daraja Pochi] Disbursing KES ${params.amount} to Pochi: ${formattedPhone} on ${baseUrl}`);
     const response = await axios.post(`${baseUrl}/mpesa/b2c/v1/paymentrequest`, payload, {
-        headers: { Authorization: `Bearer ${token}` },
-        timeout: 10000
+        headers: { 
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json'
+        },
+        timeout: 15000
     });
 
     return {
@@ -483,10 +509,13 @@ export const executeRatibaStandingOrder = async (
         EndDate: params.endDate
     };
 
-    console.log(`[Daraja Ratiba] Creating Standing Order ${params.standingOrderName} for ${formattedPhone}`);
+    console.log(`[Daraja Ratiba] Creating Standing Order ${params.standingOrderName} for ${formattedPhone} on ${baseUrl}`);
     const response = await axios.post(`${baseUrl}/standingorder/v1/createStandingOrderExternal`, payload, {
-        headers: { Authorization: `Bearer ${token}` },
-        timeout: 10000
+        headers: { 
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json'
+        },
+        timeout: 15000
     });
 
     return {
@@ -511,10 +540,13 @@ export const executePullTransactionsQuery = async (
         OffSetValue: params.offset || '0'
     };
 
-    console.log(`[Daraja Pull Transactions] Pulling for ${creds.shortCode} between ${params.startDate} and ${params.endDate}`);
+    console.log(`[Daraja Pull Transactions] Pulling for ${creds.shortCode} between ${params.startDate} and ${params.endDate} on ${baseUrl}`);
     const response = await axios.post(`${baseUrl}/pulltransactions/v1/query`, payload, {
-        headers: { Authorization: `Bearer ${token}` },
-        timeout: 10000
+        headers: { 
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json'
+        },
+        timeout: 15000
     });
 
     return {
@@ -561,8 +593,11 @@ export const executeMobileValidation = async (
             idType: 'National ID',
             idNumber: '00000000'
         }, {
-            headers: { Authorization: `Bearer ${token}` },
-            timeout: 6000
+            headers: { 
+                Authorization: `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            },
+            timeout: 10000
         });
         darajaValidationResult = kycRes.data;
     } catch (e: any) {

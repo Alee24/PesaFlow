@@ -5,6 +5,11 @@ import QRCode from 'qrcode';
 
 const prisma = new PrismaClient();
 
+export const cleanCred = (val: any): string => {
+    if (val === undefined || val === null) return '';
+    return String(val).trim().replace(/^["']|["']$/g, '').trim();
+};
+
 export const getCredentials = async (userId?: string) => {
     // 1. Start with .env as baseline
     let creds = {
@@ -24,7 +29,7 @@ export const getCredentials = async (userId?: string) => {
             where: { role: 'ADMIN' },
             include: { businessProfile: true }
         });
-        if (adminUser?.businessProfile && adminUser.businessProfile.mpesaConsumerKey) {
+        if (adminUser?.businessProfile) {
             const p = adminUser.businessProfile;
             if (p.mpesaConsumerKey) creds.consumerKey = p.mpesaConsumerKey;
             if (p.mpesaConsumerSecret) creds.consumerSecret = p.mpesaConsumerSecret;
@@ -44,46 +49,73 @@ export const getCredentials = async (userId?: string) => {
     if (userId) {
         const profile = await prisma.businessProfile.findUnique({ where: { userId } });
 
-        // ONLY override if user has explicitly enabled custom M-Pesa and has keys
-        if (profile && (profile as any).useCustomMpesa && profile.mpesaConsumerKey) {
-            console.log(`[M-Pesa] Merchant ${userId} using OWN API credentials`);
-            creds.consumerKey = profile.mpesaConsumerKey || creds.consumerKey;
-            creds.consumerSecret = profile.mpesaConsumerSecret || creds.consumerSecret;
-            creds.passkey = profile.mpesaPasskey || creds.passkey;
-            creds.shortCode = profile.mpesaShortcode || creds.shortCode;
-            creds.initiatorName = profile.mpesaInitiatorName || creds.initiatorName;
-            creds.password = profile.mpesaInitiatorPass || creds.password;
-            creds.callbackUrl = profile.mpesaCallbackUrl || creds.callbackUrl;
-            creds.env = profile.mpesaEnv || creds.env;
+        // Override if merchant has configured custom M-Pesa or provided shortcode / keys
+        if (profile && ((profile as any).useCustomMpesa || profile.mpesaConsumerKey || profile.mpesaShortcode)) {
+            console.log(`[M-Pesa] Merchant ${userId} using profile M-Pesa configuration`);
+            if (profile.mpesaConsumerKey) creds.consumerKey = profile.mpesaConsumerKey;
+            if (profile.mpesaConsumerSecret) creds.consumerSecret = profile.mpesaConsumerSecret;
+            if (profile.mpesaPasskey) creds.passkey = profile.mpesaPasskey;
+            if (profile.mpesaShortcode) creds.shortCode = profile.mpesaShortcode;
+            if (profile.mpesaInitiatorName) creds.initiatorName = profile.mpesaInitiatorName;
+            if (profile.mpesaInitiatorPass) creds.password = profile.mpesaInitiatorPass;
+            if (profile.mpesaCallbackUrl) creds.callbackUrl = profile.mpesaCallbackUrl;
+            if (profile.mpesaEnv) creds.env = profile.mpesaEnv;
         } else {
             console.log(`[M-Pesa] Merchant ${userId} using SYSTEM Mpesa Connect`);
         }
     }
 
-    console.log(`[M-Pesa Config] Key: ${creds.consumerKey?.substring(0, 5)}... ShortCode: ${creds.shortCode} Env: ${creds.env}`);
+    // Clean, trim, and normalize all credentials
+    creds.consumerKey = cleanCred(creds.consumerKey);
+    creds.consumerSecret = cleanCred(creds.consumerSecret);
+    creds.passkey = cleanCred(creds.passkey);
+    creds.shortCode = cleanCred(creds.shortCode);
+    creds.initiatorName = cleanCred(creds.initiatorName);
+    creds.password = cleanCred(creds.password);
+    creds.callbackUrl = cleanCred(creds.callbackUrl);
+    creds.env = cleanCred(creds.env).toLowerCase() || 'sandbox';
+
+    console.log(`[M-Pesa Config] Key: ${creds.consumerKey ? creds.consumerKey.substring(0, 5) + '...' : 'EMPTY'} | ShortCode: ${creds.shortCode} | Env: ${creds.env}`);
     return creds;
-}
+};
 
 export const getAccessToken = async (creds: any) => {
-    if (!creds.consumerKey || !creds.consumerSecret) {
-        throw new Error('MPESA_NOT_CONFIGURED: Missing Consumer Key or Secret');
+    const key = cleanCred(creds.consumerKey);
+    const secret = cleanCred(creds.consumerSecret);
+
+    if (!key || !secret) {
+        throw new Error('MPESA_NOT_CONFIGURED: Missing Consumer Key or Secret. Please check your M-Pesa credentials in Settings.');
     }
 
-    const url = creds.env === 'production'
+    const env = cleanCred(creds.env).toLowerCase();
+    const isProd = env === 'production' || env === 'live';
+
+    const url = isProd
         ? 'https://api.safaricom.co.ke/oauth/v1/generate?grant_type=client_credentials'
         : 'https://sandbox.safaricom.co.ke/oauth/v1/generate?grant_type=client_credentials';
 
-    const auth = Buffer.from(`${creds.consumerKey}:${creds.consumerSecret}`).toString('base64');
+    const auth = Buffer.from(`${key}:${secret}`).toString('base64');
 
     try {
+        console.log(`[Daraja OAuth] Requesting Access Token for Shortcode: ${creds.shortCode} | Env: ${isProd ? 'PRODUCTION' : 'SANDBOX'} | Target URL: ${url}`);
         const response = await axios.get(url, {
-            headers: { Authorization: `Basic ${auth}` },
+            headers: { 
+                Authorization: `Basic ${auth}`,
+                'Content-Type': 'application/json'
+            },
+            timeout: 15000
         });
-        return response.data.access_token;
+
+        const token = cleanCred(response.data?.access_token);
+        if (!token) {
+            throw new Error('Safaricom did not return an access token');
+        }
+        console.log(`[Daraja OAuth] Token successfully generated (${token.substring(0, 8)}...)`);
+        return token;
     } catch (error: any) {
         console.error('M-Pesa Access Token Error:', error.response?.data || error.message);
         const detailedError = error.response?.data?.errorMessage || error.response?.data?.error || error.message;
-        throw new Error(`Token Error: ${detailedError}`);
+        throw new Error(`Daraja Token Error: ${detailedError}`);
     }
 };
 
