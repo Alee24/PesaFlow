@@ -2,6 +2,7 @@
 import axios from 'axios';
 import { PrismaClient } from '@prisma/client';
 import QRCode from 'qrcode';
+import { generateSecurityCredential, isProductionEnv } from '../utils/daraja-security';
 
 const prisma = new PrismaClient();
 
@@ -12,13 +13,15 @@ export const cleanCred = (val: any): string => {
 
 export const getCredentials = async (userId?: string) => {
     // 1. Start with .env as baseline
-    let creds = {
+    let creds: any = {
         consumerKey: process.env.MPESA_CONSUMER_KEY,
         consumerSecret: process.env.MPESA_CONSUMER_SECRET,
         passkey: process.env.MPESA_PASSKEY,
         shortCode: process.env.MPESA_SHORTCODE,
         initiatorName: process.env.MPESA_INITIATOR_NAME,
         password: process.env.MPESA_INITIATOR_PASSWORD,
+        securityCredential: process.env.MPESA_SECURITY_CREDENTIAL,
+        certificate: process.env.MPESA_CERTIFICATE,
         callbackUrl: process.env.MPESA_CALLBACK_URL || (process.env.APP_URL ? `${process.env.APP_URL}/api/mpesa/callback` : 'http://localhost:3001/api/mpesa/callback'),
         env: process.env.MPESA_ENV || 'sandbox'
     };
@@ -37,6 +40,8 @@ export const getCredentials = async (userId?: string) => {
             if (p.mpesaShortcode) creds.shortCode = p.mpesaShortcode;
             if (p.mpesaInitiatorName) creds.initiatorName = p.mpesaInitiatorName;
             if (p.mpesaInitiatorPass) creds.password = p.mpesaInitiatorPass;
+            if ((p as any).mpesaSecurityCredential) creds.securityCredential = (p as any).mpesaSecurityCredential;
+            if ((p as any).mpesaCertificate) creds.certificate = (p as any).mpesaCertificate;
             if (p.mpesaCallbackUrl) creds.callbackUrl = p.mpesaCallbackUrl;
             if (p.mpesaEnv) creds.env = p.mpesaEnv;
             console.log('[M-Pesa] Loaded System Defaults from Admin Profile');
@@ -58,6 +63,8 @@ export const getCredentials = async (userId?: string) => {
             if (profile.mpesaShortcode) creds.shortCode = profile.mpesaShortcode;
             if (profile.mpesaInitiatorName) creds.initiatorName = profile.mpesaInitiatorName;
             if (profile.mpesaInitiatorPass) creds.password = profile.mpesaInitiatorPass;
+            if ((profile as any).mpesaSecurityCredential) creds.securityCredential = (profile as any).mpesaSecurityCredential;
+            if ((profile as any).mpesaCertificate) creds.certificate = (profile as any).mpesaCertificate;
             if (profile.mpesaCallbackUrl) creds.callbackUrl = profile.mpesaCallbackUrl;
             if (profile.mpesaEnv) creds.env = profile.mpesaEnv;
         } else {
@@ -72,10 +79,17 @@ export const getCredentials = async (userId?: string) => {
     creds.shortCode = cleanCred(creds.shortCode);
     creds.initiatorName = cleanCred(creds.initiatorName);
     creds.password = cleanCred(creds.password);
+    creds.securityCredential = cleanCred(creds.securityCredential);
+    creds.certificate = cleanCred(creds.certificate);
     creds.callbackUrl = cleanCred(creds.callbackUrl);
     creds.env = cleanCred(creds.env).toLowerCase() || 'sandbox';
 
-    console.log(`[M-Pesa Config] Key: ${creds.consumerKey ? creds.consumerKey.substring(0, 5) + '...' : 'EMPTY'} | ShortCode: ${creds.shortCode} | Env: ${creds.env}`);
+    // In sandbox, Safaricom's default initiator name is always 'testapi'
+    if (creds.env === 'sandbox' && !creds.initiatorName) {
+        creds.initiatorName = 'testapi';
+    }
+
+    console.log(`[M-Pesa Config] Key: ${creds.consumerKey ? creds.consumerKey.substring(0, 5) + '...' : 'EMPTY'} | ShortCode: ${creds.shortCode} | Initiator: ${creds.initiatorName || 'NONE'} | Env: ${creds.env}`);
     return creds;
 };
 
@@ -311,7 +325,7 @@ export const querySTKPushStatus = async (checkoutRequestId: string, userId?: str
     }
 };
 
-export const testMpesaConnectionService = async (userId?: string, providedCreds?: { consumerKey: string, consumerSecret: string, env: string }) => {
+export const testMpesaConnectionService = async (userId?: string, providedCreds?: any) => {
     try {
         let creds;
         if (providedCreds && providedCreds.consumerKey && providedCreds.consumerSecret) {
@@ -324,7 +338,25 @@ export const testMpesaConnectionService = async (userId?: string, providedCreds?
             throw new Error("Missing Consumer Key or Secret (Env or Settings)");
         }
         const token = await getAccessToken(creds);
-        return { success: true, message: 'Connection successful. Access Token generated.', token: token.slice(0, 10) + '...' };
+
+        let initiatorInfo = 'Not configured';
+        const initiatorPassOrCred = creds.securityCredential || creds.password;
+        if (creds.initiatorName && initiatorPassOrCred) {
+            try {
+                const isProd = isProductionEnv(creds.env);
+                const encrypted = generateSecurityCredential(initiatorPassOrCred, isProd, creds.certificate);
+                initiatorInfo = `Ready (${encrypted.slice(0, 12)}...)`;
+            } catch (initErr: any) {
+                initiatorInfo = `Error: ${initErr.message}`;
+            }
+        }
+
+        return { 
+            success: true, 
+            message: `Connection successful! Access Token generated. Initiator Authorization: ${initiatorInfo}`, 
+            token: token.slice(0, 10) + '...',
+            initiatorInfo
+        };
     } catch (error: any) {
         return { success: false, message: error.message };
     }
@@ -348,9 +380,17 @@ export const initiateB2CPayment = async (
         ? `254${phoneNumber.slice(1)}`
         : phoneNumber;
 
+    const initiatorPassOrCred = creds.securityCredential || creds.password;
+    if (!creds.initiatorName || !initiatorPassOrCred) {
+        throw new Error('B2C payout requires Initiator Name and Initiator Password (or Security Credential) configured in Settings → M-Pesa.');
+    }
+
+    const isProd = isProductionEnv(creds.env);
+    const securityCredential = generateSecurityCredential(initiatorPassOrCred, isProd, creds.certificate);
+
     const requestBody = {
         InitiatorName: creds.initiatorName,
-        SecurityCredential: creds.password, // M-Pesa Initiator Password (Security Credential)
+        SecurityCredential: securityCredential,
         CommandID: 'BusinessPayment',
         Amount: amount,
         PartyA: creds.shortCode,

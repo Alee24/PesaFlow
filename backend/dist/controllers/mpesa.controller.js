@@ -527,10 +527,18 @@ const getMpesaStatus = async (req, res) => {
 exports.getMpesaStatus = getMpesaStatus;
 const testConnection = async (req, res) => {
     const userId = req.user?.userId;
-    const { consumerKey, consumerSecret, env } = req.body;
+    const { consumerKey, consumerSecret, env, initiatorName, password, securityCredential, certificate } = req.body;
     let providedCreds;
     if (consumerKey && consumerSecret) {
-        providedCreds = { consumerKey, consumerSecret, env: env || 'sandbox' };
+        providedCreds = {
+            consumerKey,
+            consumerSecret,
+            env: env || 'sandbox',
+            initiatorName,
+            password,
+            securityCredential,
+            certificate
+        };
     }
     const result = await (0, mpesa_service_1.testMpesaConnectionService)(userId, providedCreds);
     if (result.success) {
@@ -556,7 +564,9 @@ const resetMpesaConfig = async (req, res) => {
                 mpesaPasskey: null,
                 mpesaShortcode: null,
                 mpesaInitiatorName: null,
-                mpesaInitiatorPass: null
+                mpesaInitiatorPass: null,
+                mpesaSecurityCredential: null,
+                mpesaCertificate: null
             }
         });
         res.json({ success: true, message: 'Settings reset successful' });

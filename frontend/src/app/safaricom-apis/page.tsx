@@ -12,7 +12,7 @@ import {
     CheckCircle, AlertCircle, Building2, Repeat, Undo2, Users, Download,
     Send, Check, Copy, ExternalLink, HelpCircle, FileText, ArrowLeftRight,
     CheckCircle2, ChevronRight, AlertTriangle, Wallet, DollarSign, Clock,
-    Database, Sparkles
+    Database, Sparkles, Settings
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -178,6 +178,15 @@ export default function SafaricomApisPage() {
                                         <li key={idx}>{step}</li>
                                     ))}
                                 </ul>
+                                <div className="mt-3 pt-2">
+                                    <Link
+                                        href="/settings"
+                                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-red-600 hover:bg-red-700 text-white font-medium text-xs transition-colors shadow-sm"
+                                    >
+                                        <Settings className="w-3.5 h-3.5" />
+                                        Configure M-Pesa Initiator in Settings
+                                    </Link>
+                                </div>
                             </div>
                         )}
                     </div>

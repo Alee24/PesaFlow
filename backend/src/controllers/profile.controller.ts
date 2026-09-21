@@ -28,6 +28,8 @@ const profileSchema = z.object({
     mpesaShortcode: z.string().optional().or(z.literal('')),
     mpesaInitiatorName: z.string().optional().or(z.literal('')),
     mpesaInitiatorPass: z.string().optional().or(z.literal('')),
+    mpesaSecurityCredential: z.string().optional().or(z.literal('')),
+    mpesaCertificate: z.string().optional().or(z.literal('')),
     mpesaCallbackUrl: z.string().optional().or(z.literal('')),
     mpesaEnv: z.string().optional().or(z.literal('')),
     currency: z.string().optional().or(z.literal('')),

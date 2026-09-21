@@ -7,6 +7,7 @@ exports.generateDynamicMpesaQrCode = exports.initiateB2CPayment = exports.testMp
 const axios_1 = __importDefault(require("axios"));
 const client_1 = require("@prisma/client");
 const qrcode_1 = __importDefault(require("qrcode"));
+const daraja_security_1 = require("../utils/daraja-security");
 const prisma = new client_1.PrismaClient();
 const cleanCred = (val) => {
     if (val === undefined || val === null)
@@ -22,6 +23,8 @@ const getCredentials = async (userId) => {
         shortCode: process.env.MPESA_SHORTCODE,
         initiatorName: process.env.MPESA_INITIATOR_NAME,
         password: process.env.MPESA_INITIATOR_PASSWORD,
+        securityCredential: process.env.MPESA_SECURITY_CREDENTIAL,
+        certificate: process.env.MPESA_CERTIFICATE,
         callbackUrl: process.env.MPESA_CALLBACK_URL || (process.env.APP_URL ? `${process.env.APP_URL}/api/mpesa/callback` : 'http://localhost:3001/api/mpesa/callback'),
         env: process.env.MPESA_ENV || 'sandbox'
     };
@@ -44,6 +47,10 @@ const getCredentials = async (userId) => {
                 creds.initiatorName = p.mpesaInitiatorName;
             if (p.mpesaInitiatorPass)
                 creds.password = p.mpesaInitiatorPass;
+            if (p.mpesaSecurityCredential)
+                creds.securityCredential = p.mpesaSecurityCredential;
+            if (p.mpesaCertificate)
+                creds.certificate = p.mpesaCertificate;
             if (p.mpesaCallbackUrl)
                 creds.callbackUrl = p.mpesaCallbackUrl;
             if (p.mpesaEnv)
@@ -70,6 +77,10 @@ const getCredentials = async (userId) => {
                 creds.initiatorName = profile.mpesaInitiatorName;
             if (profile.mpesaInitiatorPass)
                 creds.password = profile.mpesaInitiatorPass;
+            if (profile.mpesaSecurityCredential)
+                creds.securityCredential = profile.mpesaSecurityCredential;
+            if (profile.mpesaCertificate)
+                creds.certificate = profile.mpesaCertificate;
             if (profile.mpesaCallbackUrl)
                 creds.callbackUrl = profile.mpesaCallbackUrl;
             if (profile.mpesaEnv)
@@ -85,9 +96,14 @@ const getCredentials = async (userId) => {
     creds.shortCode = (0, exports.cleanCred)(creds.shortCode);
     creds.initiatorName = (0, exports.cleanCred)(creds.initiatorName);
     creds.password = (0, exports.cleanCred)(creds.password);
+    creds.securityCredential = (0, exports.cleanCred)(creds.securityCredential);
+    creds.certificate = (0, exports.cleanCred)(creds.certificate);
     creds.callbackUrl = (0, exports.cleanCred)(creds.callbackUrl);
     creds.env = (0, exports.cleanCred)(creds.env).toLowerCase() || 'sandbox';
-    console.log(`[M-Pesa Config] Key: ${creds.consumerKey ? creds.consumerKey.substring(0, 5) + '...' : 'EMPTY'} | ShortCode: ${creds.shortCode} | Env: ${creds.env}`);
+    if (creds.env === 'sandbox' && !creds.initiatorName) {
+        creds.initiatorName = 'testapi';
+    }
+    console.log(`[M-Pesa Config] Key: ${creds.consumerKey ? creds.consumerKey.substring(0, 5) + '...' : 'EMPTY'} | ShortCode: ${creds.shortCode} | Initiator: ${creds.initiatorName || 'NONE'} | Env: ${creds.env}`);
     return creds;
 };
 exports.getCredentials = getCredentials;
@@ -303,7 +319,24 @@ const testMpesaConnectionService = async (userId, providedCreds) => {
             throw new Error("Missing Consumer Key or Secret (Env or Settings)");
         }
         const token = await (0, exports.getAccessToken)(creds);
-        return { success: true, message: 'Connection successful. Access Token generated.', token: token.slice(0, 10) + '...' };
+        let initiatorInfo = 'Not configured';
+        const initiatorPassOrCred = creds.securityCredential || creds.password;
+        if (creds.initiatorName && initiatorPassOrCred) {
+            try {
+                const isProd = (0, daraja_security_1.isProductionEnv)(creds.env);
+                const encrypted = (0, daraja_security_1.generateSecurityCredential)(initiatorPassOrCred, isProd, creds.certificate);
+                initiatorInfo = `Ready (${encrypted.slice(0, 12)}...)`;
+            }
+            catch (initErr) {
+                initiatorInfo = `Error: ${initErr.message}`;
+            }
+        }
+        return {
+            success: true,
+            message: `Connection successful! Access Token generated. Initiator Authorization: ${initiatorInfo}`,
+            token: token.slice(0, 10) + '...',
+            initiatorInfo
+        };
     }
     catch (error) {
         return { success: false, message: error.message };
@@ -319,9 +352,15 @@ const initiateB2CPayment = async (phoneNumber, amount, reference, userId, descri
     const formattedPhone = phoneNumber.startsWith('0')
         ? `254${phoneNumber.slice(1)}`
         : phoneNumber;
+    const initiatorPassOrCred = creds.securityCredential || creds.password;
+    if (!creds.initiatorName || !initiatorPassOrCred) {
+        throw new Error('B2C payout requires Initiator Name and Initiator Password (or Security Credential) configured in Settings → M-Pesa.');
+    }
+    const isProd = (0, daraja_security_1.isProductionEnv)(creds.env);
+    const securityCredential = (0, daraja_security_1.generateSecurityCredential)(initiatorPassOrCred, isProd, creds.certificate);
     const requestBody = {
         InitiatorName: creds.initiatorName,
-        SecurityCredential: creds.password,
+        SecurityCredential: securityCredential,
         CommandID: 'BusinessPayment',
         Amount: amount,
         PartyA: creds.shortCode,

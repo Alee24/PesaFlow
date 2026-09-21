@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/Button';
 import Toast from '@/components/ui/Toast';
 import api from '@/lib/api';
 import { getImageUrl } from '@/lib/utils';
-import { CreditCard, ShieldCheck, CheckCircle2, Globe, Lock, Settings as SettingsIcon } from 'lucide-react';
+import { CreditCard, ShieldCheck, CheckCircle2, Globe, Lock, Settings as SettingsIcon, KeyRound, ExternalLink, HelpCircle, Info } from 'lucide-react';
 
 export default function SettingsPage() {
     const [formData, setFormData] = useState({
@@ -35,6 +35,8 @@ export default function SettingsPage() {
         mpesaShortcode: '',
         mpesaInitiatorName: '',
         mpesaInitiatorPass: '',
+        mpesaSecurityCredential: '',
+        mpesaCertificate: '',
         mpesaCallbackUrl: '',
         mpesaEnv: 'sandbox',
         useCustomMpesa: false,
@@ -222,7 +224,11 @@ export default function SettingsPage() {
             const payload = {
                 consumerKey: formData.mpesaConsumerKey,
                 consumerSecret: formData.mpesaConsumerSecret,
-                env: formData.mpesaEnv
+                env: formData.mpesaEnv,
+                initiatorName: formData.mpesaInitiatorName,
+                password: formData.mpesaInitiatorPass,
+                securityCredential: formData.mpesaSecurityCredential,
+                certificate: formData.mpesaCertificate
             };
             const res = await api.post('/mpesa/test', payload);
             setMpesaTestStatus('success');
@@ -523,8 +529,73 @@ export default function SettingsPage() {
                                     <Input label="Consumer Secret" name="mpesaConsumerSecret" value={formData.mpesaConsumerSecret} onChange={handleChange} type="password" />
                                     <Input label="Passkey" name="mpesaPasskey" value={formData.mpesaPasskey} onChange={handleChange} type="password" />
                                     <Input label="Shortcode (Paybill/Till)" name="mpesaShortcode" value={formData.mpesaShortcode} onChange={handleChange} />
-                                    <Input label="Initiator Name" name="mpesaInitiatorName" value={formData.mpesaInitiatorName} onChange={handleChange} />
-                                    <Input label="Initiator Password" name="mpesaInitiatorPass" value={formData.mpesaInitiatorPass} onChange={handleChange} type="password" />
+                                    
+                                    <div className="md:col-span-2 border-t border-zinc-200 dark:border-zinc-800 pt-5 mt-2">
+                                        <div className="flex items-center gap-2 mb-3">
+                                            <KeyRound className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+                                            <h4 className="font-semibold text-zinc-900 dark:text-white text-base">
+                                                Daraja Initiator Credentials &amp; Advanced Operations
+                                            </h4>
+                                        </div>
+                                        <div className="p-3.5 mb-4 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-xs text-zinc-600 dark:text-zinc-400 space-y-1.5">
+                                            <div className="flex items-center gap-1.5 font-medium text-zinc-800 dark:text-zinc-200">
+                                                <Info className="w-4 h-4 text-emerald-500 shrink-0" />
+                                                <span>Required for Account Balance inquiries, Transaction Status checks, B2B, B2C, and Reversals.</span>
+                                            </div>
+                                            <p>
+                                                • <b>Sandbox:</b> Initiator Name is typically <code className="bg-white dark:bg-zinc-800 px-1 py-0.5 rounded text-emerald-600 dark:text-emerald-400 font-mono">testapi</code>.
+                                            </p>
+                                            <p>
+                                                • <b>Production:</b> Initiator Name is your Operator Username created on the Safaricom M-Pesa Org Portal (<a href="https://org.ke.m-pesa.com" target="_blank" rel="noreferrer" className="text-emerald-600 hover:underline inline-flex items-center gap-0.5">org.ke.m-pesa.com <ExternalLink className="w-3 h-3" /></a>) with the <i>API Operator</i> or <i>Business Administrator</i> role.
+                                            </p>
+                                            <p>
+                                                • <b>Pre-computed Security Credential:</b> You can generate your 344-character Security Credential directly using Safaricom&apos;s generator tool at <a href="https://developer.safaricom.co.ke/test_credentials" target="_blank" rel="noreferrer" className="text-emerald-600 hover:underline inline-flex items-center gap-0.5">developer.safaricom.co.ke/test_credentials <ExternalLink className="w-3 h-3" /></a> and paste it below. Pre-computed credentials guarantee 100% compatibility.
+                                            </p>
+                                        </div>
+
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            <Input 
+                                                label="Initiator Name / Username" 
+                                                name="mpesaInitiatorName" 
+                                                placeholder={formData.mpesaEnv === 'production' ? 'e.g. operator_api' : 'testapi'} 
+                                                value={formData.mpesaInitiatorName} 
+                                                onChange={handleChange} 
+                                            />
+                                            <Input 
+                                                label="Initiator Password (Auto-encrypted)" 
+                                                name="mpesaInitiatorPass" 
+                                                value={formData.mpesaInitiatorPass} 
+                                                onChange={handleChange} 
+                                                type="password" 
+                                                placeholder="Operator password"
+                                            />
+                                        </div>
+
+                                        <div className="mt-4 flex flex-col space-y-1">
+                                            <label className="text-sm font-medium text-gray-700 dark:text-gray-300 flex items-center justify-between">
+                                                <span>Pre-generated Security Credential (Optional &amp; Recommended)</span>
+                                                <a 
+                                                    href="https://developer.safaricom.co.ke/test_credentials" 
+                                                    target="_blank" 
+                                                    rel="noreferrer" 
+                                                    className="text-xs text-emerald-600 dark:text-emerald-400 hover:underline inline-flex items-center gap-1"
+                                                >
+                                                    Open Safaricom Generator <ExternalLink className="w-3 h-3" />
+                                                </a>
+                                            </label>
+                                            <textarea
+                                                name="mpesaSecurityCredential"
+                                                rows={2}
+                                                value={formData.mpesaSecurityCredential}
+                                                onChange={handleChange}
+                                                placeholder="Paste your 172 or 344-character Base64 encrypted SecurityCredential here..."
+                                                className="px-3 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-500 bg-white dark:bg-gray-800 dark:text-white dark:border-gray-700 font-mono text-xs"
+                                            />
+                                            <p className="text-[11px] text-gray-500 dark:text-gray-400">
+                                                If provided, PesaFlow transmits this credential directly to Safaricom Daraja without re-encrypting.
+                                            </p>
+                                        </div>
+                                    </div>
                                     <div className="flex flex-col space-y-1 md:col-span-2">
                                         <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Callback URL</label>
                                         <div className="flex gap-2">

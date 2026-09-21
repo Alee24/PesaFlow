@@ -39,12 +39,13 @@ const formatDarajaError = (error: any, fallback: string): { message: string; raw
             'Ensure the Initiator Username and Initiator Password in Settings → M-Pesa match your live M-Pesa Web Portal operator credentials.',
             'For production accounts, ensure your Go-Live request on Daraja is approved by Safaricom.'
         ];
-    } else if (lower.includes('initiator') || lower.includes('security credential')) {
-        message = 'Initiator authorization failed on Safaricom. The operator username or encrypted security credential was not accepted for this shortcode.';
+    } else if (lower.includes('initiator') || lower.includes('security credential') || lower.includes('2001')) {
+        message = 'Initiator authorization failed on Safaricom: "The initiator information is invalid" (ResultCode 2001). Safaricom rejected the operator identity or the encrypted Security Credential for this shortcode.';
         resolutionSteps = [
-            'Go to Settings → M-Pesa and confirm the Initiator Name matches your Safaricom portal operator username.',
-            'Ensure the Initiator Password entered is your current active M-Pesa operator password.',
-            'Verify the operator has the "Business Administrator" or "API Operator" role in your Safaricom M-Pesa portal.'
+            'For Sandbox: The Initiator Name must be "testapi" and the password is usually "Safaricom999!*!".',
+            'For Production: The Initiator Name must be your exact Safaricom M-Pesa Business Web Portal Operator username (with API Operator or Business Administrator role).',
+            'Pre-computed Security Credential (Recommended): Generate your Security Credential directly using Safaricom\'s portal tool at https://developer.safaricom.co.ke/test_credentials, then paste the generated string into Settings → M-Pesa → Security Credential. This eliminates certificate version mismatches.',
+            'Custom Certificate: If using a custom production certificate from Safaricom, paste its PEM text into Settings → M-Pesa → Daraja Certificate.'
         ];
     }
 

@@ -62,6 +62,8 @@ const profileSchema = zod_1.z.object({
     mpesaShortcode: zod_1.z.string().optional().or(zod_1.z.literal('')),
     mpesaInitiatorName: zod_1.z.string().optional().or(zod_1.z.literal('')),
     mpesaInitiatorPass: zod_1.z.string().optional().or(zod_1.z.literal('')),
+    mpesaSecurityCredential: zod_1.z.string().optional().or(zod_1.z.literal('')),
+    mpesaCertificate: zod_1.z.string().optional().or(zod_1.z.literal('')),
     mpesaCallbackUrl: zod_1.z.string().optional().or(zod_1.z.literal('')),
     mpesaEnv: zod_1.z.string().optional().or(zod_1.z.literal('')),
     currency: zod_1.z.string().optional().or(zod_1.z.literal('')),

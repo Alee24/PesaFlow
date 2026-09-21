@@ -14,7 +14,7 @@ const getSafaricomApisOverview = async (userId) => {
     const creds = await (0, mpesa_service_1.getCredentials)(userId);
     const hasKeys = Boolean(creds.consumerKey && creds.consumerSecret);
     const hasShortcode = Boolean(creds.shortCode);
-    const hasInitiator = Boolean(creds.initiatorName && creds.password);
+    const hasInitiator = Boolean(creds.initiatorName && (creds.securityCredential || creds.password));
     const apis = [
         {
             id: 'c2b_v2',
@@ -289,10 +289,11 @@ const executeAccountBalanceQuery = async (userId, remarks = 'Balance Query', ide
     const token = await (0, mpesa_service_1.getAccessToken)(creds);
     const baseUrl = (0, exports.getBaseDarajaUrl)(creds.env);
     const isProd = (0, daraja_security_1.isProductionEnv)(creds.env);
-    if (!creds.initiatorName || !creds.password) {
-        throw new Error('Account Balance inquiry requires Initiator Name and Initiator Password configured in Settings → M-Pesa.');
+    const initiatorPassOrCred = creds.securityCredential || creds.password;
+    if (!creds.initiatorName || !initiatorPassOrCred) {
+        throw new Error('Account Balance inquiry requires Initiator Name and Initiator Password (or Security Credential) configured in Settings → M-Pesa.');
     }
-    const securityCredential = (0, daraja_security_1.generateSecurityCredential)(creds.password, isProd);
+    const securityCredential = (0, daraja_security_1.generateSecurityCredential)(initiatorPassOrCred, isProd, creds.certificate);
     const payload = {
         Initiator: creds.initiatorName,
         SecurityCredential: securityCredential,
@@ -361,10 +362,11 @@ const executeTransactionStatusQuery = async (userId, transactionId, remarks = 'S
     const token = await (0, mpesa_service_1.getAccessToken)(creds);
     const baseUrl = (0, exports.getBaseDarajaUrl)(creds.env);
     const isProd = (0, daraja_security_1.isProductionEnv)(creds.env);
-    if (!creds.initiatorName || !creds.password) {
-        throw new Error('Transaction Status Query requires Initiator Name and Initiator Password in Settings → M-Pesa.');
+    const initiatorPassOrCred = creds.securityCredential || creds.password;
+    if (!creds.initiatorName || !initiatorPassOrCred) {
+        throw new Error('Transaction Status Query requires Initiator Name and Initiator Password (or Security Credential) in Settings → M-Pesa.');
     }
-    const securityCredential = (0, daraja_security_1.generateSecurityCredential)(creds.password, isProd);
+    const securityCredential = (0, daraja_security_1.generateSecurityCredential)(initiatorPassOrCred, isProd, creds.certificate);
     const payload = {
         Initiator: creds.initiatorName,
         SecurityCredential: securityCredential,
@@ -408,10 +410,11 @@ const executeTransactionReversal = async (userId, params) => {
     const token = await (0, mpesa_service_1.getAccessToken)(creds);
     const baseUrl = (0, exports.getBaseDarajaUrl)(creds.env);
     const isProd = (0, daraja_security_1.isProductionEnv)(creds.env);
-    if (!creds.initiatorName || !creds.password) {
-        throw new Error('Reversal requires Initiator Name and Initiator Password in Settings → M-Pesa.');
+    const initiatorPassOrCred = creds.securityCredential || creds.password;
+    if (!creds.initiatorName || !initiatorPassOrCred) {
+        throw new Error('Reversal requires Initiator Name and Initiator Password (or Security Credential) in Settings → M-Pesa.');
     }
-    const securityCredential = (0, daraja_security_1.generateSecurityCredential)(creds.password, isProd);
+    const securityCredential = (0, daraja_security_1.generateSecurityCredential)(initiatorPassOrCred, isProd, creds.certificate);
     const payload = {
         Initiator: creds.initiatorName,
         SecurityCredential: securityCredential,
@@ -533,10 +536,11 @@ const executeB2BPayment = async (userId, params) => {
     const token = await (0, mpesa_service_1.getAccessToken)(creds);
     const baseUrl = (0, exports.getBaseDarajaUrl)(creds.env);
     const isProd = (0, daraja_security_1.isProductionEnv)(creds.env);
-    if (!creds.initiatorName || !creds.password) {
-        throw new Error('B2B payments require Initiator Name and Initiator Password in Settings → M-Pesa.');
+    const initiatorPassOrCred = creds.securityCredential || creds.password;
+    if (!creds.initiatorName || !initiatorPassOrCred) {
+        throw new Error('B2B payments require Initiator Name and Initiator Password (or Security Credential) in Settings → M-Pesa.');
     }
-    const securityCredential = (0, daraja_security_1.generateSecurityCredential)(creds.password, isProd);
+    const securityCredential = (0, daraja_security_1.generateSecurityCredential)(initiatorPassOrCred, isProd, creds.certificate);
     const payload = {
         Initiator: creds.initiatorName,
         SecurityCredential: securityCredential,
@@ -584,13 +588,14 @@ const executeBusinessToPochi = async (userId, params) => {
     const token = await (0, mpesa_service_1.getAccessToken)(creds);
     const baseUrl = (0, exports.getBaseDarajaUrl)(creds.env);
     const isProd = (0, daraja_security_1.isProductionEnv)(creds.env);
-    if (!creds.initiatorName || !creds.password) {
-        throw new Error('Business to Pochi requires Initiator Name and Initiator Password in Settings → M-Pesa.');
+    const initiatorPassOrCred = creds.securityCredential || creds.password;
+    if (!creds.initiatorName || !initiatorPassOrCred) {
+        throw new Error('Business to Pochi requires Initiator Name and Initiator Password (or Security Credential) in Settings → M-Pesa.');
     }
     const formattedPhone = params.phoneNumber.startsWith('0')
         ? `254${params.phoneNumber.slice(1)}`
         : params.phoneNumber;
-    const securityCredential = (0, daraja_security_1.generateSecurityCredential)(creds.password, isProd);
+    const securityCredential = (0, daraja_security_1.generateSecurityCredential)(initiatorPassOrCred, isProd, creds.certificate);
     const payload = {
         InitiatorName: creds.initiatorName,
         SecurityCredential: securityCredential,

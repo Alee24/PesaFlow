@@ -578,11 +578,19 @@ export const getMpesaStatus = async (req: AuthRequest, res: Response): Promise<v
 
 export const testConnection = async (req: AuthRequest, res: Response): Promise<void> => {
     const userId = req.user?.userId;
-    const { consumerKey, consumerSecret, env } = req.body;
+    const { consumerKey, consumerSecret, env, initiatorName, password, securityCredential, certificate } = req.body;
     
     let providedCreds;
     if (consumerKey && consumerSecret) {
-        providedCreds = { consumerKey, consumerSecret, env: env || 'sandbox' };
+        providedCreds = { 
+            consumerKey, 
+            consumerSecret, 
+            env: env || 'sandbox',
+            initiatorName,
+            password,
+            securityCredential,
+            certificate
+        };
     }
 
     const result = await testMpesaConnectionService(userId, providedCreds);
@@ -609,7 +617,9 @@ export const resetMpesaConfig = async (req: AuthRequest, res: Response): Promise
                 mpesaPasskey: null,
                 mpesaShortcode: null,
                 mpesaInitiatorName: null,
-                mpesaInitiatorPass: null
+                mpesaInitiatorPass: null,
+                mpesaSecurityCredential: null,
+                mpesaCertificate: null
             }
         });
 
