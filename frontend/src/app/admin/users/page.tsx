@@ -6,7 +6,7 @@ import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import api from '@/lib/api';
-import { Plus, Search, CheckCircle, XCircle, Ban, Power, ShieldCheck } from 'lucide-react';
+import { Plus, Search, CheckCircle, XCircle, Ban, Power, ShieldCheck, LogIn, Loader2 } from 'lucide-react';
 import { useToast } from '@/contexts/ToastContext';
 import { ConfirmModal } from '@/components/ui/ConfirmModal';
 
@@ -66,6 +66,9 @@ export default function UserManagementPage() {
         userName: '',
         loading: false
     });
+
+    // Impersonation loading state
+    const [impersonatingId, setImpersonatingId] = useState<string | null>(null);
 
     // Create Form State
     const [newUser, setNewUser] = useState({
@@ -298,6 +301,44 @@ export default function UserManagementPage() {
         }
     };
 
+    const handleImpersonate = async (targetUser: any) => {
+        if (!window.confirm(`Are you sure you want to log in as ${targetUser.name || targetUser.email}? You can return to your admin account at any time using the top banner.`)) {
+            return;
+        }
+
+        setImpersonatingId(targetUser.id);
+        try {
+            const res = await api.post(`/admin/users/${targetUser.id}/impersonate`);
+            if (res.data?.token) {
+                // Save current admin credentials so admin can return
+                const currentToken = localStorage.getItem('token');
+                const currentUser = localStorage.getItem('user');
+                if (currentToken && currentUser) {
+                    localStorage.setItem('impersonation_admin_token', currentToken);
+                    localStorage.setItem('impersonation_admin_user', currentUser);
+                }
+
+                // Set impersonated credentials
+                localStorage.setItem('token', res.data.token);
+                localStorage.setItem('user', JSON.stringify(res.data.user));
+
+                showToast(`Switched account. Logging in as ${targetUser.name || targetUser.email}...`, 'success');
+
+                // Redirect to merchant dashboard
+                setTimeout(() => {
+                    window.location.href = '/dashboard';
+                }, 500);
+            } else {
+                throw new Error(res.data?.error || 'Failed to authenticate as user');
+            }
+        } catch (error: any) {
+            console.error('Impersonation failed:', error);
+            const msg = error.response?.data?.error || error.message || 'Failed to log in as user';
+            showToast(msg, 'error');
+            setImpersonatingId(null);
+        }
+    };
+
     return (
         <DashboardLayout>
             <div className="max-w-7xl mx-auto pb-12">
@@ -380,6 +421,21 @@ export default function UserManagementPage() {
                                                 <div className="flex justify-end gap-2">
                                                     {user.role !== 'ADMIN' && (
                                                         <>
+                                                            <Button
+                                                                size="sm"
+                                                                variant="outline"
+                                                                className="text-emerald-600 border-emerald-300 hover:bg-emerald-50 dark:hover:bg-emerald-950/30 flex items-center gap-1.5 font-semibold shadow-xs"
+                                                                title={`Log in as ${user.name || user.email}`}
+                                                                disabled={impersonatingId === user.id}
+                                                                onClick={() => handleImpersonate(user)}
+                                                            >
+                                                                {impersonatingId === user.id ? (
+                                                                    <Loader2 className="w-3.5 h-3.5 animate-spin text-emerald-600" />
+                                                                ) : (
+                                                                    <LogIn className="w-3.5 h-3.5 text-emerald-600" />
+                                                                )}
+                                                                <span className="text-xs font-semibold">Login as</span>
+                                                            </Button>
                                                             {!user.emailVerified && (
                                                                 <Button
                                                                     size="sm"

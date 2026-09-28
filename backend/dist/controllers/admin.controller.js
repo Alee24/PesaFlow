@@ -3,11 +3,12 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.triggerSystemUpdate = exports.getSystemUpdateLogs = exports.getSystemStatus = exports.manageSubscription = exports.resetUserPassword = exports.deleteUser = exports.updateUser = exports.getAdminStats = exports.verifyUser = exports.updateUserStatus = exports.createUser = exports.getAllUsers = void 0;
+exports.impersonateUser = exports.triggerSystemUpdate = exports.getSystemUpdateLogs = exports.getSystemStatus = exports.manageSubscription = exports.resetUserPassword = exports.deleteUser = exports.updateUser = exports.getAdminStats = exports.verifyUser = exports.updateUserStatus = exports.createUser = exports.getAllUsers = void 0;
 const client_1 = require("@prisma/client");
 const bcryptjs_1 = __importDefault(require("bcryptjs"));
 const child_process_1 = require("child_process");
 const path_1 = __importDefault(require("path"));
+const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const prisma = new client_1.PrismaClient();
 const getAllUsers = async (req, res) => {
     try {
@@ -385,4 +386,44 @@ const triggerSystemUpdate = async (req, res) => {
     }
 };
 exports.triggerSystemUpdate = triggerSystemUpdate;
+const impersonateUser = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const targetUser = await prisma.user.findUnique({
+            where: { id },
+            include: {
+                businessProfile: true,
+                subscription: true
+            }
+        });
+        if (!targetUser) {
+            res.status(404).json({ error: 'User not found' });
+            return;
+        }
+        const token = jsonwebtoken_1.default.sign({
+            userId: targetUser.id,
+            role: targetUser.role,
+            status: targetUser.status,
+            parentId: targetUser.parentId,
+            impersonatedBy: req.user?.userId
+        }, process.env.JWT_SECRET || 'fallback_secret', { expiresIn: '7d' });
+        res.json({
+            message: `Impersonation successful. Logging in as ${targetUser.name || targetUser.email}`,
+            token,
+            user: {
+                id: targetUser.id,
+                email: targetUser.email,
+                name: targetUser.name,
+                role: targetUser.role,
+                status: targetUser.status,
+                isProfileComplete: !!targetUser.businessProfile
+            }
+        });
+    }
+    catch (error) {
+        console.error('Impersonation error:', error);
+        res.status(500).json({ error: error.message || 'Failed to impersonate user' });
+    }
+};
+exports.impersonateUser = impersonateUser;
 //# sourceMappingURL=admin.controller.js.map

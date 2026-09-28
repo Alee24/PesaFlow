@@ -4,7 +4,7 @@
 import React, { useEffect, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { Sidebar, Header, menuGroups } from './DashboardShell';
-import { AlertCircle, XCircle } from 'lucide-react';
+import { AlertCircle, XCircle, LogOut } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '../ui/Button';
 import { getImageUrl } from '@/lib/utils';
@@ -16,6 +16,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     const [user, setUser] = useState<any>(null);
     const [isClient, setIsClient] = useState(false);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+    const [isImpersonating, setIsImpersonating] = useState(false);
 
     useEffect(() => {
         setIsClient(true);
@@ -80,7 +81,27 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 })
                 .catch(() => {});
         });
+
+        // Check if admin is currently impersonating this account
+        const adminToken = localStorage.getItem('impersonation_admin_token');
+        if (adminToken) {
+            setIsImpersonating(true);
+        }
     }, [router]);
+
+    const handleExitImpersonation = () => {
+        const adminToken = localStorage.getItem('impersonation_admin_token');
+        const adminUser = localStorage.getItem('impersonation_admin_user');
+        if (adminToken && adminUser) {
+            localStorage.setItem('token', adminToken);
+            localStorage.setItem('user', adminUser);
+            localStorage.removeItem('impersonation_admin_token');
+            localStorage.removeItem('impersonation_admin_user');
+            window.location.href = '/admin/users';
+        } else {
+            router.push('/auth/login');
+        }
+    };
 
     // Handle Profile Completion Redirects
     useEffect(() => {
@@ -111,6 +132,27 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                         onMenuClick={() => setIsMobileMenuOpen(true)}
                     />
                 </div>
+
+                {isImpersonating && (
+                    <div className="bg-amber-600 text-white px-4 py-2.5 text-xs font-semibold flex flex-wrap items-center justify-between gap-2 shadow-md sticky top-0 z-40 print:hidden animate-fade-in">
+                        <div className="flex items-center gap-2">
+                            <span className="bg-black/30 px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-wider">
+                                Impersonation Mode
+                            </span>
+                            <span>
+                                You are currently logged in as <strong>{user?.name || user?.email}</strong> ({user?.role})
+                            </span>
+                        </div>
+                        <button
+                            type="button"
+                            onClick={handleExitImpersonation}
+                            className="bg-black/40 hover:bg-black/60 text-white px-3 py-1 rounded text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-sm active:scale-95"
+                        >
+                            <LogOut className="w-3.5 h-3.5" />
+                            Exit &amp; Return to Admin
+                        </button>
+                    </div>
+                )}
 
 
 

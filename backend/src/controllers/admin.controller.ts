@@ -3,6 +3,7 @@ import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcryptjs';
 import { exec, spawn } from 'child_process';
 import path from 'path';
+import jwt from 'jsonwebtoken';
 
 const prisma = new PrismaClient();
 
@@ -448,4 +449,54 @@ export const triggerSystemUpdate = async (req: AuthRequest, res: Response) => {
         res.status(500).json({ error: error.message });
     }
 };
+
+export const impersonateUser = async (req: AuthRequest, res: Response): Promise<void> => {
+    try {
+        const { id } = req.params;
+
+        // Ensure target user exists
+        const targetUser = await prisma.user.findUnique({
+            where: { id },
+            include: {
+                businessProfile: true,
+                subscription: true
+            }
+        });
+
+        if (!targetUser) {
+            res.status(404).json({ error: 'User not found' });
+            return;
+        }
+
+        // Generate token for target user with impersonation metadata
+        const token = jwt.sign(
+            {
+                userId: targetUser.id,
+                role: targetUser.role,
+                status: targetUser.status,
+                parentId: targetUser.parentId,
+                impersonatedBy: req.user?.userId
+            },
+            process.env.JWT_SECRET || 'fallback_secret',
+            { expiresIn: '7d' }
+        );
+
+        res.json({
+            message: `Impersonation successful. Logging in as ${targetUser.name || targetUser.email}`,
+            token,
+            user: {
+                id: targetUser.id,
+                email: targetUser.email,
+                name: targetUser.name,
+                role: targetUser.role,
+                status: targetUser.status,
+                isProfileComplete: !!targetUser.businessProfile
+            }
+        });
+    } catch (error: any) {
+        console.error('Impersonation error:', error);
+        res.status(500).json({ error: error.message || 'Failed to impersonate user' });
+    }
+};
+
 

@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { getAllUsers, createUser, updateUserStatus, verifyUser, getAdminStats, updateUser, deleteUser, resetUserPassword, manageSubscription, getSystemStatus, triggerSystemUpdate, getSystemUpdateLogs } from '../controllers/admin.controller';
+import { getAllUsers, createUser, updateUserStatus, verifyUser, getAdminStats, updateUser, deleteUser, resetUserPassword, manageSubscription, getSystemStatus, triggerSystemUpdate, getSystemUpdateLogs, impersonateUser } from '../controllers/admin.controller';
 import { getSystemLogs } from '../controllers/admin-logs.controller';
 import { assignSubscription } from '../controllers/admin-subscription.controller';
 import { getOverview, getTopMerchants, getPaymentMethods, getRevenueTrends, getTopProducts } from '../controllers/admin.analytics.controller';
@@ -14,6 +14,7 @@ router.use(requireAdmin);
 router.get('/stats', getAdminStats);
 router.get('/users', getAllUsers);
 router.post('/users', createUser);
+router.post('/users/:id/impersonate', impersonateUser);
 router.patch('/users/:id/status', updateUserStatus);
 router.patch('/users/:id/verify', verifyUser); // New verification endpoint
 router.put('/users/:id', updateUser);

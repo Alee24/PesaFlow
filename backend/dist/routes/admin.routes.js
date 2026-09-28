@@ -12,6 +12,7 @@ router.use(auth_middleware_1.requireAdmin);
 router.get('/stats', admin_controller_1.getAdminStats);
 router.get('/users', admin_controller_1.getAllUsers);
 router.post('/users', admin_controller_1.createUser);
+router.post('/users/:id/impersonate', admin_controller_1.impersonateUser);
 router.patch('/users/:id/status', admin_controller_1.updateUserStatus);
 router.patch('/users/:id/verify', admin_controller_1.verifyUser);
 router.put('/users/:id', admin_controller_1.updateUser);
