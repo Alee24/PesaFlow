@@ -90,7 +90,10 @@ const getProfile = async (req, res) => {
         const profile = await prisma.businessProfile.findUnique({
             where: { userId: profileUserId },
         });
-        res.json(profile || {});
+        const profileData = profile
+            ? { ...profile, useCustomMpesa: profile.useCustomMpesa ?? true }
+            : { useCustomMpesa: true };
+        res.json(profileData);
     }
     catch (error) {
         console.error("Get Profile Error:", error);

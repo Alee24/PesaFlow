@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/Button';
 import Toast from '@/components/ui/Toast';
 import api from '@/lib/api';
 import { getImageUrl } from '@/lib/utils';
-import { CreditCard, ShieldCheck, CheckCircle2, Globe, Lock, Settings as SettingsIcon, KeyRound, ExternalLink, HelpCircle, Info } from 'lucide-react';
+import { CreditCard, ShieldCheck, CheckCircle2, Globe, Lock, Settings as SettingsIcon, KeyRound, ExternalLink, HelpCircle, Info, AlertTriangle, Banknote, Wallet } from 'lucide-react';
 
 export default function SettingsPage() {
     const [formData, setFormData] = useState({
@@ -39,7 +39,7 @@ export default function SettingsPage() {
         mpesaCertificate: '',
         mpesaCallbackUrl: '',
         mpesaEnv: 'sandbox',
-        useCustomMpesa: false,
+        useCustomMpesa: true,
         vatEnabled: false,
         vatRate: 16,
         // Notifications & SMS
@@ -61,6 +61,7 @@ export default function SettingsPage() {
     const [faviconFile, setFaviconFile] = useState<File | null>(null);
     const [user, setUser] = useState<any>(null);
     const [subscription, setSubscription] = useState<any>(null);
+    const [showPlatformWarningModal, setShowPlatformWarningModal] = useState(false);
 
     // Toast State
     const [toast, setToast] = useState<{ visible: boolean; message: string; type: 'success' | 'error' | 'info' }>({
@@ -110,6 +111,13 @@ export default function SettingsPage() {
                 // Ensure default generic M-Pesa env if missing
                 if (!sanitizedData.mpesaEnv) sanitizedData.mpesaEnv = 'sandbox';
                 if (!sanitizedData.currency) sanitizedData.currency = 'KES';
+
+                // Default useCustomMpesa to true (merchants use their own credentials by default)
+                if (res.data.useCustomMpesa !== undefined && res.data.useCustomMpesa !== null) {
+                    sanitizedData.useCustomMpesa = res.data.useCustomMpesa === true || res.data.useCustomMpesa === 'true';
+                } else {
+                    sanitizedData.useCustomMpesa = true;
+                }
 
                 // Keep boolean/number types for VAT
                 if (res.data.vatEnabled !== undefined) sanitizedData.vatEnabled = res.data.vatEnabled;
@@ -475,51 +483,103 @@ export default function SettingsPage() {
                         {/* Payment Choice Section - Only show for Merchants, Admins see everything */}
                         {user?.role !== 'ADMIN' && (
                             <div className="bg-gray-50 dark:bg-gray-800/50 p-6 rounded-xl border border-gray-200 dark:border-gray-700 mb-8">
-                                <h3 className="text-md font-bold mb-4 flex items-center gap-2 text-gray-800 dark:text-white">
-                                    <CreditCard className="w-5 h-5 text-indigo-600" />
-                                    Payment Processing Source
-                                </h3>
+                                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
+                                    <h3 className="text-md font-bold flex items-center gap-2 text-gray-800 dark:text-white">
+                                        <CreditCard className="w-5 h-5 text-emerald-600" />
+                                        M-Pesa Integration Architecture
+                                    </h3>
+                                    <span className="text-xs px-2.5 py-1 rounded-full font-semibold bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400 border border-emerald-300 dark:border-emerald-800 self-start sm:self-auto">
+                                        Standard: Own API Credentials
+                                    </span>
+                                </div>
+                                <p className="text-xs text-gray-600 dark:text-gray-400 mb-5 leading-relaxed">
+                                    Direct Safaricom Daraja API credentials are required for independent settlement. Customer payments settle immediately into your own Paybill or Till.
+                                </p>
 
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    {/* Option 1: Mpesa Connect */}
+                                    {/* Option 1: Own API (DEFAULT & HIGHLY RECOMMENDED) */}
                                     <div
-                                        className={`cursor-pointer p-4 rounded-xl border-2 transition-all ${!formData.useCustomMpesa ? 'border-indigo-600 bg-indigo-50 dark:bg-indigo-900/10' : 'border-gray-200 hover:border-indigo-300 dark:border-gray-700'}`}
-                                        onClick={() => setFormData(prev => ({ ...prev, useCustomMpesa: false }))}
+                                        className={`relative cursor-pointer p-5 rounded-xl border-2 transition-all ${formData.useCustomMpesa ? 'border-emerald-600 bg-emerald-50/70 dark:bg-emerald-950/20 shadow-sm ring-1 ring-emerald-500/20' : 'border-gray-200 hover:border-emerald-300 dark:border-gray-700 bg-white dark:bg-gray-900'}`}
+                                        onClick={() => setFormData(prev => ({ ...prev, useCustomMpesa: true }))}
                                     >
                                         <div className="flex items-center justify-between mb-2">
-                                            <span className="font-bold flex items-center gap-2 text-gray-900 dark:text-white">
-                                                <ShieldCheck className="w-4 h-4 text-indigo-600" />
-                                                Mpesa Connect (Platform)
-                                            </span>
-                                            {!formData.useCustomMpesa && <CheckCircle2 className="w-5 h-5 text-indigo-600" />}
+                                            <div className="flex items-center gap-2">
+                                                <div className="p-1.5 rounded-lg bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300">
+                                                    <Globe className="w-4 h-4" />
+                                                </div>
+                                                <div>
+                                                    <span className="font-bold text-sm text-gray-900 dark:text-white block">
+                                                        Own API Credentials
+                                                    </span>
+                                                    <span className="text-[10px] uppercase font-bold text-emerald-600 dark:text-emerald-400 tracking-wider">
+                                                        Default & Recommended
+                                                    </span>
+                                                </div>
+                                            </div>
+                                            {formData.useCustomMpesa ? (
+                                                <CheckCircle2 className="w-5 h-5 text-emerald-600" />
+                                            ) : (
+                                                <div className="w-4 h-4 rounded-full border-2 border-gray-300 dark:border-gray-600" />
+                                            )}
                                         </div>
-                                        <p className="text-xs text-gray-600 dark:text-gray-400">Use our pre-configured infrastructure. Simple, secure, and ready-to-use. Funds settle to your Mpesa Connect wallet.</p>
+                                        <p className="text-xs text-gray-600 dark:text-gray-300 mb-3 leading-relaxed">
+                                            Direct Safaricom Daraja integration. Customer payments settle immediately into your own Safaricom Paybill or Till account with zero platform intermediaries.
+                                        </p>
+                                        <div className="bg-white/90 dark:bg-gray-800/90 rounded-lg p-2.5 border border-emerald-200/80 dark:border-emerald-900/40 text-[11px] text-gray-700 dark:text-gray-300 space-y-1">
+                                            <p className="font-semibold text-emerald-800 dark:text-emerald-300 flex items-center gap-1">
+                                                <ShieldCheck className="w-3.5 h-3.5" /> Required Daraja Credentials:
+                                            </p>
+                                            <ul className="grid grid-cols-2 gap-x-2 gap-y-0.5 text-[10px] text-gray-600 dark:text-gray-400 pl-1">
+                                                <li>• Consumer Key & Secret</li>
+                                                <li>• Shortcode (Paybill/Till)</li>
+                                                <li>• Online Passkey</li>
+                                                <li>• Initiator Name & Password</li>
+                                            </ul>
+                                        </div>
                                     </div>
 
-                                    {/* Option 2: Own API */}
+                                    {/* Option 2: Mpesa Connect (Platform Account - Temporary Fallback) */}
                                     <div
-                                        className={`relative cursor-pointer p-4 rounded-xl border-2 transition-all ${formData.useCustomMpesa ? 'border-indigo-600 bg-indigo-50 dark:bg-indigo-900/10' : 'border-gray-200 hover:border-indigo-300 dark:border-gray-700'} ${!isPro ? 'opacity-70 cursor-not-allowed grayscale' : ''}`}
+                                        className={`relative cursor-pointer p-5 rounded-xl border-2 transition-all ${!formData.useCustomMpesa ? 'border-amber-500 bg-amber-50/70 dark:bg-amber-950/20 shadow-sm ring-1 ring-amber-500/20' : 'border-gray-200 hover:border-amber-300 dark:border-gray-700 bg-white dark:bg-gray-900'}`}
                                         onClick={() => {
-                                            if (!isPro) {
-                                                showToast("Your current plan doesn't support custom APIs. Upgrade to PRO.", 'info');
-                                                return;
+                                            if (formData.useCustomMpesa) {
+                                                setShowPlatformWarningModal(true);
+                                            } else {
+                                                setFormData(prev => ({ ...prev, useCustomMpesa: false }));
                                             }
-                                            setFormData(prev => ({ ...prev, useCustomMpesa: true }));
                                         }}
                                     >
-                                        {!isPro && (
-                                            <div className="absolute top-2 right-2 flex items-center gap-1 bg-amber-100 text-amber-800 text-[10px] px-1.5 py-0.5 rounded-full font-bold">
-                                                <Lock className="w-2 h-2" /> PRO Feature
-                                            </div>
-                                        )}
                                         <div className="flex items-center justify-between mb-2">
-                                            <span className="font-bold flex items-center gap-2 text-gray-900 dark:text-white">
-                                                <Globe className="w-4 h-4 text-indigo-600" />
-                                                Own API Credentials
-                                            </span>
-                                            {formData.useCustomMpesa && <CheckCircle2 className="w-5 h-5 text-indigo-600" />}
+                                            <div className="flex items-center gap-2">
+                                                <div className="p-1.5 rounded-lg bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300">
+                                                    <CreditCard className="w-4 h-4" />
+                                                </div>
+                                                <div>
+                                                    <span className="font-bold text-sm text-gray-900 dark:text-white block">
+                                                        M-Pesa Connect (Platform Account)
+                                                    </span>
+                                                    <span className="text-[10px] uppercase font-bold text-amber-600 dark:text-amber-400 tracking-wider">
+                                                        Temporary Fallback Only
+                                                    </span>
+                                                </div>
+                                            </div>
+                                            {!formData.useCustomMpesa ? (
+                                                <CheckCircle2 className="w-5 h-5 text-amber-600" />
+                                            ) : (
+                                                <div className="w-4 h-4 rounded-full border-2 border-gray-300 dark:border-gray-600" />
+                                            )}
                                         </div>
-                                        <p className="text-xs text-gray-600 dark:text-gray-400">Integrate your direct Safaricom Daraja credentials. Funds settle directly to your Paybill/Shortcode.</p>
+                                        <p className="text-xs text-gray-600 dark:text-gray-300 mb-3 leading-relaxed">
+                                            Routes payments to the company master treasury Paybill. Collected funds are credited into your PesaFlow Wallet for manual withdrawal.
+                                        </p>
+                                        <div className="bg-amber-100/60 dark:bg-amber-900/30 rounded-lg p-2.5 border border-amber-300/60 dark:border-amber-800/50 text-[11px] text-amber-900 dark:text-amber-200 space-y-1">
+                                            <p className="font-semibold flex items-center gap-1">
+                                                <AlertTriangle className="w-3.5 h-3.5 text-amber-700 dark:text-amber-300" /> Operational Guidance:
+                                            </p>
+                                            <p className="text-[10px] leading-tight text-amber-800 dark:text-amber-300">
+                                                Funds route to the company account, not your own. Minimize M-Pesa, focus on Cash, and register your own Paybill promptly.
+                                            </p>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -665,9 +725,79 @@ export default function SettingsPage() {
                         )}
 
                         {!formData.useCustomMpesa && user?.role !== 'ADMIN' && (
-                            <div className="flex items-center gap-3 p-4 bg-indigo-50 dark:bg-indigo-900/10 rounded-lg text-indigo-700 dark:text-indigo-300 text-sm">
-                                <ShieldCheck className="w-5 h-5" />
-                                <span>You are currently using <b>Mpesa Connect</b>. Your customers will pay via our shared treasury, and credits will appear in your Mpesa Connect wallet.</span>
+                            <div className="p-5 bg-gradient-to-r from-amber-50 to-amber-100/70 dark:from-amber-950/40 dark:to-amber-900/20 border-2 border-amber-300 dark:border-amber-700/60 rounded-xl space-y-4 shadow-sm animate-in fade-in duration-300">
+                                <div className="flex items-start gap-3">
+                                    <div className="p-2 bg-amber-200/80 dark:bg-amber-800/60 rounded-lg text-amber-800 dark:text-amber-200 shrink-0 mt-0.5">
+                                        <AlertTriangle className="w-5 h-5" />
+                                    </div>
+                                    <div className="space-y-1 flex-1">
+                                        <h4 className="font-bold text-sm text-amber-900 dark:text-amber-200">
+                                            Platform Master Account Active (Company Treasury Mode)
+                                        </h4>
+                                        <p className="text-xs text-amber-800/90 dark:text-amber-300/90 leading-relaxed">
+                                            Customer payments are processed through the company's master M-Pesa integration. Please note these critical settlement conditions:
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1 text-xs">
+                                    <div className="bg-white/95 dark:bg-gray-800/90 p-3 rounded-lg border border-amber-200/80 dark:border-amber-800/50 shadow-xs">
+                                        <div className="flex items-center gap-1.5 font-bold text-gray-900 dark:text-white mb-1">
+                                            <Banknote className="w-4 h-4 text-amber-600" />
+                                            1. Company Paybill Deposit
+                                        </div>
+                                        <p className="text-gray-600 dark:text-gray-400 text-[11px] leading-relaxed">
+                                            Customer payments are received directly into the company's shared Paybill, not your personal or business Till.
+                                        </p>
+                                    </div>
+
+                                    <div className="bg-white/95 dark:bg-gray-800/90 p-3 rounded-lg border border-amber-200/80 dark:border-amber-800/50 shadow-xs">
+                                        <div className="flex items-center gap-1.5 font-bold text-gray-900 dark:text-white mb-1">
+                                            <Wallet className="w-4 h-4 text-emerald-600" />
+                                            2. Wallet Credit & Payouts
+                                        </div>
+                                        <p className="text-gray-600 dark:text-gray-400 text-[11px] leading-relaxed">
+                                            Collected funds are credited to your PesaFlow Wallet balance. You must request a withdrawal to transfer your money.
+                                        </p>
+                                    </div>
+
+                                    <div className="bg-white/95 dark:bg-gray-800/90 p-3 rounded-lg border border-amber-200/80 dark:border-amber-800/50 shadow-xs">
+                                        <div className="flex items-center gap-1.5 font-bold text-amber-800 dark:text-amber-300 mb-1">
+                                            <AlertTriangle className="w-4 h-4 text-amber-600" />
+                                            3. Temporary Fallback: Focus on Cash
+                                        </div>
+                                        <p className="text-gray-600 dark:text-gray-400 text-[11px] leading-relaxed">
+                                            Platform mode is strictly a temporary bridge. To avoid daily cash flow bottlenecks, prioritize Cash payments while on this mode.
+                                        </p>
+                                    </div>
+
+                                    <div className="bg-white/95 dark:bg-gray-800/90 p-3 rounded-lg border border-amber-200/80 dark:border-amber-800/50 shadow-xs">
+                                        <div className="flex items-center gap-1.5 font-bold text-emerald-700 dark:text-emerald-400 mb-1">
+                                            <ShieldCheck className="w-4 h-4 text-emerald-600" />
+                                            4. Highly Recommended
+                                        </div>
+                                        <p className="text-gray-600 dark:text-gray-400 text-[11px] leading-relaxed">
+                                            Apply for your own Safaricom Paybill or Till on the Safaricom Daraja Portal and input your own API credentials to receive funds instantly.
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <div className="pt-2 flex flex-col sm:flex-row items-center justify-between gap-3 border-t border-amber-200/80 dark:border-amber-800/50">
+                                    <span className="text-[11px] text-amber-800 dark:text-amber-300 font-medium">
+                                        Have your own Safaricom credentials ready?
+                                    </span>
+                                    <Button
+                                        type="button"
+                                        size="sm"
+                                        onClick={() => {
+                                            setFormData(prev => ({ ...prev, useCustomMpesa: true }));
+                                            showToast('Switched to Own API Credentials mode', 'success');
+                                        }}
+                                        className="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs flex items-center gap-1.5 shadow-sm"
+                                    >
+                                        <Globe className="w-3.5 h-3.5" /> Switch to Own API Credentials
+                                    </Button>
+                                </div>
                             </div>
                         )}
                     </Card>
@@ -820,6 +950,78 @@ export default function SettingsPage() {
                     </div>
                 </form>
             </div>
+
+            {/* Modal: Confirmation when switching to Mpesa Connect (Platform Account) */}
+            {showPlatformWarningModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-200">
+                    <div className="bg-white dark:bg-gray-900 rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-gray-200 dark:border-gray-800 space-y-4">
+                        <div className="flex items-center gap-3 border-b pb-3 dark:border-gray-800">
+                            <div className="p-2.5 bg-amber-100 dark:bg-amber-900/40 rounded-xl text-amber-700 dark:text-amber-300">
+                                <AlertTriangle className="w-6 h-6" />
+                            </div>
+                            <div>
+                                <h3 className="text-base font-bold text-gray-900 dark:text-white">
+                                    Switch to M-Pesa Connect Platform Mode?
+                                </h3>
+                                <p className="text-xs text-gray-500 dark:text-gray-400">
+                                    Important treasury & settlement notice
+                                </p>
+                            </div>
+                        </div>
+
+                        <div className="space-y-3 text-xs text-gray-700 dark:text-gray-300 leading-relaxed bg-amber-50/70 dark:bg-amber-950/20 p-4 rounded-xl border border-amber-200/80 dark:border-amber-800/40">
+                            <p className="font-semibold text-amber-950 dark:text-amber-200 text-sm">
+                                Please review the operational conditions before switching:
+                            </p>
+                            <ul className="space-y-2 text-gray-700 dark:text-gray-300">
+                                <li className="flex items-start gap-2">
+                                    <span className="font-bold text-amber-700 dark:text-amber-400">1.</span>
+                                    <span><b>Company Treasury Account:</b> All M-Pesa payments will be received directly into the company's shared Paybill, NOT your own business account.</span>
+                                </li>
+                                <li className="flex items-start gap-2">
+                                    <span className="font-bold text-amber-700 dark:text-amber-400">2.</span>
+                                    <span><b>PesaFlow Wallet:</b> Payments will be credited into your PesaFlow Wallet. You must submit a withdrawal request to transfer your money out.</span>
+                                </li>
+                                <li className="flex items-start gap-2">
+                                    <span className="font-bold text-amber-700 dark:text-amber-400">3.</span>
+                                    <span><b>Temporary Last Resort:</b> This option is intended strictly as a temporary bridge while you await your own Paybill/Till approval.</span>
+                                </li>
+                                <li className="flex items-start gap-2">
+                                    <span className="font-bold text-amber-700 dark:text-amber-400">4.</span>
+                                    <span><b>Focus on Cash:</b> While on platform mode, we advise you to prioritize Cash payments and minimize M-Pesa to maintain immediate access to daily working capital.</span>
+                                </li>
+                            </ul>
+                        </div>
+
+                        <div className="text-[11px] text-gray-500 dark:text-gray-400 italic">
+                            By continuing, you acknowledge that customer payments route via the platform company treasury and must be withdrawn from your wallet.
+                        </div>
+
+                        <div className="flex flex-col sm:flex-row items-center justify-end gap-2 pt-2">
+                            <Button
+                                type="button"
+                                variant="outline"
+                                onClick={() => setShowPlatformWarningModal(false)}
+                                className="w-full sm:w-auto text-xs"
+                            >
+                                Keep Own API Credentials (Recommended)
+                            </Button>
+                            <Button
+                                type="button"
+                                onClick={() => {
+                                    setFormData(prev => ({ ...prev, useCustomMpesa: false }));
+                                    setShowPlatformWarningModal(false);
+                                    showToast('Switched to Mpesa Connect (Platform Mode)', 'info');
+                                }}
+                                className="w-full sm:w-auto bg-amber-600 hover:bg-amber-700 text-white font-semibold text-xs"
+                            >
+                                I Understand, Switch to Platform
+                            </Button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </DashboardLayout>
     );
 }
+

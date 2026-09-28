@@ -63,7 +63,11 @@ export const getProfile = async (req: Request, res: Response) => {
             where: { userId: profileUserId },
         });
 
-        res.json(profile || {});
+        const profileData = profile 
+            ? { ...profile, useCustomMpesa: profile.useCustomMpesa ?? true } 
+            : { useCustomMpesa: true };
+
+        res.json(profileData);
     } catch (error) {
         console.error("Get Profile Error:", error);
         res.status(500).json({ error: 'Failed to fetch profile' });

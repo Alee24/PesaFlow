@@ -107,7 +107,7 @@ model BusinessProfile {
   mpesaCertificate        String? @map("mpesa_certificate") @db.Text
   mpesaCallbackUrl        String? @map("mpesa_callback_url")
   mpesaEnv                String? @default("sandbox") @map("mpesa_env")
-  useCustomMpesa          Boolean @default(false) @map("use_custom_mpesa")
+  useCustomMpesa          Boolean @default(true) @map("use_custom_mpesa")
   currency            String? @default("KES")
   vatEnabled          Boolean @default(false)
   vatRate             Float   @default(16.0)
