@@ -1,7 +1,7 @@
 
-# PesaFlow - Installation Guide
+# M-Pesa Connect - Installation Guide
 
-Welcome! This guide will help you install and configure the PesaFlow platform on your server.
+Welcome! This guide will help you install and configure the M-Pesa Connect platform on your server.
 
 ## Quick Installation (The "Easy" Way)
 
@@ -33,7 +33,7 @@ Open your web browser and go to:
 ### 3. Fill in the Details
 The installer will guide you through **4 Steps**:
 
-1.  **Database Config**: Enter your MySQL Host, User, Password, and Database Name (e.g., `pesaflow`). The installer will automatically create the schema.
+1.  **Database Config**: Enter your MySQL Host, User, Password, and Database Name (e.g., `mpesaconnect`). The installer will automatically create the schema.
     *   *Note: If testing locally, you can use the default SQLite setting if you prefer, but MySQL is required for production.*
 2.  **M-Pesa Config**: Enter your **Production** or **Sandbox** credentials.
     *   Consumer Key & Secret
@@ -62,7 +62,7 @@ If you prefer to configure the system manually without the wizard:
 
 ```env
 # Database
-DATABASE_URL="mysql://user:pass@host:3306/pesaflow"
+DATABASE_URL="mysql://user:pass@host:3306/mpesaconnect"
 
 # Security
 JWT_SECRET="complex_secret_key"

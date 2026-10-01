@@ -1,4 +1,4 @@
-# PesaFlow Server Deployment Guide
+# M-Pesa Connect Server Deployment Guide
 
 ## Prerequisites on Your VPS
 
@@ -19,7 +19,7 @@ ssh your-username@your-server-ip
 ### 2. Navigate to Your Project Directory
 
 ```bash
-cd /var/www/pesaflow  # or wherever your project is located
+cd /var/www/mpesaconnect  # or wherever your project is located
 ```
 
 ### 3. Pull Latest Changes
@@ -46,9 +46,9 @@ npx prisma generate
 npm run build
 
 # Restart backend with PM2
-pm2 restart pesaflow-backend
+pm2 restart mpesaconnect-backend
 # OR if not using PM2:
-# systemctl restart pesaflow-backend
+# systemctl restart mpesaconnect-backend
 ```
 
 ### 5. Frontend Deployment
@@ -63,9 +63,9 @@ npm install
 npm run build
 
 # Restart frontend with PM2
-pm2 restart pesaflow-frontend
+pm2 restart mpesaconnect-frontend
 # OR if not using PM2:
-# systemctl restart pesaflow-frontend
+# systemctl restart mpesaconnect-frontend
 ```
 
 ### 6. Verify Services
@@ -75,8 +75,8 @@ pm2 restart pesaflow-frontend
 pm2 status
 
 # View logs
-pm2 logs pesaflow-backend --lines 50
-pm2 logs pesaflow-frontend --lines 50
+pm2 logs mpesaconnect-backend --lines 50
+pm2 logs mpesaconnect-frontend --lines 50
 ```
 
 ## Quick One-Line Deployment
@@ -94,7 +94,7 @@ Make sure your server has the correct `.env` files:
 
 ### Backend `.env`
 ```env
-DATABASE_URL="mysql://user:password@localhost:3306/pesaflow"
+DATABASE_URL="mysql://user:password@localhost:3306/mpesaconnect"
 JWT_SECRET="your-secret-key"
 PORT=5454
 
@@ -146,11 +146,11 @@ npm install -g pm2
 
 # Start backend
 cd backend
-pm2 start dist/server.js --name pesaflow-backend
+pm2 start dist/server.js --name mpesaconnect-backend
 
 # Start frontend
 cd ../frontend
-pm2 start npm --name pesaflow-frontend -- start
+pm2 start npm --name mpesaconnect-frontend -- start
 
 # Save PM2 configuration
 pm2 save
@@ -176,7 +176,7 @@ npx prisma migrate deploy
 ### Backend won't start
 ```bash
 # Check logs
-pm2 logs pesaflow-backend
+pm2 logs mpesaconnect-backend
 
 # Check if port is in use
 netstat -tulpn | grep 5454
@@ -195,7 +195,7 @@ npm run build
 ### Database connection issues
 ```bash
 # Test MySQL connection
-mysql -u your_user -p pesaflow
+mysql -u your_user -p mpesaconnect
 
 # Check DATABASE_URL in .env
 cat backend/.env | grep DATABASE_URL

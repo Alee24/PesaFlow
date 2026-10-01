@@ -24,7 +24,7 @@ if (-not (Test-Path $ENV_FILE)) {
     
     $envContent = @"
 # Database Configuration
-DATABASE_URL="mysql://root:@localhost:3306/pesaflow"
+DATABASE_URL="mysql://root:@localhost:3306/mpesaconnect"
 
 # Server Configuration
 PORT=5454
@@ -47,14 +47,14 @@ SMTP_HOST=smtp.gmail.com
 SMTP_PORT=587
 SMTP_USER=your-email@gmail.com
 SMTP_PASS=your-app-password
-SMTP_FROM_NAME=PesaFlow
-SMTP_FROM_EMAIL=noreply@pesaflow.com
+SMTP_FROM_NAME=M-Pesa Connect
+SMTP_FROM_EMAIL=noreply@mpesaconnect.com
 
 # Frontend URL
 FRONTEND_URL=http://localhost:5054
 
 # License System
-MASTER_LICENSE_KEY=PESAFLOW-MASTER-2024-ENTERPRISE-UNLIMITED
+MASTER_LICENSE_KEY=MPESACONNECT-MASTER-2024-ENTERPRISE-UNLIMITED
 "@
     
     Set-Content -Path $ENV_FILE -Value $envContent
@@ -96,7 +96,7 @@ MASTER_LICENSE_KEY=PESAFLOW-MASTER-2024-ENTERPRISE-UNLIMITED
         Write-Info "  $dbUrlSafe"
     } else {
         Write-Error "DATABASE_URL not found in .env"
-        Write-Info "Add: DATABASE_URL='mysql://root:@localhost:3306/pesaflow'"
+        Write-Info "Add: DATABASE_URL='mysql://root:@localhost:3306/mpesaconnect'"
     }
 }
 

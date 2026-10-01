@@ -1,6 +1,6 @@
 $ErrorActionPreference = "Stop"
 
-Write-Host "🚀 Starting PesaFlow Servers..." -ForegroundColor Green
+Write-Host "🚀 Starting M-Pesa Connect Servers..." -ForegroundColor Green
 
 $backendPath = Join-Path $PSScriptRoot "backend"
 $frontendPath = Join-Path $PSScriptRoot "frontend"

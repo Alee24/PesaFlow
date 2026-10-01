@@ -6,7 +6,7 @@ set -e
 # Configuration
 API_PORT=5454
 WEB_PORT=5054
-APP_NAME="pesaflow"
+APP_NAME="mpesaconnect"
 PROJECT_ROOT="/var/www/mpesaconnect.co.ke"
 
 echo "🚀 Starting Deployment for ${APP_NAME}..."

@@ -10,7 +10,7 @@ echo "HOST=0.0.0.0" >> .env
 grep "PORT=" .env || echo "PORT=5454" >> .env
 
 # Restart server
-pm2 restart pesaflow-api
+pm2 restart mpesaconnect-api
 
 # Check binding
 netstat -tulpn | grep 5454

@@ -1,5 +1,5 @@
 
-# 🚀 PesaFlow - Deployment Update Guide
+# 🚀 M-Pesa Connect - Deployment Update Guide
 
 If you have deployed the application and need to update it with the latest changes (like the new Admin credentials or Database schema updates), follow these steps on your server.
 

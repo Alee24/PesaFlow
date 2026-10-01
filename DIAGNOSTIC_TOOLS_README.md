@@ -1,11 +1,11 @@
-# PesaFlow Diagnostic Tools
+# M-Pesa Connect Diagnostic Tools
 
-This directory contains diagnostic and troubleshooting scripts to help identify and fix connection issues in the PesaFlow application.
+This directory contains diagnostic and troubleshooting scripts to help identify and fix connection issues in the M-Pesa Connect application.
 
 ## 🛠️ Available Tools
 
 ### 1. **diagnose_connection.ps1** - Full System Diagnostic
-**Purpose:** Comprehensive health check of the entire PesaFlow system
+**Purpose:** Comprehensive health check of the entire M-Pesa Connect system
 
 **What it checks:**
 - ✅ Port configuration (.env files)
@@ -74,7 +74,7 @@ This directory contains diagnostic and troubleshooting scripts to help identify 
 .\analyze_logs.ps1
 
 # Analyze specific service
-.\analyze_logs.ps1 -Service "pesaflow-api"
+.\analyze_logs.ps1 -Service "mpesaconnect-api"
 
 # Analyze more lines
 .\analyze_logs.ps1 -Lines 500
@@ -111,7 +111,7 @@ This directory contains diagnostic and troubleshooting scripts to help identify 
 
 **Common Causes:**
 1. **Backend API not running**
-   - Fix: `pm2 restart pesaflow-api`
+   - Fix: `pm2 restart mpesaconnect-api`
    
 2. **Wrong PORT in .env**
    - Fix: `.\quick_fix.ps1`
@@ -141,7 +141,7 @@ netstat -ano | findstr :5454
 taskkill /PID <PID> /F
 
 # Restart service
-pm2 restart pesaflow-api
+pm2 restart mpesaconnect-api
 ```
 
 ---
@@ -168,7 +168,7 @@ npx prisma db push
 Start-Service MySQL
 
 # Verify connection in .env
-# DATABASE_URL="mysql://root:@localhost:3306/pesaflow"
+# DATABASE_URL="mysql://root:@localhost:3306/mpesaconnect"
 
 # Test connection
 cd backend
@@ -185,7 +185,7 @@ npx prisma db push
 
 **Diagnosis:**
 ```powershell
-.\analyze_logs.ps1 -Service "pesaflow-api"
+.\analyze_logs.ps1 -Service "mpesaconnect-api"
 ```
 
 **Solution:**
@@ -194,7 +194,7 @@ cd backend
 npm install
 npx prisma generate
 npm run build
-pm2 restart pesaflow-api
+pm2 restart mpesaconnect-api
 ```
 
 ---
@@ -249,7 +249,7 @@ pm2 save
 ### Backend .env (Required Settings)
 ```env
 # Database
-DATABASE_URL="mysql://root:@localhost:3306/pesaflow"
+DATABASE_URL="mysql://root:@localhost:3306/mpesaconnect"
 
 # Server
 PORT=5454
@@ -283,8 +283,8 @@ NEXT_PUBLIC_API_URL=http://localhost:5454
 
 | Service | Port | Status Check |
 |---------|------|--------------|
-| PesaFlow API | 5454 | `curl http://localhost:5454/api/health` |
-| PesaFlow Web | 5054 | `curl http://localhost:5054` |
+| M-Pesa Connect API | 5454 | `curl http://localhost:5454/api/health` |
+| M-Pesa Connect Web | 5054 | `curl http://localhost:5054` |
 | M-Clinic API | 3434 | `curl http://localhost:3434/api/health` |
 | M-Clinic Web | 3034 | `curl http://localhost:3034` |
 | MySQL | 3306 | `Test-NetConnection localhost -Port 3306` |
@@ -311,8 +311,8 @@ npm run build
 
 # 3. Start services
 cd ..
-pm2 start backend/dist/server.js --name pesaflow-api
-pm2 start npm --name pesaflow-web -- start -- -p 5054
+pm2 start backend/dist/server.js --name mpesaconnect-api
+pm2 start npm --name mpesaconnect-web -- start -- -p 5054
 pm2 save
 
 # 4. Verify
@@ -391,4 +391,4 @@ Attach the generated reports:
 
 **Last Updated:** 2026-01-17
 **Version:** 1.0
-**Maintainer:** PesaFlow Development Team
+**Maintainer:** M-Pesa Connect Development Team

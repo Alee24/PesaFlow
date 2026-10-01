@@ -1,10 +1,10 @@
 #!/bin/bash
 set -e
 
-# Mpesa Connect / PesaFlow - Installer & Setup Script
+# Mpesa Connect / M-Pesa Connect - Installer & Setup Script
 # Usage: ./install.sh
 
-echo "🚀 Starting PesaFlow Installation..."
+echo "🚀 Starting M-Pesa Connect Installation..."
 
 # 0. Permissions
 echo "🔑 Making shell scripts executable..."
@@ -69,8 +69,8 @@ echo "🌱 Seeding Database (Default Users)..."
 npx ts-node prisma/seed.ts
 
 echo "🔄 Starting Backend with PM2..."
-pm2 delete pesaflow-backend 2>/dev/null || true
-pm2 start dist/app.js --name pesaflow-backend || pm2 start dist/server.js --name pesaflow-backend
+pm2 delete mpesaconnect-backend 2>/dev/null || true
+pm2 start dist/app.js --name mpesaconnect-backend || pm2 start dist/server.js --name mpesaconnect-backend
 
 cd ..
 
@@ -86,13 +86,13 @@ echo "🏗️  Building Frontend..."
 npm run build
 
 echo "🔄 Starting Frontend with PM2..."
-pm2 delete pesaflow-frontend 2>/dev/null || true
-pm2 start npm --name pesaflow-frontend -- start -- -p 3000
+pm2 delete mpesaconnect-frontend 2>/dev/null || true
+pm2 start npm --name mpesaconnect-frontend -- start -- -p 3000
 
 # 4. Finalize
 echo "💾 Saving PM2 Process List..."
 pm2 save
 
 echo "🎉 Installation Complete!"
-echo "👉 Backend running (pesaflow-backend)"
-echo "👉 Frontend running (pesaflow-frontend)"
+echo "👉 Backend running (mpesaconnect-backend)"
+echo "👉 Frontend running (mpesaconnect-frontend)"

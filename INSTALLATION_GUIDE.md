@@ -1,7 +1,7 @@
-# Installation Guide for PesaFlow
+# Installation Guide for M-Pesa Connect
 
 ## Overview  
-This guide provides step-by-step instructions for installing and configuring the PesaFlow application in both local development and production environments.
+This guide provides step-by-step instructions for installing and configuring the M-Pesa Connect application in both local development and production environments.
 
 ## Table of Contents
 1. [System Requirements](#system-requirements)
@@ -24,11 +24,11 @@ This guide provides step-by-step instructions for installing and configuring the
 ## Environment Setup  
 1. **Clone the Repository:**  
    ```bash
-   git clone https://github.com/Alee24/PesaFlow.git
+   git clone https://github.com/Alee24/M-Pesa Connect.git
    ```  
 2. **Navigate to the Project Directory:**  
    ```bash
-   cd PesaFlow
+   cd M-Pesa Connect
    ```  
 3. **Install Dependencies:**  
    ```bash
@@ -100,4 +100,4 @@ This guide provides step-by-step instructions for installing and configuring the
    - If the server does not start, check the terminal for specific error messages and resolve them accordingly.
 
 ## Conclusion  
-Following these steps should help you successfully install and run the PesaFlow application in both local and production environments. For further assistance, please refer to the project documentation or contact the support team.
+Following these steps should help you successfully install and run the M-Pesa Connect application in both local and production environments. For further assistance, please refer to the project documentation or contact the support team.

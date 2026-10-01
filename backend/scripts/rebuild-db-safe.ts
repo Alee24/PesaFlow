@@ -11,9 +11,9 @@ const p = new PrismaClient({
 
 async function run() {
     console.log('Connecting to MySQL server...');
-    await p.$executeRawUnsafe('DROP DATABASE IF EXISTS pesaflow');
-    console.log('Database pesaflow dropped.');
-    await p.$executeRawUnsafe('CREATE DATABASE pesaflow');
-    console.log('Database pesaflow created.');
+    await p.$executeRawUnsafe('DROP DATABASE IF EXISTS mpesaconnect');
+    console.log('Database mpesaconnect dropped.');
+    await p.$executeRawUnsafe('CREATE DATABASE mpesaconnect');
+    console.log('Database mpesaconnect created.');
 }
 run().catch(e => console.error(e)).finally(() => p.$disconnect());

@@ -2,7 +2,7 @@
 
 echo "🚀 RESTARTING MpesaConnect Services..."
 # RESTART EVERYTHING
-pm2 restart pesaflow-api pesaflow-web
+pm2 restart mpesaconnect-api mpesaconnect-web
 
 # WAIT FOR STARTUP (10s)
 echo "----------------------------------------"
@@ -24,7 +24,7 @@ elif curl -s -I http://localhost:5454/ > /dev/null; then
 else
     echo "❌ API is NOT responding on port 5454."
     echo "   Checking logs..."
-    pm2 logs pesaflow-api --lines 20 --nostream
+    pm2 logs mpesaconnect-api --lines 20 --nostream
 fi
 
 # 3. VERIFY WEB RESPONSE (Port 5054)
@@ -35,6 +35,6 @@ if curl -s -I http://localhost:5054/ > /dev/null; then
 else
     echo "❌ Web App is NOT responding on port 5054."
     echo "   Checking logs..."
-    pm2 logs pesaflow-web --lines 20 --nostream
+    pm2 logs mpesaconnect-web --lines 20 --nostream
 fi
 echo "----------------------------------------"

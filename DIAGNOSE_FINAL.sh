@@ -16,13 +16,13 @@ lsof -i :5454 || echo "No process on 5454"
 
 # Check process list for node
 echo -e "\n=== Node Processes ==="
-ps aux | grep node | grep pesaflow-api
+ps aux | grep node | grep mpesaconnect-api
 
 # Check PM2 detailed status
 echo -e "\n=== PM2 Details ==="
-pm2 show pesaflow-api | grep "exec mode"
-pm2 show pesaflow-api | grep "interpreter"
-pm2 show pesaflow-api | grep "cwd"
+pm2 show mpesaconnect-api | grep "exec mode"
+pm2 show mpesaconnect-api | grep "interpreter"
+pm2 show mpesaconnect-api | grep "cwd"
 
 # Attempt manual binding test (Node one-liner)
 echo -e "\n=== Test Bind ==="

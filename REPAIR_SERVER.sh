@@ -16,7 +16,7 @@ rm -rf node_modules dist .next
 ## Rebuild and Restart
 npm install
 npm run build
-pm2 restart pesaflow-api
+pm2 restart mpesaconnect-api
 
 ## Verify Logs
-pm2 logs pesaflow-api --lines 50
+pm2 logs mpesaconnect-api --lines 50

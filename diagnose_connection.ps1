@@ -1,5 +1,5 @@
 # ============================================
-# PesaFlow Connection Diagnostic Script
+# M-Pesa Connect Connection Diagnostic Script
 # ============================================
 # This script checks all connection settings,
 # logs, and identifies root causes of errors
@@ -26,7 +26,7 @@ $OUTPUT_FILE = "$PROJECT_ROOT\diagnostic_report_$TIMESTAMP.txt"
 # Start logging
 Start-Transcript -Path $OUTPUT_FILE -Append
 
-Write-Header "PESAFLOW CONNECTION DIAGNOSTIC"
+Write-Header "MPESACONNECT CONNECTION DIAGNOSTIC"
 Write-Info "Timestamp: $(Get-Date)"
 Write-Info "Report will be saved to: $OUTPUT_FILE"
 
@@ -213,14 +213,14 @@ if ($pm2Cmd) {
     Write-Info "PM2 Process List:"
     Write-Host $pm2List -ForegroundColor White
     
-    # Get recent logs for pesaflow-api
+    # Get recent logs for mpesaconnect-api
     Write-Info "`nRecent Backend API logs:"
-    $apiLogs = & pm2 logs pesaflow-api --lines 50 --nostream 2>&1
+    $apiLogs = & pm2 logs mpesaconnect-api --lines 50 --nostream 2>&1
     Write-Host $apiLogs -ForegroundColor White
     
-    # Get recent logs for pesaflow-web
+    # Get recent logs for mpesaconnect-web
     Write-Info "`nRecent Frontend logs:"
-    $webLogs = & pm2 logs pesaflow-web --lines 50 --nostream 2>&1
+    $webLogs = & pm2 logs mpesaconnect-web --lines 50 --nostream 2>&1
     Write-Host $webLogs -ForegroundColor White
     
 } else {

@@ -7,10 +7,10 @@ cd /var/www/mpesaconnect.co.ke || exit
 
 # 1. Stop any conflicting PM2 processes
 echo "🛑 Stopping PM2 services to avoid port conflicts..."
-pm2 delete pesaflow-api 2>/dev/null || true
-pm2 delete pesaflow-web 2>/dev/null || true
-pm2 delete pesaflow-backend 2>/dev/null || true
-pm2 delete pesaflow-frontend 2>/dev/null || true
+pm2 delete mpesaconnect-api 2>/dev/null || true
+pm2 delete mpesaconnect-web 2>/dev/null || true
+pm2 delete mpesaconnect-backend 2>/dev/null || true
+pm2 delete mpesaconnect-frontend 2>/dev/null || true
 pm2 save
 
 # 2. Pull latest code

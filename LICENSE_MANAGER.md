@@ -1,6 +1,6 @@
-# 🔐 PesaFlow License Management Guide
+# 🔐 M-Pesa Connect License Management Guide
 
-This guide explains how to generate, manage, and troubleshoot Enterprise license keys for the PesaFlow system.
+This guide explains how to generate, manage, and troubleshoot Enterprise license keys for the M-Pesa Connect system.
 
 ## 1. Generating License Keys (CLI)
 

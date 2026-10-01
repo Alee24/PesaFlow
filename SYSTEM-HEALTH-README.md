@@ -64,7 +64,7 @@ npx prisma generate
 npm run build
 
 # 4. Restart backend
-pm2 restart pesaflow-backend
+pm2 restart mpesaconnect-backend
 
 # 5. Test the endpoint
 curl -H "Authorization: Bearer YOUR_ADMIN_TOKEN" \

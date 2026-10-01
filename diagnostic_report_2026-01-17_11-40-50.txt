@@ -19,7 +19,7 @@ SerializationVersion: 1.1.0.1
 Transcript started, output file is c:\Users\Metto\Desktop\Anti gravity\diagnostic_report_2026-01-17_11-40-50.txt
 
 ================================================
-PESAFLOW CONNECTION DIAGNOSTIC
+MPESACONNECT CONNECTION DIAGNOSTIC
 ================================================
 [INFO] Timestamp: 01/17/2026 11:40:50
 [INFO] Report will be saved to: c:\Users\Metto\Desktop\Anti gravity\diagnostic_report_2026-01-17_11-40-50.txt
@@ -30,14 +30,14 @@ PESAFLOW CONNECTION DIAGNOSTIC
 [OK] Backend .env file found
 [INFO] Backend .env contents:
   # Database Configuration
-  DATABASE_URL="mysql://root:@localhost:3306/pesaflow"
+  DATABASE_URL="mysql://root:@localhost:3306/mpesaconnect"
   #DATABASE_URL="mysql://m-cl-app:Mclinic%40App2023%3F@localhost:3306/mpesaconnect"
   PORT=3024
   SMTP_PORT="587"
   SMTP_PORT="587"
 [ERROR] Backend PORT is 3024 but should be 5454
 [OK] DATABASE_URL found in .env
-[INFO]   Connection: "mysql://root:@localhost:3306/pesaflow"
+[INFO]   Connection: "mysql://root:@localhost:3306/mpesaconnect"
 [WARN] Frontend .env.local not found
 
 ================================================
@@ -62,10 +62,10 @@ Checking listening ports...
 ΓöîΓöÇΓöÇΓöÇΓöÇΓö¼ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓö¼ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓö¼ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓö¼ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓö¼ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓö¼ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓö¼ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓö¼ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓö¼ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓö¼ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓö¼ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓö¼ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÉ Γöé id Γöé name           Γöé namespace   Γöé version Γöé mode    Γöé pid      Γöé uptime Γöé Γå║    Γöé status    Γöé cpu      Γöé mem      Γöé user     Γöé watching Γöé Γö£ΓöÇΓöÇΓöÇΓöÇΓö╝ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓö╝ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓö╝ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓö╝ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓö╝ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓö╝ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓö╝ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓö╝ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓö╝ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓö╝ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓö╝ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓö╝ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöñ Γöé 0  Γöé mclinic-api    Γöé default     Γöé N/A     Γöé fork    Γöé 0        Γöé 0      Γöé 15   Γöé errored   Γöé 0%       Γöé 0b       Γöé Metto    Γöé disabled Γöé ΓööΓöÇΓöÇΓöÇΓöÇΓö┤ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓö┤ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓö┤ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓö┤ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓö┤ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓö┤ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓö┤ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓö┤ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓö┤ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓö┤ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓö┤ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓö┤ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÿ
 [INFO] 
 Recent Backend API logs:
-[TAILING] Tailing last 50 lines for [pesaflow-api] process (change the value with --lines option)
+[TAILING] Tailing last 50 lines for [mpesaconnect-api] process (change the value with --lines option)
 [INFO] 
 Recent Frontend logs:
-[TAILING] Tailing last 50 lines for [pesaflow-web] process (change the value with --lines option)
+[TAILING] Tailing last 50 lines for [mpesaconnect-web] process (change the value with --lines option)
 
 ================================================
 5. BUILD STATUS CHECK

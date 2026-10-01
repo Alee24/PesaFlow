@@ -10,7 +10,7 @@ sed -i '/PORT=/d' .env
 echo "PORT=3002" >> .env
 
 # Restart the backend with the new port
-pm2 restart pesaflow-api
+pm2 restart mpesaconnect-api
 
 # Check binding (should show 0.0.0.0:3002)
 netstat -tulpn | grep 3002

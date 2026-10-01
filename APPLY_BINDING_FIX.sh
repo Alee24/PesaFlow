@@ -14,7 +14,7 @@ npm run build
 grep "HOST=" .env || echo "HOST=0.0.0.0" >> .env
 
 # Restart server
-pm2 restart pesaflow-api
+pm2 restart mpesaconnect-api
 
 # Check status
-pm2 logs pesaflow-api --lines 50
+pm2 logs mpesaconnect-api --lines 50

@@ -12,10 +12,10 @@ git pull origin main
 ## Update backend
 cd backend
 npm install
-pm2 restart pesaflow-api
+pm2 restart mpesaconnect-api
 
 ## Check PM2 status
 pm2 status
 
 ## View logs if needed
-pm2 logs pesaflow-api --lines 50
+pm2 logs mpesaconnect-api --lines 50

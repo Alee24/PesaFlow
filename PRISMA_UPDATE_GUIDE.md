@@ -38,16 +38,16 @@ mysql -u your_username -p mpesaconnect -e "ALTER TABLE business_profiles ADD COL
 npx prisma generate
 
 # Restart backend
-pm2 restart pesaflow-api
+pm2 restart mpesaconnect-api
 
 # Check logs
-pm2 logs pesaflow-api --lines 20
+pm2 logs mpesaconnect-api --lines 20
 ```
 
 ## Step 3: Clean Up Duplicate PM2 Processes
 
 ```bash
-# Delete duplicate pesaflow-web instances
+# Delete duplicate mpesaconnect-web instances
 pm2 delete 6
 pm2 delete 7
 

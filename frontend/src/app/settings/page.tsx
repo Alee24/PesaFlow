@@ -570,7 +570,7 @@ export default function SettingsPage() {
                                             )}
                                         </div>
                                         <p className="text-xs text-gray-600 dark:text-gray-300 mb-3 leading-relaxed">
-                                            Routes payments to the company master treasury Paybill. Collected funds are credited into your PesaFlow Wallet for manual withdrawal.
+                                            Routes payments to the company master treasury Paybill. Collected funds are credited into your M-Pesa Connect Wallet for manual withdrawal.
                                         </p>
                                         <div className="bg-amber-100/60 dark:bg-amber-900/30 rounded-lg p-2.5 border border-amber-300/60 dark:border-amber-800/50 text-[11px] text-amber-900 dark:text-amber-200 space-y-1">
                                             <p className="font-semibold flex items-center gap-1">
@@ -687,7 +687,7 @@ export default function SettingsPage() {
                                                 className="px-3 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-500 bg-white dark:bg-gray-800 dark:text-white dark:border-gray-700 font-mono text-xs"
                                             />
                                             <p className="text-[11px] text-gray-500 dark:text-gray-400">
-                                                If provided, PesaFlow transmits this credential directly to Safaricom Daraja without re-encrypting.
+                                                If provided, M-Pesa Connect transmits this credential directly to Safaricom Daraja without re-encrypting.
                                             </p>
                                         </div>
                                     </div>
@@ -757,7 +757,7 @@ export default function SettingsPage() {
                                             2. Wallet Credit & Payouts
                                         </div>
                                         <p className="text-gray-600 dark:text-gray-400 text-[11px] leading-relaxed">
-                                            Collected funds are credited to your PesaFlow Wallet balance. You must request a withdrawal to transfer your money.
+                                            Collected funds are credited to your M-Pesa Connect Wallet balance. You must request a withdrawal to transfer your money.
                                         </p>
                                     </div>
 
@@ -980,7 +980,7 @@ export default function SettingsPage() {
                                 </li>
                                 <li className="flex items-start gap-2">
                                     <span className="font-bold text-amber-700 dark:text-amber-400">2.</span>
-                                    <span><b>PesaFlow Wallet:</b> Payments will be credited into your PesaFlow Wallet. You must submit a withdrawal request to transfer your money out.</span>
+                                    <span><b>M-Pesa Connect Wallet:</b> Payments will be credited into your M-Pesa Connect Wallet. You must submit a withdrawal request to transfer your money out.</span>
                                 </li>
                                 <li className="flex items-start gap-2">
                                     <span className="font-bold text-amber-700 dark:text-amber-400">3.</span>

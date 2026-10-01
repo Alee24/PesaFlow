@@ -6,7 +6,7 @@ echo -e "\n=== Port 5454 Usage ==="
 netstat -tlpn | grep 5454
 
 echo -e "\n=== Backend Logs (Last 50 lines) ==="
-pm2 logs pesaflow-api --lines 50 --nostream
+pm2 logs mpesaconnect-api --lines 50 --nostream
 
 echo -e "\n=== Apache Error Logs (Last 20 lines) ==="
 tail -n 20 /var/log/apache2/error.log

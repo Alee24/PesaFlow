@@ -9,10 +9,10 @@ async function run() {
         password: '' // from env normally, but root/empty based on the .env I saw
     });
     
-    console.log('Dropping database pesaflow...');
-    await conn.query('DROP DATABASE IF EXISTS pesaflow');
-    console.log('Creating database pesaflow...');
-    await conn.query('CREATE DATABASE pesaflow');
+    console.log('Dropping database mpesaconnect...');
+    await conn.query('DROP DATABASE IF EXISTS mpesaconnect');
+    console.log('Creating database mpesaconnect...');
+    await conn.query('CREATE DATABASE mpesaconnect');
     console.log('Database reconstructed.');
     await conn.end();
 }

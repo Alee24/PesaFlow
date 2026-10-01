@@ -43,11 +43,11 @@ sudo systemctl restart apache2
 ```bash
 # Backend (port 3002)
 cd /var/www/mpesaconnect.co.ke/backend
-PORT=3002 pm2 start dist/server.js --name pesaflow-backend
+PORT=3002 pm2 start dist/server.js --name mpesaconnect-backend
 
 # Frontend (port 3001)
 cd /var/www/mpesaconnect.co.ke/frontend
-PORT=3001 pm2 start npm --name pesaflow-frontend -- start
+PORT=3001 pm2 start npm --name mpesaconnect-frontend -- start
 
 # Save PM2 configuration
 pm2 save
@@ -56,10 +56,10 @@ pm2 save
 **Manage services**:
 ```bash
 pm2 list                    # List all services
-pm2 logs pesaflow-backend   # View backend logs
-pm2 logs pesaflow-frontend  # View frontend logs
-pm2 restart pesaflow-backend pesaflow-frontend  # Restart services
-pm2 stop pesaflow-backend pesaflow-frontend     # Stop services
+pm2 logs mpesaconnect-backend   # View backend logs
+pm2 logs mpesaconnect-frontend  # View frontend logs
+pm2 restart mpesaconnect-backend mpesaconnect-frontend  # Restart services
+pm2 stop mpesaconnect-backend mpesaconnect-frontend     # Stop services
 ```
 
 ### 4. Deployment
@@ -131,14 +131,14 @@ sudo tail -50 /var/log/apache2/mpesaconnect_ssl_error.log
 ### PM2 issues
 ```bash
 # Delete specific processes and start fresh
-pm2 delete pesaflow-backend pesaflow-frontend
+pm2 delete mpesaconnect-backend mpesaconnect-frontend
 
 # Start services again
 cd /var/www/mpesaconnect.co.ke/backend
-PORT=3002 pm2 start dist/server.js --name pesaflow-backend
+PORT=3002 pm2 start dist/server.js --name mpesaconnect-backend
 
 cd ../frontend
-PORT=3001 pm2 start npm --name pesaflow-frontend -- start
+PORT=3001 pm2 start npm --name mpesaconnect-frontend -- start
 
 pm2 save
 ```
@@ -156,7 +156,7 @@ pm2 save
 
 ```bash
 # Restart everything
-pm2 restart pesaflow-backend pesaflow-frontend && sudo systemctl restart apache2
+pm2 restart mpesaconnect-backend mpesaconnect-frontend && sudo systemctl restart apache2
 
 # View all logs
 pm2 logs

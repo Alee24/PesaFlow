@@ -10,7 +10,7 @@ services:
     volumes:
       - mysql_data:/var/lib/mysql
     networks:
-      - pesaflow_net
+      - mpesaconnect_net
 
   backend:
     build:
@@ -26,7 +26,7 @@ services:
     ports:
       - "11399:2365"
     networks:
-      - pesaflow_net
+      - mpesaconnect_net
     volumes:
       - uploads_data:/app/public/uploads
 
@@ -47,10 +47,10 @@ services:
     ports:
       - "11398:3652"
     networks:
-      - pesaflow_net
+      - mpesaconnect_net
 
 networks:
-  pesaflow_net:
+  mpesaconnect_net:
     driver: bridge
 
 volumes:

@@ -3,31 +3,31 @@
 ## Full Deployment (Pull from Git + Rebuild)
 
 ```bash
-cd /var/www/mpesaconnect.co.ke && git fetch origin && git reset --hard origin/main && cd backend && npm install && npx prisma generate && npx prisma db push --accept-data-loss && npm run build && pm2 delete pesaflow-api || true && pm2 start dist/server.js --name pesaflow-api && cd ../frontend && npm install && npm run build && pm2 delete pesaflow-web || true && pm2 start npm --name pesaflow-web -- start -- -p 5054 && pm2 save && pm2 status
+cd /var/www/mpesaconnect.co.ke && git fetch origin && git reset --hard origin/main && cd backend && npm install && npx prisma generate && npx prisma db push --accept-data-loss && npm run build && pm2 delete mpesaconnect-api || true && pm2 start dist/server.js --name mpesaconnect-api && cd ../frontend && npm install && npm run build && pm2 delete mpesaconnect-web || true && pm2 start npm --name mpesaconnect-web -- start -- -p 5054 && pm2 save && pm2 status
 ```
 
 ## Quick Restart (No Rebuild)
 
 ```bash
-pm2 restart pesaflow-api && pm2 restart pesaflow-web && pm2 status
+pm2 restart mpesaconnect-api && pm2 restart mpesaconnect-web && pm2 status
 ```
 
 ## Backend Only
 
 ```bash
-cd /var/www/mpesaconnect.co.ke && git pull && cd backend && npm install && npx prisma generate && npm run build && pm2 restart pesaflow-api && pm2 logs pesaflow-api --lines 50
+cd /var/www/mpesaconnect.co.ke && git pull && cd backend && npm install && npx prisma generate && npm run build && pm2 restart mpesaconnect-api && pm2 logs mpesaconnect-api --lines 50
 ```
 
 ## Frontend Only
 
 ```bash
-cd /var/www/mpesaconnect.co.ke && git pull && cd frontend && npm install && npm run build && pm2 restart pesaflow-web && pm2 logs pesaflow-web --lines 50
+cd /var/www/mpesaconnect.co.ke && git pull && cd frontend && npm install && npm run build && pm2 restart mpesaconnect-web && pm2 logs mpesaconnect-web --lines 50
 ```
 
 ## Database Only
 
 ```bash
-cd /var/www/mpesaconnect.co.ke/backend && npx prisma generate && npx prisma db push --accept-data-loss && pm2 restart pesaflow-api
+cd /var/www/mpesaconnect.co.ke/backend && npx prisma generate && npx prisma db push --accept-data-loss && pm2 restart mpesaconnect-api
 ```
 
 ## Check Status
@@ -39,11 +39,11 @@ pm2 status && pm2 logs --lines 20 --nostream
 ## View Logs
 
 ```bash
-pm2 logs pesaflow-api --lines 100
+pm2 logs mpesaconnect-api --lines 100
 ```
 
 ```bash
-pm2 logs pesaflow-web --lines 100
+pm2 logs mpesaconnect-web --lines 100
 ```
 
 ```bash
@@ -65,7 +65,7 @@ pm2 start all
 ## Delete and Recreate
 
 ```bash
-pm2 delete pesaflow-api pesaflow-web && cd /var/www/mpesaconnect.co.ke/backend && pm2 start dist/server.js --name pesaflow-api && cd ../frontend && pm2 start npm --name pesaflow-web -- start -- -p 5054 && pm2 save
+pm2 delete mpesaconnect-api mpesaconnect-web && cd /var/www/mpesaconnect.co.ke/backend && pm2 start dist/server.js --name mpesaconnect-api && cd ../frontend && pm2 start npm --name mpesaconnect-web -- start -- -p 5054 && pm2 save
 ```
 
 ## Fix Port in .env
@@ -123,5 +123,5 @@ cd /var/www/mpesaconnect.co.ke/backend && npm cache clean --force && cd ../front
 ## Reset Everything
 
 ```bash
-cd /var/www/mpesaconnect.co.ke && git fetch origin && git reset --hard origin/main && pm2 delete all || true && cd backend && rm -rf node_modules dist && npm install && npx prisma generate && npx prisma db push --accept-data-loss && npm run build && pm2 start dist/server.js --name pesaflow-api && cd ../frontend && rm -rf node_modules .next && npm install && npm run build && pm2 start npm --name pesaflow-web -- start -- -p 5054 && pm2 save && pm2 status
+cd /var/www/mpesaconnect.co.ke && git fetch origin && git reset --hard origin/main && pm2 delete all || true && cd backend && rm -rf node_modules dist && npm install && npx prisma generate && npx prisma db push --accept-data-loss && npm run build && pm2 start dist/server.js --name mpesaconnect-api && cd ../frontend && rm -rf node_modules .next && npm install && npm run build && pm2 start npm --name mpesaconnect-web -- start -- -p 5054 && pm2 save && pm2 status
 ```

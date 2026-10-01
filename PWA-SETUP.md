@@ -108,7 +108,7 @@ After pushing to GitHub, deploy:
 cd /var/www/mpesaconnect.co.ke/frontend
 git pull origin main
 npm run build
-pm2 restart pesaflow-frontend
+pm2 restart mpesaconnect-frontend
 ```
 
 ## Verification

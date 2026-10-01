@@ -21,10 +21,10 @@ sed -i '/loyalty/d' src/app.ts
 npm run build
 
 # Start backend
-pm2 start dist/server.js --name pesaflow-api
+pm2 start dist/server.js --name mpesaconnect-api
 
 # Check status
-pm2 logs pesaflow-api --lines 20
+pm2 logs mpesaconnect-api --lines 20
 ```
 
 ## Solution 2: Add Loyalty Tables (Proper Fix)
@@ -78,7 +78,7 @@ EOF
 # Then rebuild
 npx prisma generate
 npm run build
-pm2 restart pesaflow-api
+pm2 restart mpesaconnect-api
 ```
 
 ## Recommended: Use Solution 1 for now
