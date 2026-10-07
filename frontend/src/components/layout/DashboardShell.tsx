@@ -4,7 +4,7 @@
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import {
-    LayoutDashboard, ShoppingCart, Package, CreditCard, ArrowLeftRight, Settings,
+    LayoutDashboard, ShoppingCart, Package, CreditCard, Settings,
     LogOut, User, Store, FileText, Bell, X, CheckCircle, AlertCircle, Info, Lock,
     ShieldCheck, TrendingUp, BarChart3, Users, MessageSquare, Key, Globe,
     ChevronRight, Receipt, Zap, Building2, Smartphone, QrCode, Activity
@@ -42,7 +42,6 @@ export const navSections = [
             { name: 'M-Pesa Services', href: '/mpesa-services', icon: Activity },
             { name: 'M-Pesa QR Generator', href: '/qr-generator', icon: QrCode },
             { name: 'Invoices', href: '/invoices', icon: FileText, feature: 'invoices' },
-            { name: 'Bulk Payments', href: '/bulk-payments', icon: ArrowLeftRight, feature: 'MPESA_BULK' },
         ]
     },
     {
