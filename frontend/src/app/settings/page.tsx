@@ -8,7 +8,8 @@ import { Button } from '@/components/ui/Button';
 import Toast from '@/components/ui/Toast';
 import api from '@/lib/api';
 import { getImageUrl } from '@/lib/utils';
-import { CreditCard, ShieldCheck, CheckCircle2, Globe, Lock, Settings as SettingsIcon, KeyRound, ExternalLink, HelpCircle, Info, AlertTriangle, Banknote } from 'lucide-react';
+import { CreditCard, ShieldCheck, CheckCircle2, Globe, Lock, Settings as SettingsIcon, KeyRound, ExternalLink, HelpCircle, Info, AlertTriangle, Banknote, Smartphone } from 'lucide-react';
+import MpesaStkGuideModal from '@/components/mpesa/MpesaStkGuideModal';
 
 export default function SettingsPage() {
     const [formData, setFormData] = useState({
@@ -70,6 +71,7 @@ export default function SettingsPage() {
     });
 
     // Test States
+    const [showStkGuideModal, setShowStkGuideModal] = useState(false);
     const [mpesaTestStatus, setMpesaTestStatus] = useState<'idle' | 'success' | 'error'>('idle');
     const [mpesaTestMessage, setMpesaTestMessage] = useState('');
 
@@ -467,19 +469,54 @@ export default function SettingsPage() {
 
                     {/* M-Pesa Settings */}
                     <Card className="p-6">
-                        <div className="flex justify-between items-center mb-6 border-b pb-4">
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 border-b pb-4">
                             <div>
                                 <h2 className="text-xl font-semibold text-gray-800 dark:text-white">M-Pesa Payments Integration</h2>
                                 <p className="text-sm text-gray-500 mt-1">Configure your direct Safaricom Daraja API credentials. Customer payments settle directly into your own Paybill or Till.</p>
                             </div>
-                            <div className="flex items-center gap-4">
-                                <span className={`text-xs px-2 py-1 rounded font-bold ${formData.mpesaEnv === 'production' ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800'}`}>
+                            <div className="flex items-center gap-3">
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => setShowStkGuideModal(true)}
+                                    className="flex items-center gap-1.5 border-emerald-300 text-emerald-700 hover:bg-emerald-50 dark:border-emerald-700 dark:text-emerald-300 dark:hover:bg-emerald-950/40 text-xs"
+                                >
+                                    <HelpCircle className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+                                    <span>STK Push Guide</span>
+                                </Button>
+                                <span className={`text-xs px-2.5 py-1 rounded-full font-bold ${formData.mpesaEnv === 'production' ? 'bg-red-100 text-red-800 dark:bg-red-950 dark:text-red-300' : 'bg-green-100 text-green-800 dark:bg-green-950 dark:text-green-300'}`}>
                                     {formData.mpesaEnv === 'production' ? 'PRODUCTION' : 'SANDBOX'}
                                 </span>
                             </div>
                         </div>
 
                         <div className="space-y-6">
+                            {/* STK Push Requirements & Support Banner */}
+                            <div className="p-3.5 rounded-xl bg-gradient-to-r from-emerald-50 via-teal-50/60 to-white dark:from-emerald-950/30 dark:via-zinc-900 dark:to-zinc-900 border border-emerald-200 dark:border-emerald-800/60 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                                <div className="flex items-center gap-3">
+                                    <div className="p-2 bg-emerald-600 text-white rounded-lg shadow-sm shrink-0">
+                                        <Smartphone className="w-4 h-4" />
+                                    </div>
+                                    <div>
+                                        <p className="text-xs sm:text-sm font-semibold text-emerald-950 dark:text-emerald-200">
+                                            Need help setting up M-Pesa STK Push?
+                                        </p>
+                                        <p className="text-[11px] sm:text-xs text-emerald-800/80 dark:text-emerald-400">
+                                            Learn what credentials are needed, get official Safaricom Daraja links, or request setup support from our team.
+                                        </p>
+                                    </div>
+                                </div>
+                                <Button
+                                    type="button"
+                                    size="sm"
+                                    onClick={() => setShowStkGuideModal(true)}
+                                    className="bg-emerald-600 hover:bg-emerald-700 text-white shrink-0 text-xs shadow-sm flex items-center gap-1.5"
+                                >
+                                    <HelpCircle className="w-3.5 h-3.5" />
+                                    <span>Requirements &amp; Setup Guide</span>
+                                </Button>
+                            </div>
                             {/* Status Banner */}
                             <div className={`p-4 rounded-lg border flex flex-col gap-2 ${mpesaTestStatus === 'success' ? 'bg-green-50 border-green-200' : mpesaTestStatus === 'error' ? 'bg-red-50 border-red-200' : 'bg-gray-50 border-gray-100 dark:bg-gray-800 dark:border-gray-700'}`}>
                                 <div className="flex items-center justify-between">
@@ -763,6 +800,13 @@ export default function SettingsPage() {
                         </Button>
                     </div>
                 </form>
+
+                {/* M-Pesa STK Push Guide & Support Modal */}
+                <MpesaStkGuideModal
+                    isOpen={showStkGuideModal}
+                    onClose={() => setShowStkGuideModal(false)}
+                    currentEnv={formData.mpesaEnv as 'sandbox' | 'production'}
+                />
             </div>
         </DashboardLayout>
     );

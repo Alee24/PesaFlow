@@ -15,6 +15,7 @@ import {
     Database, Sparkles, Settings
 } from 'lucide-react';
 import Link from 'next/link';
+import MpesaStkGuideModal from '@/components/mpesa/MpesaStkGuideModal';
 
 export default function SafaricomApisPage() {
     const [activeTab, setActiveTab] = useState<
@@ -23,6 +24,7 @@ export default function SafaricomApisPage() {
 
     const [overviewData, setOverviewData] = useState<any>(null);
     const [loadingOverview, setLoadingOverview] = useState(true);
+    const [showStkGuide, setShowStkGuide] = useState(false);
     const { showToast } = useToast();
 
     // 1. Balance Query & Stored State
@@ -527,7 +529,15 @@ export default function SafaricomApisPage() {
                         </p>
                     </div>
 
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 flex-wrap">
+                        <Button
+                            variant="outline"
+                            onClick={() => setShowStkGuide(true)}
+                            className="flex items-center gap-1.5 text-sm border-emerald-300 text-emerald-700 hover:bg-emerald-50 dark:border-emerald-700 dark:text-emerald-300 dark:hover:bg-emerald-950/40"
+                        >
+                            <HelpCircle className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                            STK Push Guide
+                        </Button>
                         <Button
                             variant="outline"
                             onClick={fetchOverview}
@@ -1478,6 +1488,13 @@ export default function SafaricomApisPage() {
                     </div>
                 )}
             </div>
+
+            {/* M-Pesa STK Push Guide & Support Modal */}
+            <MpesaStkGuideModal
+                isOpen={showStkGuide}
+                onClose={() => setShowStkGuide(false)}
+                currentEnv={overviewData?.credentialsSummary?.environment === 'production' ? 'production' : 'sandbox'}
+            />
         </DashboardLayout>
     );
 }

@@ -6,11 +6,14 @@ import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import toast from 'react-hot-toast';
 import api from '@/lib/api';
+import { HelpCircle } from 'lucide-react';
+import MpesaStkGuideModal from '@/components/mpesa/MpesaStkGuideModal';
 
 export default function OnboardingPage() {
     const router = useRouter();
     const [step, setStep] = useState(1);
     const [loading, setLoading] = useState(false);
+    const [showStkGuide, setShowStkGuide] = useState(false);
     const [hasExistingProfile, setHasExistingProfile] = useState(false);
     
     // Step 1: Profile
@@ -246,9 +249,21 @@ export default function OnboardingPage() {
 
                     {step === 2 && (
                         <div className="space-y-6">
-                            <div className="bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-800 text-emerald-800 dark:text-emerald-300 text-xs p-3.5 rounded-xl">
-                                <p className="font-semibold text-sm mb-1">Direct Safaricom Daraja Integration</p>
-                                <p>Provide your own M-Pesa API credentials below so customer payments settle immediately into your business Paybill or Till. You can also skip this step to accept Cash only.</p>
+                            <div className="bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-800 text-emerald-800 dark:text-emerald-300 text-xs p-3.5 rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                                <div>
+                                    <p className="font-semibold text-sm mb-1">Direct Safaricom Daraja Integration</p>
+                                    <p>Provide your own M-Pesa API credentials below so customer payments settle immediately into your business Paybill or Till. You can also skip this step to accept Cash only.</p>
+                                </div>
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => setShowStkGuide(true)}
+                                    className="shrink-0 text-xs flex items-center gap-1.5 border-emerald-300 text-emerald-700 hover:bg-emerald-100 bg-white dark:bg-zinc-800"
+                                >
+                                    <HelpCircle className="w-3.5 h-3.5 text-emerald-600" />
+                                    <span>Requirements Guide</span>
+                                </Button>
                             </div>
 
                             <Input
@@ -329,6 +344,13 @@ export default function OnboardingPage() {
                     )}
                 </div>
             </div>
+
+            {/* M-Pesa STK Push Guide & Support Modal */}
+            <MpesaStkGuideModal
+                isOpen={showStkGuide}
+                onClose={() => setShowStkGuide(false)}
+                currentEnv={mpesaData.mpesaEnv as 'sandbox' | 'production'}
+            />
         </div>
     );
 }
