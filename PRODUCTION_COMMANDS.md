@@ -3,7 +3,7 @@
 ## Full Deployment (Pull from Git + Rebuild)
 
 ```bash
-cd /var/www/mpesaconnect.co.ke && git fetch origin && git reset --hard origin/main && cd backend && npm install && npx prisma generate && npx prisma db push --accept-data-loss && npm run build && pm2 delete mpesaconnect-api || true && pm2 start dist/server.js --name mpesaconnect-api && cd ../frontend && npm install && npm run build && pm2 delete mpesaconnect-web || true && pm2 start npm --name mpesaconnect-web -- start -- -p 5054 && pm2 save && pm2 status
+cd /var/www/mpesaconnect.co.ke && git fetch origin && git reset --hard origin/main && cd backend && npm install && npx prisma generate && npx prisma db push --accept-data-loss && npm run build && pm2 delete mpesaconnect-api pesaflow-api 2>/dev/null || true && pm2 start dist/server.js --name mpesaconnect-api && cd ../frontend && npm install && rm -rf .next && npm run build && pm2 delete mpesaconnect-web pesaflow-web 2>/dev/null || true && pm2 start npm --name mpesaconnect-web -- start -- -p 5054 && pm2 save && pm2 status
 ```
 
 ## Quick Restart (No Rebuild)
@@ -21,7 +21,7 @@ cd /var/www/mpesaconnect.co.ke && git pull && cd backend && npm install && npx p
 ## Frontend Only
 
 ```bash
-cd /var/www/mpesaconnect.co.ke && git pull && cd frontend && npm install && npm run build && pm2 restart mpesaconnect-web && pm2 logs mpesaconnect-web --lines 50
+cd /var/www/mpesaconnect.co.ke && git pull && cd frontend && npm install && rm -rf .next && npm run build && pm2 restart mpesaconnect-web && pm2 logs mpesaconnect-web --lines 50
 ```
 
 ## Database Only
