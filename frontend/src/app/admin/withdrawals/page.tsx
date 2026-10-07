@@ -7,7 +7,7 @@ import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import api from '@/lib/api';
 import Toast from '@/components/ui/Toast';
-import { Check, X, Clock, User, Phone, Wallet as WalletIcon } from 'lucide-react';
+import { Check, X, Clock, User, Phone, CreditCard } from 'lucide-react';
 
 export default function AdminWithdrawalsPage() {
     const [withdrawals, setWithdrawals] = useState<any[]>([]);
@@ -80,14 +80,14 @@ export default function AdminWithdrawalsPage() {
 
                 <div className="bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800 text-amber-800 dark:text-amber-300 text-xs p-3.5 rounded-xl">
                     <p className="font-semibold text-sm mb-0.5">Feature Disabled</p>
-                    <p>Merchants are currently configured to receive customer payments directly into their own Safaricom Paybills and Tills. Platform wallet holding and withdrawal processing are inactive.</p>
+                    <p>Merchants are currently configured to receive customer payments directly into their own Safaricom Paybills and Tills. Platform settlement processing and payout requests are inactive.</p>
                 </div>
 
                 <div className="grid gap-6">
                     {loading ? (
                         <div className="py-20 text-center text-gray-500">Loading requests...</div>
                     ) : withdrawals.length === 0 ? (
-                        <Card className="p-12 text-center text-gray-500">No withdrawal requests found.</Card>
+                        <Card className="p-12 text-center text-gray-500">No payout requests found.</Card>
                     ) : (
                         withdrawals.map((w) => (
                             <Card key={w.id} className="p-6 relative overflow-hidden group">
@@ -100,7 +100,7 @@ export default function AdminWithdrawalsPage() {
                                     <div className="flex-1 space-y-4">
                                         <div className="flex items-center gap-4">
                                             <div className="p-3 bg-indigo-50 dark:bg-indigo-900/30 rounded-xl">
-                                                <WalletIcon className="w-6 h-6 text-indigo-600 dark:text-indigo-400" />
+                                                <CreditCard className="w-6 h-6 text-indigo-600 dark:text-indigo-400" />
                                             </div>
                                             <div>
                                                 <div className="text-2xl font-bold text-gray-900 dark:text-white">
@@ -115,7 +115,7 @@ export default function AdminWithdrawalsPage() {
                                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                                             <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
                                                 <User className="w-4 h-4 opacity-50" />
-                                                <span className="font-medium">{w.wallet.user.name || w.wallet.user.email}</span>
+                                                <span className="font-medium">{w.wallet?.user?.name || w.wallet?.user?.email || 'Merchant'}</span>
                                             </div>
                                             <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
                                                 <Phone className="w-4 h-4 opacity-50" />

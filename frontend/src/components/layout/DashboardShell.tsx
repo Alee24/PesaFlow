@@ -6,7 +6,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import {
     LayoutDashboard, ShoppingCart, Package, CreditCard, ArrowLeftRight, Settings,
     LogOut, User, Store, FileText, Bell, X, CheckCircle, AlertCircle, Info, Lock,
-    ShieldCheck, TrendingUp, BarChart3, Users, Wallet, MessageSquare, Key, Globe,
+    ShieldCheck, TrendingUp, BarChart3, Users, MessageSquare, Key, Globe,
     ChevronRight, Receipt, Zap, Building2, Smartphone, QrCode, Activity
 } from 'lucide-react';
 import { cn } from '@/lib/utils';

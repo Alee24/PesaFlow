@@ -325,7 +325,7 @@ export default function BulkPaymentsPage() {
                             <div>
                                 <h4 className="font-black text-gray-900 dark:text-white uppercase tracking-tighter mb-3">Balance Guard</h4>
                                 <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed font-medium">
-                                    B2C payments draw directly from your **M-Pesa Business Utility Wallet**. Ensure you have sufficient float before 
+                                    B2C payments draw directly from your **M-Pesa Business Utility Account**. Ensure you have sufficient float before 
                                     initiating large batches to avoid Safaricom "Insufficient Funds" errors.
                                 </p>
                             </div>

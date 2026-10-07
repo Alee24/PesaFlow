@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/Button';
 import Toast from '@/components/ui/Toast';
 import api from '@/lib/api';
 import { getImageUrl } from '@/lib/utils';
-import { CreditCard, ShieldCheck, CheckCircle2, Globe, Lock, Settings as SettingsIcon, KeyRound, ExternalLink, HelpCircle, Info, AlertTriangle, Banknote, Wallet } from 'lucide-react';
+import { CreditCard, ShieldCheck, CheckCircle2, Globe, Lock, Settings as SettingsIcon, KeyRound, ExternalLink, HelpCircle, Info, AlertTriangle, Banknote } from 'lucide-react';
 
 export default function SettingsPage() {
     const [formData, setFormData] = useState({

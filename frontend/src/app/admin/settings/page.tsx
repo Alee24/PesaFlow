@@ -191,7 +191,7 @@ export default function AdminSettingsPage() {
                                     placeholder="2.5"
                                 />
                                 <p className="text-xs text-gray-500 mt-2">
-                                    This amount will be deducted from each M-Pesa payment before crediting the merchant wallet
+                                    This amount will be deducted from each M-Pesa payment as the platform service charge
                                 </p>
                             </div>
 

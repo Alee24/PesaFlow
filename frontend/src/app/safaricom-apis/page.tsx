@@ -11,7 +11,7 @@ import {
     Activity, ShieldCheck, ArrowUpRight, Search, RefreshCw, Smartphone,
     CheckCircle, AlertCircle, Building2, Repeat, Undo2, Users, Download,
     Send, Check, Copy, ExternalLink, HelpCircle, FileText, ArrowLeftRight,
-    CheckCircle2, ChevronRight, AlertTriangle, Wallet, DollarSign, Clock,
+    CheckCircle2, ChevronRight, AlertTriangle, Landmark, DollarSign, Clock,
     Database, Sparkles, Settings
 } from 'lucide-react';
 import Link from 'next/link';
@@ -585,7 +585,7 @@ export default function SafaricomApisPage() {
                     <div className="bg-gradient-to-r from-emerald-500/10 via-emerald-500/5 to-transparent border border-emerald-500/20 rounded-xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                         <div className="flex items-center gap-3">
                             <div className="p-2.5 rounded-lg bg-emerald-600 text-white shrink-0">
-                                <Wallet className="w-5 h-5" />
+                                <Landmark className="w-5 h-5" />
                             </div>
                             <div>
                                 <div className="flex items-center gap-2">
@@ -753,7 +753,7 @@ export default function SafaricomApisPage() {
                                 <div className="p-5 rounded-xl border border-emerald-200/70 dark:border-emerald-900/50 bg-emerald-50/40 dark:bg-emerald-950/20 relative overflow-hidden">
                                     <div className="flex items-center justify-between mb-2">
                                         <span className="text-xs font-bold text-emerald-800 dark:text-emerald-300 uppercase tracking-wider flex items-center gap-1.5">
-                                            <Wallet className="w-4 h-4 text-emerald-600" /> Working Account Float
+                                            <Landmark className="w-4 h-4 text-emerald-600" /> Working Account Float
                                         </span>
                                         <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-900/70 text-emerald-700 dark:text-emerald-300">
                                             Disbursements
@@ -1174,7 +1174,7 @@ export default function SafaricomApisPage() {
                                 M-Pesa Ratiba (Standing Orders)
                             </h2>
                             <p className="text-xs text-gray-500 mb-6">
-                                Create an automated recurring standing order on a customer's M-Pesa wallet for recurring club memberships, rent, or service subscriptions.
+                                Create an automated recurring standing order on a customer's M-Pesa account for recurring club memberships, rent, or service subscriptions.
                             </p>
 
                             <form onSubmit={handleCreateRatiba} className="space-y-4">
