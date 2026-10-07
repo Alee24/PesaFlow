@@ -151,7 +151,7 @@ export default function OnboardingPage() {
             setLoading(true);
             
             const formData = new FormData();
-            if (!skipMpesa && mpesaData.useCustomMpesa) {
+            if (!skipMpesa && mpesaData.mpesaConsumerKey) {
                 formData.append('mpesaConsumerKey', mpesaData.mpesaConsumerKey);
                 formData.append('mpesaConsumerSecret', mpesaData.mpesaConsumerSecret);
                 formData.append('mpesaShortcode', mpesaData.mpesaShortcode);
@@ -176,7 +176,7 @@ export default function OnboardingPage() {
                 localStorage.setItem('user', JSON.stringify(stored));
             } catch {}
 
-            toast.success('Onboarding completed successfully!');
+            toast.success(skipMpesa ? 'Onboarding completed! Accepting cash payments.' : 'M-Pesa API integration saved & ready!');
             router.push('/dashboard');
         } catch (error: any) {
             toast.error(error.response?.data?.error || 'Failed to complete onboarding');
@@ -193,7 +193,7 @@ export default function OnboardingPage() {
                     Welcome to M-Pesa Connect!
                 </h2>
                 <p className="mt-2 text-center text-sm text-gray-600">
-                    {step === 1 ? 'Let\'s set up your business profile.' : 'Set up M-Pesa Integration (Optional)'}
+                    {step === 1 ? 'Let\'s set up your business profile.' : 'Set up your direct M-Pesa API integration (Optional)'}
                 </p>
             </div>
 
@@ -246,79 +246,68 @@ export default function OnboardingPage() {
 
                     {step === 2 && (
                         <div className="space-y-6">
-                            <div className="flex items-center mb-4">
-                                <input
-                                    type="checkbox"
-                                    id="useCustomMpesa"
-                                    name="useCustomMpesa"
-                                    checked={mpesaData.useCustomMpesa}
-                                    onChange={handleMpesaChange}
-                                    className="h-4 w-4 text-green-600 border-gray-300 rounded"
-                                />
-                                <label htmlFor="useCustomMpesa" className="ml-2 block text-sm text-gray-900">
-                                    Enable Custom M-Pesa Configuration
-                                </label>
+                            <div className="bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-800 text-emerald-800 dark:text-emerald-300 text-xs p-3.5 rounded-xl">
+                                <p className="font-semibold text-sm mb-1">Direct Safaricom Daraja Integration</p>
+                                <p>Provide your own M-Pesa API credentials below so customer payments settle immediately into your business Paybill or Till. You can also skip this step to accept Cash only.</p>
                             </div>
 
-                            {mpesaData.useCustomMpesa && (
-                                <>
-                                    <Input
-                                        label="Consumer Key"
-                                        name="mpesaConsumerKey"
-                                        value={mpesaData.mpesaConsumerKey}
-                                        onChange={handleMpesaChange}
-                                    />
-                                    <Input
-                                        label="Consumer Secret"
-                                        name="mpesaConsumerSecret"
-                                        type="password"
-                                        value={mpesaData.mpesaConsumerSecret}
-                                        onChange={handleMpesaChange}
-                                    />
-                                    <Input
-                                        label="Shortcode"
-                                        name="mpesaShortcode"
-                                        value={mpesaData.mpesaShortcode}
-                                        onChange={handleMpesaChange}
-                                    />
-                                    <div className="mb-4">
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">Environment</label>
-                                        <select
-                                            name="mpesaEnv"
-                                            value={mpesaData.mpesaEnv}
-                                            onChange={handleMpesaChange}
-                                            className="w-full border border-gray-300 rounded-md p-2"
-                                        >
-                                            <option value="sandbox">Sandbox</option>
-                                            <option value="production">Production</option>
-                                        </select>
-                                    </div>
-                                    <div className="flex gap-2">
-                                        <Button variant="outline" className="flex-1" onClick={testMpesa}>
-                                            Test Connection
-                                        </Button>
-                                    </div>
-                                    {mpesaTestStatus === 'success' && <p className="text-green-600 text-sm mt-1">Connection verified!</p>}
-                                    {mpesaTestStatus === 'error' && <p className="text-red-600 text-sm mt-1">Connection failed.</p>}
-                                </>
-                            )}
-                            
-                            {!mpesaData.useCustomMpesa && (
-                                <div className="bg-blue-50 border border-blue-200 text-blue-800 text-sm p-4 rounded-lg mt-2 mb-4">
-                                    <p className="font-semibold mb-1">Using System M-Pesa Credentials</p>
-                                    <p>You can use the platform immediately without your own M-Pesa API credentials. However, please note that a <strong>2.5% service fee</strong> will be deducted from your withdrawals.</p>
-                                </div>
-                            )}
+                            <Input
+                                label="Consumer Key"
+                                name="mpesaConsumerKey"
+                                value={mpesaData.mpesaConsumerKey}
+                                onChange={handleMpesaChange}
+                                placeholder="Your Daraja App Consumer Key"
+                            />
+                            <Input
+                                label="Consumer Secret"
+                                name="mpesaConsumerSecret"
+                                type="password"
+                                value={mpesaData.mpesaConsumerSecret}
+                                onChange={handleMpesaChange}
+                                placeholder="Your Daraja App Consumer Secret"
+                            />
+                            <Input
+                                label="Shortcode (Paybill/Till)"
+                                name="mpesaShortcode"
+                                value={mpesaData.mpesaShortcode}
+                                onChange={handleMpesaChange}
+                                placeholder="e.g. 174379 or your Paybill number"
+                            />
+                            <Input
+                                label="Online Passkey"
+                                name="mpesaPasskey"
+                                type="password"
+                                value={mpesaData.mpesaPasskey}
+                                onChange={handleMpesaChange}
+                                placeholder="Daraja Lipa na M-Pesa Online Passkey"
+                            />
+                            <div className="mb-4">
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Environment</label>
+                                <select
+                                    name="mpesaEnv"
+                                    value={mpesaData.mpesaEnv}
+                                    onChange={handleMpesaChange}
+                                    className="w-full border border-gray-300 rounded-md p-2"
+                                >
+                                    <option value="sandbox">Sandbox (Development / Testing)</option>
+                                    <option value="production">Production (Live Daraja)</option>
+                                </select>
+                            </div>
+                            <div className="flex gap-2">
+                                <Button variant="outline" className="w-full" onClick={testMpesa}>
+                                    Test Connection
+                                </Button>
+                            </div>
+                            {mpesaTestStatus === 'success' && <p className="text-green-600 text-sm mt-1">✓ Connection verified successfully!</p>}
+                            {mpesaTestStatus === 'error' && <p className="text-red-600 text-sm mt-1">✗ Connection failed. Check credentials.</p>}
 
                             <div className="flex flex-col gap-2 pt-4 border-t border-gray-200">
                                 <Button className="w-full" onClick={() => finishOnboarding(false)} isLoading={loading}>
-                                    Complete Setup
+                                    Save &amp; Complete Setup
                                 </Button>
-                                {mpesaData.useCustomMpesa && (
-                                    <Button variant="outline" className="w-full text-gray-500" onClick={() => finishOnboarding(true)} disabled={loading}>
-                                        Skip & Use System Credentials
-                                    </Button>
-                                )}
+                                <Button variant="outline" className="w-full text-gray-600" onClick={() => finishOnboarding(true)} disabled={loading}>
+                                    Skip M-Pesa Setup (Cash Payments Only)
+                                </Button>
                                 <div className="flex justify-between items-center pt-2">
                                     <button 
                                         type="button" 

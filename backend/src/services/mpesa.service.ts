@@ -12,63 +12,36 @@ export const cleanCred = (val: any): string => {
 };
 
 export const getCredentials = async (userId?: string) => {
-    // 1. Start with .env as baseline
+    // Strictly load merchant's own M-Pesa credentials.
+    // Platform/Company shared M-Pesa integrations are removed - merchants only use their own APIs.
     let creds: any = {
-        consumerKey: process.env.MPESA_CONSUMER_KEY,
-        consumerSecret: process.env.MPESA_CONSUMER_SECRET,
-        passkey: process.env.MPESA_PASSKEY,
-        shortCode: process.env.MPESA_SHORTCODE,
-        initiatorName: process.env.MPESA_INITIATOR_NAME,
-        password: process.env.MPESA_INITIATOR_PASSWORD,
-        securityCredential: process.env.MPESA_SECURITY_CREDENTIAL,
-        certificate: process.env.MPESA_CERTIFICATE,
-        callbackUrl: process.env.MPESA_CALLBACK_URL || (process.env.APP_URL ? `${process.env.APP_URL}/api/mpesa/callback` : 'http://localhost:3001/api/mpesa/callback'),
-        env: process.env.MPESA_ENV || 'sandbox'
+        consumerKey: '',
+        consumerSecret: '',
+        passkey: '',
+        shortCode: '',
+        initiatorName: '',
+        password: '',
+        securityCredential: '',
+        certificate: '',
+        callbackUrl: '',
+        env: 'sandbox'
     };
 
-    // 2. Try to load System-wide Admin defaults if available in DB
-    try {
-        const adminUser = await prisma.user.findFirst({
-            where: { role: 'ADMIN' },
-            include: { businessProfile: true }
-        });
-        if (adminUser?.businessProfile) {
-            const p = adminUser.businessProfile;
-            if (p.mpesaConsumerKey) creds.consumerKey = p.mpesaConsumerKey;
-            if (p.mpesaConsumerSecret) creds.consumerSecret = p.mpesaConsumerSecret;
-            if (p.mpesaPasskey) creds.passkey = p.mpesaPasskey;
-            if (p.mpesaShortcode) creds.shortCode = p.mpesaShortcode;
-            if (p.mpesaInitiatorName) creds.initiatorName = p.mpesaInitiatorName;
-            if (p.mpesaInitiatorPass) creds.password = p.mpesaInitiatorPass;
-            if ((p as any).mpesaSecurityCredential) creds.securityCredential = (p as any).mpesaSecurityCredential;
-            if ((p as any).mpesaCertificate) creds.certificate = (p as any).mpesaCertificate;
-            if (p.mpesaCallbackUrl) creds.callbackUrl = p.mpesaCallbackUrl;
-            if (p.mpesaEnv) creds.env = p.mpesaEnv;
-            console.log('[M-Pesa] Loaded System Defaults from Admin Profile');
-        }
-    } catch (e) {
-        console.warn('[M-Pesa] Failed to load System Defaults from DB, using ENV');
-    }
-
-    // 3. User Specific Override
     if (userId) {
         const profile = await prisma.businessProfile.findUnique({ where: { userId } });
+        if (profile) {
+            creds.consumerKey = profile.mpesaConsumerKey || '';
+            creds.consumerSecret = profile.mpesaConsumerSecret || '';
+            creds.passkey = profile.mpesaPasskey || '';
+            creds.shortCode = profile.mpesaShortcode || '';
+            creds.initiatorName = profile.mpesaInitiatorName || '';
+            creds.password = profile.mpesaInitiatorPass || '';
+            creds.securityCredential = (profile as any).mpesaSecurityCredential || '';
+            creds.certificate = (profile as any).mpesaCertificate || '';
+            creds.env = profile.mpesaEnv || 'sandbox';
 
-        // Override if merchant has configured custom M-Pesa or provided shortcode / keys
-        if (profile && ((profile as any).useCustomMpesa || profile.mpesaConsumerKey || profile.mpesaShortcode)) {
-            console.log(`[M-Pesa] Merchant ${userId} using profile M-Pesa configuration`);
-            if (profile.mpesaConsumerKey) creds.consumerKey = profile.mpesaConsumerKey;
-            if (profile.mpesaConsumerSecret) creds.consumerSecret = profile.mpesaConsumerSecret;
-            if (profile.mpesaPasskey) creds.passkey = profile.mpesaPasskey;
-            if (profile.mpesaShortcode) creds.shortCode = profile.mpesaShortcode;
-            if (profile.mpesaInitiatorName) creds.initiatorName = profile.mpesaInitiatorName;
-            if (profile.mpesaInitiatorPass) creds.password = profile.mpesaInitiatorPass;
-            if ((profile as any).mpesaSecurityCredential) creds.securityCredential = (profile as any).mpesaSecurityCredential;
-            if ((profile as any).mpesaCertificate) creds.certificate = (profile as any).mpesaCertificate;
-            if (profile.mpesaCallbackUrl) creds.callbackUrl = profile.mpesaCallbackUrl;
-            if (profile.mpesaEnv) creds.env = profile.mpesaEnv;
-        } else {
-            console.log(`[M-Pesa] Merchant ${userId} using SYSTEM Mpesa Connect`);
+            const baseUrl = process.env.APP_URL || (process.env.MPESA_CALLBACK_URL ? process.env.MPESA_CALLBACK_URL.replace(/\/api\/mpesa\/callback.*$/, '') : 'http://localhost:3001');
+            creds.callbackUrl = profile.mpesaCallbackUrl || `${baseUrl}/api/mpesa/callback/${userId}`;
         }
     }
 
@@ -143,6 +116,9 @@ export const initiateSTKPush = async (
     saleId?: string // Existing sale ID for retry
 ) => {
     const creds = await getCredentials(userId);
+    if (!creds.consumerKey || !creds.consumerSecret || !creds.shortCode || !creds.passkey) {
+        throw new Error('MPESA_NOT_CONFIGURED: Please configure your own M-Pesa API credentials (Consumer Key, Consumer Secret, Passkey, Shortcode) in Settings.');
+    }
     console.log(`[M-Pesa Service] Using Environment: ${creds.env}`);
     const token = await getAccessToken(creds);
 
@@ -335,7 +311,7 @@ export const testMpesaConnectionService = async (userId?: string, providedCreds?
         }
         
         if (!creds.consumerKey || !creds.consumerSecret) {
-            throw new Error("Missing Consumer Key or Secret (Env or Settings)");
+            throw new Error("Missing Consumer Key or Secret. Please enter your M-Pesa API credentials.");
         }
         const token = await getAccessToken(creds);
 

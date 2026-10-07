@@ -78,6 +78,11 @@ export default function AdminWithdrawalsPage() {
                     <p className="text-gray-500">Review and process merchant withdrawal requests.</p>
                 </header>
 
+                <div className="bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800 text-amber-800 dark:text-amber-300 text-xs p-3.5 rounded-xl">
+                    <p className="font-semibold text-sm mb-0.5">Feature Disabled</p>
+                    <p>Merchants are currently configured to receive customer payments directly into their own Safaricom Paybills and Tills. Platform wallet holding and withdrawal processing are inactive.</p>
+                </div>
+
                 <div className="grid gap-6">
                     {loading ? (
                         <div className="py-20 text-center text-gray-500">Loading requests...</div>

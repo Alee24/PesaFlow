@@ -68,34 +68,34 @@ export default function DashboardPage() {
 
     const statCards = [
         {
-            label: user.role === 'ADMIN' ? 'System Liquidity' : 'Wallet Balance',
-            value: `KES ${Number(summary?.walletBalance || 0).toLocaleString()}`,
-            sub: 'Available funds',
+            label: 'Total Sales Volume',
+            value: `KES ${Number(summary?.totalIncome || 0).toLocaleString()}`,
+            sub: `Gross revenue (${period})`,
             icon: DollarSign,
-            trend: null,
+            trend: '+12.4%',
+            trendUp: true,
             color: 'emerald',
         },
         {
-            label: user.role === 'ADMIN' ? 'Total GTV' : 'Total Income',
-            value: `KES ${Number(summary?.totalIncome || 0).toLocaleString()}`,
-            sub: `Gross volume (${period})`,
+            label: 'Completed Transactions',
+            value: `${Number(summary?.totalSalesCount || 0).toLocaleString()} sales`,
+            sub: `Total volume (${period})`,
             icon: TrendingUp,
-            trend: '+12.4%',
-            trendUp: true,
+            trend: null,
             color: 'blue',
         },
         {
-            label: 'Withdrawals',
-            value: `KES ${Number(summary?.totalWithdrawals || 0).toLocaleString()}`,
-            sub: `Total payouts (${period})`,
-            icon: ArrowRight,
+            label: 'Direct Settlements',
+            value: `Paybill / Till`,
+            sub: `Direct merchant deposits`,
+            icon: ShieldCheck,
             trend: null,
             color: 'rose',
         },
         {
-            label: user.role === 'ADMIN' ? 'Service Revenue' : 'Transaction Fees',
-            value: `KES ${Number(summary?.totalFeeIncome || 0).toLocaleString()}`,
-            sub: user.role === 'ADMIN' ? 'Net platform income' : 'Service charges',
+            label: 'Platform Operations',
+            value: `Active`,
+            sub: user.role === 'ADMIN' ? 'All systems nominal' : 'Own Daraja APIs connected',
             icon: Activity,
             trend: null,
             color: 'amber',
@@ -179,10 +179,10 @@ export default function DashboardPage() {
                 {/* Quick Actions */}
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                     {[
-                        { label: 'New Sale', href: '/pos', icon: ShoppingCart, color: 'bg-emerald-500 hover:bg-emerald-600' },
+                        { label: 'Point of Sale', href: '/pos', icon: ShoppingCart, color: 'bg-emerald-500 hover:bg-emerald-600' },
                         { label: 'Create Invoice', href: '/invoices/new', icon: FileText, color: 'bg-blue-500 hover:bg-blue-600' },
-                        { label: 'STK Push', href: '/wallet', icon: Zap, color: 'bg-violet-500 hover:bg-violet-600' },
-                        { label: 'Withdraw', href: '/withdrawals', icon: CreditCard, color: 'bg-amber-500 hover:bg-amber-600' },
+                        { label: 'Direct Payment', href: '/direct-payment', icon: Zap, color: 'bg-violet-500 hover:bg-violet-600' },
+                        { label: 'M-Pesa QR', href: '/qr-generator', icon: QrCode, color: 'bg-amber-500 hover:bg-amber-600' },
                     ].map((action) => (
                         <Link
                             key={action.label}
@@ -368,7 +368,7 @@ export default function DashboardPage() {
                             { name: 'Pull Transactions', desc: 'Batch Reconciliation', href: '/mpesa-services', icon: Download, tag: 'Sync' },
                             { name: 'Mobile & KYC', desc: 'Carrier & State Check', href: '/mpesa-services', icon: ShieldCheck, tag: 'Verify' },
                             { name: 'C2B v2 Payments', desc: 'Webhook Registration', href: '/mpesa-services', icon: ArrowLeftRight, tag: 'Webhooks' },
-                            { name: 'STK Push Online', desc: 'SIM Toolkit Push', href: '/wallet', icon: Zap, tag: 'Instant' },
+                            { name: 'STK Push Online', desc: 'SIM Toolkit Push', href: '/direct-payment', icon: Zap, tag: 'Instant' },
                             { name: 'Bill Manager', desc: 'Automated Invoicing', href: '/invoices', icon: FileText, tag: 'Billing' },
                         ].map((srv, idx) => {
                             const SrvIcon = srv.icon;

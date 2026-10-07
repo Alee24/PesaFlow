@@ -42,8 +42,6 @@ export const navSections = [
             { name: 'M-Pesa Services', href: '/mpesa-services', icon: Activity },
             { name: 'M-Pesa QR Generator', href: '/qr-generator', icon: QrCode },
             { name: 'Invoices', href: '/invoices', icon: FileText, feature: 'invoices' },
-            { name: 'Wallet', href: '/wallet', icon: Wallet },
-            { name: 'Withdrawals', href: '/withdrawals', icon: CreditCard },
             { name: 'Bulk Payments', href: '/bulk-payments', icon: ArrowLeftRight, feature: 'MPESA_BULK' },
         ]
     },
@@ -67,7 +65,6 @@ export const navSections = [
             { name: 'License', href: '/admin/license', icon: Key, role: 'ADMIN' },
             { name: 'Verification', href: '/admin/verification', icon: CheckCircle, role: 'ADMIN' },
             { name: 'Users', href: '/admin/users', icon: User, role: 'ADMIN' },
-            { name: 'Withdrawals', href: '/admin/withdrawals', icon: CreditCard, role: 'ADMIN' },
             { name: 'Admin Settings', href: '/admin/settings', icon: Settings, role: 'ADMIN' },
             { name: 'KRA Integration', href: '/admin/kra-integration', icon: Globe, role: 'ADMIN' },
             { name: 'Google Analytics', href: '/admin/analytics', icon: BarChart3, role: 'ADMIN' },
