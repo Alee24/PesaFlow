@@ -19,7 +19,8 @@ import {
     Calendar,
     MessageSquare,
     PhoneCall,
-    Send
+    Send,
+    ExternalLink
 } from 'lucide-react';
 import { formatDistanceToNow, format } from 'date-fns';
 
@@ -549,7 +550,15 @@ export default function CustomerDetailPage() {
                         </h3>
                         <div className="space-y-4">
                             {customer.sales?.map((sale: any) => (
-                                <div key={sale.id} className="bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 p-4 rounded-lg hover:shadow-sm transition-shadow">
+                                <div
+                                    key={sale.id}
+                                    onClick={() => {
+                                        if (sale.transactionId) {
+                                            router.push(`/invoices/${sale.transactionId}`);
+                                        }
+                                    }}
+                                    className={`bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 p-4 rounded-lg hover:shadow-sm transition-all ${sale.transactionId ? 'cursor-pointer hover:border-indigo-300' : ''}`}
+                                >
                                     <div className="flex justify-between items-center mb-2">
                                         <div className="flex items-center gap-3">
                                             <div className={`p-2 rounded-full ${sale.paymentStatus === 'PAID' ? 'bg-green-100 text-green-600' :
@@ -559,9 +568,14 @@ export default function CustomerDetailPage() {
                                                 <DollarSign className="w-4 h-4" />
                                             </div>
                                             <div>
-                                                <p className="font-medium text-gray-900 dark:text-white">
-                                                    Invoice #{sale.id.substring(0, 8)}
-                                                </p>
+                                                <div className="flex items-center gap-1.5">
+                                                    <p className="font-medium text-gray-900 dark:text-white">
+                                                        Invoice #{sale.id.substring(0, 8)}
+                                                    </p>
+                                                    {sale.transactionId && (
+                                                        <ExternalLink className="w-3.5 h-3.5 text-indigo-500 inline" />
+                                                    )}
+                                                </div>
                                                 <p className="text-xs text-gray-500">
                                                     {format(new Date(sale.createdAt), 'PPP')}
                                                 </p>

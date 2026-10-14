@@ -212,12 +212,12 @@ const InvoicePDF: React.FC<InvoicePDFProps> = ({ invoice, globalLogo }) => {
                 {/* Header */}
                 <View style={styles.header}>
                     <View style={styles.companyCol}>
-                        {renderLogo && (
+                        {renderLogo && getImageUrl(renderLogo) ? (
                             <Image
                                 style={styles.logo}
-                                src={getImageUrl(renderLogo) || ''}
+                                src={getImageUrl(renderLogo)!}
                             />
-                        )}
+                        ) : null}
                         <Text style={styles.companyName}>{biz?.companyName || 'Company Name'}</Text>
                         {/* Show Address / Contact */}
                         <Text style={styles.companyInfo}>{biz?.location}</Text>
@@ -244,7 +244,7 @@ const InvoicePDF: React.FC<InvoicePDFProps> = ({ invoice, globalLogo }) => {
                         <Text style={styles.sectionTitle}>Payment Details</Text>
                         <Text style={styles.contentValue}>Total Due: KES {fmt(invoice.amount)}</Text>
                         <Text style={{ ...styles.invoiceMeta, marginTop: 4 }}>
-                            Status: <Text style={styles.statusPaid}>{invoice.status === 'PAID' ? 'PAID' : 'ISSUED'}</Text>
+                            Status: <Text style={styles.statusPaid}>{isPaid ? 'PAID' : (invoice.status || 'ISSUED')}</Text>
                         </Text>
                     </View>
                 </View>

@@ -149,6 +149,51 @@ const updateTransactionStatus = async (req, res) => {
             data: { status },
             include: { initiator: true }
         });
+        const isPaid = status === 'COMPLETED' || status === 'PAID';
+        const isCancelled = status === 'CANCELLED';
+        const linkedSale = await prisma.sale.findFirst({
+            where: { transactionId: id }
+        });
+        if (linkedSale) {
+            const previousStatus = linkedSale.paymentStatus;
+            await prisma.sale.update({
+                where: { id: linkedSale.id },
+                data: {
+                    paymentStatus: isPaid ? 'PAID' : isCancelled ? 'CANCELLED' : 'PENDING',
+                    amountPaid: isPaid ? linkedSale.totalAmount : 0,
+                    amountDue: isPaid ? 0 : linkedSale.totalAmount
+                }
+            });
+            if (isPaid && previousStatus !== 'PAID' && linkedSale.customerId) {
+                try {
+                    await prisma.customer.update({
+                        where: { id: linkedSale.customerId },
+                        data: {
+                            totalPurchases: { increment: 1 },
+                            lifetimeValue: { increment: linkedSale.totalAmount },
+                            lastPurchaseDate: new Date()
+                        }
+                    });
+                }
+                catch (custErr) {
+                    console.error("Failed to increment customer metrics:", custErr);
+                }
+            }
+            else if (!isPaid && previousStatus === 'PAID' && linkedSale.customerId) {
+                try {
+                    await prisma.customer.update({
+                        where: { id: linkedSale.customerId },
+                        data: {
+                            totalPurchases: { decrement: 1 },
+                            lifetimeValue: { decrement: linkedSale.totalAmount }
+                        }
+                    });
+                }
+                catch (custErr) {
+                    console.error("Failed to decrement customer metrics on revert:", custErr);
+                }
+            }
+        }
         if ((status === 'COMPLETED' || status === 'PAID') && transaction.type === 'INVOICE') {
             try {
                 let metadata = {};

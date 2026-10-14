@@ -43,6 +43,7 @@ export default function InvoicePage() {
     const [stkModalOpen, setStkModalOpen] = useState(false);
     const [stkLoading, setStkLoading] = useState(false);
     const [paymentPhone, setPaymentPhone] = useState('');
+    const [logoFailed, setLogoFailed] = useState(false);
 
     useEffect(() => {
         setIsClient(true);
@@ -156,12 +157,12 @@ export default function InvoicePage() {
         setConfirmLoading(true);
         try {
             await api.patch(`/transactions/${id}/status`, { status: confirmModal.status });
+            toast.success(`Invoice status updated to ${confirmModal.status}`);
             await fetchInvoice(); // Reload data
             setConfirmModal({ ...confirmModal, isOpen: false });
-        } catch (error) {
+        } catch (error: any) {
             console.error(error);
-            // Ideally assume global error handling or toast here, keeping it simple for now as per no toast component used in this file
-            alert('Failed to update status'); // Fallback
+            toast.error(error.response?.data?.error || 'Failed to update status');
         } finally {
             setConfirmLoading(false);
         }
@@ -235,7 +236,7 @@ export default function InvoicePage() {
                             <Printer className="w-4 h-4" /> Print
                         </Button>
                         {isClient && (
-                            <PDFDownloadLink document={<InvoicePDF invoice={invoice} globalLogo={globalLogo} />} fileName={`Invoice_${invoice.reference}.pdf`}>
+                            <PDFDownloadLink document={<InvoicePDF invoice={invoice} globalLogo={globalLogo} />} fileName={`Invoice_${invoice.reference || invoice.id?.slice(0, 8) || 'receipt'}.pdf`}>
                                 {({ loading }) => (
                                     <Button disabled={loading} className="flex items-center gap-2">
                                         <Download className="w-4 h-4" /> {loading ? 'Generating...' : 'Download PDF'}
@@ -277,22 +278,12 @@ export default function InvoicePage() {
                     {/* Header */}
                     <div className="flex justify-between items-start mb-12 border-b pb-8 relative z-10">
                         <div>
-                            {biz?.logoUrl ? (
+                            {biz?.logoUrl && !logoFailed ? (
                                 <img
                                     src={getImageUrl(biz.logoUrl) || ''}
                                     alt="Logo"
                                     className="h-24 mb-6 object-contain"
-                                    onError={(e) => {
-                                        e.currentTarget.style.display = 'none';
-                                        // Show text fallback if image fails
-                                        const parent = e.currentTarget.parentElement;
-                                        if (parent) {
-                                            const textnode = document.createElement('div');
-                                            textnode.className = "text-3xl font-bold text-gray-800 uppercase mb-4";
-                                            textnode.innerText = biz?.companyName || 'YOUR LOGO';
-                                            parent.appendChild(textnode);
-                                        }
-                                    }}
+                                    onError={() => setLogoFailed(true)}
                                 />
                             ) : (
                                 <div className="text-3xl font-bold text-gray-800 uppercase mb-4">{biz?.companyName || 'YOUR LOGO'}</div>

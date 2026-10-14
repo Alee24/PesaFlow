@@ -17,77 +17,31 @@ const cleanCred = (val) => {
 exports.cleanCred = cleanCred;
 const getCredentials = async (userId) => {
     let creds = {
-        consumerKey: process.env.MPESA_CONSUMER_KEY,
-        consumerSecret: process.env.MPESA_CONSUMER_SECRET,
-        passkey: process.env.MPESA_PASSKEY,
-        shortCode: process.env.MPESA_SHORTCODE,
-        initiatorName: process.env.MPESA_INITIATOR_NAME,
-        password: process.env.MPESA_INITIATOR_PASSWORD,
-        securityCredential: process.env.MPESA_SECURITY_CREDENTIAL,
-        certificate: process.env.MPESA_CERTIFICATE,
-        callbackUrl: process.env.MPESA_CALLBACK_URL || (process.env.APP_URL ? `${process.env.APP_URL}/api/mpesa/callback` : 'http://localhost:3001/api/mpesa/callback'),
-        env: process.env.MPESA_ENV || 'sandbox'
+        consumerKey: '',
+        consumerSecret: '',
+        passkey: '',
+        shortCode: '',
+        initiatorName: '',
+        password: '',
+        securityCredential: '',
+        certificate: '',
+        callbackUrl: '',
+        env: 'sandbox'
     };
-    try {
-        const adminUser = await prisma.user.findFirst({
-            where: { role: 'ADMIN' },
-            include: { businessProfile: true }
-        });
-        if (adminUser?.businessProfile) {
-            const p = adminUser.businessProfile;
-            if (p.mpesaConsumerKey)
-                creds.consumerKey = p.mpesaConsumerKey;
-            if (p.mpesaConsumerSecret)
-                creds.consumerSecret = p.mpesaConsumerSecret;
-            if (p.mpesaPasskey)
-                creds.passkey = p.mpesaPasskey;
-            if (p.mpesaShortcode)
-                creds.shortCode = p.mpesaShortcode;
-            if (p.mpesaInitiatorName)
-                creds.initiatorName = p.mpesaInitiatorName;
-            if (p.mpesaInitiatorPass)
-                creds.password = p.mpesaInitiatorPass;
-            if (p.mpesaSecurityCredential)
-                creds.securityCredential = p.mpesaSecurityCredential;
-            if (p.mpesaCertificate)
-                creds.certificate = p.mpesaCertificate;
-            if (p.mpesaCallbackUrl)
-                creds.callbackUrl = p.mpesaCallbackUrl;
-            if (p.mpesaEnv)
-                creds.env = p.mpesaEnv;
-            console.log('[M-Pesa] Loaded System Defaults from Admin Profile');
-        }
-    }
-    catch (e) {
-        console.warn('[M-Pesa] Failed to load System Defaults from DB, using ENV');
-    }
     if (userId) {
         const profile = await prisma.businessProfile.findUnique({ where: { userId } });
-        if (profile && (profile.useCustomMpesa || profile.mpesaConsumerKey || profile.mpesaShortcode)) {
-            console.log(`[M-Pesa] Merchant ${userId} using profile M-Pesa configuration`);
-            if (profile.mpesaConsumerKey)
-                creds.consumerKey = profile.mpesaConsumerKey;
-            if (profile.mpesaConsumerSecret)
-                creds.consumerSecret = profile.mpesaConsumerSecret;
-            if (profile.mpesaPasskey)
-                creds.passkey = profile.mpesaPasskey;
-            if (profile.mpesaShortcode)
-                creds.shortCode = profile.mpesaShortcode;
-            if (profile.mpesaInitiatorName)
-                creds.initiatorName = profile.mpesaInitiatorName;
-            if (profile.mpesaInitiatorPass)
-                creds.password = profile.mpesaInitiatorPass;
-            if (profile.mpesaSecurityCredential)
-                creds.securityCredential = profile.mpesaSecurityCredential;
-            if (profile.mpesaCertificate)
-                creds.certificate = profile.mpesaCertificate;
-            if (profile.mpesaCallbackUrl)
-                creds.callbackUrl = profile.mpesaCallbackUrl;
-            if (profile.mpesaEnv)
-                creds.env = profile.mpesaEnv;
-        }
-        else {
-            console.log(`[M-Pesa] Merchant ${userId} using SYSTEM Mpesa Connect`);
+        if (profile) {
+            creds.consumerKey = profile.mpesaConsumerKey || '';
+            creds.consumerSecret = profile.mpesaConsumerSecret || '';
+            creds.passkey = profile.mpesaPasskey || '';
+            creds.shortCode = profile.mpesaShortcode || '';
+            creds.initiatorName = profile.mpesaInitiatorName || '';
+            creds.password = profile.mpesaInitiatorPass || '';
+            creds.securityCredential = profile.mpesaSecurityCredential || '';
+            creds.certificate = profile.mpesaCertificate || '';
+            creds.env = profile.mpesaEnv || 'sandbox';
+            const baseUrl = process.env.APP_URL || (process.env.MPESA_CALLBACK_URL ? process.env.MPESA_CALLBACK_URL.replace(/\/api\/mpesa\/callback.*$/, '') : 'http://localhost:3001');
+            creds.callbackUrl = profile.mpesaCallbackUrl || `${baseUrl}/api/mpesa/callback/${userId}`;
         }
     }
     creds.consumerKey = (0, exports.cleanCred)(creds.consumerKey);
@@ -144,6 +98,9 @@ const getAccessToken = async (creds) => {
 exports.getAccessToken = getAccessToken;
 const initiateSTKPush = async (phoneNumber, amount, reference, userId, items = [], invoiceId, saleId) => {
     const creds = await (0, exports.getCredentials)(userId);
+    if (!creds.consumerKey || !creds.consumerSecret || !creds.shortCode || !creds.passkey) {
+        throw new Error('MPESA_NOT_CONFIGURED: Please configure your own M-Pesa API credentials (Consumer Key, Consumer Secret, Passkey, Shortcode) in Settings.');
+    }
     console.log(`[M-Pesa Service] Using Environment: ${creds.env}`);
     const token = await (0, exports.getAccessToken)(creds);
     const date = new Date();
@@ -316,7 +273,7 @@ const testMpesaConnectionService = async (userId, providedCreds) => {
             creds = await (0, exports.getCredentials)(userId);
         }
         if (!creds.consumerKey || !creds.consumerSecret) {
-            throw new Error("Missing Consumer Key or Secret (Env or Settings)");
+            throw new Error("Missing Consumer Key or Secret. Please enter your M-Pesa API credentials.");
         }
         const token = await (0, exports.getAccessToken)(creds);
         let initiatorInfo = 'Not configured';

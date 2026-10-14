@@ -8,7 +8,7 @@ export const createInvoice = async (req: Request, res: Response) => {
     try {
         const userId = (req as any).user.userId; // The actor (audit)
         const merchantId = (req as any).user.merchantId; // The data owner
-        const { customerId, clientName, clientPhone, clientAddress, clientEmail, date, dueDate, items, invoiceNumber, notes } = req.body;
+        const { customerId, clientName, clientPhone, clientAddress, clientEmail, date, dueDate, items, invoiceNumber, notes, status, paymentMethod } = req.body;
 
         console.log(`[Invoice] Creating for Merchant: ${merchantId} by User: ${userId}`);
         console.log(`[Invoice] Payload:`, JSON.stringify(req.body));
@@ -34,6 +34,12 @@ export const createInvoice = async (req: Request, res: Response) => {
         }
 
         const totalAmount = subTotal + vatAmount;
+        const isPaid = status === 'PAID' || status === 'COMPLETED';
+        const initialTxStatus = isPaid ? 'COMPLETED' : 'PENDING';
+        const initialSaleStatus = isPaid ? 'PAID' : 'PENDING';
+        const initialAmountPaid = isPaid ? totalAmount : 0;
+        const initialAmountDue = isPaid ? 0 : totalAmount;
+        const resolvedMethod = paymentMethod || (isPaid ? 'CASH' : 'INVOICE');
 
         // Create Transaction (Type: INVOICE)
         const transaction = await prisma.transaction.create({
@@ -41,13 +47,18 @@ export const createInvoice = async (req: Request, res: Response) => {
                 type: 'INVOICE',
                 amount: totalAmount,
                 reference: invoiceNumber,
-                status: 'PENDING',
+                status: initialTxStatus,
                 initiatorUserId: userId,
                 recipientWalletId: wallet.id,
                 metadata: JSON.stringify({
                     clientName: clientName?.substring(0, 50),
+                    clientPhone: clientPhone?.substring(0, 20),
+                    clientEmail: clientEmail?.substring(0, 80),
+                    clientAddress: clientAddress?.substring(0, 100),
                     invoiceDate: date,
                     dueDate: dueDate,
+                    paymentStatus: initialSaleStatus,
+                    paymentMethod: resolvedMethod,
                     hasItems: items.length > 0,
                     itemsSnapshot: items,
                     customerId: targetCustomerId // Store in metadata too for safety
@@ -78,10 +89,11 @@ export const createInvoice = async (req: Request, res: Response) => {
         const saleData: any = {
             merchantId: merchantId,
             totalAmount: totalAmount,
+            amountPaid: initialAmountPaid,
+            amountDue: initialAmountDue,
             transactionId: transaction.id,
-            paymentMethod: 'INVOICE',
-            paymentStatus: 'PENDING',
-            amountDue: totalAmount,
+            paymentMethod: resolvedMethod,
+            paymentStatus: initialSaleStatus,
             customerName: clientName,
             customerEmail: clientEmail,
             customerPhone: clientPhone,
@@ -104,6 +116,22 @@ export const createInvoice = async (req: Request, res: Response) => {
         const sale = await prisma.sale.create({
             data: saleData
         });
+
+        // If saved as PAID and linked to a customer, update customer CRM metrics immediately
+        if (isPaid && targetCustomerId && targetCustomerId.length > 5) {
+            try {
+                await prisma.customer.update({
+                    where: { id: targetCustomerId },
+                    data: {
+                        totalPurchases: { increment: 1 },
+                        lifetimeValue: { increment: totalAmount },
+                        lastPurchaseDate: new Date()
+                    }
+                });
+            } catch (custErr) {
+                console.error("Failed to update customer purchase stats on invoice creation:", custErr);
+            }
+        }
 
         // Create Notification
         await prisma.notification.create({

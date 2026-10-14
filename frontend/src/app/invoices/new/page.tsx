@@ -20,11 +20,14 @@ function CreateInvoiceForm() {
     const [invoiceData, setInvoiceData] = useState({
         invoiceNumber: `INV-${Date.now().toString().slice(-6)}`,
         date: new Date().toISOString().split('T')[0],
+        dueDate: '',
         customerId: '', // Store linked customer ID
         clientName: '',
         clientPhone: '',
         clientEmail: '',
         clientAddress: '',
+        status: 'PENDING',
+        paymentMethod: 'CASH',
         notes: '1. Goods once sold are not returnable.\n2. Accounts are due on demand.\n3. Title to goods remains with the seller until full payment.'
     });
 
@@ -43,15 +46,17 @@ function CreateInvoiceForm() {
         const email = searchParams.get('email');
         const phone = searchParams.get('phone');
         const address = searchParams.get('address');
+        const statusParam = searchParams.get('status');
 
-        if (customerId || name) {
+        if (customerId || name || statusParam) {
             setInvoiceData(prev => ({
                 ...prev,
                 customerId: customerId || '',
                 clientName: name || prev.clientName,
                 clientEmail: email || prev.clientEmail,
                 clientPhone: phone || prev.clientPhone,
-                clientAddress: address || prev.clientAddress
+                clientAddress: address || prev.clientAddress,
+                status: (statusParam && (statusParam.toUpperCase() === 'PAID' || statusParam.toUpperCase() === 'COMPLETED')) ? 'PAID' : prev.status
             }));
         }
     }, [searchParams]);
@@ -127,6 +132,8 @@ function CreateInvoiceForm() {
 
             const res = await api.post('/invoices', {
                 ...cleanInvoiceData,
+                status: invoiceData.status,
+                paymentMethod: invoiceData.paymentMethod,
                 items: items.map(i => ({
                     price: Number(i.price),
                     quantity: Number(i.quantity),
@@ -136,7 +143,7 @@ function CreateInvoiceForm() {
             });
 
             console.log('Saved:', res.data);
-            showToast('Invoice created successfully!', 'success'); // Assuming useToast hook is used, otherwise alert
+            showToast('Invoice created successfully!', 'success');
 
             if (res.data.transaction && res.data.transaction.id) {
                 router.push(`/invoices/${res.data.transaction.id}`);
@@ -147,7 +154,7 @@ function CreateInvoiceForm() {
         } catch (error: any) {
             console.error(error);
             const msg = error.response?.data?.details || error.response?.data?.error || error.message || 'Failed to save invoice';
-            alert(`Error: ${msg}`);
+            showToast(`Error: ${msg}`, 'error');
         } finally {
             setLoading(false);
         }
@@ -255,10 +262,40 @@ function CreateInvoiceForm() {
                                 <input
                                     type="date"
                                     className="text-right font-bold text-gray-800 border-none p-0 focus:ring-0 w-32"
-                                    value={(invoiceData as any).dueDate || ''}
-                                    onChange={e => setInvoiceData({ ...invoiceData, dueDate: e.target.value } as any)}
+                                    value={invoiceData.dueDate || ''}
+                                    onChange={e => setInvoiceData({ ...invoiceData, dueDate: e.target.value })}
                                 />
                             </div>
+                            <div className="flex items-center justify-end gap-2 mt-2 pt-2 border-t border-gray-100">
+                                <span className="text-sm font-bold text-gray-500 uppercase tracking-wide">Status</span>
+                                <select
+                                    value={invoiceData.status}
+                                    onChange={e => setInvoiceData({ ...invoiceData, status: e.target.value })}
+                                    className={`text-xs font-semibold rounded px-2 py-1 border transition-colors ${
+                                        invoiceData.status === 'PAID'
+                                            ? 'bg-green-50 text-green-700 border-green-300'
+                                            : 'bg-yellow-50 text-yellow-700 border-yellow-300'
+                                    }`}
+                                >
+                                    <option value="PENDING">UNPAID / PENDING</option>
+                                    <option value="PAID">PAID</option>
+                                </select>
+                            </div>
+                            {invoiceData.status === 'PAID' && (
+                                <div className="flex items-center justify-end gap-2 mt-1">
+                                    <span className="text-sm font-bold text-gray-500 uppercase tracking-wide">Method</span>
+                                    <select
+                                        value={invoiceData.paymentMethod}
+                                        onChange={e => setInvoiceData({ ...invoiceData, paymentMethod: e.target.value })}
+                                        className="text-xs font-semibold rounded px-2 py-1 border border-gray-200 bg-white text-gray-700"
+                                    >
+                                        <option value="CASH">Cash</option>
+                                        <option value="MPESA">M-Pesa</option>
+                                        <option value="BANK_TRANSFER">Bank Transfer</option>
+                                        <option value="CARD">Credit/Debit Card</option>
+                                    </select>
+                                </div>
+                            )}
                         </div>
                     </div>
 
